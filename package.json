@@ -1,0 +1,17 @@
+{
+  "name": "valkey-glide-docs",
+  "version": "1.0.0",
+  "description": "Valkey GLIDE documentation using Markdoc and TypeScript",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "ts-node src/build.ts"
+  },
+  "dependencies": {
+    "@markdoc/markdoc": "^0.5.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,34 @@
+# Application Development
+
+Learn how to build real-world applications using Valkey GLIDE. This section covers practical tutorials for common application patterns.
+
+## What You'll Build
+
+These tutorials will teach you how to build:
+
+- **Caching Applications** - Improve performance with intelligent caching
+- **Real-time Systems** - Build responsive applications with pub/sub
+- **Session Management** - Handle user sessions efficiently
+- **Data Processing** - Process and transform data at scale
+
+## Prerequisites
+
+Before starting these tutorials, you should:
+
+- Have completed the Quick Setup section
+- Be familiar with basic Valkey operations
+- Have your development environment ready
+
+## Tutorial Structure
+
+Each tutorial in this section follows a consistent structure:
+
+1. **Problem Overview** - Understanding what we're solving
+2. **Architecture** - How the solution is designed
+3. **Implementation** - Step-by-step code walkthrough
+4. **Testing** - How to verify your implementation
+5. **Next Steps** - Ideas for extending the solution
+
+## Choose Your Tutorial
+
+Select a tutorial below based on your current needs and interests.
