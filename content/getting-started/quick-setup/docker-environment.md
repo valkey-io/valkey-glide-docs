@@ -368,4 +368,4 @@ Now that you have GLIDE installed and a Valkey server running, let's [make your 
 
 ---
 
-**Previous**: [← What is Valkey GLIDE?](overview.html) | **Next**: [First Connection →](first-connection.html)
+**Previous**: [← Welcome to Valkey GLIDE](../overview.html) | **Next**: [First Connection →](first-connection.html)

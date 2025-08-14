@@ -1,3 +1,690 @@
-# Hello, World!
+---
+title: First Connection
+---
 
-This is a placeholder for `first-connection.md`.
+# Your First Connection
+
+In this tutorial, you'll learn how to establish your first connection to a Valkey or Redis server using GLIDE. We'll cover both standalone and cluster connections.
+
+## Understanding GLIDE Clients
+
+GLIDE provides two main client types:
+
+- **`GlideClient`**: For standalone Valkey/Redis instances
+- **`GlideClusterClient`**: For cluster deployments
+
+For this tutorial, we'll start with a standalone connection.
+
+## Basic Connection
+
+Let's create a simple connection to your local Valkey server:
+
+<div class="code-tabs" data-labels='["Python","Java","Node.js","Go"]'>
+<div class="tab-content" data-label="Python">
+
+```python
+import asyncio
+from glide import GlideClient, NodeAddress
+
+async def main():
+    # Create client configuration
+    client = GlideClient([NodeAddress("localhost", 6379)])
+    
+    try:
+        # Test the connection
+        response = await client.ping()
+        print(f"Connected! Server responded: {response}")
+        
+    except Exception as e:
+        print(f"Connection failed: {e}")
+    
+    finally:
+        # Always close the client
+        await client.close()
+
+# Run the async function
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Save as `connection_test.py` and run:**
+```bash
+python connection_test.py
+```
+
+</div>
+<div class="tab-content" data-label="Java">
+
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+public class ConnectionTest {
+    public static void main(String[] args) {
+        // Create client configuration
+        GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder()
+                .host("localhost")
+                .port(6379)
+                .build())
+            .build();
+        
+        try (GlideClient client = GlideClient.createClient(config).get()) {
+            // Test the connection
+            String response = client.ping().get();
+            System.out.println("Connected! Server responded: " + response);
+            
+        } catch (Exception e) {
+            System.err.println("Connection failed: " + e.getMessage());
+        }
+    }
+}
+```
+
+**Compile and run:**
+```bash
+javac -cp "path/to/valkey-glide.jar" ConnectionTest.java
+java -cp ".:path/to/valkey-glide.jar" ConnectionTest
+```
+
+</div>
+<div class="tab-content" data-label="Node.js">
+
+```javascript
+const { GlideClient } = require('@valkey/valkey-glide');
+
+async function main() {
+    // Create client configuration
+    const client = GlideClient.createClient({
+        addresses: [{ host: 'localhost', port: 6379 }]
+    });
+    
+    try {
+        // Test the connection
+        const response = await client.ping();
+        console.log(`Connected! Server responded: ${response}`);
+        
+    } catch (error) {
+        console.error(`Connection failed: ${error.message}`);
+    } finally {
+        // Always close the client
+        client.close();
+    }
+}
+
+// Run the function
+main().catch(console.error);
+```
+
+**Save as `connection-test.js` and run:**
+```bash
+node connection-test.js
+```
+
+</div>
+<div class="tab-content" data-label="Go">
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    
+    "github.com/valkey-io/valkey-glide/go/glide/api"
+)
+
+func main() {
+    // Create client configuration
+    config := &api.GlideClientConfiguration{
+        Addresses: []api.NodeAddress{
+            {Host: "localhost", Port: 6379},
+        },
+    }
+    
+    client := api.NewGlideClient(config)
+    defer client.Close()
+    
+    // Test the connection
+    response, err := client.Ping()
+    if err != nil {
+        log.Fatalf("Connection failed: %v", err)
+    }
+    
+    fmt.Printf("Connected! Server responded: %s\n", response)
+}
+```
+
+**Save as `main.go` and run:**
+```bash
+go run main.go
+```
+
+</div>
+</div>
+
+**Expected Output:**
+```
+Connected! Server responded: PONG
+```
+
+## Connection Configuration
+
+GLIDE offers many configuration options. Here are the most common ones:
+
+<div class="code-tabs" data-labels='["Python","Java","Node.js","Go"]'>
+<div class="tab-content" data-label="Python">
+
+```python
+import asyncio
+from glide import GlideClient, NodeAddress, GlideClientConfiguration
+
+async def main():
+    # Advanced configuration
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        # Connection timeout (milliseconds)
+        request_timeout=5000,
+        # Connection pool size
+        connection_backoff_max_delay=1000,
+        # TLS configuration (if needed)
+        use_tls=False,
+        # Database selection (0-15 for Redis/Valkey)
+        database_id=0
+    )
+    
+    client = GlideClient(config)
+    
+    try:
+        # Test connection with custom message
+        response = await client.ping("Hello GLIDE!")
+        print(f"Server responded: {response}")
+        
+    finally:
+        await client.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+</div>
+<div class="tab-content" data-label="Java">
+
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import java.time.Duration;
+
+public class AdvancedConnection {
+    public static void main(String[] args) {
+        // Advanced configuration
+        GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder()
+                .host("localhost")
+                .port(6379)
+                .build())
+            // Connection timeout
+            .requestTimeout(Duration.ofSeconds(5))
+            // TLS configuration (if needed)
+            .useTls(false)
+            // Database selection
+            .databaseId(0)
+            .build();
+        
+        try (GlideClient client = GlideClient.createClient(config).get()) {
+            // Test connection with custom message
+            String response = client.ping("Hello GLIDE!").get();
+            System.out.println("Server responded: " + response);
+            
+        } catch (Exception e) {
+            System.err.println("Connection failed: " + e.getMessage());
+        }
+    }
+}
+```
+
+</div>
+<div class="tab-content" data-label="Node.js">
+
+```javascript
+const { GlideClient } = require('@valkey/valkey-glide');
+
+async function main() {
+    // Advanced configuration
+    const client = GlideClient.createClient({
+        addresses: [{ host: 'localhost', port: 6379 }],
+        // Connection timeout (milliseconds)
+        requestTimeout: 5000,
+        // TLS configuration (if needed)
+        useTls: false,
+        // Database selection (0-15 for Redis/Valkey)
+        databaseId: 0
+    });
+    
+    try {
+        // Test connection with custom message
+        const response = await client.ping('Hello GLIDE!');
+        console.log(`Server responded: ${response}`);
+        
+    } finally {
+        client.close();
+    }
+}
+
+main().catch(console.error);
+```
+
+</div>
+<div class="tab-content" data-label="Go">
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "time"
+    
+    "github.com/valkey-io/valkey-glide/go/glide/api"
+)
+
+func main() {
+    // Advanced configuration
+    config := &api.GlideClientConfiguration{
+        Addresses: []api.NodeAddress{
+            {Host: "localhost", Port: 6379},
+        },
+        // Connection timeout
+        RequestTimeout: 5 * time.Second,
+        // TLS configuration (if needed)
+        UseTls: false,
+        // Database selection
+        DatabaseId: 0,
+    }
+    
+    client := api.NewGlideClient(config)
+    defer client.Close()
+    
+    // Test connection with custom message
+    response, err := client.PingWithMessage("Hello GLIDE!")
+    if err != nil {
+        log.Fatalf("Connection failed: %v", err)
+    }
+    
+    fmt.Printf("Server responded: %s\n", response)
+}
+```
+
+</div>
+</div>
+
+## Connecting to Remote Servers
+
+To connect to a remote Valkey/Redis server, simply change the address:
+
+<div class="code-tabs" data-labels='["Python","Java","Node.js","Go"]'>
+<div class="tab-content" data-label="Python">
+
+```python
+# Remote server connection
+client = GlideClient([NodeAddress("your-server.com", 6379)])
+
+# With authentication
+from glide import GlideClientConfiguration
+
+config = GlideClientConfiguration(
+    addresses=[NodeAddress("your-server.com", 6379)],
+    # Add password if required
+    password="your-password",
+    # Add username if using ACL
+    username="your-username"
+)
+client = GlideClient(config)
+```
+
+</div>
+<div class="tab-content" data-label="Java">
+
+```java
+// Remote server connection
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("your-server.com")
+        .port(6379)
+        .build())
+    // Add password if required
+    .password("your-password")
+    // Add username if using ACL
+    .username("your-username")
+    .build();
+```
+
+</div>
+<div class="tab-content" data-label="Node.js">
+
+```javascript
+// Remote server connection
+const client = GlideClient.createClient({
+    addresses: [{ host: 'your-server.com', port: 6379 }],
+    // Add password if required
+    password: 'your-password',
+    // Add username if using ACL
+    username: 'your-username'
+});
+```
+
+</div>
+<div class="tab-content" data-label="Go">
+
+```go
+// Remote server connection
+config := &api.GlideClientConfiguration{
+    Addresses: []api.NodeAddress{
+        {Host: "your-server.com", Port: 6379},
+    },
+    // Add password if required
+    Password: "your-password",
+    // Add username if using ACL
+    Username: "your-username",
+}
+```
+
+</div>
+</div>
+
+## Connection Best Practices
+
+### 1. Always Close Connections
+
+<div class="code-tabs" data-labels='["Python","Java","Node.js","Go"]'>
+<div class="tab-content" data-label="Python">
+
+```python
+# Use try/finally
+client = GlideClient([NodeAddress("localhost", 6379)])
+try:
+    # Your code here
+    pass
+finally:
+    await client.close()
+
+# Or use async context manager (if available)
+async with GlideClient([NodeAddress("localhost", 6379)]) as client:
+    # Your code here
+    pass
+```
+
+</div>
+<div class="tab-content" data-label="Java">
+
+```java
+// Use try-with-resources
+try (GlideClient client = GlideClient.createClient(config).get()) {
+    // Your code here
+} // Client automatically closed
+```
+
+</div>
+<div class="tab-content" data-label="Node.js">
+
+```javascript
+// Always call close()
+const client = GlideClient.createClient(config);
+try {
+    // Your code here
+} finally {
+    client.close();
+}
+```
+
+</div>
+<div class="tab-content" data-label="Go">
+
+```go
+// Use defer
+client := api.NewGlideClient(config)
+defer client.Close()
+
+// Your code here
+```
+
+</div>
+</div>
+
+### 2. Handle Connection Errors
+
+```python
+# Example error handling (Python)
+try:
+    client = GlideClient([NodeAddress("localhost", 6379)])
+    await client.ping()
+except ConnectionError as e:
+    print(f"Failed to connect: {e}")
+except TimeoutError as e:
+    print(f"Connection timed out: {e}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
+### 3. Reuse Connections
+
+GLIDE clients are designed to be long-lived. Create one client and reuse it throughout your application rather than creating new connections for each operation.
+
+## Testing Your Connection
+
+Here's a comprehensive connection test:
+
+<div class="code-tabs" data-labels='["Python","Java","Node.js","Go"]'>
+<div class="tab-content" data-label="Python">
+
+```python
+import asyncio
+from glide import GlideClient, NodeAddress
+
+async def test_connection():
+    client = GlideClient([NodeAddress("localhost", 6379)])
+    
+    try:
+        # Test 1: Basic ping
+        print("Testing basic connection...")
+        response = await client.ping()
+        print(f"✓ Ping successful: {response}")
+        
+        # Test 2: Server info
+        print("\nTesting server info...")
+        info = await client.info()
+        print(f"✓ Server info retrieved (length: {len(info)} chars)")
+        
+        # Test 3: Set and get
+        print("\nTesting basic operations...")
+        await client.set("test_key", "test_value")
+        value = await client.get("test_key")
+        print(f"✓ Set/Get successful: {value}")
+        
+        # Cleanup
+        await client.delete(["test_key"])
+        print("✓ Cleanup completed")
+        
+    except Exception as e:
+        print(f"✗ Test failed: {e}")
+    finally:
+        await client.close()
+
+if __name__ == "__main__":
+    asyncio.run(test_connection())
+```
+
+</div>
+<div class="tab-content" data-label="Java">
+
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+public class ConnectionTest {
+    public static void main(String[] args) {
+        GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .build();
+        
+        try (GlideClient client = GlideClient.createClient(config).get()) {
+            // Test 1: Basic ping
+            System.out.println("Testing basic connection...");
+            String response = client.ping().get();
+            System.out.println("✓ Ping successful: " + response);
+            
+            // Test 2: Server info
+            System.out.println("\nTesting server info...");
+            String info = client.info().get();
+            System.out.println("✓ Server info retrieved (length: " + info.length() + " chars)");
+            
+            // Test 3: Set and get
+            System.out.println("\nTesting basic operations...");
+            client.set("test_key", "test_value").get();
+            String value = client.get("test_key").get();
+            System.out.println("✓ Set/Get successful: " + value);
+            
+            // Cleanup
+            client.del(new String[]{"test_key"}).get();
+            System.out.println("✓ Cleanup completed");
+            
+        } catch (Exception e) {
+            System.err.println("✗ Test failed: " + e.getMessage());
+        }
+    }
+}
+```
+
+</div>
+<div class="tab-content" data-label="Node.js">
+
+```javascript
+const { GlideClient } = require('@valkey/valkey-glide');
+
+async function testConnection() {
+    const client = GlideClient.createClient({
+        addresses: [{ host: 'localhost', port: 6379 }]
+    });
+    
+    try {
+        // Test 1: Basic ping
+        console.log('Testing basic connection...');
+        const response = await client.ping();
+        console.log(`✓ Ping successful: ${response}`);
+        
+        // Test 2: Server info
+        console.log('\nTesting server info...');
+        const info = await client.info();
+        console.log(`✓ Server info retrieved (length: ${info.length} chars)`);
+        
+        // Test 3: Set and get
+        console.log('\nTesting basic operations...');
+        await client.set('test_key', 'test_value');
+        const value = await client.get('test_key');
+        console.log(`✓ Set/Get successful: ${value}`);
+        
+        // Cleanup
+        await client.del(['test_key']);
+        console.log('✓ Cleanup completed');
+        
+    } catch (error) {
+        console.error(`✗ Test failed: ${error.message}`);
+    } finally {
+        client.close();
+    }
+}
+
+testConnection().catch(console.error);
+```
+
+</div>
+<div class="tab-content" data-label="Go">
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    
+    "github.com/valkey-io/valkey-glide/go/glide/api"
+)
+
+func main() {
+    config := &api.GlideClientConfiguration{
+        Addresses: []api.NodeAddress{
+            {Host: "localhost", Port: 6379},
+        },
+    }
+    
+    client := api.NewGlideClient(config)
+    defer client.Close()
+    
+    // Test 1: Basic ping
+    fmt.Println("Testing basic connection...")
+    response, err := client.Ping()
+    if err != nil {
+        log.Fatalf("✗ Ping failed: %v", err)
+    }
+    fmt.Printf("✓ Ping successful: %s\n", response)
+    
+    // Test 2: Server info
+    fmt.Println("\nTesting server info...")
+    info, err := client.Info()
+    if err != nil {
+        log.Fatalf("✗ Info failed: %v", err)
+    }
+    fmt.Printf("✓ Server info retrieved (length: %d chars)\n", len(info))
+    
+    // Test 3: Set and get
+    fmt.Println("\nTesting basic operations...")
+    err = client.Set("test_key", "test_value")
+    if err != nil {
+        log.Fatalf("✗ Set failed: %v", err)
+    }
+    
+    value, err := client.Get("test_key")
+    if err != nil {
+        log.Fatalf("✗ Get failed: %v", err)
+    }
+    fmt.Printf("✓ Set/Get successful: %s\n", value)
+    
+    // Cleanup
+    _, err = client.Del([]string{"test_key"})
+    if err != nil {
+        log.Printf("Warning: Cleanup failed: %v", err)
+    } else {
+        fmt.Println("✓ Cleanup completed")
+    }
+}
+```
+
+</div>
+</div>
+
+## Troubleshooting
+
+**Connection Refused**
+- Ensure your Valkey/Redis server is running
+- Check the host and port are correct
+- Verify firewall settings
+
+**Authentication Failed**
+- Check username/password are correct
+- Ensure ACL permissions are properly configured
+
+**Timeout Errors**
+- Increase the request timeout
+- Check network connectivity
+- Verify server performance
+
+## What's Next?
+
+Great! You've successfully connected to Valkey using GLIDE. Now let's learn how to [perform basic operations](basic-operations.html) like storing and retrieving data.
+
+---
+
+**Previous**: [← Quick Setup](quick-setup.html) | **Next**: [Basic Operations →](basic-operations.html)

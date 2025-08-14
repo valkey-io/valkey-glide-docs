@@ -54,8 +54,7 @@ const navConfig: NavSection[] = [
       {
         title: 'Quick Setup',
         items: [
-          { key: 'getting-started/quick-setup/environment-setup.md', label: 'Environment Setup' },
-          { key: 'getting-started/quick-setup/docker-environment.md', label: 'Docker Compose Setup' },
+          { key: 'getting-started/quick-setup/docker-environment.md', label: 'Environment Setup' },
           { key: 'getting-started/quick-setup/first-connection.md', label: 'First Connection' },
           { key: 'getting-started/quick-setup/basic-operations.md', label: 'Basic Operations' }
         ]
