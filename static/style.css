@@ -128,7 +128,54 @@ a:hover { color: var(--color-primary-hover); }
   padding: 0.5rem;
   border-bottom: 1px solid var(--color-border);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-collapse-all {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-collapse-all:hover {
+  background: var(--color-surface-border);
+  color: var(--color-text);
+}
+
+.nav-collapse-all .collapse-icon {
+  transition: transform 0.2s ease;
+}
+
+.nav-collapse-all[data-state="collapsed"] .collapse-icon {
+  transform: rotate(180deg);
+}
+
+/* Hide collapse all button when sidebar is collapsed */
+.sidebar.collapsed .nav-collapse-all {
+  display: none;
+}
+
+/* Highlight subsection headers that contain active items */
+.nav-subsection:has(.nav-subitem.active) .nav-subsection-header {
+  background: rgba(33,128,141,0.05);
+  border-radius: var(--radius-sm);
+}
+
+/* Fallback for browsers that don't support :has() */
+.nav-subsection.has-active-item .nav-subsection-header {
+  background: rgba(33,128,141,0.05);
+  border-radius: var(--radius-sm);
 }
 
 .sidebar-toggle {
@@ -161,6 +208,76 @@ a:hover { color: var(--color-primary-hover); }
   transition: opacity 300ms ease;
 }
 .nav-section + .nav-section { margin-top: 1rem; }
+
+/* Navigation section toggle styles */
+.nav-section-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.nav-section-toggle:hover {
+  background: var(--color-surface-border);
+}
+
+.nav-section-toggle:hover h3 {
+  color: var(--color-text);
+}
+
+.nav-section-toggle .toggle-icon {
+  margin-right: 0.5rem;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  color: var(--color-text-secondary);
+  width: 1rem;
+  text-align: center;
+}
+
+.nav-section-toggle[aria-expanded="false"] .toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.nav-section-toggle h3 {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Default collapsed state for navigation sections */
+.nav-section {
+  /* Sections start collapsed by default */
+}
+
+.nav-section .nav-section-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+.nav-section:not([data-collapsed]) .nav-section-content,
+.nav-section[data-collapsed="false"] .nav-section-content {
+  max-height: none;
+  opacity: 1;
+}
+
+.nav-section-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.nav-section[data-collapsed="true"] .nav-section-content {
+  max-height: 0;
+  opacity: 0;
+}
+
 .nav-section-header h3 { font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-secondary); margin-bottom: 0.5rem; }
 .nav-items { list-style: none; padding: 0; margin: 0; }
 .nav-item { display: block; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); color: var(--color-text); }
@@ -170,6 +287,73 @@ a:hover { color: var(--color-primary-hover); }
 /* 3-level navigation styles */
 .nav-subsection { margin-top: 0.75rem; }
 .nav-subsection + .nav-subsection { margin-top: 0.75rem; }
+
+/* Navigation subsection toggle styles */
+.nav-subsection-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.nav-subsection-toggle:hover {
+  background: var(--color-surface-border);
+}
+
+.nav-subsection-toggle:hover h4 {
+  color: var(--color-text);
+}
+
+.nav-subsection-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-subsection-toggle .toggle-icon {
+  margin-right: 0.5rem;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  color: var(--color-text-secondary);
+  width: 1rem;
+  text-align: center;
+}
+
+.nav-subsection-toggle[aria-expanded="false"] .toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.nav-subsection-toggle h4 {
+  margin: 0;
+}
+
+/* Default collapsed state for navigation subsections */
+.nav-subsection .nav-subsection-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+.nav-subsection:not([data-collapsed]) .nav-subsection-content,
+.nav-subsection[data-collapsed="false"] .nav-subsection-content {
+  max-height: none;
+  opacity: 1;
+}
+
+.nav-subsection-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease 0.1s, opacity 0.2s ease 0.1s;
+}
+
+.nav-subsection[data-collapsed="true"] .nav-subsection-content {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
 .nav-subsection-header h4 { 
   font-size: var(--font-size-xs); 
   font-weight: 600; 

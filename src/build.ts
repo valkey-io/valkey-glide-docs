@@ -421,10 +421,19 @@ function relativeUrl(fromFile: string, toFile: string): string {
  */
 function generateNav(currentOutput: string): string {
   const currentAbs = currentOutput;
-  let nav = '<nav class="sidebar" aria-label="Main">\n  <div class="sidebar-header">\n    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">\n      <span class="toggle-icon">‹</span>\n    </button>\n  </div>\n  <div class="sidebar-content">\n';
+  let nav = '<nav class="sidebar" aria-label="Main">\n  <div class="sidebar-header">\n    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">\n      <span class="toggle-icon">‹</span>\n    </button>\n    <button class="nav-collapse-all" id="navCollapseAll" aria-label="Collapse all sections" title="Collapse all sections">\n      <span class="collapse-icon">⌃</span>\n    </button>\n  </div>\n  <div class="sidebar-content">\n';
   
   for (const section of navConfig) {
-    nav += `    <div class=\"nav-section\">\n      <div class=\"nav-section-header\"><h3>${section.section}</h3></div>\n`;
+    const sectionId = section.section.toLowerCase().replace(/\s+/g, '-');
+    nav += `    <div class=\"nav-section\" data-section="${sectionId}" data-collapsed="true">
+      <div class=\"nav-section-header\">
+        <button class=\"nav-section-toggle\" aria-expanded="false" aria-controls="${sectionId}-content">
+          <span class=\"toggle-icon\">▼</span>
+          <h3>${section.section}</h3>
+        </button>
+      </div>
+      <div class=\"nav-section-content\" id="${sectionId}-content">
+`;
     
     // Handle direct items under section (2-level navigation)
     if (section.items && section.items.length > 0) {
@@ -459,7 +468,17 @@ function generateNav(currentOutput: string): string {
           subsectionLink = relativeUrl(currentOutput, firstItemTargetAbs);
         }
         
-        nav += `      <div class=\"nav-subsection\">\n        <div class=\"nav-subsection-header\"><h4><a class=\"nav-subsection-link${isSubsectionActive ? ' active' : ''}\" href=\"${subsectionLink}\">${subsection.title}</a></h4></div>\n        <ul class=\"nav-subitems\">\n`;
+        const subsectionId = `${sectionId}-${subsection.title.toLowerCase().replace(/\s+/g, '-')}`;
+        nav += `      <div class=\"nav-subsection\" data-subsection="${subsectionId}" data-collapsed="true">
+        <div class=\"nav-subsection-header\">
+          <button class=\"nav-subsection-toggle\" aria-expanded="false" aria-controls="${subsectionId}-content">
+            <span class=\"toggle-icon\">▼</span>
+            <h4><a class=\"nav-subsection-link${isSubsectionActive ? ' active' : ''}\" href=\"${subsectionLink}\">${subsection.title}</a></h4>
+          </button>
+        </div>
+        <div class=\"nav-subsection-content\" id="${subsectionId}-content">
+          <ul class=\"nav-subitems\">
+`;
         
         for (const item of subsection.items) {
           const htmlPath = getOutputPath(item.key);
@@ -469,11 +488,11 @@ function generateNav(currentOutput: string): string {
           nav += `          <li><a class=\"nav-subitem${isActive ? ' active' : ''}\" href=\"${link}\">${item.label}</a></li>\n`;
         }
         
-        nav += '        </ul>\n      </div>\n';
+        nav += '          </ul>\n        </div>\n      </div>\n';
       }
     }
     
-    nav += '    </div>\n';
+    nav += '      </div>\n    </div>\n';
   }
   
   nav += '  </div>\n</nav>';
