@@ -48,7 +48,7 @@ const navConfig: NavSection[] = [
   {
     section: 'Getting Started',
     items: [
-      { key: 'getting-started/overview.md', label: 'Welcome to Valkey GLIDE' }
+      { key: 'getting-started/overview.md', label: 'Feature Tables' }
     ],
     subsections: [
       {
