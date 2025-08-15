@@ -264,7 +264,7 @@ a:hover { color: var(--color-primary-hover); }
 
 .nav-section:not([data-collapsed]) .nav-section-content,
 .nav-section[data-collapsed="false"] .nav-section-content {
-  max-height: none;
+  max-height: 2000px; /* Large enough for any section content */
   opacity: 1;
 }
 
@@ -339,19 +339,22 @@ a:hover { color: var(--color-primary-hover); }
 
 .nav-subsection:not([data-collapsed]) .nav-subsection-content,
 .nav-subsection[data-collapsed="false"] .nav-subsection-content {
-  max-height: none;
+  max-height: 1000px; /* Large enough for any content */
   opacity: 1;
 }
 
+/* Ensure subsections have adequate spacing and don't get truncated */
 .nav-subsection-content {
-  overflow: hidden;
+  overflow: visible;
   transition: max-height 0.3s ease 0.1s, opacity 0.2s ease 0.1s;
+  padding-bottom: 0.5rem;
 }
 
 .nav-subsection[data-collapsed="true"] .nav-subsection-content {
   max-height: 0;
   opacity: 0;
   transition: max-height 0.3s ease, opacity 0.2s ease;
+  padding-bottom: 0;
 }
 
 .nav-subsection-header h4 { 

@@ -116,8 +116,7 @@
     const expandContainer = (container, toggle, content, storageKey) => {
       container.removeAttribute('data-collapsed');
       toggle.setAttribute('aria-expanded', 'true');
-      content.style.maxHeight = content.scrollHeight + 'px';
-      content.style.opacity = '1';
+      // CSS handles the max-height and opacity via the data-collapsed attribute
       try {
         localStorage.setItem(storageKey, 'false');
       } catch (_) {}
@@ -127,8 +126,7 @@
     const collapseContainer = (container, toggle, content, storageKey) => {
       container.setAttribute('data-collapsed', 'true');
       toggle.setAttribute('aria-expanded', 'false');
-      content.style.maxHeight = '0';
-      content.style.opacity = '0';
+      // CSS handles the max-height and opacity via the data-collapsed attribute
       try {
         localStorage.setItem(storageKey, 'true');
       } catch (_) {}
@@ -148,36 +146,41 @@
           const subsectionId = subsection.getAttribute('data-subsection');
           
           if (subsectionToggle && subsectionContent && subsectionId) {
-            // First, collapse all other subsections within the same section (accordion behavior)
-            const parentSection = subsection.closest('.nav-section');
-            if (parentSection) {
-              parentSection.querySelectorAll('.nav-subsection').forEach(otherSubsection => {
-                if (otherSubsection !== subsection) {
-                  const otherToggle = otherSubsection.querySelector('.nav-subsection-toggle');
-                  const otherContent = otherSubsection.querySelector('.nav-subsection-content');
-                  const otherSubId = otherSubsection.getAttribute('data-subsection');
-                  
-                  if (otherToggle && otherContent && otherSubId) {
-                    collapseContainer(otherSubsection, otherToggle, otherContent, `nav-subsection-${otherSubId}-collapsed`);
-                  }
-                }
-              });
-            }
+            // Only apply accordion behavior if this subsection is currently collapsed
+            const isSubsectionCollapsed = subsection.hasAttribute('data-collapsed');
             
-            // Then expand this subsection
-            expandContainer(
-              subsection, 
-              subsectionToggle, 
-              subsectionContent, 
-              `nav-subsection-${subsectionId}-collapsed`
-            );
+            if (isSubsectionCollapsed) {
+              // First, collapse all other subsections within the same section (accordion behavior)
+              const parentSection = subsection.closest('.nav-section');
+              if (parentSection) {
+                parentSection.querySelectorAll('.nav-subsection').forEach(otherSubsection => {
+                  if (otherSubsection !== subsection) {
+                    const otherToggle = otherSubsection.querySelector('.nav-subsection-toggle');
+                    const otherContent = otherSubsection.querySelector('.nav-subsection-content');
+                    const otherSubId = otherSubsection.getAttribute('data-subsection');
+                    
+                    if (otherToggle && otherContent && otherSubId) {
+                      collapseContainer(otherSubsection, otherToggle, otherContent, `nav-subsection-${otherSubId}-collapsed`);
+                    }
+                  }
+                });
+              }
+              
+              // Then expand this subsection
+              expandContainer(
+                subsection, 
+                subsectionToggle, 
+                subsectionContent, 
+                `nav-subsection-${subsectionId}-collapsed`
+              );
+            }
             
             // Add class for styling fallback
             subsection.classList.add('has-active-item');
           }
         }
         
-        // Also ensure the parent section is expanded and collapse other sections
+        // Also ensure the parent section is expanded
         const section = activeItem.closest('.nav-section');
         if (section) {
           const sectionToggle = section.querySelector('.nav-section-toggle');
@@ -185,26 +188,31 @@
           const sectionId = section.getAttribute('data-section');
           
           if (sectionToggle && sectionContent && sectionId) {
-            // First, collapse all other sections (accordion behavior)
-            document.querySelectorAll('.nav-section').forEach(otherSection => {
-              if (otherSection !== section) {
-                const otherToggle = otherSection.querySelector('.nav-section-toggle');
-                const otherContent = otherSection.querySelector('.nav-section-content');
-                const otherSectionId = otherSection.getAttribute('data-section');
-                
-                if (otherToggle && otherContent && otherSectionId) {
-                  collapseContainer(otherSection, otherToggle, otherContent, `nav-section-${otherSectionId}-collapsed`);
-                }
-              }
-            });
+            // Only apply accordion behavior if this section is currently collapsed
+            const isSectionCollapsed = section.hasAttribute('data-collapsed');
             
-            // Then expand this section
-            expandContainer(
-              section, 
-              sectionToggle, 
-              sectionContent, 
-              `nav-section-${sectionId}-collapsed`
-            );
+            if (isSectionCollapsed) {
+              // First, collapse all other sections (accordion behavior)
+              document.querySelectorAll('.nav-section').forEach(otherSection => {
+                if (otherSection !== section) {
+                  const otherToggle = otherSection.querySelector('.nav-section-toggle');
+                  const otherContent = otherSection.querySelector('.nav-section-content');
+                  const otherSectionId = otherSection.getAttribute('data-section');
+                  
+                  if (otherToggle && otherContent && otherSectionId) {
+                    collapseContainer(otherSection, otherToggle, otherContent, `nav-section-${otherSectionId}-collapsed`);
+                  }
+                }
+              });
+              
+              // Then expand this section
+              expandContainer(
+                section, 
+                sectionToggle, 
+                sectionContent, 
+                `nav-section-${sectionId}-collapsed`
+              );
+            }
           }
         }
       });
@@ -294,13 +302,9 @@
       if (isCollapsed) {
         section.setAttribute('data-collapsed', 'true');
         toggle.setAttribute('aria-expanded', 'false');
-        content.style.maxHeight = '0';
-        content.style.opacity = '0';
       } else {
         section.removeAttribute('data-collapsed');
         toggle.setAttribute('aria-expanded', 'true');
-        content.style.maxHeight = content.scrollHeight + 'px';
-        content.style.opacity = '1';
       }
       
       // Add click handler
@@ -380,13 +384,9 @@
       if (isCollapsed) {
         subsection.setAttribute('data-collapsed', 'true');
         toggle.setAttribute('aria-expanded', 'false');
-        content.style.maxHeight = '0';
-        content.style.opacity = '0';
       } else {
         subsection.removeAttribute('data-collapsed');
         toggle.setAttribute('aria-expanded', 'true');
-        content.style.maxHeight = content.scrollHeight + 'px';
-        content.style.opacity = '1';
       }
       
       // Add click handler
@@ -419,112 +419,20 @@
       });
     });
     
-    // Add click handlers to navigation items for auto-expansion
+    // Disable navigation item click handlers to prevent flicker
     const addNavItemClickHandlers = () => {
-      document.querySelectorAll('.nav-item, .nav-subitem').forEach(navItem => {
-        navItem.addEventListener('click', function(e) {
-          // Small delay to allow page navigation to start
-          setTimeout(() => {
-            // Find the subsection containing this item
-            const subsection = navItem.closest('.nav-subsection');
-            if (subsection) {
-              const subsectionToggle = subsection.querySelector('.nav-subsection-toggle');
-              const subsectionContent = subsection.querySelector('.nav-subsection-content');
-              const subsectionId = subsection.getAttribute('data-subsection');
-              
-              if (subsectionToggle && subsectionContent && subsectionId) {
-                // First, collapse all other subsections within the same section (accordion behavior)
-                const parentSection = subsection.closest('.nav-section');
-                if (parentSection) {
-                  parentSection.querySelectorAll('.nav-subsection').forEach(otherSubsection => {
-                    if (otherSubsection !== subsection) {
-                      const otherToggle = otherSubsection.querySelector('.nav-subsection-toggle');
-                      const otherContent = otherSubsection.querySelector('.nav-subsection-content');
-                      const otherSubId = otherSubsection.getAttribute('data-subsection');
-                      
-                      if (otherToggle && otherContent && otherSubId) {
-                        collapseContainer(otherSubsection, otherToggle, otherContent, `nav-subsection-${otherSubId}-collapsed`);
-                      }
-                    }
-                  });
-                }
-                
-                // Then expand this subsection
-                expandContainer(
-                  subsection, 
-                  subsectionToggle, 
-                  subsectionContent, 
-                  `nav-subsection-${subsectionId}-collapsed`
-                );
-              }
-            }
-            
-            // Also ensure the parent section is expanded and collapse other sections
-            const section = navItem.closest('.nav-section');
-            if (section) {
-              const sectionToggle = section.querySelector('.nav-section-toggle');
-              const sectionContent = section.querySelector('.nav-section-content');
-              const sectionId = section.getAttribute('data-section');
-              
-              if (sectionToggle && sectionContent && sectionId) {
-                // First, collapse all other sections (accordion behavior)
-                document.querySelectorAll('.nav-section').forEach(otherSection => {
-                  if (otherSection !== section) {
-                    const otherToggle = otherSection.querySelector('.nav-section-toggle');
-                    const otherContent = otherSection.querySelector('.nav-section-content');
-                    const otherSectionId = otherSection.getAttribute('data-section');
-                    
-                    if (otherToggle && otherContent && otherSectionId) {
-                      collapseContainer(otherSection, otherToggle, otherContent, `nav-section-${otherSectionId}-collapsed`);
-                    }
-                  }
-                });
-                
-                // Then expand this section
-                expandContainer(
-                  section, 
-                  sectionToggle, 
-                  sectionContent, 
-                  `nav-section-${sectionId}-collapsed`
-                );
-              }
-            }
-          }, 10);
-        });
-      });
+      // Temporarily disabled to fix flicker issue
+      // The auto-expand functionality should handle active items on page load
+      // User can still use section/subsection toggles for manual control
     };
 
-    // Add click handlers to subsection links to auto-expand
+    // Add click handlers to subsection links (these are section headers, not nav items)
     const addSubsectionLinkHandlers = () => {
       document.querySelectorAll('.nav-subsection-link').forEach(link => {
         link.addEventListener('click', function(e) {
-          const subsection = link.closest('.nav-subsection');
-          if (subsection) {
-            const subToggle = subsection.querySelector('.nav-subsection-toggle');
-            const subContent = subsection.querySelector('.nav-subsection-content');
-            const subId = subsection.getAttribute('data-subsection');
-            
-            if (subToggle && subContent && subId) {
-              // First, collapse all other subsections within the same section (accordion behavior)
-              const parentSection = subsection.closest('.nav-section');
-              if (parentSection) {
-                parentSection.querySelectorAll('.nav-subsection').forEach(otherSubsection => {
-                  if (otherSubsection !== subsection) {
-                    const otherToggle = otherSubsection.querySelector('.nav-subsection-toggle');
-                    const otherContent = otherSubsection.querySelector('.nav-subsection-content');
-                    const otherSubId = otherSubsection.getAttribute('data-subsection');
-                    
-                    if (otherToggle && otherContent && otherSubId) {
-                      collapseContainer(otherSubsection, otherToggle, otherContent, `nav-subsection-${otherSubId}-collapsed`);
-                    }
-                  }
-                });
-              }
-              
-              // Then expand the subsection to show all items
-              expandContainer(subsection, subToggle, subContent, `nav-subsection-${subId}-collapsed`);
-            }
-          }
+          // Don't prevent default - allow normal navigation
+          // Don't apply any accordion behavior for subsection header links
+          // These are just navigation links, not toggle controls
         });
       });
     };
@@ -561,15 +469,8 @@
       }
     }, 150);
     
-    // Update max-heights when window resizes
-    window.addEventListener('resize', function() {
-      document.querySelectorAll('.nav-section-content, .nav-subsection-content').forEach(content => {
-        const container = content.closest('[data-collapsed]');
-        if (!container || container.hasAttribute('data-collapsed')) return;
-        content.style.maxHeight = content.scrollHeight + 'px';
-        content.style.opacity = '1';
-      });
-    });
+    // No need for resize handler since CSS handles everything now
+    // window.addEventListener('resize', function() { ... });
   }
 
   // Optional: Clear navigation state for testing (remove this in production)
