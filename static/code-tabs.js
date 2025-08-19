@@ -2,29 +2,33 @@
 // navigation. It reads the list of labels from the `data-labels` attribute and
 // generates clickable buttons that toggle the visibility of each code block.
 
+// Global utility functions
+function canon(label) {
+  if (!label) return '';
+  const s = String(label).trim().toLowerCase();
+  if (['node', 'nodejs', 'node.js', 'js', 'javascript'].includes(s)) return 'node.js';
+  if (['py', 'python'].includes(s)) return 'python';
+  if (['java'].includes(s)) return 'java';
+  if (['go', 'golang', 'galang'].includes(s)) return 'go';
+  return s;
+}
+
+function getPreferredLanguage() {
+  try {
+    return localStorage.getItem('preferred-language') || 'node.js';
+  } catch (e) {
+    return 'node.js';
+  }
+}
+
+function setPreferredLanguage(value) {
+  const c = canon(value);
+  try { localStorage.setItem('preferred-language', c); } catch (_) {}
+  const ev = new CustomEvent('preferred-language-changed', { detail: { value: c } });
+  document.dispatchEvent(ev);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-  function canon(label) {
-    if (!label) return '';
-    const s = String(label).trim().toLowerCase();
-    if (['node', 'nodejs', 'node.js', 'js', 'javascript'].includes(s)) return 'node.js';
-    if (['py', 'python'].includes(s)) return 'python';
-    if (['java'].includes(s)) return 'java';
-    if (['go', 'golang', 'galang'].includes(s)) return 'go';
-    return s;
-  }
-  function getPreferredLanguage() {
-    try {
-      return localStorage.getItem('preferred-language') || 'node.js';
-    } catch (e) {
-      return 'node.js';
-    }
-  }
-  function setPreferredLanguage(value) {
-    const c = canon(value);
-    try { localStorage.setItem('preferred-language', c); } catch (_) {}
-    const ev = new CustomEvent('preferred-language-changed', { detail: { value: c } });
-    document.dispatchEvent(ev);
-  }
 
   const tabContainers = document.querySelectorAll('.code-tabs');
   tabContainers.forEach(function (tabsContainer) {

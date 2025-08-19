@@ -437,3 +437,17 @@ li { margin: 0.25rem 0; }
 @media (max-width: 768px) {
   .content { padding: 1rem; }
 }
+
+.language-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+}
+
+.language-link:hover {
+    color: var(--color-primary-hover);
+}

@@ -48,7 +48,7 @@ const navConfig: NavSection[] = [
   {
     section: 'Getting Started',
     items: [
-      { key: 'getting-started/overview.md', label: 'Feature Tables' }
+      { key: 'getting-started/overview.md', label: 'Overview' }
     ],
     subsections: [
       {
@@ -175,7 +175,8 @@ const navConfig: NavSection[] = [
           { key: 'concepts/client-features/pubsub-model.md', label: 'PubSub Model' },
           { key: 'concepts/client-features/dynamic-authentication.md', label: 'Dynamic Authentication' },
           { key: 'concepts/client-features/read-strategies-deep.md', label: 'Read Strategies Deep Dive' },
-          { key: 'concepts/client-features/observability-design.md', label: 'Observability Design' }
+          { key: 'concepts/client-features/observability-design.md', label: 'Observability Design' },
+          { key: 'concepts/client-features/reliability.md', label: 'Reliability' }
         ]
       },
       {
