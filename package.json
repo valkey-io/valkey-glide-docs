@@ -1,17 +1,19 @@
 {
-  "name": "valkey-glide-docs",
-  "version": "1.0.0",
-  "description": "Valkey GLIDE documentation using Markdoc and TypeScript",
-  "main": "dist/index.js",
+  "name": "@example/starlight-markdoc",
   "type": "module",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "build": "ts-node src/build.ts"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
-    "@markdoc/markdoc": "^0.5.4"
-  },
-  "devDependencies": {
-    "ts-node": "^10.0.0",
-    "typescript": "^5.0.0"
+    "@astrojs/mdx": "^4.3.4",
+    "@astrojs/starlight": "^0.35.2",
+    "astro": "^5.6.1",
+    "sharp": "^0.34.2"
   }
 }

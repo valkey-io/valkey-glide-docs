@@ -1,0 +1,120 @@
+---
+import Select from "@astrojs/starlight/components/Select.astro";
+
+// Define valid icon types based on Starlight's icon set
+type ValidIcon = "setting" | "laptop" | "sun" | "moon" | "external";
+
+interface Props {
+  label: string;
+  value: string;
+  options: {
+    label: string;
+    value: string;
+    selected: boolean;
+  }[];
+  icon?: ValidIcon;
+  width?: string;
+}
+
+const {
+  label,
+  value,
+  options,
+  icon = "setting",
+  width = "8.25em",
+} = Astro.props;
+---
+
+<tab-select>
+  <Select
+    label={label}
+    value={value}
+    options={options}
+    width={width}
+    icon={icon}
+  />
+</tab-select>
+
+{/* Inlined to avoid FOUC. Uses global scope from `ThemeProvider.astro` */}
+<script is:inline>
+  window.StarlightSyncTabProvider = (() => {
+    const storedSyncTab =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("starlight-synced-tabs");
+    const syncTab = storedSyncTab;
+    document.documentElement.dataset.syncTab =
+      syncTab === "light" ? "light" : "dark";
+    return {
+      updatePickers(theme = storedSyncTab || "auto") {
+        document.querySelectorAll("tab-select").forEach((picker) => {
+          const select = picker.querySelector("select");
+          if (select) select.value = syncTab;
+          /** @type {HTMLTemplateElement | null} */
+          const tmpl = document.querySelector(`#tab-icons`);
+          const newIcon = tmpl && tmpl.content.querySelector("." + syncTab);
+          if (newIcon) {
+            const oldIcon = picker.querySelector("svg.label-icon");
+            if (oldIcon) {
+              oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+            }
+          }
+        });
+      },
+    };
+  })();
+</script>
+
+<script is:inline>
+  StarlightSyncTabProvider.updatePickers();
+</script>
+
+<script>
+  type Theme = "auto" | "dark" | "light";
+
+  /** Key in `localStorage` to store color theme preference at. */
+  const storageKey = "starlight-synced-tabs";
+
+  /** Get a typesafe theme string from any JS value (unknown values are coerced to `'auto'`). */
+  const parseSyncTab = (theme: unknown): Theme =>
+    theme === "auto" || theme === "dark" || theme === "light" ? theme : "auto";
+
+  /** Load the user’s preference from `localStorage`. */
+  const loadSyncTab = (): Theme =>
+    parseSyncTab(
+      typeof localStorage !== "undefined" && localStorage.getItem(storageKey)
+    );
+
+  /** Store the user’s preference in `localStorage`. */
+  function storeSyncTab(theme: Theme): void {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(
+        storageKey,
+        theme === "light" || theme === "dark" ? theme : ""
+      );
+    }
+  }
+
+  /** Get the preferred system color scheme. */
+  const getPreferredColorScheme = (): Theme =>
+    matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+
+  /** Update select menu UI, document theme, and local storage state. */
+  function onSyncTabChange(theme: Theme): void {
+    document.documentElement.dataset.theme =
+      theme === "auto" ? getPreferredColorScheme() : theme;
+    storeSyncTab(theme);
+  }
+
+  class TabSelect extends HTMLElement {
+    constructor() {
+      super();
+      onSyncTabChange(loadSyncTab());
+      this.querySelector("select")?.addEventListener("change", (e) => {
+        if (e.currentTarget instanceof HTMLSelectElement) {
+          onSyncTabChange(parseSyncTab(e.currentTarget.value));
+        }
+      });
+    }
+  }
+  customElements.define("tab-select", TabSelect);
+</script>
