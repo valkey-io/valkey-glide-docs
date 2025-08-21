@@ -4,10 +4,8 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	server: {
-		host: true,
-		allowedHosts: ["4a869e20032d.ngrok-free.app"]
-	},
+	site: 'https://valkey.io',
+	base: '/valkey-glide-docs',
 	integrations: [
 		starlight({
 			components: {
@@ -15,7 +13,7 @@ export default defineConfig({
 			},
 			title: 'Valkey Glide',
 			editLink: {
-				baseUrl: 'https://github.com/Bit-Quill/valkey-glide-docs/edit/main/',
+				baseUrl: 'https://github.com/valkey-io/valkey-glide-docs/edit/main/',
 			},
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/valkey-io/valkey-glide' }],
 			sidebar: [
