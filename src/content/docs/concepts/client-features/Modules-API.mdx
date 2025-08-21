@@ -1,0 +1,226 @@
+---
+title: Modules API
+description: A reference page in my new Starlight docs site.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey Modules offers a way to extend the general Valkey commands and functionality, and (starting in release 1.2) Valkey-Glide offers a simple Modules API client interface to interact with common Modules API. See [Modules Introduction](https://valkey.io/topics/modules-intro/) on how to load modules into your Valkey service. 
+
+### General Usage
+
+Valkey Module commands are available through static calls that wrap the [custom command](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#custom-command).  The APIs definitions are strictly owned by the Module creator, so there will be some slight variation between Module behaviour.  Visit the module API pages to learn more about the behaviour of individual APIs. 
+
+Some example Module APIs include: 
+
+* [Amazon MemoryDB Vector search commands](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search-commands.html)
+* [Amazon ElastiCache JSON commands](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/json-list-commands.html)
+
+Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modules.
+
+### Examples
+
+Once the module is loaded into the server, the following examples demonstrate basic behaviour for calling module commands: 
+
+#### JSON Module Example
+
+<Tabs syncKey="examples">
+<TabItem label="Java">
+```java
+import glide.api.commands.servermodules.Json;
+
+try (GlideClient glideClient = GlideClient.createClient(config).get()) {
+    String key = "testKey";
+    String path = "$";
+    String jsonValue = "{\"a\": 1.0, \"b\": 2}";
+
+    CompletableFuture<String> setResponseFuture = Json.set(glideClient, key, path, jsonValue);
+    String setResponse = setResponseFuture.get(); // "OK"
+    assert setResponse.equals("OK");
+
+    CompletableFuture<String> getResponseFuture = Json.get(client, key).get();
+    String getResponseFuture = setResponseFuture.get(); // jsonValue
+    assert value.equals("{\"a\": 1.0, \"b\": 2}");
+}
+```
+</TabItem>
+
+<TabItem label="Node.js">
+```typescript
+import {GlideJson, GlideClient} from "@valkey/valkey-glide";
+
+// Create the GlideClient instance
+const client = await GlideClient.createClient(config);
+
+const value = {a: 1.0, b:2};
+const jsonStr = JSON.stringify(value);
+
+// Sets the value at `doc` as a JSON object.
+const jsonSetResponse = await GlideJson.set("doc", "$", jsonStr);
+console.log(jsonSetResponse); // 'OK' - Indicates successful setting of the value at path '$' in the key stored at `doc`.
+
+// Gets the value at path '$' in the JSON document stored at `doc`.
+const jsonGetResponse = await GlideJson.get(client, "doc", {path: "$"});
+console.log(JSON.stringify(jsonGetResponse)); //  [{"a": 1.0, "b": 2}] # JSON object retrieved from the key `doc`
+```
+</TabItem>
+
+<TabItem label="Python">
+```python
+from glide import glide_json
+import json
+
+client = await GlideClient.create(config)
+value = {'a': 1.0, 'b': 2}
+json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
+
+# Sets the value at `doc` as a JSON object.
+set_response = await glide_json.set(client, "doc", "$", json_str)
+print(set_response) # "OK" - Indicates successful setting of the value at path '$' in the key stored at `doc`.
+
+# Gets the value at path '$' in the JSON document stored at `doc`.
+get_response = await glide_json.get(client, "doc", "$") 
+print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
+json.loads(str(json_get)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
+```
+</TabItem>
+</Tabs>
+
+#### Vector Search Module Example
+
+<Tabs syncKey="examples">
+<TabItem label="Java">
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.commands.FT.FTCreateOptions.FieldInfo;
+import glide.api.models.commands.FT.FTCreateOptions;
+import glide.api.models.commands.FT.FTCreateOptions.*;
+import glide.api.models.commands.FT.FTSearchOptions;
+
+try (GlideClient glideClient = GlideClient.createClient(config).get()) {
+
+    // FT.Create a Hash index with Hash values and FT.Search those values
+    String prefix = "{hash}:";
+    String index = prefix + "index";
+    FieldInfo[] fields = new FieldInfo[] {
+        new FieldInfo("vec", "VEC", VectorFieldHnsw.builder(DistanceMetric.L2, 2).build())
+    };
+    FTCreateOptions.builder().dataType(DataType.HASH).prefixes(new String[] {prefix}).build();
+    FT.create(client, index, fields, FTCreateOptions).get(); // returns "OK"
+
+    Map hash0 = Map.of("vec", new byte[] {
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0
+    });
+    client.hset(prefix + "0", hash0).get();
+    
+    Map hash1 = Map.of("vec", new byte[] {
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+        (byte) 0, (byte) 0, (byte) 0x80, (byte) 0xBF
+    });
+    client.hset(prefix + "1", hash1).get();
+
+    Thread.sleep(1000); // let server digest the data and update index
+
+    FTSearchOptions searchOptions = FTSearchOptions.builder()
+        .params(Map.of("query_vec", (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0)))
+        .build();
+    String query = "*=>[KNN 2 @VEC $query_vec]";
+    Object[] ftsearchResponse = FT.search(client, index, query, searchOptions).get();
+    assert ftsearchResponse[0] == 2L;
+    // ftsearchResponse[1] contains a map with "{hash}:0" and "{hash}:1" vector search results
+}
+```
+</TabItem>
+
+<TabItem label="Node.js">
+```typescript
+import {
+    GlideJson,
+    FtSearchOptions,
+    FtSearchReturnType,
+    GlideClient,
+    GlideFt,
+    VectorField
+} from "@valkey/valkey-glide";
+
+const client = await GlideClient.createClient(config);
+const prefix = "{json}:";
+
+await GlideJson.set(client, `${prefix}1`, "$", '[{"arr": 42}, {"val": "hello"}, {"val": "world"}]');
+
+const vectorFields: VectorField[] = [
+    {
+        type: "NUMERIC",
+        name: "$..arr",
+        alias: "arr",
+    },
+    {
+        type: "TEXT",
+        name: "$..val",
+        alias: "val",
+    },
+];
+await GlideFt.create(client, `${prefix}index`, vectorFields
+    {
+        dataType: "JSON",
+        prefixes: [prefix],
+    },
+);
+
+const optionsWithLimit: FtSearchOptions = {
+    returnFields: [
+        { fieldIdentifier: "$..arr", alias: "myarr" },
+        { fieldIdentifier: "$..val", alias: "myval" },
+    ],
+    timeout: 10000,
+    limit: { offset: 0, count: 2 },
+};
+const searchResult: FtSearchReturnType = await GlideFt.search(client, `${prefix}index`, query, optionsWithLimit);
+console.log(searchResult[0]); // Output: 1
+console.log(searchResult[1]); // Output: An array with search result containing "{json}:1"
+```
+</TabItem>
+
+<TabItem label="Python">
+```python
+from glide import (glide_json, NumericField, ReturnField, FtCreateOptions, FtSearchOptions)
+import json
+
+client = await GlideClient.create(config)
+
+prefix = "{json}:"
+json_key1 = prefix + "1"
+json_key2 = prefix + "2"
+json_value1 = {"a": 11111, "b": 2, "c": 3}
+json_value2 = {"a": 22222, "b": 2, "c": 3}
+index = prefix + "index"
+
+await ft.create(client, index, 
+    schema=[
+        NumericField("$.a", "a"),
+        NumericField("$.b", "b"),
+    ],
+    options=FtCreateOptions(DataType.JSON),
+)
+
+await GlideJson.set(client, json_key1, "$", json.dumps(json_value1))
+await GlideJson.set(client, json_key2, "$", json.dumps(json_value2))
+
+time.sleep(1)
+
+ft_search_options = FtSearchOptions(
+    return_fields=[
+        ReturnField(field_identifier="a", alias="a_new"),
+        ReturnField(field_identifier="b", alias="b_new"),
+    ]
+)
+
+# Search the index for string inputs.
+search_result = await ft.search(client, index, "*", options=ft_search_options)
+
+print(search_result[0]) # prints "2"
+print(search_result[1]) # prints a search result with "{json}:1" and "{json}:2"
+```
+</TabItem>
+</Tabs>
+

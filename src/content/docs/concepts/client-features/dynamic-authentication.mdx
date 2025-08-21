@@ -3,5 +3,229 @@ title: Dynamic Authentication
 description: A reference page in my new Starlight docs site.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-This is a placeholder for `dynamic-authentication.md`.
+Valkey GLIDE introduces the ability to dynamically update the connection-configured password at runtime. \
+This enhancement facilitates seamless password rotations, ensuring uninterrupted access and improved security for your applications.
+
+### Authentication Context
+
+Valkey/Redis-OSS supports authentication mechanisms, enabling secure connections through passwords. Proper authentication is crucial for restricting access to authorized clients and safeguarding your data.
+
+- **Password Authentication**: Clients authenticate using a predefined password.
+- **Access Control Lists (ACLs)**: Offers granular user permissions with individual passwords. For more information, refer to the [Valkey ACL documentation](https://valkey.io/topics/acl/).
+
+### ACL Permissions Requirements
+Valkey GLIDE's [connection](https://github.com/valkey-io/valkey-glide/blob/d3c7513026d0abf05d5d1951b05dba8a550e9b85/glide-core/redis-rs/redis/src/aio/mod.rs#L143) setup process automatically executes several Valkey commands that require specific ACL permissions.
+#### Commands Executed During Connection Setup:
+- HELLO (RESP3 protocol negotiation) - Basic auth permissions
+- AUTH (if credentials provided) - Valid username/password
+- CLIENT SETINFO (library metadata) - `+client|setinfo`
+- CLIENT SETNAME (connection identification, if client name set) - `+client|setname`
+- INFO (availability zone discovery, if AZ-aware replicas enabled) - `+info`
+- SELECT (database selection, if db != 0) - `+select` or `+@keyspace`
+- PubSub Resubscription (RESP3 and existing subscriptions) - `+@pubsub`
+
+*Note: Missing any of the required permissions above (when the associated feature is used) will result in a connection error.
+
+ACLs provide extensive control over permissions. For detailed insights, please visit the [Valkey ACL documentation](https://valkey.io/topics/acl/).*
+
+### Integration with AWS and GCP Services
+
+GLIDE's dynamic password update feature supports integration with cloud services like Amazon ElastiCache, MemoryDB, and Google Cloud Memorystore.
+
+- **Amazon ElastiCache**: Supports password-based and IAM authentication. AWS recommends regular password rotations.
+  
+  > *"Regularly rotating passwords is a best practice to minimize security risks."* - [AWS ElastiCache Authentication](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html)
+
+- **Amazon MemoryDB**: Uses IAM authentication with short-lived tokens that need regular renewal.
+  
+  > *"IAM authentication tokens have a limited lifetime and must be refreshed regularly to maintain secure connections."* - [AWS MemoryDB Authentication](https://docs.aws.amazon.com/memorydb/latest/devguide/auth-iam.html)
+
+- **Google Cloud Memorystore**: Offers IAM authentication with ephemeral tokens requiring periodic renewal.
+  
+  > *"Google Cloud Memorystore's IAM authentication requires periodic renewal of tokens to maintain secure connections."* - [GCP Memorystore IAM Authentication](https://cloud.google.com/memorystore/docs/cluster/about-iam-auth?hl=en)
+
+
+In all these scenarios, frequently updating passwords or tokens is essential to maintain secure connections and handle failovers effectively. 
+
+### Dynamic Password Update Feature
+
+The dynamic password update functionality allows clients to update their connection passwords on-the-fly, ensuring continuous operation without the need for client restarts or reconnections. \
+This feature is particularly useful for scenarios where passwords need to be rotated regularly to maintain secure connections. **Updating the password immediately when server-side password changes is crucial to avoid disconnection and reconnection issues due to password mismatch**.
+
+For most scenarios, you can update the password without immediate re-authentication. However, for cases like IAM authentication where tokens need to be refreshed periodically (e.g., every 12 hours), you can utilize the `immediateAuth`/`immediate_auth` option to re-authenticate immediately.
+
+In case you want to remove the password from the connection configuration, you can pass `null`/`None` as the password.
+
+* *Note that the functionality does not rotate the password on the server-side. It only updates the client-side password to maintain secure connections.*
+
+**Benefits:**
+
+- **Seamless Password Update**: Update passwords without interrupting service.
+- **Enhanced Security**: Regularly update passwords to mitigate unauthorized access risks.
+- **Operational Efficiency**: Simplify password management and reduce maintenance overhead.
+
+### Usage Examples
+
+Below are examples demonstrating how to utilize the dynamic password update feature in different programming languages using GLIDE.
+
+<Tabs syncKey="overview">
+    <TabItem label="Java">
+    ```java
+    import com.valkey.glide.GlideClusterClient;
+    import com.valkey.glide.GlideClusterClientConfiguration;
+    import com.valkey.glide.ServerCredentials;
+    import com.valkey.glide.NodeAddress;
+
+    import java.util.Arrays;
+    import java.util.List;
+
+    public class Main {
+        public static void main(String[] args) throws Exception {
+            // Define the list of node addresses
+            List<NodeAddress> nodeList = Arrays.asList(
+                new NodeAddress("localhost", 6379),
+                new NodeAddress("localhost", 6380),
+                new NodeAddress("localhost", 6381)
+            );
+
+            // Define your server credentials
+            ServerCredentials credentials = ServerCredentials.builder()
+                .username("your-username")
+                .password("your-password-or-token")
+                .build();
+
+            // Create a configuration for the GlideClusterClient
+            GlideClusterClientConfiguration config = new GlideClusterClientConfiguration.Builder()
+                .addresses(nodeList)
+                .credentials(credentials)
+                .requestTimeout(5000)
+                .clientName("my-client")
+                .build();
+
+            // Create the GlideClusterClient instance
+            GlideClusterClient client = GlideClusterClient.createClient(config);
+
+            // Update password dynamically
+            client.updateConnectionPassword("your-new-password");
+            // To perform immediate re-authentication, set the second parameter to true
+            client.updateConnectionPassword("your-new-password", true);
+
+            // Resetting password by passing null
+            client.updateConnectionPassword(null); // Note: This will clear the password from the connection configuration.
+
+            System.out.println("GlideClusterClient created and password updated.");
+        }
+    }
+    ```
+    </TabItem>
+    <TabItem label="Node.js">
+    ```typescript
+    import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials } from '@valkey/valkey-glide';
+
+    async function main() {
+
+    // Define your server credentials
+    const credentials: ServerCredentials = {
+        username: 'your-username',
+        password: 'your-password-or-token'
+    };
+
+    // Create a configuration for the GlideClusterClient
+    const config: GlideClusterClientConfiguration = {
+        addresses: [
+            { host: 'sample-address-0001.use1.cache.amazonaws.com', port: 6379 }
+        ],
+        credentials: credentials,
+        requestTimeout: 5000,
+        clientName: 'my-client'
+    };
+
+    // Create the GlideClusterClient instance
+    const client = await GlideClusterClient.createClient(config);
+
+    // Update password dynamically
+    await client.updateConnectionPassword('your-new-password'); 
+    // To perform immediate re-authentication, set the second parameter to true
+    await client.updateConnectionPassword('your-new-password', true);
+
+    // Resetting password by passing null
+    client.updateConnectionPassword(null); // Note: This will clear the password from the connection configuration.
+    }
+    ```
+    </TabItem>
+    <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
+
+    async def main():
+        # Define your server credentials
+        credentials = ServerCredentials(
+            username='your-username',
+            password='your-password-or-token'
+        )
+        # Define the list of node addresses
+        addresses = [
+            NodeAddress("my-instance.valkey.us-central1.gcp.cloud", 6379),
+        ]
+        # Create a configuration for the GlideClusterClient
+        config = GlideClusterClientConfiguration(
+            addresses=addresses,
+            credentials=credentials,
+            request_timeout=250,
+            client_name='my-client'
+        )
+
+        # Create the GlideClusterClient instance
+        client = await GlideClusterClient.create_client(config)
+
+        # Update password dynamically
+        await client.update_connection_password('your-new-password')
+        # To perform immediate re-authentication, set the second parameter to true
+        await client.update_connection_password('your-new-password', True)
+        # Resetting password by passing None
+        await client.update_connection_password(None) # Note: This will clear the password from the connection configuration.
+
+
+    asyncio.run(main())
+    ```
+    </TabItem>
+</Tabs>
+
+#### Optional Username  
+In scenarios where a username is not required (e.g., IAM authentication), you can omit it or set it to `null`.  
+
+<Tabs syncKey="overview">
+    <TabItem label="Java">
+    ```java
+    ServerCredentials credentials = ServerCredentials.builder()
+        .password("your-password-or-token")
+        .build();
+    ```
+    </TabItem>
+    <TabItem label="Node.js">
+    ```typescript
+    const credentials: ServerCredentials = {
+        password: 'your-password-or-token'
+    };
+    ```
+    </TabItem>
+    <TabItem label="Python">
+    ```python
+    credentials = ServerCredentials(
+        password='your-password-or-token'
+    )
+    ```
+    </TabItem>
+</Tabs>
+#### Best Practices for Authentication
+
+- **Regular Credential Rotation**: Frequently update passwords and tokens using the dynamic password update feature to maintain secure connections.
+- **Automate Token Refreshing**: Implement automated mechanisms to refresh IAM tokens before they expire.
+- **Secure Credential Storage**: Store passwords and tokens securely using environment variables or secret management tools.
+- **Principle of Least Privilege**: Use ACLs to assign minimal necessary permissions to users.
+- **Monitor Authentication Events**: Track authentication attempts and token renewals to detect and respond to potential security threats promptly.
+
+By leveraging GLIDE's dynamic password update capability, you ensure that your applications maintain secure and uninterrupted connections to Valkey, adhering to both internal security policies and best practices recommended by cloud service providers like AWS and GCP.

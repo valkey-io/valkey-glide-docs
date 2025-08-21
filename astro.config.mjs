@@ -58,14 +58,7 @@ export default defineConfig({
 						},
 						{
 							label: 'Client Features',
-							items: [
-								{ label: 'Batching vs Pipelining', slug: 'concepts/client-features/batching-vs-pipelining' },
-								{ label: 'Dynamic Authentication', slug: 'concepts/client-features/dynamic-authentication' },
-								{ label: 'Observability Design', slug: 'concepts/client-features/observability-design' },
-								{ label: 'PubSub Model', slug: 'concepts/client-features/pubsub-model' },
-								{ label: 'Read Strategies Deep', slug: 'concepts/client-features/read-strategies-deep' },
-								{ label: 'Reliability', slug: 'concepts/client-features/reliability' },
-							],
+							autogenerate: { directory: 'concepts/client-features' },
 						},
 						{
 							label: 'Comparison',

@@ -1,0 +1,42 @@
+---
+title: Inflight Request Limit
+description: A reference page in my new Starlight docs site.
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+To ensure system stability and prevent out-of-memory (OOM) errors, Valkey GLIDE limits the maximum number of concurrent (inflight) requests sent through each connection of a GLIDE client.
+Excessive inflight requests can lead to queuing within the GLIDE infrastructure, increasing memory usage and potentially causing OOM issues.
+By capping inflight requests per connection, this feature reduces the risk of excessive queuing and helps maintain reliable system performance.
+The default inflight request limit is 1000 per connection, though this value can be configured in all GLIDE wrappers to suit application needs.
+
+The limit is designed based on Little’s Law, ensuring that the system can operate efficiently at peak throughput while allowing a buffer for bursts. 
+* Maximum request rate: 50,000 requests/second.
+* Average response time: 1 millisecond.
+Using Little’s Law:
+* Inflight requests = (Request rate) × (Response time)
+* Inflight requests = 50,000 requests/second × (1 ms/1000 ms) = 50 requests
+
+A default value of 1000 allows for sufficient headroom above this calculated baseline, ensuring performance during short bursts of activity.
+When the inflight request limit is exceeded, excess requests are immediately rejected, and errors are returned to the client.
+
+<Tabs syncKey="examples">
+    <TabItem label="Python">
+    ```python
+    cluster_config = GlideClusterClientConfiguration(
+        <some general config>,
+        inflight_requests_limit=<customer config>,
+    )
+    ```
+    </TabItem>
+    <TabItem label="Java">
+    ```java
+    GlideClientConfiguration glideClientConfiguration =
+        GlideClientConfiguration.builder()
+            .address(node1address)
+            .inflightRequestsLimit(<customer config>)
+            .build();
+    )
+    ```
+    </TabItem>
+</Tabs>
+

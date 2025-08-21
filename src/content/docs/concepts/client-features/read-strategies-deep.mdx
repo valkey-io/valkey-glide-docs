@@ -3,5 +3,21 @@ title: Read Strategies Deep
 description: A reference page in my new Starlight docs site.
 ---
 
+By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
 
-This is a placeholder for `read-strategies-deep.md`.
+Valkey GLIDE provides support for next read strategies, allowing you to choose the one that best fits your specific use case.
+
+|Strategy	|Description	|
+|---	|---	|
+|`PRIMARY`	|Always read from primary, in order to get the freshest data	|
+|`PREFER_REPLICA`	|Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary	|
+|`AZ_AFFINITY`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
+|`AZ_AFFINITY_REPLICAS_AND_PRIMARY`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
+
+## What's Next?
+For detailed documentation, see langge specific examples 
+TODO: fix links
+* [Python wrapper - Read Strategies]()
+* [NodeJS wrapper - Read Strategies]()
+* [Java wrapper - Read Strategies]()
+* [Golang wrapper - Read Strategies]()
