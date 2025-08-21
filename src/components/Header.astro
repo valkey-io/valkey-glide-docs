@@ -27,15 +27,17 @@ const shouldRenderSearch =
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
-    <TabSelect
-      label="Client Language"
-      value="go"
-      options={[
-        { label: "Python", value: "python", selected: true },
+    <div class="sl-hiddenprint:hidden">
+      <TabSelect
+        label="Client Language"
+        value="go"
+        options={[
+          { label: "Python", value: "python", selected: true },
         { label: "Java", value: "java", selected: false },
         { label: "Node.js", value: "nodejs" , selected: false},
         { label: "Go", value: "go" , selected: false},
       ]} />
+    </div>
     <ThemeSelect />
     <LanguageSelect />
   </div>
