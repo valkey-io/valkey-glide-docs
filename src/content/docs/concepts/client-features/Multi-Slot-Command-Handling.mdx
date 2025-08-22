@@ -1,6 +1,10 @@
 ---
 title: Multi-Slot Command Handling
 description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
 ---
 
 In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. When these commands receive keys that map to multiple slots, they are termed as **multi-slot commands**. GLIDE supports efficient handling of these commands, ensuring they execute correctly across the cluster.
