@@ -1,5 +1,5 @@
 ---
-title: Valkey commands
+title: Valkey Commands
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
@@ -10,14 +10,90 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+This documentation site under construction and is not yet complete!
 
 For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
 
-## Valkey commands
-For information on the supported commands and their corresponding parameters, we recommend referring to the documentation in the code. This documentation provides in-depth insights into the usage and options available for each command.
+## Valkey Commands
+
+For information on the supported commands and their corresponding parameters, we recommend referring to [the documentation in the code](https://github.com/valkey-io/valkey-glide/tree/main/java/client/src/main/java/glide/api/commands). This documentation provides in-depth insights into the usage and options available for each command.
+
+### Async Command API
+
+Valkey-Glide provides an async command API.  All single commands (including MULTI/EXEC, and EVAL) return a asynchronous promise to complete the command wrapped by a `CompletableFuture`.  The `CompletableFuture` object will return a result when the action is completed, or will throw an `Exception` if the action times out, is cancelled, or is interrupted.  If the command is otherwise unsuccessful, the result will contain an error result and message.  
+
+Asynchronous APIs lend themselves well to concurrent calls.  See the [BenchmarkingApp](https://github.com/valkey-io/valkey-glide/blob/main/java/benchmarks/src/main/java/glide/benchmarks/utils/Benchmarking.java#L116) for an example on how to execute and handle results using an `ExecutorService`.  
+
+```java
+ExecutorService executor =
+    new ThreadPoolExecutor(
+        0,
+        Integer.MAX_VALUE,
+        60L,
+        TimeUnit.SECONDS,
+        new SynchronousQueue<Runnable>(),
+        // include a RejectedExecutionHandler, as some threads may be interrupted
+        (r, poolExecutor) -> {
+            if (!poolExecutor.isShutdown()) {
+                try {
+                    poolExecutor.getQueue().put(r);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("interrupted");
+                }
+            }
+        });
+```
+
+The action can be executed in a separate thread by the `Executor`, for example:
+
+```java
+List<CompletableFuture<String>> getCommandTasks = new ArrayList<>();
+getCommandTasks.add(CompletableFuture.supplyAsync(
+    () -> {
+        try {
+            return client.get("myKey").get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    },
+    executor
+));
+
+CompletableFuture<String>[] completableAsyncTaskArray =
+    getCommandTasks.toArray(new CompletableFuture[getCommandTasks.size()]);
+
+try {
+    // wait for all futures to complete
+    CompletableFuture.allOf(completableAsyncTaskArray).get();
+} catch (InterruptedException | ExecutionException e) {
+    e.printStackTrace();
+    throw new RuntimeException(e);
+}
+```
+
+### Command String Arguments
+Valkey strings store sequences of bytes, that may include text, serialized objects, or binary arrays. As such, to pass Valkey strings as arguments to commands, or receive Valkey strings in responses, Glide offers two APIs:
+1. `String`:  for common case `UTF-8` converted strings keys and `String` objects can be passed and receives as a Java `String`.
+2. `GlideString`:  to pass `byte[]` data, a `GlideString` container object can be passed as an argument to a command or received as a response from a command.
+
+A rule about the API:
+* Command signatures either take and return `String`'s or `GlideString`'s, but not both.
+* `String`'s are returned if the commands are passed in `String`'s. e.g `CompletableFuture<String[]> mget(String[] keys)`
+* `GlideStrings`'s are returned if the commands are passed in `GlideStrings`'s. e.g `CompletableFuture<GlideString[]> mget(GlideString[] keys)`
+
+Arguments for commands that require a `String` can also be substituted with `GlideString` in order to pass in or return a binary value.
+* `gs()` is a static constructor that can be called with a `byte[]` or `String` argument to convert to `GlideString`. For example,
+```java
+byte[] byteKey = Base64.getDecoder().decode("byteKey");
+client.set(gs(byteKey), gs("GlideString value")).get();
+```
+* A `GlideString byte[]` object can be converted to `UTF-8 String` by calling `.getString()` on the `GlideString` object. For example,
+```java
+client.get(gs(byteKey)).get();              // "GlideString value" as a GlideString
+client.get(gs(byteKey)).get().getString();  // "GlideString value" as a String
+```
 
 ### Batch: Transaction and Pipelining (Glide 2.0)
 
@@ -55,49 +131,40 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 **`Batch`**
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
-```python
-from glide import Batch
+```java
+import glide.api.models.Batch;
 
-# Create an atomic batch (transaction)
-batch = Batch(True)
-# Create a non-atomic batch (pipeline)
-batch = Batch(False)
+// Create an atomic batch (transaction)
+Batch batch = new Batch(true);
+// Create a non-atomic batch (pipeline)
+Batch pipeline = new Batch(false);
 ```
 > Note: Standalone Batches are executed on primary node.
 
 **`ClusterBatch`**
 
-For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support)). 
-```python
-from glide import ClusterBatch
+For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support)). 
+```java
+import glide.api.models.ClusterBatch;
 
-# Create an atomic cluster batch (must use keys mapping to same slot)
-batch = ClusterBatch(True)
-# Create a non-atomic cluster batch (pipeline may span multiple slots)
-const batch = ClusterBatch(False)
+// Create an atomic cluster batch (must use keys mapping to same slot)
+ClusterBatch atomicCluster = new ClusterBatch(true);
+// Create a non-atomic cluster batch (pipeline may span multiple slots)
+ClusterBatch pipelineCluster = new ClusterBatch(false);
 ```
-> **Note:** When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support).
+> **Note:** When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support).
 > If the client is configured to read from replicas (ReplicaPrefered, AZ_AFFINITY,  AZ_AFFINITY_REPLICAS_AND_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 
 **Error handling - `Raise on Error`**
 
 Determines how errors are surfaced when calling `exec(...)`. It is passed directly:
-```python
-# Standalone Mode
-async def exec(
-    self,
-    batch: Batch,
-    raise_on_error: bool,
-    options: Optional[BatchOptions] = None,
-)
-
-# Cluster Mode
-async def exec(
-    self,
-    batch: ClusterBatch,
-    raise_on_error: bool,
-    options: Optional[ClusterBatchOptions] = None,
-)
+```java
+// Standalone Mode
+CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError);
+CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError, BatchOptions options);
+// Cluster Mode
+CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError);
+CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError, ClusterBatchOptions options);
 ```
 
 Behavior:
@@ -107,37 +174,33 @@ When set to `true`, the first encountered error within the batch (after all conf
 
 * `raiseOnError = false`:
     * When set to `false`, errors are returned as part of the response array rather than thrown.
-    * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned array.
+    * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned `Object[]`.
     * Allows processing of both successful and failed commands together.
 
 **Example:**
-```python
-# Cluster pipeline with raiseOnError = False
-batch = ClusterBatch(False)
-
-batch.set(key, "hello")
-batch.lpop(key)
-batch.delete([key])
-batch.rename(key, key2)
-
-result = await GlideClusterClient.exec(batch, raise_on_error=False)
-print("Result is:", result)
-# Output: Result is: ['OK', RequestError('WRONGTYPE: Operation against a key holding the wrong kind of value'), 1, RequestError('An error was signalled by the server: - ResponseError: no such key')]
+```java
+// Cluster pipeline with raiseOnError = false
+ClusterBatch batch = new ClusterBatch(false);
+batch.set("key", "value")          // OK
+      .lpop("key")                 // WRONGTYPE error (not a list)
+      .rename("non-existing-key", "{non-existing-key}:1"); // NO SUCH KEY error
+var res = glideClusterClient.exec(batch, false).get();
+System.out.println("Result is: " + Arrays.toString(res));
+// Output: Result is: [OK, glide.api.models.exceptions.RequestException: WRONGTYPE: Operation against a key holding the wrong kind of value, glide.api.models.exceptions.RequestException: An error was signalled by the server: - ResponseError: no such key]
 ```
-```python
-# Transaction with raiseOnError = true
-batch = ClusterBatch(True)
+```java
+// Transaction with raiseOnError = true
+Batch batch = new Batch(true)
+    .set("keyA", "valueA")        // OK
+    .lpop("keyA")                 // WRONGTYPE error (not a list)
+    .get("keyB");                 // Would be queued but not executed if error occurs first
 
-batch.set(key, "hello")
-batch.lpop(key)
-batch.delete([key])
-batch.rename(key, key2)
-
-try: 
-    await GlideClient.exec(batch, raise_on_error=False)
-except RequestsError as e: 
-    print("Batch execution aborted:", e)
-# Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+try {
+    Object[] results = glideClient.exec(batch, true).get();
+} catch (RequestException e) {
+    System.err.println("Batch execution aborted: " + e.getMessage());
+    // Example output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+}
 ```
 
 **`BatchOptions`**
@@ -148,10 +211,12 @@ Configuration for **standalone** batches.
 |-----------|-----------|-----------------------------------------------|---------------------------------------------------|
 | `timeout` | `Integer` | Client-level request  timeout (e.g., 5000 ms) | Maximum time in milliseconds to wait for the batch response. If exceeded, a timeout error is returned for the batch. |
 
-```python
-from glide import BatchOptions
+```java
+import glide.api.models.BatchOptions;
 
-batch_options = BatchOptions(timeout=2000) # 2 seconds
+BatchOptions options = BatchOptions.builder()
+    .timeout(2000)         // 2-second timeout
+    .build();
 ```
 
 **`ClusterBatchOptions`**
@@ -160,8 +225,8 @@ Configuration for cluster batches.
 
 |      Option     |             Type            |            Default            |                                                                            Description                                                                            |
 |:---------------:|:---------------------------:|:-----------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|    `timeout`    |          `Integer`          |    Client’s requestTimeout    |                                              Maximum time in milliseconds to wait for entire cluster batch response.                                              |
-| `retryStrategy` | `ClusterBatchRetryStrategy` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if<br>`isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
+|    `timeout`    |          `Integer`          |    Client's requestTimeout    |                                              Maximum time in milliseconds to wait for entire cluster batch response.                                              |
+| `retryStrategy` | `ClusterBatchRetryStrategy` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if `isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
 |     `route`     |      `SingleNodeRoute`      |              null             |                                                       Configures single-node routing for the batch request.                                                       |
 
 
@@ -173,20 +238,33 @@ Defines retry behavior (only for **non-atomic** cluster batches).
 |   `retryServerError`   | `boolean` | `false` |                 Retry commands that fail with retriable server errors (e.g.`TRYAGAIN`). May cause out-of-order results.                 |
 | `retryConnectionError` | `boolean` | `false` | Retry entire batch on connection failures. May cause duplicate executions since server might have processed the request before failure. |
 
-```python
-from glide import BatchRetryStrategy
+```java
+import glide.api.models.BatchRetryStrategy;
 
-retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error= False)
+ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
+    .retryServerError(true)
+    .retryConnectionError(true)
+    .build();
 ```
 > **Note:** The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
 
 **Full usage**
 
-```python
-from glide import ClusterBatchOptions, BatchRetryStrategy
+```java
+import glide.api.models.ClusterBatchOptions;
+import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
+import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleSingleNodeRoute.RANDOM;
 
-retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
-options = ClusterBatchOptions(retry_strategy=retry_strategy)
+ClusterBatchOptions options = ClusterBatchOptions.builder()
+    .timeout(1000)                    // 1-second timeout
+    .retryStrategy(
+        ClusterBatchRetryStrategy.builder()
+            .retryServerError(true)     // Retry on server errors
+            .retryConnectionError(false)// Do not retry on connection errors
+            .build()
+    )
+    .route(RANDOM) // Route the batch to a random node
+    .build();
 ```
 
 #### Configuration Details
@@ -204,7 +282,7 @@ options = ClusterBatchOptions(retry_strategy=retry_strategy)
     * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-    * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support))  is retried from the start.
+    * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support))  is retried from the start.
     * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
@@ -217,160 +295,162 @@ If a redirection error occurs:
 
 #### Usage Examples
 **Standalone (Atomic Batch)**
-```python
-from glide import (
- GlideClientConfiguration,
- NodeAddress,
- GlideClient,
- BatchOptions,
-)
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.Batch;
+import glide.api.models.BatchOptions;
+import glide.api.models.exceptions.RequestException;
 
- # Create client configuration
-addresses = [
-    NodeAddress("server_primary.example.com", 6379),
-    NodeAddress("server_replica.example.com", 6379)
-]
-config = GlideClientConfiguration(addresses)
+// Create client configuration
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder().host("localhost").port(6379).build())
+    .build();
 
- # Initialize client
-client = await GlideClient.create(config)
+// Initialize client
+GlideClient client = GlideClient.createClient(config).get();
 
- # Configure batch options
-options = BatchOptions(timeout=2000)
+// Configure batch options
+BatchOptions options = BatchOptions.builder()
+    .timeout(2000)   // 2-second timeout
+    .build();
 
-# Create atomic batch (true indicates atomic/transaction mode)
-atomic_batch = Batch(True)
-atomic_batch.set("account:source", "100")
-atomic_batch.set("account:dest", "0")
-atomic_batch.incrby("account:dest", 50)
-atomic_batch.decrby("account:source", 50)
-atomic_batch.get("account:source")
+// Create atomic batch
+Batch atomicBatch = new Batch(true)
+    .set("account:source", "100")
+    .set("account:dest", "0")
+    .incrBy("account:dest", 50)
+    .decrBy("account:source", 50)
+    .get("account:source");
 
-try: 
-    # Execute with raiseOnError = true
-    results = await client.exec(atomic_batch, raise_on_error=True, options=options)
-    print("Atomic Batch Results:", results)
-    # Expected output: Atomic Batch Results: ['OK', 'OK', 50, 50, '50']
- except RequestError as e:
-    print(f"Batch failed:", e)
+// Execute with raiseOnError = true
+try {
+    Object[] results = client.exec(atomicBatch, true, options).get();
+    System.out.println("Atomic Batch Results: " + Arrays.toString(results));
+    // Atomic Batch Results: ["OK", "OK", 50, 50, "50"]
+} catch (RequestException e) {
+    System.err.println("Batch failed: " + e.getMessage());
+}
 ```
 **Standalone (Non-Atomic Batch)**
-```python
-from glide import (
-    GlideClientConfiguration,
-    NodeAddress,
-    GlideClient,
-    Batch,
-    BatchOptions
-)
+```java
+import glide.api.GlideClient;
+import glide.api.models.Batch;
+import glide.api.models.BatchOptions;
 
-# Create client configuration
-addresses = [
-    NodeAddress("localhost", 6379)
-]
-config = GlideClientConfiguration(addresses)
+// Create client configuration
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder().host("localhost").port(6379).build())
+    .build();
 
-# Initialize client
-client = await GlideClient.create(config)
+// Initialize client
+GlideClient client = GlideClient.createClient(config).get();
 
-# Configure batch options
-options = BatchOptions(timeout=2000)  # 2-second timeout
+// Configure batch options
+BatchOptions options = BatchOptions.builder()
+    .timeout(2000)   // 2-second timeout
+    .build();
 
-# Create non-atomic batch (False indicates pipeline mode)
-pipeline = Batch(False)
-pipeline.set("temp:key1", "value1")
-pipeline.set("temp:key2", "value2")
-pipeline.get("temp:key1")
-pipeline.get("temp:key2")
+Batch pipeline = new Batch(false)
+    .set("temp:key1", "value1")
+    .set("temp:key2", "value2")
+    .get("temp:key1")
+    .get("temp:key2");
 
-# Execute with raise_on_error = False
-results = await client.exec(pipeline, raise_on_error=False, options=options)
-print("Pipeline Results:", results)
-# Expected output: Pipeline Results: ['OK', 'OK', 'value1', 'value2']
+Object[] results = client.exec(pipeline, false, options).get();
+System.out.println("Pipeline Results: " + Arrays.toString(results));
+// Pipeline Results: ["OK", "OK", "value1", "value2"]
 ```
 
 **Cluster (Atomic Batch)**
-```python
-from glide import (
-    GlideClusterClientConfiguration,
-    NodeAddress,
-    GlideClusterClient,
-    ClusterBatch,
-    ClusterBatchOptions
-)
+```java
+import glide.api.models.ClusterBatch;
+import glide.api.models.ClusterBatchOptions;
+import glide.api.models.exceptions.RequestException;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.NodeAddress;
+import glide.api.GlideClusterClient;
 
-# Initialize cluster client configuration
-addresses = [
-    NodeAddress("127.0.0.1", 6379)
-]
-config = GlideClusterClientConfiguration(addresses)
+// Initialize cluster client
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+    .address(
+        NodeAddress.builder()
+            .host("127.0.0.1")
+            .port(6379)
+            .build()
+    )
+    .build();
 
-# Initialize client
-glideClusterClient = await GlideClusterClient.create(config)
+// Initialize client
+GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
 
-# Configure atomic batch options
-options = ClusterBatchOptions(timeout=3000)  # 3-second timeout
+// Configure atomic batch options
+ClusterBatchOptions options = ClusterBatchOptions.builder()
+    .timeout(3000)   // 3-second timeout
+    .build();
 
-# Create atomic cluster batch (all keys map to same slot)
-atomicClusterBatch = ClusterBatch(True)
-atomicClusterBatch.set("user:100:visits", "1")
-atomicClusterBatch.incrby("user:100:visits", 5)
-atomicClusterBatch.get("user:100:visits")
+// Create atomic cluster batch (all keys map to same slot)
+ClusterBatch atomicClusterBatch = new ClusterBatch(true)
+    .set("user:100:visits", "1")    
+    .incrBy("user:100:visits", 5)    
+    .get("user:100:visits");        
 
-try:
-    # Execute with raise_on_error = True
-    clusterResults = await glideClusterClient.exec(atomicClusterBatch, raise_on_error=True, options=options)
-    print("Atomic Cluster Batch:", clusterResults)
-    # Expected output: Atomic Cluster Batch: ['OK', 6, '6']
-except RequestError as e:
-    print("Atomic cluster batch failed:", e)
+// Execute with raiseOnError = true
+try {
+    Object[] clusterResults = glideClusterClient.exec(atomicClusterBatch, true, options).get();
+    System.out.println("Atomic Cluster Batch: " + Arrays.toString(clusterResults));
+    // Expected- Atomic Cluster Batch: ["OK", 6, "6"]
+} catch (RequestException e) {
+    System.err.println("Atomic cluster batch failed: " + e.getMessage());
+}
 ```
 > **Important:** If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
 
 **Cluster (Non-Atomic Batch / Pipeline)**
-```python
-from glide import (
-    GlideClusterClientConfiguration,
-    NodeAddress,
-    GlideClusterClient,
-    ClusterBatch,
-    ClusterBatchOptions,
-    ClusterBatchRetryStrategy
-)
+```java
+import glide.api.models.ClusterBatch;
+import glide.api.models.ClusterBatchOptions;
+import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.NodeAddress;
+import glide.api.GlideClusterClient;
 
-# Initialize cluster client configuration
-addresses = [
-    NodeAddress("localhost", 6379)
-]
-config = GlideClusterClientConfiguration(addresses)
+// Initialize cluster client
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+    .address(
+        NodeAddress.builder()
+            .host("localhost")
+            .port(6379)
+            .build()
+    )
+    .build();
 
-# Initialize client
-glideClusterClient = await GlideClusterClient.create(config)
+GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
 
-# Configure retry strategy and pipeline options
-retry_strategy = ClusterBatchRetryStrategy(
-    retry_server_error=False,
-    retry_connection_error=True
-)
+// Configure retry strategy and pipeline options
+ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
+    .retryServerError(false)
+    .retryConnectionError(true)
+    .build();
 
-pipeline_options = ClusterBatchOptions(
-    timeout=5000,                # 5-second timeout
-    retry_strategy=retry_strategy
-)
+ClusterBatchOptions pipelineOptions = ClusterBatchOptions.builder()
+    .timeout(5000)                          // 5-second timeout
+    .retryStrategy(retryStrategy)
+    .build();
 
-# Create pipeline spanning multiple slots
-pipeline_cluster = ClusterBatch(False)  # False indicates non-atomic (pipeline)
-pipeline_cluster.set("page:home:views", "100")
-pipeline_cluster.incrby("page:home:views", 25)
-pipeline_cluster.get("page:home:views")
-pipeline_cluster.lpush("recent:logins", ["user1"])
-pipeline_cluster.lpush("recent:logins", ["user2"])
-pipeline_cluster.lrange("recent:logins", 0, 1)
+// Create pipeline spanning multiple slots
+ClusterBatch pipelineCluster = new ClusterBatch(false)
+    .set("page:home:views", "100")     
+    .incrBy("page:home:views", 25)       
+    .get("page:home:views")              
+    .lpush("recent:logins", "user1")   
+    .lpush("recent:logins", "user2")   
+    .lrange("recent:logins", 0, 1);      
 
-# Execute with raise_on_error = False
-pipeline_results = await glideClusterClient.exec(pipeline_cluster, raise_on_error=False, options=pipeline_options)
-print("Pipeline Cluster Results:", pipeline_results)
-# Expected output: Pipeline Cluster Results: ['OK', 125, '125', 1, 2, ['user2', 'user1']]
+// Execute with raiseOnError = false
+Object[] pipelineResults = glideClusterClient.exec(pipelineCluster, false, pipelineOptions).get();
+System.out.println("Pipeline Cluster Results: " + Arrays.toString(pipelineResults));
+// Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
 ```
 
 #### Multi-Node Support
@@ -386,17 +466,17 @@ When Glide processes a pipeline:
 
 **Retry Strategy in Pipelines**
 
-When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#classes-and-api) for how to handle these errors programmatically).
+When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#classes-and-api) for how to handle these errors programmatically).
 
 Glide distinguishes between different types of errors and handles them as follows:
 
 * **Redirection Errors (e.g., `MOVED` or `ASK`):**
     These are always handled automatically. Glide will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
 * **Retriable Server Errors (e.g., `TRYAGAIN`):**
-    If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors. <br>
+    If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors.
     ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
 * **Connection Errors:**
-    If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs. <br>
+    If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs.
     ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
 
 Retry strategies are currently supported only for **non-atomic (pipeline) cluster batches.** You can configure these using the `ClusterBatchRetryStrategy` options:
@@ -435,6 +515,7 @@ OK
     * Replace calls to `new Transaction()` with `new Batch(true)`.
     * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
     * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
+
 
 ### OpenTelemetry (GLIDE 2.0)
 
@@ -494,11 +575,11 @@ You can configure the OTel collector endpoint using one of the following protoco
 
 #### Optional Parameters
 
-When initializing OpenTelemetry, you can customize behavior using the `openTelemetryConfig` object.
-**Note**: Both `traces` and `metrics` are optional—but **at least one must be provided** in the `openTelemetryConfig`. If neither is set, OpenTelemetry will not emit any data.
+When initializing OpenTelemetry, you can customize behavior using the `OpenTelemetryConfig` object.
+**Note**: Both `traces` and `metrics` are optional—but **at least one must be provided** in the `OpenTelemetryConfig`. If neither is set, OpenTelemetry will not emit any data.
 
 #### Tracing
-```python
+```java
 openTelemetryConfig.traces
 ```
 
@@ -507,15 +588,15 @@ openTelemetryConfig.traces
   * For production, a low sampling rate (1–5%) is recommended to balance performance and insight.
 
 #### Metrics
-```python
+```java
 openTelemetryConfig.metrics
 ```
 
 * **endpoint** (required): The metrics collector endpoint.
 
 #### Flush Interval
-```python
-openTelemetryConfig.flush_interval_ms
+```java
+openTelemetryConfig.flushIntervalMs
 ```
 
 * (optional): Time in milliseconds between flushes to the collector. Default: `5000`.
@@ -532,27 +613,33 @@ If using `file://` as the endpoint:
 
 #### Validation Rules
 
-* `flush_interval_ms` must be a positive integer.
-* `sample_percentage` must be between 0 and 100.
+* `flushIntervalMs` must be a positive integer.
+* `samplePercentage` must be between 0 and 100.
 * File exporter paths must start with `file://` and have an existing parent directory.
 * Invalid configuration will throw an error synchronously when calling `OpenTelemetry.init()`.
 
 ⚠️ **Important**: `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
 
 
-#### Full Example (Python)
-```python
-   from glide import OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig
-
-        OpenTelemetry.init(OpenTelemetryConfig(
-            traces=OpenTelemetryTracesConfig(
-                endpoint="http://localhost:4318/v1/traces",
-                sample_percentage=10  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
-            ),
-            metrics=OpenTelemetryMetricsConfig(
-                endpoint="http://localhost:4318/v1/metrics"
-            ),
-            flush_interval_ms=1000  # Optional, defaults to 5000
-        ))
+#### Full Example (Java)
+```java
+import glide.api.OpenTelemetry;
+OpenTelemetry.init(
+     OpenTelemetry.OpenTelemetryConfig.builder()
+        .traces(
+            OpenTelemetry.TracesConfig.builder()
+                .endpoint("http://localhost:4318/v1/traces")
+                .samplePercentage(10) // Optional, defaults to 1. Can also be changed at runtime via setSamplePercentage().
+                .build()
+         )
+         .metrics(
+            OpenTelemetry.MetricsConfig.builder()
+                .endpoint("http://localhost:4318/v1/metrics")
+                .build()
+         )
+        .flushIntervalMs(1000L) // Optional, defaults to 5000
+        .build()
+);
 ```
+
 

@@ -1,0 +1,46 @@
+---
+title: Client Usage
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Command Concurrency
+
+All GLIDE commands make asynchronous calls using CompletableFuture responses.  
+
+### Tracking resources
+
+GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns a `HashMap` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+
+- `total_connections` contains the number of active connections across **all** clients
+- `total_clients` contains the number of active clients (regardless of its type)
+
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+GlideClusterClient config = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("address.example.com")
+        .port(6379).build())
+    .requestTimeout(500)
+    .build();
+
+GlideClusterClient client = GlideClusterClient.createClient(config).get();
+HashMap<String, String> stats = client.getStatistics();
+// do something with the `stats`
+```
+
