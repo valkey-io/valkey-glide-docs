@@ -1,7 +1,36 @@
 ---
-title: Batching Vs Pipelining
+title: Batching (Pipeline and Transaction)
 description: A reference page in my new Starlight docs site.
 ---
 
+In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. Glide 2.0 introduces a robust Batch API with two primary modes:
 
-This is a placeholder for `batching-vs-pipelining.md`.
+* **Atomic Batch:** Guarantees that all commands in a batch execute as a single, atomic unit. No other commands can interleave (similar to [MULTI](https://valkey.io/commands/multi/)/[EXEC](https://valkey.io/commands/exec/)).
+* **Non-Atomic Batch** (Pipeline): Sends multiple commands in one request without atomic guarantees. Commands can span multiple slots/nodes in a cluster and do not block other operations from being processed between them.
+
+Both modes leverage the same classes— `Batch` for standalone mode and `ClusterBatch` for cluster mode — distinguished by an `isAtomic` flag. Extra configuration is provided via `BatchOptions` or `ClusterBatchOptions`, allowing control over timeouts, routings, and retry strategies.
+
+## Concepts
+###  **Atomic Batch (Transaction)**
+
+* **Definition:** A set of commands executed together as a single, indivisible operation.
+* **Guarantees:** Sequential execution without interruption. Other clients cannot interleave commands between the batched operations.
+* **Slot Constraint** (Cluster Mode): When running against a cluster, all keys in an atomic batch must map to the same hash slot. Mixing keys from different slots will cause the transaction to fail.
+* **Underlying Valkey:** Equivalent to [`MULTI`](https://valkey.io/commands/multi/)/[`EXEC`](https://valkey.io/commands/exec/) Valkey commands.
+* **Use Case:** When you need consistency and isolation.
+* See: [Valkey Transactions](https://valkey.io/topics/transactions/).
+
+### **Non-Atomic Batch (Pipeline)**
+
+* **Definition:** A group of commands sent in a single request, but executed without atomicity or isolation.
+* **Behavior:** Commands may be processed on different slots/nodes (in cluster mode), and other operations from different clients may interleave during execution.
+* **Underlying Valkey:** Similar to pipelining, minimizing round-trip latencies by sending all commands at once.
+* **Use Case:** Bulk reads or writes where each command is independent.
+* **See:** [Valkey Pipelines](https://valkey.io/topics/pipelining/).
+
+## What's Next?
+For detailed documentation, see - 
+* [Python wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper#batch-transaction-and-pipelining-glide-20)
+* [NodeJS wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-wrapper#batch-transaction-and-pipelining-glide-20)
+* [Java wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/Java-wrapper#batch-transaction-and-pipelining-glide-20)
+* [Golang wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/Golang-wrapper#batch-transaction-and-pipelining-glide-20)

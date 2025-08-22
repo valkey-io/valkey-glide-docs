@@ -1,0 +1,62 @@
+---
+title: Multi-Slot Command Handling
+description: A reference page in my new Starlight docs site.
+---
+
+In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. When these commands receive keys that map to multiple slots, they are termed as **multi-slot commands**. GLIDE supports efficient handling of these commands, ensuring they execute correctly across the cluster.
+
+### What are Multi-Slot Commands?
+Multi-slot commands are those which allow multiple keys as inputs, with each key potentially belonging to a different hash slot. In cluster mode, if keys within a command map to different hash slots, the command must be split according to each slot and executed separately. Examples of such commands include `MSET`, `MGET`, and `DEL`, which can target multiple keys that are not necessarily in the same slot.
+
+For example, the command:
+```
+DEL {foo} {foo}1 bar
+```
+should be split into:
+```
+DEL {foo} {foo}1
+DEL bar
+```
+Even if all slots are managed by the same shard, the command must be split by slot. However, certain commands, such as `SUNIONSTORE`, are **not** considered multi-slot because they require all keys to be in the same slot.
+
+### Multi-Slot Command Execution in GLIDE
+
+When handling multi-slot commands, GLIDE automatically splits the command based on the slots of the input key arguments. Each sub-command is then sent to the appropriate shard for execution. The multi-slot handling process in GLIDE is as follows:
+
+1. **Command Splitting**:
+   GLIDE determines if a command should be split based on the hash slot of each key. The command is divided into sub-commands that each target a single slot, ensuring accurate routing across the cluster.
+
+2. **Atomicity at Slot Level**:
+   Since each sub-command operates independently, multi-slot commands are atomic only at the slot level. If a command fails on one slot while succeeding on others, the entire command call will return the first encountered error. Some parts of the request may succeed, while others fail, depending on the execution per slot.
+
+3. **Error Handling**:
+   If one or more slot-specific requests fail, GLIDE will return the first encountered error. This behavior ensures consistency in reporting errors but may impact atomicity across the entire command if sub-requests are involved. If this behavior impacts your application logic, consider splitting the request into sub-requests per slot to ensure atomicity.
+
+### Supported Multi-Slot Commands in GLIDE
+
+The following commands are supported as multi-slot commands in GLIDE, meaning they can operate on keys distributed across multiple hash slots:
+
+- `MSET`
+- `MGET`
+- `DEL`
+- `UNLINK`
+- `EXISTS`
+- `TOUCH`
+- `WATCH`
+- `JSON.MGET`
+
+### Example Use Case
+
+Consider the command:
+```
+MSET foo1 bar1 foo2 bar2 {foo3} bar3
+```
+In this example, keys `foo1` and `foo2` hash to different slots from `{foo3}` due to their hash slots. GLIDE will split the `MSET` command into separate commands based on slot grouping to ensure each key is routed to the correct shard, and execute them asynchronously.
+
+```
+MSET foo1 bar1 foo2 bar2
+MSET {foo3} bar3
+```
+
+This setup allows GLIDE to handle multi-slot commands efficiently across distributed nodes.
+

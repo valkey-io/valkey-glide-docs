@@ -1,7 +1,51 @@
 ---
-title: Observability Design
+title: Observability (OpenTelemetry)
 description: A reference page in my new Starlight docs site.
 ---
 
+GLIDE 2.0 introduces native support for OpenTelemetry (OTel), providing powerful observability capabilities directly from the client layer.
 
-This is a placeholder for `observability-design.md`.
+With simple configuration, GLIDE can automatically emit both **distributed traces** and **metrics**, giving full visibility into client-side behavior, retries, failures, and latency. This enables teams to diagnose performance issues, monitor system health, and analyze trends without requiring additional instrumentation.
+
+OpenTelemetry support is available across all GLIDE 2.0 language clients and can be enabled via the `OpenTelemetryConfig` object.
+
+## Key Features
+### **Traces**
+For every Valkey command, GLIDE creates a trace span capturing the full client-side execution time. Each span includes:
+
+   * A **child span** measuring network latency — the time spent sending the command to the server and waiting for a response.
+
+   * A **status field** that reflects whether the command completed successfully (`OK`) or encountered an error (`Error`), making it easy to track failure rates and troubleshoot problematic commands.
+
+   * In future versions, additional child spans will further decompose the command lifecycle into more granular phases, providing even deeper insight into where time is spent during request processing.
+
+### **Metrics**
+GLIDE currently collects initial metrics covering key client behaviors:
+
+   * **Timeouts**: Number of requests that exceeded their configured timeout.
+
+   * **Retries**: Count of operations that were retried due to transient issues.
+
+   * **MOVED Errors**: Frequency of cluster slot reallocation responses from the server.
+
+   Additional metrics will be added in future releases to expand observability coverage.
+
+### **Configurable Sampling (Tracing only)**
+Sampling controls how many requests are instrumented with traces. This allows balancing observability depth with system overhead. Higher sampling rates offer richer data but may impact client performance. In production environments, low sampling rates (1-5%) are typically recommended for efficient statistical insight.
+
+### **Vendor-neutral Integration**
+Fully compatible with any OpenTelemetry-compliant backend (e.g., Prometheus, Jaeger, AWS CloudWatch, etc.), giving users flexibility in how telemetry data is processed, stored, and visualized.
+
+## What's Next?
+
+For full details and usage examples, see:
+
+* [NodeJS wrapper - OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-wrapper#opentelemetry-glide-20)
+
+* [Python wrapper - OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper#opentelemetry-glide-20)
+
+* [Java wrapper - OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#opentelemetry-glide-20)
+
+* [Go wrapper - OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/Golang-wrapper#opentelemetry-glide-20)
+
+

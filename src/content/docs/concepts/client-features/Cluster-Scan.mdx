@@ -1,0 +1,152 @@
+---
+title: Cluster Scan
+description: A reference page in my new Starlight docs site.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Cluster Scan feature enhances the `SCAN` command for optimal use in a Cluster environment. While it mirrors the functionality of the `SCAN` command, it incorporates additional logic to seamlessly scan the entire cluster, providing the same experience as a standalone scan. This removes the need for users to implement their own logic to handle the complexities of a cluster setup, such as slot migration, failovers, and cluster rebalancing. The `SCAN` command guarantees that a full iteration retrieves all elements present in the collection from start to finish.
+
+Cluster Scan achieves this through a `ScanState` object that tracks scanned slots and iterates over each cluster node. It validates the node's scan and marks the slots owned by the node as scanned. This ensures that even if a slot moves between nodes, it will be scanned.
+
+The `ScanState` is not held as a static or global object. Instead, a `ClusterScanCursor` object, which wraps a reference counter (RC) to the `ScanState`, is returned to the user. This approach avoids extra memory copying between layers, and the `ScanState` is immediately dropped when the user drops the `ClusterScanCursor`.
+
+### Creating a ClusterScanCursor
+
+To start iterating, create a `ClusterScanCursor`:
+
+<Tabs syncKey="examples">
+    <TabItem label="Python">
+    ```py
+    cursor = ClusterScanCursor()
+    ```
+    </TabItem>
+
+    <TabItem label="Java">
+    ```java
+    ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+    ```
+    </TabItem>
+</Tabs>
+
+Each cursor returned by an iteration is an RC to a new state object. Using the same cursor object will handle the same scan iteration again. A new cursor object should be used for each iteration to continue the scan.
+
+### Optional Parameters
+The `SCAN` command accepts three optional parameters:
+* `MATCH`: Iterates over keys that match the provided pattern.
+* `COUNT`: Specifies the number of keys to return in a single iteration. The actual number may vary, serving as a hint to the server on the number of steps to perform in each iteration. The default value is 10.
+* `TYPE`: Filters the keys by a specific type.
+### General Usage Example
+#### Python examples:
+<TabItem label="Python">
+```py
+cursor = ClusterScanCursor()
+all_keys = []
+while not cursor.is_finished():
+    cursor, keys = await client.scan(cursor)
+    all_keys.extend(keys)
+```
+</TabItem>
+
+<TabItem label="Python">
+```py
+await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
+cursor = ClusterScanCursor()
+await client.scan(cursor, match=b"*key*")
+# Returns matching keys such as [b'my_key1', b'my_key2', b'not_my_key']
+```
+</TabItem>
+
+<TabItem label="Python">
+```py
+await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
+cursor = ClusterScanCursor()
+await client.scan(cursor, count=1)
+# Returns around `count` amount of keys: [b'my_key1']
+```
+</TabItem>
+
+<TabItem label="Python">
+```py
+await client.mset({b'key1': b'value1', b'key2': b'value2', b'key3': b'value3'})
+await client.sadd(b"this_is_a_set", [b"value4"])
+cursor = ClusterScanCursor()
+all_keys = []
+while not cursor.is_finished():
+    cursor, keys = await client.scan(cursor, type=ObjectType.STRING)
+    all_keys.extend(keys)
+print(all_keys)  # Output: [b'key1', b'key2', b'key3']
+```
+</TabItem>
+#### Java examples: 
+<TabItem label="Java">
+```java
+String key = "key:test_cluster_scan_simple" + UUID.randomUUID();
+Map<String, String> expectedData = new LinkedHashMap<>();
+for (int i = 0; i < 100; i++) {
+    expectedData.put(key + ":" + i, "value " + i);
+}
+
+Set<String> result = new LinkedHashSet<>();
+ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+while (!cursor.isFinished()) {
+     final Object[] response = clusterClient.scan(cursor).get();
+     cursor.releaseCursorHandle();
+
+     cursor = (ClusterScanCursor) response[0];
+     final Object[] data = (Object[]) response[1];
+     for (Object datum : data) {
+         result.add(datum.toString());
+      }
+}
+cursor.releaseCursorHandle();
+```
+</TabItem>
+
+<TabItem label="Java">
+```java
+Set<String> result = new LinkedHashSet<>();
+ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+while (!cursor.isFinished()) {
+    final Object[] response =
+                    clusterClient
+                            .scan(
+                                    cursor,
+                                    ScanOptions.builder()
+                                            .matchPattern("key:*")
+                                            .type(ScanOptions.ObjectType.STRING)
+                                            .build())
+                            .get();
+    cursor.releaseCursorHandle();
+
+     cursor = (ClusterScanCursor) response[0];
+     final Object[] data = (Object[]) response[1];
+     for (Object datum : data) {
+           result.add(datum.toString());
+      }
+}
+cursor.releaseCursorHandle();
+```
+</TabItem>
+
+<TabItem label="Java">
+```java
+Set<String> result = new LinkedHashSet<>();
+ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+while (!cursor.isFinished()) {
+    final Object[] response = clusterClient.scan(cursor, ScanOptions.builder().count(100L).build()).get();
+    cursor.releaseCursorHandle();
+
+     cursor = (ClusterScanCursor) response[0];
+     final Object[] data = (Object[]) response[1];
+      for (Object datum : data) {
+           result.add(datum.toString());
+      }
+}
+cursor.releaseCursorHandle();
+```
+</TabItem>
+
+
+
+
