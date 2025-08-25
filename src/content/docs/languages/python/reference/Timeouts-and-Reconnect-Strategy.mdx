@@ -1,0 +1,40 @@
+---
+title: Timeouts and Reconnect Strategy
+description: A reference page in my new Starlight docs site.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Timeouts and Reconnect Strategy
+
+Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the `GlideClusterClientConfiguration` and `GlideClientConfiguration` parameters.
+
+
+|Configuration setting	|Description	|**Default value**	|
+|---	|---	|---	|
+|request_timeout	|This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
+|reconnect_strategy	|The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures	|Exponential backoff	|
+
+
+#### Example - Setting Increased Request Timeout for Long-Running Commands
+
+```python
+from glide import (
+    GlideClient,
+    GlideClusterClientConfiguration,
+    GlideClusterClient
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+client_config = GlideClusterClientConfiguration(addresses, request_timeout=500)
+
+client = await GlideClusterClient.create(client_config)
+```
+

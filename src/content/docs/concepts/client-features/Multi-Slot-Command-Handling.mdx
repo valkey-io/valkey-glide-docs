@@ -7,6 +7,15 @@ sidebar:
     variant: caution
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
 In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. When these commands receive keys that map to multiple slots, they are termed as **multi-slot commands**. GLIDE supports efficient handling of these commands, ensuring they execute correctly across the cluster.
 
 ### What are Multi-Slot Commands?

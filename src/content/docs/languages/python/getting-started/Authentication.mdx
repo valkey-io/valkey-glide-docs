@@ -1,0 +1,160 @@
+---
+title: Authentication
+description: A reference page in my new Starlight docs site.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Authentication
+
+By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
+
+Valkey GLIDE also offers support for an authenticated connection mode. 
+
+In authenticated mode, you have the following options:
+
+* Use both a username and password, which is recommended and configured through [ACLs](https://valkey.io/topics/acl/) on the server.
+* Use a password only, which is applicable if the server is configured with the [requirepass](https://valkey.io/topics/security/#authentication) setting.
+
+To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` class.
+
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
+
+#### Example - Connecting with Username and Password to a Cluster
+
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    ServerCredentials,
+    NodeAddress
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+credentials = ServerCredentials("passwordA", "user1")
+client_config = GlideClusterClientConfiguration(addresses, credentials=credentials)
+
+client = await GlideClusterClient.create(client_config)
+```
+
+
+#### Example - Connecting with Username and Password to a Standalone server
+
+```python
+from glide import (
+    GlideClient,
+    GlideClientConfiguration,
+    ServerCredentials,
+    NodeAddress
+)
+
+addresses = [
+    NodeAddress(host="primary.example.com", port=6379),
+    NodeAddress(host="replica1.example.com", port=6379),
+    NodeAddress(host="replica2.example.com", port=6379)
+  ]
+credentials = ServerCredentials("passwordA", "user1")
+client_config = GlideClientConfiguration(addresses, credentials=credentials)
+
+client = await GlideClient.create(client_config)
+```
+#### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
+
+The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+
+**Token generation -**
+
+```python
+from typing import Tuple, Union
+from urllib.parse import ParseResult, urlencode, urlunparse
+import botocore.session
+from botocore.model import ServiceId
+from botocore.signers import RequestSigner
+from cachetools import TTLCache, cached
+import valkey
+
+
+class ElastiCacheIAMProvider(valkey.CredentialProvider):
+    def __init__(self, user, cluster_name, region="us-east-1"):
+        self.user = user
+        self.cluster_name = cluster_name
+        self.region = region
+
+        session = botocore.session.get_session()
+        self.request_signer = RequestSigner(
+            ServiceId("elasticache"),
+            self.region,
+            "elasticache",
+            "v4",
+            session.get_credentials(),
+            session.get_component("event_emitter"),
+        )
+
+    # Generated IAM tokens are valid for 15 minutes
+    @cached(cache=TTLCache(maxsize=128, ttl=900))
+    def get_credentials(self) -> Tuple[str, str]:
+        query_params = {"Action": "connect", "User": self.user}
+        url = urlunparse(
+            ParseResult(
+                scheme="https",
+                netloc=self.cluster_name,
+                path="/",
+                query=urlencode(query_params),
+                params="",
+                fragment="",
+            )
+        )
+        signed_url = self.request_signer.generate_presigned_url(
+            {"method": "GET", "url": url, "body": {}, "headers": {}, "context": {}},
+            operation_name="connect",
+            expires_in=900,
+            region_name=self.region,
+        )
+        # Elasticache expects to receive the URL without the protocol prefix
+        return (self.user, signed_url.removeprefix("https://"))
+```
+
+**Usage example -**
+```python
+from typing import Tuple, Union
+import asyncio
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    ServerCredentials,
+    NodeAddress,
+)
+
+async def main():
+    username = "your-username"
+    cluster_name = "your-cluster-name"
+    
+    auth = ElastiCacheIAMProvider(user=username,cluster_name=cluster_name, region='us-east-1')
+    _, iam_token = auth.get_credentials()
+    valkey_credentials = ServerCredentials(
+        username=username,
+        password=iam_token,
+    )
+    
+    addresses = [NodeAddress("example-cluster-endpoint.use1.cache.amazonaws.com", 6379)]
+    config = GlideClusterClientConfiguration(addresses=addresses, use_tls=True, credentials=valkey_credentials)
+    client = await GlideClusterClient.create(config)
+    
+    # Update password dynamically
+    _, new_iam_token = auth.get_credentials()
+        await client.update_connection_password(new_iam_token)
+        
+    # To perform immediate re-authentication, set the second parameter to true
+    await client.update_connection_password(new_iam_token, True)
+```
+
+
+

@@ -1,0 +1,83 @@
+---
+title: Client Initialization
+description: A reference page in my new Starlight docs site.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Client Initialization
+
+Valkey GLIDE provides support for both [Cluster](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper#cluster) and [Standalone](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper#standalone) configurations. Please refer to the relevant section based on your specific setup.
+
+### Cluster
+
+Valkey GLIDE supports [Cluster](https://valkey.io/topics/cluster-spec) deployments, where the database is partitioned across multiple primary shards, with each shard being represented by a primary node and zero or more replica nodes.
+
+
+To initialize a `GlideClusterClient`, you need to provide a `GlideClusterClientConfiguration` that includes the addresses of initial seed nodes. Valkey GLIDE automatically discovers the entire cluster topology, eliminating the necessity of explicitly listing all cluster nodes.
+
+#### **Connecting to a Cluster**
+
+The `NodeAddress` class represents the host and port of a cluster node. The host can be either an IP address, a hostname, or a fully qualified domain name (FQDN).
+
+#### Example - Connecting to a cluster
+
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    NodeAddress
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+client_config = GlideClusterClientConfiguration(addresses)
+
+client = await GlideClusterClient.create(client_config)
+```
+
+#### Request Routing
+
+In the cluster, data is divided into slots, and each primary node within the cluster is responsible for specific slots. Valkey GLIDE adheres to [Valkey OSS guidelines](https://valkey.io/topics/command-tips/#request-policy) when determining the node(s) to which a command should be sent in clustering mode. 
+
+For more details on the routing of specific commands, please refer to the documentation within the code.
+
+#### Response Aggregation
+
+When requests are dispatched to multiple shards in a cluster (as discussed in the Request routing section), the client needs to aggregate the responses for a given command. Valkey GLIDE follows [Valkey OSS guidelines](https://valkey.io/topics/command-tips/#response-policy) for determining how to aggregate the responses from multiple shards within a cluster. 
+
+To learn more about response aggregation for specific commands, please refer to the documentation within the code.
+
+#### Topology Updates
+
+The cluster's topology can change over time. New nodes can be added or removed, and the primary node owning a specific slot may change. Valkey GLIDE is designed to automatically rediscover the topology whenever the server indicates a change in slot ownership. This ensures that the Valkey GLIDE client stays in sync with the cluster's topology.
+
+### Standalone 
+
+Valkey GLIDE also supports Standalone deployments, where the database is hosted on a single primary node, optionally with replica nodes. To initialize a `GlideClient` for a standalone setup, you should create a `GlideClientConfiguration` that includes the addresses of primary and all replica nodes.
+
+#### **Example - Connecting to a standalone** 
+
+```python
+from glide import (
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress
+)
+
+addresses = [
+    NodeAddress(host="primary.example.com", port=6379),
+    NodeAddress(host="replica1.example.com", port=6379),
+    NodeAddress(host="replica2.example.com", port=6379)
+  ]
+client_config = GlideClientConfiguration(addresses)
+
+client = await GlideClient.create(client_config)
+```
+
