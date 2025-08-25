@@ -161,7 +161,7 @@ Configuration for cluster batches.
 |      Option     |             Type            |            Default            |                                                                            Description                                                                            |
 |:---------------:|:---------------------------:|:-----------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |    `timeout`    |          `Integer`          |    Client’s requestTimeout    |                                              Maximum time in milliseconds to wait for entire cluster batch response.                                              |
-| `retryStrategy` | `ClusterBatchRetryStrategy` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if<br>`isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
+| `retryStrategy` | `ClusterBatchRetryStrategy` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if `isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
 |     `route`     |      `SingleNodeRoute`      |              null             |                                                       Configures single-node routing for the batch request.                                                       |
 
 
@@ -393,10 +393,10 @@ Glide distinguishes between different types of errors and handles them as follow
 * **Redirection Errors (e.g., `MOVED` or `ASK`):**
     These are always handled automatically. Glide will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
 * **Retriable Server Errors (e.g., `TRYAGAIN`):**
-    If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors. <br>
+    If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors.  
     ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
 * **Connection Errors:**
-    If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs. <br>
+    If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs.  
     ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
 
 Retry strategies are currently supported only for **non-atomic (pipeline) cluster batches.** You can configure these using the `ClusterBatchRetryStrategy` options:
