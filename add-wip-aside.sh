@@ -55,7 +55,7 @@ find src/content/docs -name "*.mdx" -type f | while read -r file; do
         print "import { Aside } from '\''@astrojs/starlight/components'\'';"
         print ""
         print "<Aside type=\"caution\" title=\"Work In Progress!\">"
-        print "This documentation site under construction and is not yet complete!"
+        print "This documentation site is under construction and is not yet complete!"
         print ""
         print "For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github."
         print "</Aside>"
