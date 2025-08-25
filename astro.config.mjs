@@ -12,6 +12,14 @@ export default defineConfig({
 				Header: './src/components/Header.astro',
 			},
 			title: 'Valkey Glide',
+			logo: {
+				src: './src/assets/valkey-logo.svg',
+			},
+			customCss: [
+				// Relative path to your custom CSS file
+				'./src/styles/custom.css',
+			],
+			favicon: '/valkey-favicon.svg',
 			editLink: {
 				baseUrl: 'https://github.com/valkey-io/valkey-glide-docs/edit/main/',
 			},
