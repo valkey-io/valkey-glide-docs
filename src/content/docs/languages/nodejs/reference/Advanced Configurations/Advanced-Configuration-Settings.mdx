@@ -1,0 +1,449 @@
+---
+title: Advanced Configuration Settings
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Advanced Configuration Settings
+
+### Authentication
+
+By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
+
+Valkey GLIDE also offers support for an authenticated connection mode. 
+
+In authenticated mode, you have the following options:
+
+* Use both a username and password, which is recommended and configured through [ACLs](https://valkey.io/topics/acl/) on the server.
+* Use a password only, which is applicable if the server is configured with the [requirepass](https://valkey.io/topics/security/#authentication) setting.
+
+To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` class.
+
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
+
+#### Example - Connecting with Username and Password to a Cluster
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const credentials = {
+    username: "user1",
+    password: "passwordA"
+};
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    credentials: credentials
+});
+```
+
+
+#### Example - Connecting with Username and Password to a Standalone server
+
+```typescript
+import {GlideClient} from "@valkey/valkey-glide";
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const credentials = {
+    username: "user1",
+    password: "passwordA"
+};
+
+const client = await GlideClient.createClient({
+    addresses: addresses,
+    credentials: credentials
+});
+```
+
+#### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
+
+The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+
+**Token generation-**
+```typescript
+import { SignatureV4 } from "@smithy/signature-v4";
+import { HttpRequest } from "@smithy/protocol-http";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { formatUrl } from "@aws-sdk/util-format-url";
+import { Sha256 } from "@aws-crypto/sha256-js";
+
+
+class ElastiCacheIAMProvider {
+    private user: string;
+    private clusterName: string;
+    private region: string;
+
+    constructor(user: string, clusterName: string, region: string = "us-east-1") {
+        this.user = user;
+        this.clusterName = clusterName;
+        this.region = region;
+    }
+
+    async  getCredentials() {
+        const credentials = await defaultProvider()();
+    
+        const signer = new SignatureV4({
+            service: "elasticache",
+            credentials,
+            region: this.region,
+            sha256: Sha256,
+        });
+    
+        const url = new URL(`https://${this.clusterName}/`);
+        url.searchParams.append("Action", "connect");
+        url.searchParams.append("User", this.user);
+    
+        const request = new HttpRequest({
+            protocol: url.protocol,
+            hostname: url.hostname,
+            method: "GET",
+            path: url.pathname,
+            query: Object.fromEntries(url.searchParams),
+            headers: {
+                host: url.hostname,
+            },
+        });
+    
+        const signedRequest = await signer.presign(request, { expiresIn: 900 });
+        return formatUrl(signedRequest).replace(/^https?:\/\//, "");
+    }
+}
+```
+
+**Usage example -**
+```typescript
+import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials, AdvancedGlideClusterClientConfiguration } from "@valkey/valkey-glide";
+
+async function main() {
+    const username = "your-username";
+    const cluster_name = "your-cluster-name";
+    const endpoint = "example-cluster-endpoint.use1.cache.amazonaws.com";
+
+    const addresses = [
+        {
+            host: endpoint,
+            port: 6379,
+        },
+    ];
+
+    const provider = new ElastiCacheIAMProvider(
+        username,
+        cluster_name,
+        "us-east-1"
+    );
+
+    const iamAuthToken = await provider.getCredentials();
+
+    const credentials: ServerCredentials = {
+        username: username,
+        password: iamAuthToken
+    };
+
+    const config: GlideClusterClientConfiguration = {
+        addresses: addresses,
+        credentials: credentials,
+        useTLS: true,
+        clientName: 'my-client',
+    };
+    
+    const client = await GlideClusterClient.createClient(config);
+    
+    // Update password dynamically
+    const newIAMAuthToken = await provider.getCredentials();
+    await client.updateConnectionPassword(newIAMAuthToken);
+    
+    // To perform immediate re-authentication, set the second parameter to true
+    await client.updateConnectionPassword(newIAMAuthToken, true);
+}
+```
+
+### TLS
+
+Valkey GLIDE supports secure TLS connections to a data store.
+
+It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
+
+#### Example - Connecting with TLS Mode Enabled to a Cluster
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    useTLS: true
+});
+```
+#### Example - Connecting with TLS Mode Enabled to a Standalone
+
+```typescript
+import {GlideClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClient.createClient({
+    addresses: addresses,
+    useTLS: true
+});
+```
+
+### Read Strategy
+
+By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
+
+Valkey GLIDE provides support for next read strategies, allowing you to choose the one that best fits your specific use case.
+
+|Strategy	|Description	|
+|---	|---	|
+|`primary`	|Always read from primary, in order to get the freshest data	|
+|`preferReplica`	|Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary	|
+|`AZAffinity`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
+|`AZAffinityReplicasAndPrimary`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
+
+#### Example - Use preferReplica Read Strategy
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    readFrom: "preferReplica"
+});
+await client.set("key1", "val1");
+/// get will read from one of the replicas
+await client.get("key1");
+```
+
+#### Example - Use AZAffinity Read Strategy
+If ReadFrom strategy is AZAffinity, 'clientAz' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    readFrom: "AZAffinity" as ReadFrom,
+    clientAz: "us-east-1a",
+});
+await client.set("key1", "val1");
+/// get will read from one of the replicas in the same client's availability zone if exits.
+await client.get("key1");
+```
+
+#### Example - Use AZAffinityReplicasAndPrimary Read Strategy
+If ReadFrom strategy is AZAffinityReplicasAndPrimary, 'clientAz' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    readFrom: "AZAffinityReplicasAndPrimary" as ReadFrom,
+    clientAz: "us-east-1a",
+});
+await client.set("key1", "val1");
+/// get will read from one of the replicas or the primary in the same client's availability zone if exits.
+await client.get("key1");
+```
+
+### Timeouts and Reconnect Strategy
+
+Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the `GlideClusterClientConfiguration` and `GlideClientConfiguration` parameters.
+
+
+|Configuration setting	|Description	|**Default value**	|
+|---	|---	|---	|
+|requestTimeout	|This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
+|connectionBackoff	|The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures	|Exponential backoff	|
+
+
+#### Example - Setting Increased Request Timeout for Long-Running Commands
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    requestTimeout: 500
+});
+```
+
+### Transaction
+
+A transaction in Valkey Glide allows you to execute a group of commands in a single, atomic step. This ensures that all commands in the transaction are executed sequentially and without interruption. See [Valkey Transactions](https://valkey.io/topics/transactions).
+
+
+This is equivalent to the Valkey commands [MULTI](https://valkey.io/commands/multi/) / [EXEC](https://valkey.io/commands/exec/).
+
+#### Modes of Operation
+
+There are two primary modes for handling transactions in Glide:
+
+1. **Standalone Mode:** Use the `Transaction` class.
+2. **Cluster Mode:** Use the `ClusterTransaction` class.
+
+
+
+#### Reusing Transaction Objects
+
+Transaction objects can be reused. If you need to execute a particular group of commands multiple times, you can simply resend the same transaction object.
+
+
+#### Example Usage
+
+Here's a simple example demonstrating how to create and execute a transaction in standalone mode:
+
+```ts
+import {Transaction} from "@valkey/valkey-glide";
+
+// Initialize a transaction object
+const transaction = new Transaction();
+
+// Add commands to the transaction
+transaction.set('key', 'value');
+transaction.select(1);  // Standalone command
+transaction.get('key');
+
+// Execute the transaction
+const result = await client.exec(transaction);
+console.log(result); // Output: [OK, OK, null]
+```
+
+#### Command Chaining
+
+Valkey Glide supports command chaining within a transaction, allowing for a more concise and readable code. Here's how you can use chaining in transactions:
+
+```ts
+import {ClusterTransaction} from "@valkey/valkey-glide";
+
+// Initialize a cluster transaction object
+const clusterTransaction = new ClusterTransaction();
+
+// Chain commands
+clusterTransaction.set('key', 'value').get('key')
+
+// Execute the transaction
+const result = await client.exec(clusterTransaction);
+console.log(result); // Output: [OK, 'value']
+```
+
+**Cluster Mode Considerations:** When using `ClusterTransaction`, all keys in the transaction must be mapped to the same slot.
+
+
+#### Detailed Steps:
+
+**Creating a Transaction:** Initialize the `Transaction` or `ClusterTransaction` object.
+```ts
+import {Transaction, ClusterTransaction}  from "@valkey/valkey-glide";
+
+const transaction = new Transaction();  // For standalone mode
+const clusterTransaction = new ClusterTransaction();  // For cluster mode
+```
+**Adding Commands:** Use the transaction object to queue up the desired commands.
+```ts
+transaction.set('key', 'value');
+transaction.get('key');
+```
+**Executing the Transaction:** Use the `exec` method of the Valkey Glide client to execute the transaction.
+```ts
+await client.exec(transaction);
+```
+
+**Handling Results:** The result of the transaction execution will be a list of responses corresponding to each command in the transaction.
+```ts
+const result = await client.exec(transaction)
+console.log(result);  // Output: [OK, 'value']
+```
+
+### Tracking resources
+
+GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+
+- `total_connections` contains the number of active connections across **all** clients
+- `total_clients` contains the number of active clients (regardless of its type)
+
+```ts
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    requestTimeout: 500
+});
+
+// Retrieve statistics
+const stats = await client.getStatistics();
+
+// Example: Accessing and printing statistics
+console.log(`Total Connections: ${stats.total_connections}`);
+console.log(`Total Clients: ${stats.total_clients}`);

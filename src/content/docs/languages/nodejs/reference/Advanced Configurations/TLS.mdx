@@ -1,0 +1,59 @@
+---
+title: TLS
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### TLS
+
+Valkey GLIDE supports secure TLS connections to a data store.
+
+It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
+
+#### Example - Connecting with TLS Mode Enabled to a Cluster
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    useTLS: true
+});
+```
+#### Example - Connecting with TLS Mode Enabled to a Standalone
+
+```typescript
+import {GlideClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClient.createClient({
+    addresses: addresses,
+    useTLS: true
+});
+```
+

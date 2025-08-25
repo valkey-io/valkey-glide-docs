@@ -1,0 +1,54 @@
+---
+title: Decoder
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Decoder
+
+In Node.js, most users expect the responses to be in string format unless specified otherwise. Users can select which data type they expect to receive as a response. The user has the option, using [`DecoderOption`](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L295) as an extension to command option types with [`Decoder`](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L283), of converting the response into either a string or bytes for each command. In addition, as part of the client creation process, the user has the option of setting a default for all commands if no decoder argument is passed to the command.
+
+`Decoder` is an optional parameter for all commands and it has two options
+
+1. `Bytes`: decodes the response into a `Buffer` (byte array).
+2. `String`: decodes the response into a string.
+
+If `Decoder` is not configured, `Decoder.String` will be used as the default decoder.
+Note: Using the `Decoder.String` to convert Non-UTF-8 encoded Valkey strings can lead to errors unrecoverable data lost. See: [#2221](https://github.com/valkey-io/valkey-glide/discussions/2221).
+
+#### Example Usage
+
+Here is an example of command implementation to outline arguments using [`DecoderOption`](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L295) and response type:
+
+```typescript
+public getdel(
+        key: GlideString,
+        options?: DecoderOption,
+    ): Promise<GlideString | null>
+```
+
+Here's a simple example demonstrating how to use `Decoder` in command API and `Buffer.from()` to encode binary data:
+
+```typescript
+expect(await client.set(key, value)).toEqual("OK");
+expect(await client.getdel(key)).toEqual(value);
+
+const valueEncoded = Buffer.from(value);
+expect(await client.set(key, value)).toEqual("OK");
+expect(await client.getdel(key, { decoder: Decoder.Bytes })).toEqual(
+    valueEncoded,
+);
+```
+

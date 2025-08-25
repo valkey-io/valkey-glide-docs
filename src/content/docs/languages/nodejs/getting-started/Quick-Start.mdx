@@ -1,0 +1,99 @@
+---
+title: Quick Start
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+# Quick Start
+
+## Installation
+
+```bash
+npm i @valkey/valkey-glide
+```
+
+## Basic Examples
+
+#### Standalone Mode:
+
+```typescript
+import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
+// When Valkey is in standalone mode, add address of the primary node, and any replicas you'd like to be able to read from.
+const addresses = [
+    {
+        host: "localhost",
+        port: 6379,
+    },
+];
+// Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
+const client = await GlideClient.createClient({
+    addresses: addresses,
+    // if the server uses TLS, you'll need to enable it. Otherwise, the connection attempt will time out silently.
+    // useTLS: true,
+    // It is recommended to set a timeout for your specific use case
+    requestTimeout: 500, // 500ms timeout
+    clientName: "test_standalone_client",
+});
+// The empty array signifies that there are no additional arguments.
+const pong = await client.customCommand(["PING"]);
+console.log(pong);
+const set_response = await client.set("foo", "bar");
+console.log(`Set response is = ${set_response}`);
+const get_response = await client.get("foo");
+console.log(`Get response is = ${get_response}`);
+```
+
+#### Cluster Mode:
+
+```typescript
+import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
+// When Valkey is in cluster mode, add address of any nodes, and the client will find all nodes in the cluster.
+const addresses = [
+    {
+        host: "localhost",
+        port: 6379,
+    },
+];
+// Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    // if the cluster nodes use TLS, you'll need to enable it. Otherwise the connection attempt will time out silently.
+    // useTLS: true,
+    // It is recommended to set a timeout for your specific use case
+    requestTimeout: 500, // 500ms timeout
+    clientName: "test_cluster_client",
+});
+// The empty array signifies that there are no additional arguments.
+const pong = await client.customCommand(["PING"], { route: "randomNode" });
+console.log(pong);
+const set_response = await client.set("foo", "bar");
+console.log(`Set response is = ${set_response}`);
+const get_response = await client.get("foo");
+console.log(`Get response is = ${get_response}`);
+client.close();
+```
+
+### Supported platforms
+
+Currently, the package is tested on:
+
+| Operation systems | C lib                | Architecture      |
+| ----------------- | -------------------- | ----------------- |
+| `Linux`           | `glibc`, `musl libc` | `x86_64`, `arm64` |
+| `macOS`           | `Darwin`             | `x86_64`, `arm64` |
+
+## Community and Feedback
+
+We encourage you to join our community to support, share feedback, and ask questions. You can approach us for anything on our Valkey Slack: [Join Valkey Slack](https://join.slack.com/t/valkey-oss-developer/shared_invite/zt-2nxs51chx-EB9hu9Qdch3GMfRcztTSkQ).

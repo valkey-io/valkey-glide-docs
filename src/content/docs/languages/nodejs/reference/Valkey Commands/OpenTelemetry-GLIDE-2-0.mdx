@@ -1,0 +1,150 @@
+---
+title: OpenTelemetry (GLIDE 2.0)
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### OpenTelemetry (GLIDE 2.0)
+
+Observability is consistently one of the top feature requests by customers. Valkey GLIDE 2.0 introduces support for [OpenTelemetry (OTel)](https://opentelemetry.io/), enabling developers to gain deep insights into client-side performance and behavior in distributed systems.
+OTel is an open source, vendor-neutral framework that provides APIs, SDKs, and tools for generating, collecting, and exporting telemetry data—such as traces, metrics, and logs. It supports multiple programming languages and integrates with various observability backends like Prometheus, Jaeger, and AWS CloudWatch.
+
+#### How It Works
+
+GLIDE's OpenTelemetry integration is designed to be both powerful and easy to adopt. Once an OTel collector endpoint is configured, GLIDE begins emitting default metrics and traces automatically—no additional code changes are required. This simplifies the path to observability best practices and minimizes disruption to existing workflows.
+
+#### Metrics Overview
+
+GLIDE emits several built-in metrics out of the box. These metrics can be used to build dashboards, configure alerts, and monitor performance trends:
+
+* **Timeouts**: Number of requests that exceeded their timeout duration.
+* **Retries**: Count of operations retried due to transient errors or topology changes.
+* **Moved Errors**: Number of MOVED responses received, indicating key reallocation in the cluster.
+
+These metrics are emitted to your configured OpenTelemetry collector and can be viewed in any supported backend (Prometheus, CloudWatch, etc.).
+
+#### Tracing Integration
+
+GLIDE creates a **trace span for each Valkey command**, giving detailed visibility into client-side performance. Each trace captures:
+
+* The **entire command lifecycle**: from creation to completion or failure.
+* A nested **`send_command` span**, measuring communication time with the Valkey server.
+* A **status tag** indicating success or error for each span, helping you identify failure patterns.
+
+This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
+
+**⚠ Note:**
+Some advanced commands are not yet included in tracing instrumentation:
+* The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
+* Lua scripting commands (EVAL, EVALSHA)
+
+Support for these commands will be added in a future version as we continue to expand tracing coverage.
+
+Even with these exceptions, GLIDE 2.0 provides comprehensive insights across the vast majority of standard operations, making it easy to adopt observability best practices with minimal effort.
+
+#### Getting Started
+
+To begin collecting telemetry data with GLIDE 2.0:
+
+* Set up an [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) to receive trace and metric data.
+* Configure the GLIDE client with the endpoint to your collector.
+* Alternatively, you can configure GLIDE to export telemetry data directly to a local file for development or debugging purposes, without requiring a running collector.
+
+GLIDE does not export data directly to third-party services—instead, it sends data to your collector, which routes it to your backend (e.g., CloudWatch, Prometheus, Jaeger).
+
+#### Supported Collector Protocols
+
+You can configure the OTel collector endpoint using one of the following protocols:
+
+* `http://` or `https://` - Send data via HTTP(S)
+* `grpc://` - Use gRPC for efficient telemetry transmission
+* `file://` - Write telemetry data to a local file (ideal for local dev/debugging)
+
+#### Optional Parameters
+
+When initializing OpenTelemetry, you can customize behavior using the `openTelemetryConfig` object.
+**Note**: Both `traces` and `metrics` are optional—but **at least one must be provided** in the `openTelemetryConfig`. If neither is set, OpenTelemetry will not emit any data.
+
+#### Tracing
+```typescript
+openTelemetryConfig.traces
+```
+
+* **endpoint** (required): The trace collector endpoint.
+* **samplePercentage** (optional): Percentage (0–100) of commands to sample for tracing. Default: `1`.
+  * For production, a low sampling rate (1–5%) is recommended to balance performance and insight.
+
+#### Metrics
+```typescript
+openTelemetryConfig.metrics
+```
+
+* **endpoint** (required): The metrics collector endpoint.
+
+#### Flush Interval
+```typescript
+openTelemetryConfig.flushIntervalMs
+```
+
+* (optional): Time in milliseconds between flushes to the collector. Default: `5000`.
+
+#### File Exporter Details
+
+If using `file://` as the endpoint:
+
+* The path must begin with `file://`.
+* If a directory is provided (or no file extension), data is written to `signals.json` in that directory.
+* If a filename is included, it will be used as-is.
+* The parent directory must already exist.
+* Data is **appended**, not overwritten.
+
+#### Validation Rules
+
+* `flushIntervalMs` must be a positive integer.
+* `samplePercentage` must be between 0 and 100.
+* File exporter paths must start with `file://` and have an existing parent directory.
+* Invalid configuration will throw an error synchronously when calling `OpenTelemetry.init()`.
+
+⚠️ **Important**: `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
+
+
+#### Full Example (Node.js)
+```typescript
+import { OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig } from "@valkey/valkey-glide";
+
+// Define traces configuration
+const tracesConfig: OpenTelemetryTracesConfig = {
+  endpoint: "http://localhost:4318/v1/traces",
+  samplePercentage: 10  // Optional, defaults to 1%
+};
+
+// Define metrics configuration
+const metricsConfig: OpenTelemetryMetricsConfig = {
+  endpoint: "http://localhost:4318/v1/metrics"
+};
+
+// Complete OpenTelemetry configuration
+const openTelemetryConfig: OpenTelemetryConfig = { 
+  traces: tracesConfig,           // Optional: can omit if only metrics are needed
+  metrics: metricsConfig,         // Optional: can omit if only traces are needed
+  flushIntervalMs: 1000           // Optional, defaults to 5000 ms
+};
+
+// Initialize OpenTelemetry (can only be called once per process)
+OpenTelemetry.init(openTelemetryConfig);
+```
+
+> ✅ In this example, both traces and metrics are configured, but you can configure only one of them if you wish. At least one must be provided.
+

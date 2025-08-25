@@ -1,0 +1,182 @@
+---
+title: Authentication
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Authentication
+
+By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
+
+Valkey GLIDE also offers support for an authenticated connection mode. 
+
+In authenticated mode, you have the following options:
+
+* Use both a username and password, which is recommended and configured through [ACLs](https://valkey.io/topics/acl/) on the server.
+* Use a password only, which is applicable if the server is configured with the [requirepass](https://valkey.io/topics/security/#authentication) setting.
+
+To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` class.
+
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
+
+#### Example - Connecting with Username and Password to a Cluster
+
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const credentials = {
+    username: "user1",
+    password: "passwordA"
+};
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    credentials: credentials
+});
+```
+
+
+#### Example - Connecting with Username and Password to a Standalone server
+
+```typescript
+import {GlideClient} from "@valkey/valkey-glide";
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const credentials = {
+    username: "user1",
+    password: "passwordA"
+};
+
+const client = await GlideClient.createClient({
+    addresses: addresses,
+    credentials: credentials
+});
+```
+
+#### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
+
+The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+
+**Token generation-**
+```typescript
+import { SignatureV4 } from "@smithy/signature-v4";
+import { HttpRequest } from "@smithy/protocol-http";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { formatUrl } from "@aws-sdk/util-format-url";
+import { Sha256 } from "@aws-crypto/sha256-js";
+
+
+class ElastiCacheIAMProvider {
+    private user: string;
+    private clusterName: string;
+    private region: string;
+
+    constructor(user: string, clusterName: string, region: string = "us-east-1") {
+        this.user = user;
+        this.clusterName = clusterName;
+        this.region = region;
+    }
+
+    async  getCredentials() {
+        const credentials = await defaultProvider()();
+    
+        const signer = new SignatureV4({
+            service: "elasticache",
+            credentials,
+            region: this.region,
+            sha256: Sha256,
+        });
+    
+        const url = new URL(`https://${this.clusterName}/`);
+        url.searchParams.append("Action", "connect");
+        url.searchParams.append("User", this.user);
+    
+        const request = new HttpRequest({
+            protocol: url.protocol,
+            hostname: url.hostname,
+            method: "GET",
+            path: url.pathname,
+            query: Object.fromEntries(url.searchParams),
+            headers: {
+                host: url.hostname,
+            },
+        });
+    
+        const signedRequest = await signer.presign(request, { expiresIn: 900 });
+        return formatUrl(signedRequest).replace(/^https?:\/\//, "");
+    }
+}
+```
+
+**Usage example -**
+```typescript
+import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials, AdvancedGlideClusterClientConfiguration } from "@valkey/valkey-glide";
+
+async function main() {
+    const username = "your-username";
+    const cluster_name = "your-cluster-name";
+    const endpoint = "example-cluster-endpoint.use1.cache.amazonaws.com";
+
+    const addresses = [
+        {
+            host: endpoint,
+            port: 6379,
+        },
+    ];
+
+    const provider = new ElastiCacheIAMProvider(
+        username,
+        cluster_name,
+        "us-east-1"
+    );
+
+    const iamAuthToken = await provider.getCredentials();
+
+    const credentials: ServerCredentials = {
+        username: username,
+        password: iamAuthToken
+    };
+
+    const config: GlideClusterClientConfiguration = {
+        addresses: addresses,
+        credentials: credentials,
+        useTLS: true,
+        clientName: 'my-client',
+    };
+    
+    const client = await GlideClusterClient.createClient(config);
+    
+    // Update password dynamically
+    const newIAMAuthToken = await provider.getCredentials();
+    await client.updateConnectionPassword(newIAMAuthToken);
+    
+    // To perform immediate re-authentication, set the second parameter to true
+    await client.updateConnectionPassword(newIAMAuthToken, true);
+}
+```
+
