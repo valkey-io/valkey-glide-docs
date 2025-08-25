@@ -1,0 +1,13 @@
+a.site-title {
+  gap: 0.5rem;
+}
+
+/* Site logo is an SVG rendered as an image, so we need to use CSS filters to change its color. */
+a.site-title img {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(100%) saturate(1742%)
+    hue-rotate(220deg) brightness(105%) contrast(101%);
+}
+
+a.site-title span {
+  color: #6983ff;
+}
