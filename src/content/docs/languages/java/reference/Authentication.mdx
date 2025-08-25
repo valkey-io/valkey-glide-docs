@@ -1,0 +1,401 @@
+---
+title: Authentication
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Authentication
+
+By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
+
+Valkey GLIDE also offers support for an authenticated connection mode. 
+
+In authenticated mode, you have the following options:
+
+* Use both a username and password, which is recommended and configured through [ACLs](https://valkey.io/docs/topics/acl/) on the server.
+* Use a password only, which is applicable if the server is configured with the [requirepass](https://valkey.io/topics/security/#authentication) setting.
+
+To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` class.
+
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
+
+#### Example - Connecting with Username and Password to a Cluster
+
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.ServerCredentials;
+
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder() 
+    .address(NodeAddress.builder()
+        .host("address.example.com")
+        .port(6379)
+        .build())
+    .credentials(ServerCredentials.builder()
+        .username("user1")
+        .password("passwordA")
+        .build())
+    .build();
+
+GlideClusterClient client = GlideClusterClient.createClient(config).get();
+```
+
+
+#### Example - Connecting with Username and Password to a Standalone
+
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.ServerCredentials;
+
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("primary.example.com")
+        .port(6379)
+        .build())
+    .credentials(ServerCredentials.builder()
+        .username("user1")
+        .password("passwordA")
+        .build())
+    .build();
+
+GlideClient client = GlideClient.createClient(config).get();
+```
+
+#### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
+
+The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+
+**Token generation -**
+
+This token generation example uses AWS SDK for Java v2. For token generation using AWS SDK for Java v1, see example below.
+
+```java
+import java.net.URI;
+import java.time.Duration;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.http.SdkHttpMethod;
+import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.auth.aws.signer.AwsV4FamilyHttpSigner.AuthLocation;
+import software.amazon.awssdk.http.auth.aws.signer.AwsV4HttpSigner;
+import software.amazon.awssdk.utils.StringUtils;
+
+class ElasticachePasswordGenerator {
+    private final AwsV4HttpSigner awsV4HttpSigner;
+    private final AwsCredentialsProvider credentialsProvider;
+
+    private final String cacheName;
+    private final String cacheRegion;
+    private final String userId;
+    private final boolean isServerless;
+
+    private static final String FAKE_SCHEME = "https://";
+
+    ElasticachePasswordGenerator(
+            final String cacheName,
+            final String cacheRegion,
+            final String userId,
+            final AwsV4HttpSigner awsV4HttpSigner,
+            final AwsCredentialsProvider credentialsProvider,
+            final boolean isServerless) {
+        this.cacheName = cacheName;
+        this.cacheRegion = cacheRegion;
+        this.userId = userId;
+        this.awsV4HttpSigner = awsV4HttpSigner;
+        this.credentialsProvider = credentialsProvider;
+        this.isServerless = isServerless;
+    }
+
+    public static ElasticachePasswordGenerator create(
+            final String cacheName, final String cacheRegion, final String userId, final boolean isServerless) {
+        if (StringUtils.isEmpty(cacheName)) {
+            throw new IllegalArgumentException("cacheName must be provided");
+        }
+
+        if (StringUtils.isEmpty(cacheRegion)) {
+            throw new IllegalArgumentException("cacheRegion must be provided");
+        }
+
+        if (StringUtils.isEmpty(userId)) {
+            throw new IllegalArgumentException("userId must be provided");
+        }
+
+        return new ElasticachePasswordGenerator(
+                cacheName, cacheRegion, userId, AwsV4HttpSigner.create(), DefaultCredentialsProvider.create(), isServerless);
+    }
+
+    public String generatePassword() {
+        final var requestUri = URI.create(String.format("%s%s/", FAKE_SCHEME, cacheName));
+        final var requestBuilder = SdkHttpRequest.builder()
+                .method(SdkHttpMethod.GET)
+                .uri(requestUri)
+                .appendRawQueryParameter("Action", "connect")
+                .appendRawQueryParameter("User", userId);
+        if (this.isServerless) {
+            requestBuilder.appendRawQueryParameter("ResourceType", "ServerlessCache");
+        }
+
+        final var cacheRequest = requestBuilder.build();
+
+
+        final var signedRequest = awsV4HttpSigner.sign(signRequest -> signRequest
+                .request(cacheRequest)
+                .identity(credentialsProvider.resolveCredentials())
+                .putProperty(AwsV4HttpSigner.EXPIRATION_DURATION, Duration.ofMinutes(15))
+                .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, "elasticache")
+                .putProperty(AwsV4HttpSigner.REGION_NAME, cacheRegion)
+                .putProperty(AwsV4HttpSigner.AUTH_LOCATION, AuthLocation.QUERY_STRING));
+
+        return signedRequest.request().getUri().toString().replace(FAKE_SCHEME, "");
+    }
+}
+```
+
+**Usage example -**
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.ServerCredentials;
+import static glide.api.models.GlideString.gs;
+import java.util.concurrent.ExecutionException;
+
+public class Main {
+    public static void main(String[] args) {
+        runGlideExamples();
+    }
+    private static void runGlideExamples() {
+        try {
+            String host = "your-hostname";
+            String cacheName = "your-cluster-name";
+            String username = "your-username";
+            String region = "us-east-1";
+            Integer port = 6379;
+            boolean useSsl = true;
+            boolean isServerless = true;
+    
+            ElasticachePasswordGenerator PassordGenerator = ElasticachePasswordGenerator.create(cacheName, region, username, isServerless);
+            String iamAuthToken = PassordGenerator.generatePassword();
+            System.out.println(iamAuthToken);
+    
+            ServerCredentials my_credentials = ServerCredentials.builder()
+                .username(username)
+                .password(iamAuthToken)
+                .build();
+
+            
+            GlideClusterClientConfiguration config =
+                    GlideClusterClientConfiguration.builder()
+                            .address(NodeAddress.builder()
+                                    .host(host)
+                                    .port(port)
+                                    .build())
+                            .useTLS(useSsl)
+                            .credentials(my_credentials)
+                            .build();
+            try {
+                GlideClusterClient client = GlideClusterClient.createClient(config).get();
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                // Update password dynamically
+                String newIAMAuthToken = PassordGenerator.generatePassword();
+                client.updateConnectionPassword(newIAMAuthToken, false);
+                
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                // To perform immediate re-authentication, set the second parameter to true
+                client.updateConnectionPassword(newIAMAuthToken, true);
+
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                }  catch (ExecutionException | InterruptedException e) {
+                System.out.println("Glide example failed with an exception: ");
+                e.printStackTrace();
+                }
+            } catch (Exception e) {
+                System.out.println("Received error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+```
+
+**Token generation using AWS Java SDK v1**
+
+NOTE: Java SDK v1 is going to be [EOS effective December 31, 2025](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-java-v1-x-on-december-31-2025/). 
+
+**Token generation (Java SDK v1)** - 
+```java
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.http.HttpMethodName;
+import com.amazonaws.Request;
+import com.amazonaws.DefaultRequest;
+import com.amazonaws.auth.AWS4Signer;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.client.utils.URIBuilder;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ElastiCacheIAMProvider {
+    private static final HttpMethodName REQUEST_METHOD = HttpMethodName.GET;
+    private static final String REQUEST_PROTOCOL = "http://";
+    private static final String PARAM_ACTION = "Action";
+    private static final String PARAM_USER = "User";
+    private static final String PARAM_RESOURCE_TYPE = "ResourceType";
+    private static final String RESOURCE_TYPE_SERVERLESS_CACHE = "ServerlessCache";
+    private static final String ACTION_NAME = "connect";
+    private static final String SERVICE_NAME = "elasticache";
+    private static final long TOKEN_EXPIRY_SECONDS = 900;
+
+    private final String userId;
+    private final String cacheName;
+    private final String region;
+    private final boolean isServerless;
+
+    public ElastiCacheIAMProvider(String userId, String cacheName, String region, boolean isServerless) {
+        this.userId = userId;
+        this.cacheName = cacheName;
+        this.region = region;
+        this.isServerless = isServerless;
+    }
+
+    public String toSignedRequestUri() throws URISyntaxException {
+        AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+        AWSCredentials credentials = credentialsProvider.getCredentials();
+        Request<Void> request = getSignableRequest();
+        sign(request, credentials);
+        return new URIBuilder(request.getEndpoint())
+            .addParameters(toNamedValuePair(request.getParameters()))
+            .build()
+            .toString()
+            .replace(REQUEST_PROTOCOL, "");
+    }
+
+    private <T> Request<T> getSignableRequest() {
+        Request<T> request  = new DefaultRequest<>(SERVICE_NAME);
+        request.setHttpMethod(REQUEST_METHOD);
+        request.setEndpoint(getRequestUri());
+        request.addParameter(PARAM_ACTION, ACTION_NAME);
+        request.addParameter(PARAM_USER, userId);
+        if (isServerless) {
+            request.addParameter(PARAM_RESOURCE_TYPE, RESOURCE_TYPE_SERVERLESS_CACHE);
+        }
+        return request;
+    }
+
+    private URI getRequestUri() {
+        return URI.create(String.format("%s%s/", REQUEST_PROTOCOL, cacheName));
+    }
+
+    private <T> void sign(Request<T> request, AWSCredentials credentials) {
+        AWS4Signer signer = new AWS4Signer();
+        signer.setRegionName(region);
+        signer.setServiceName(SERVICE_NAME);
+
+        DateTime dateTime = DateTime.now();
+        dateTime = dateTime.plus(Duration.standardSeconds(TOKEN_EXPIRY_SECONDS));
+
+        signer.presignRequest(request, credentials, dateTime.toDate());
+    }
+
+    private static List<NameValuePair> toNamedValuePair(Map<String, List<String>> in) {
+        return in.entrySet().stream()
+            .map(e -> new BasicNameValuePair(e.getKey(), e.getValue().get(0)))
+            .collect(Collectors.toList());
+    }
+}
+```
+
+**Usage example** - 
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.ServerCredentials;
+import static glide.api.models.GlideString.gs;
+import java.util.concurrent.ExecutionException;
+
+
+public class Main {
+    public static void main(String[] args) {
+        runGlideExamples();
+    }
+    private static void runGlideExamples() {
+        try {
+            String host = "example-cluster-endpoint.use1.cache.amazonaws.com";
+            String cacheName = "your-cluster-name";
+            String username = "your-username";
+            String region = "us-east-1";
+            Integer port1 = 6379;
+            boolean useSsl = true;
+            boolean isServerless = true;
+    
+            ElastiCacheIAMProvider iamAuthTokenProvider = new ElastiCacheIAMProvider(username, cacheName, region, isServerless);
+            String iamAuthToken = iamAuthTokenProvider.toSignedRequestUri();
+            System.out.println(iamAuthToken);
+    
+            ServerCredentials my_credentials = ServerCredentials.builder()
+                .username(username)
+                .password(iamAuthToken)
+                .build();
+            
+            GlideClusterClientConfiguration config =
+                    GlideClusterClientConfiguration.builder()
+                            .address(NodeAddress.builder()
+                                    .host(host)
+                                    .port(port1)
+                                    .build())
+                            .useTLS(useSsl)
+                            .credentials(my_credentials)
+                            .build();
+            try {
+                GlideClusterClient client = GlideClusterClient.createClient(config).get();
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                // Update password dynamically
+                String newIAMAuthToken = iamAuthTokenProvider.toSignedRequestUri();
+                client.updateConnectionPassword(newIAMAuthToken, false);
+                
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                // To perform immediate re-authentication, set the second parameter to true
+                client.updateConnectionPassword(newIAMAuthToken, true);
+
+                System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                }  catch (ExecutionException | InterruptedException e) {
+                System.out.println("Glide example failed with an exception: ");
+                e.printStackTrace();
+                }
+            } catch (java.net.URISyntaxException e) {
+                System.out.println("URI Syntax error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+```
+
