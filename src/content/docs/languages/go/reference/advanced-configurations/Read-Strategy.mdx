@@ -1,0 +1,108 @@
+---
+title: Read Strategy
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Read Strategy
+
+By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
+
+Valkey GLIDE provides support for next read strategies, allowing you to choose the one that best fits your specific use case.
+
+|Strategy	|Description	|
+|---	|---	|
+|`Primary`	|Always read from primary, in order to get the freshest data.	|
+|`PreferReplica`	|Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.	|
+|`AZAffinity`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
+|`AzAffinityReplicaAndPrimary`	|Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
+
+#### Example - Use PreferReplica Read Strategy
+
+```go
+import (
+    "context"
+
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithReadStrategyPreferReplica() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithReadFrom(config.PreferReplica)
+
+    client, _ := glide.NewClusterClient(myConfig)
+
+    client.Set(context.Background(), "key1", "val1")
+
+    // Get will read from one of the replicas
+    client.Get(context.Background(),"key1")
+}
+```
+
+#### Example - Use AZAffinity Read Strategy
+If ReadFrom strategy is AZAffinity, 'clientAZ' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
+
+```go
+import (
+    "context"
+
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithReadStrategyAZAffinity() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithReadFrom(config.AzAffinity).
+        WithClientAZ("us-east-1a")
+
+    client, _ := glide.NewClusterClient(myConfig)
+
+    client.Set(context.Background(), "key1", "val1")
+
+    // Get will read from one of the replicas in the same client's availability zone if exits.
+    client.Get(context.Background(),"key1")
+}
+```
+
+#### Example - Use AzAffinityReplicaAndPrimary Read Strategy
+If ReadFrom strategy is AzAffinityReplicaAndPrimary, 'clientAZ' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
+
+```go
+import (
+    "context"
+
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithReadStrategyAZAffinity() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithReadFrom(config.AzAffinityReplicaAndPrimary).
+        WithClientAZ("us-east-1a")
+
+    client, _ := glide.NewClusterClient(myConfig)
+
+    client.Set(context.Background(), "key1", "val1")
+
+    // Get will read from one of the replicas or the primary in the same client's availability zone if exits.
+    client.Get(context.Background(),"key1")
+}
+```
+
+

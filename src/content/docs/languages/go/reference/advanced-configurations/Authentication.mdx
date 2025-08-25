@@ -1,0 +1,68 @@
+---
+title: Authentication
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Authentication
+
+By default, when connecting to Valkey, Valkey GLIDE operates in an unauthenticated mode.
+
+Valkey GLIDE also offers support for an authenticated connection mode. 
+
+In authenticated mode, you have the following options:
+
+* Use both a username and password, which is recommended and configured through [ACLs](https://valkey.io/docs/topics/acl/) on the server.
+* Use a password only, which is applicable if the server is configured with the [requirepass](https://valkey.io/topics/security/#authentication) setting.
+
+To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` struct.
+
+See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
+
+#### Example - Connecting with Username and Password to a Cluster
+
+```go
+import (
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithCredentials() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithCredentials(config.NewServerCredentials("user1", "passwordA"))
+
+    client, err := glide.NewClusterClient(myConfig)
+}
+```
+
+
+#### Example - Connecting with Username and Password to a Standalone
+
+```go
+import (
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectStandaloneWithCredentials() {
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+        WithCredentials(config.NewServerCredentials("user1", "passwordA"))
+
+    client, err := glide.NewClient(myConfig)
+}
+```
+
