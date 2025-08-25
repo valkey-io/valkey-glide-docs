@@ -7,6 +7,15 @@ sidebar:
     variant: caution
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
 In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. Glide 2.0 introduces a robust Batch API with two primary modes:
 
 * **Atomic Batch:** Guarantees that all commands in a batch execute as a single, atomic unit. No other commands can interleave (similar to [MULTI](https://valkey.io/commands/multi/)/[EXEC](https://valkey.io/commands/exec/)).

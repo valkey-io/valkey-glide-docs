@@ -1,0 +1,53 @@
+---
+title: TLS
+description: A reference page in my new Starlight docs site.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### TLS
+
+Valkey GLIDE supports secure TLS connections to a data store.
+
+It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
+
+#### Example - Connecting with TLS Mode Enabled to a Cluster
+
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    NodeAddress
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+client_config = GlideClusterClientConfiguration(addresses, use_tls=True)
+
+client = await GlideClusterClient.create(client_config)
+```
+#### Example - Connecting with TLS Mode Enabled to a Standalone server
+
+```python
+from glide import (
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress
+)
+
+addresses = [
+    NodeAddress(host="primary.example.com", port=6379),
+    NodeAddress(host="replica1.example.com", port=6379),
+    NodeAddress(host="replica2.example.com", port=6379)
+  ]
+client_config = GlideClientConfiguration(addresses, use_tls=True)
+
+client = await GlideClient.create(client_config)
+```
+
