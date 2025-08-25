@@ -1,0 +1,236 @@
+---
+title: Connection Setup
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 3
+  badge:
+    text: Draft
+    variant: caution
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+## Constructor Differences
+
+- **Lettuce** offers multiple constructors for different connection configurations
+- **Glide** uses a **single configuration object** that comes pre-configured with best practices
+
+Glide typically requires minimal configuration changes for:
+- Timeout settings
+- TLS configuration
+- Read from replica settings
+- User authentication (username & password)
+
+For advanced configurations, refer to the **[Glide Wiki - Java](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper)**.
+
+### Standalone Mode
+<Tabs>
+<TabItem label="Lettuce">
+```java
+RedisClient client = RedisClient.create("redis://localhost");
+StatefulRedisConnection<String, String> connection = client.connect();
+RedisCommands<String, String> syncCommands = connection.sync();
+
+// With options
+RedisURI redisUri = RedisURI.Builder.redis("localhost")
+                                .withPassword("password")
+                                .withDatabase(2)
+                                .build();
+RedisClient clientWithOptions = RedisClient.create(redisUri);
+StatefulRedisConnection<String, String> connectionWithOptions = clientWithOptions.connect();
+RedisCommands<String, String> syncCommandsWithOptions = connectionWithOptions.sync();
+```
+</TabItem>
+<TabItem label="Glide">
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.AdvancedGlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.ServerCredentials;
+import glide.api.models.configuration.ReadFrom;
+import glide.api.models.configuration.BackoffStrategy;
+import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+// Simple connection
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(6379)
+        .build())
+    .build();
+
+GlideClient client = GlideClient.createClient(config).get();
+
+// With options
+GlideClientConfiguration configWithOptions = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(6379)
+        .build())
+    .useTLS(true)
+    .credentials(ServerCredentials.builder()
+        .username("user")
+        .password("password")
+        .build())
+    .readFrom(ReadFrom.AZ_AFFINITY) 
+    .requestTimeout(2000)
+    .reconnectStrategy(BackoffStrategy.builder()
+        .numOfRetries(5)
+        .factor(2)
+        .exponentBase(2)
+        .jitterPercent(10)
+        .build())
+    .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+        .connectionTimeout(5000)
+        .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+            .useInsecureTLS(false)
+            .build())
+        .build())
+    .build();
+
+GlideClient clientWithOptions = GlideClient.createClient(configWithOptions).get();
+```
+</TabItem>
+</Tabs>
+
+### Cluster Mode
+<Tabs>
+<TabItem label="Lettuce">
+```java
+RedisURI redisUri = RedisURI.create("redis://localhost:7000");
+RedisClusterClient clusterClient = RedisClusterClient.create(redisUri);
+StatefulRedisClusterConnection<String, String> connection = clusterClient.connect();
+RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
+
+// With multiple nodes
+List<RedisURI> nodes = Arrays.asList(
+    RedisURI.create("redis://localhost:7000"),
+    RedisURI.create("redis://localhost:7001")
+);
+RedisClusterClient clusterClientMultiNodes = RedisClusterClient.create(nodes);
+
+// With options
+RedisURI redisUriWithOptions = RedisURI.Builder.redis("localhost", 7000)
+                                .withPassword("password")
+                                .build();
+RedisClusterClient clusterClientWithOptions = RedisClusterClient.create(redisUriWithOptions);
+```
+</TabItem>
+<TabItem label="Glide">
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.configuration.ServerCredentials;
+import glide.api.models.configuration.ReadFrom;
+import glide.api.models.configuration.BackoffStrategy;
+import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+// Simple connection
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(7000)
+        .build())
+    .build();
+
+GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
+
+// With multiple nodes
+GlideClusterClientConfiguration multiNodeConfig = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(7000)
+        .build())
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(7001)
+        .build())
+    .build();
+
+GlideClusterClient multiNodeClient = GlideClusterClient.createClient(multiNodeConfig).get();
+
+// With options
+GlideClusterClientConfiguration configWithOptions = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(7000)
+        .build())
+    .useTLS(true)
+    .credentials(ServerCredentials.builder()
+        .username("user")
+        .password("password")
+        .build())
+    .readFrom(ReadFrom.AZ_AFFINITY) 
+    .requestTimeout(2000)
+    .reconnectStrategy(BackoffStrategy.builder()
+        .numOfRetries(5)
+        .factor(2)
+        .exponentBase(2)
+        .jitterPercent(10)
+        .build())
+    .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+        .connectionTimeout(5000)
+        .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+            .useInsecureTLS(false)
+            .build())
+        .build())
+    .build();
+
+GlideClusterClient clientWithOptions = GlideClusterClient.createClient(configWithOptions).get();
+```
+</TabItem>
+</Tabs>
+
+## Constructor Parameters Comparison
+
+The table below compares **Lettuce constructors** with **Glide configuration parameters**:
+
+| **Lettuce Parameter** | **Equivalent Glide Configuration** |
+|--------------------------|--------------------------------------|
+| `RedisURI.create("redis://host:port")` | `GlideClientConfiguration.builder().address(NodeAddress.builder().host("host").port(port).build()).build()` |
+| `RedisURI.Builder.redis(host, port)` | `NodeAddress.builder().host(host).port(port).build()` |
+| `withPassword("password")` | `credentials(ServerCredentials.builder().password("password").build())` |
+| `withUsername("username")` | `credentials(ServerCredentials.builder().username("username").build())` |
+| `withDatabase(2)` | - Use `client.select(db)` after connection |
+| `withSsl(true)` | `useTLS(true)` |
+| `withTimeout(Duration.ofMillis(500))` | `requestTimeout(500)` |
+| `ReadFrom.REPLICA` | `readFrom(ReadFrom.REPLICA)` / `readFrom(ReadFrom.PREFER_REPLICA)` / `readFrom(ReadFrom.AZ_AFFINITY)` / `readFrom(ReadFrom.AZ_AFFINITY_REPLICAS_AND_PRIMARY)` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+| `SocketOptions.builder().connectTimeout()` | `connectionBackoff(ConnectionBackoffStrategy.builder().numberOfRetries(retries).build())` |
+| `lazyConnect: boolean` | Not suppoerted yet |
+
+**Advanced configuration**
+
+**Standalone Mode** uses `GlideClientConfiguration` and **Cluster Mode** uses `GlideClusterClientConfiguration`, but the usage is similar:
+
+```java
+// Standalone mode
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(6379)
+        .build())
+    .requestTimeout(500)
+    .build();
+
+GlideClient client = GlideClient.createClient(config).get();
+
+// Cluster mode
+GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("localhost")
+        .port(7000)
+        .build())
+    .requestTimeout(500)
+    .build();
+
+GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+```

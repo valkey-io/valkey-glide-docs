@@ -194,6 +194,7 @@ export default defineConfig({
 					label: 'Migration',
 					items: [
 						{ label: 'Index', slug: 'migration/overview' },
+						{ label: 'Lettuce', autogenerate: { directory: 'migration/lettuce' }},
 						{
 							label: 'From Redis Clients',
 							items: [
