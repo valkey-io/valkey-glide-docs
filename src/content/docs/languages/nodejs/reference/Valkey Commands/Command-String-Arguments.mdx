@@ -1,0 +1,31 @@
+---
+title: Command String Arguments
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Command String Arguments
+
+Valkey strings are stored in its simplest form: as a sequence of bytes. GLIDE offers [GlideString](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L278) which maps to Valkey strings. Use it to pass Valkey strings as arguments to commands, or receive Valkey strings in response to commands. GlideString represents either:
+
+1. `string`: as a UTF-8 encoded string.
+2. `Buffer`: as a `byte[]`.
+
+The return types of command API:
+
+-   Command uses `string` instead of `GlideString` as the return type if it contains a simple string value (simple strings in Valkey are always UTF-8 encoded strings). For example, [`type`](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L4488) command returns one of pre-defined strings, or [`set`](https://github.com/valkey-io/valkey-glide/blob/79fdec50bbef4310cb12e46a69f14c18378afb44/node/src/BaseClient.ts#L1182) command which returns `"OK"`.
+-   Command uses `Buffer` as the return type, because it always contains binary data. For example, `dump` and `functionDump` commands.
+-   Most commands use `GlideString` as the common return type.
+

@@ -1,0 +1,46 @@
+---
+title: Tracking resources
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+### Tracking resources
+
+GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+
+- `total_connections` contains the number of active connections across **all** clients
+- `total_clients` contains the number of active clients (regardless of its type)
+
+```ts
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    requestTimeout: 500
+});
+
+// Retrieve statistics
+const stats = await client.getStatistics();
+
+// Example: Accessing and printing statistics
+console.log(`Total Connections: ${stats.total_connections}`);
+console.log(`Total Clients: ${stats.total_clients}`);
