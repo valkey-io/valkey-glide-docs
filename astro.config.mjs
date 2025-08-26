@@ -235,6 +235,8 @@ export default defineConfig({
 								{ label: 'Platform Support', slug: 'reference/compatibility/platform-support' },
 								{ label: 'Redis Versions', slug: 'reference/compatibility/redis-versions' },
 								{ label: 'Valkey Versions', slug: 'reference/compatibility/valkey-versions' },
+								{ label: 'Valkey Commands Implementation Progress', slug: 'reference/compatibility/valkey-commands-implementation-progress' },
+								{ label: 'Known Issues', slug: 'reference/compatibility/known-issues' },
 							],
 						},
 						{
