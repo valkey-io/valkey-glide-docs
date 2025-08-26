@@ -1,0 +1,46 @@
+---
+title: 'REPL (interactive shell)'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 6
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## REPL (interactive shell)
+
+It is possible to run an interactive shell synced with the currect client code to test and debug it:
+
+```bash
+npx ts-node --project tsconfig.json
+```
+
+This shell allows executing typescript and javascript code line by line:
+
+```typescript
+import { GlideClient, GlideClusterClient } from ".";
+let client = await GlideClient.createClient({
+    addresses: [{ host: "localhost", port: 6379 }],
+});
+let clusterClient = await GlideClusterClient.createClient({
+    addresses: [{ host: "localhost", port: 7000 }],
+});
+await client.ping();
+```
+
+After applying changes in client code you need to restart the shell.
+
+It has command history and bash-like search (`Ctrl+R`).
+
+Shell hangs on exit (`Ctrl+D`) if you don't close the clients. Use `Ctrl+C` to kill it and/or close clients before exit.
+

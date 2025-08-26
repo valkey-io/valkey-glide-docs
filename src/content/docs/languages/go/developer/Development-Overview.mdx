@@ -1,0 +1,24 @@
+---
+title: 'Overview'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 1
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+The Valkey GLIDE Go wrapper consists of both Go and Rust code. The Go and Rust components communicate in two ways:
+
+1. Using the [protobuf](https://github.com/protocolbuffers/protobuf) protocol.
+2. Using shared C objects. [cgo](https://pkg.go.dev/cmd/cgo) is used to interact with the C objects from Go code.
+

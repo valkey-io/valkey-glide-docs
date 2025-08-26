@@ -1,0 +1,42 @@
+---
+title: 'Build'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 4
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Build
+---
+
+After installing prerequisites and cloning the repository, you can build the async Python client using the `dev.py` CLI utility that can be found in the root `python/` directory.
+
+### Examples:
+
+```bash
+# Build the async client in release mode
+python3 dev.py build --client async --mode release
+```
+
+> These commands handle environment setup, dependency installation, and consistent build logic.
+
+### Notes on Build Modes
+- Use `--mode debug` (default) when developing or debugging.
+- Use `--mode release` when measuring performance or preparing production builds.
+
+Run the following to see all available commands:
+```bash
+python3 dev.py --help
+```
+

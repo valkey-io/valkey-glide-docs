@@ -1,0 +1,65 @@
+---
+title: 'Linters'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 3
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Linters
+
+Development on the Java wrapper may involve changes in either the Java or Rust code. Each language has distinct linter tests that must be passed before committing changes.
+
+Firstly, install the Rust linter
+
+```bash
+# Run from the `java` folder
+# Will only need to run once during the installation process
+rustup component add clippy rustfmt
+cargo clippy --all-features --all-targets -- -D warnings
+cargo fmt --manifest-path ./Cargo.toml --all
+```
+
+### Language-specific Linters and Static Code Analysis
+
+**Java:**
+For Java, we use Spotless and SpotBugs.
+
+1. Spotless
+
+    ```bash
+    # Run from the `java` folder
+    ./gradlew :spotlessCheck # run first to see if there are any linting changes to make
+    ./gradlew :spotlessApply # to apply these changes
+    ```
+
+2. SpotBugs
+
+   To run SpotBugs and generate reports:
+
+    ```bash
+    # Run from the `java` folder
+    ./gradlew spotbugsMain
+    ```
+
+   This command will generate HTML and XML reports in the `build/reports/spotbugs/` directory.
+
+   To view the SpotBugs findings:
+    - Open the HTML report located at `build/reports/spotbugs/main/spotbugs.html` in a web browser.
+    - If you are using IntellJ Idea - open `build/reports/spotbugs/main/spotbugs.xml` in SpotBugs plugin as it will provide better experience.
+
+   Ensure any new findings are addressed and fixed before committing and pushing your changes.
+
+   _Note: The `spotbugs` task is currently configured to not fail the build on findings._
+

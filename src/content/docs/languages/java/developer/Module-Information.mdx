@@ -1,0 +1,24 @@
+---
+title: 'Module Information'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 14
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Module Information
+
+- The [module-info.java](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/module-info.java) (glide.api) contains a list of all of the directories the user can access.
+- Ensure to update the exports list if there are more directories the user will need to access.
+

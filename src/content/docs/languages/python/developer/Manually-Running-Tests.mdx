@@ -1,0 +1,40 @@
+---
+title: 'Manually Running Tests'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 6
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Manually Running Tests
+---
+
+If needed, you can invoke `pytest` directly from the root `python/` directory for custom workflows:
+
+### Run all tests manually
+```bash
+source .env/bin/activate
+pytest -v
+```
+
+### Running with different async backends
+
+Python GLIDE supports both trio and asyncio. Pass the `--async-backend` flag to `pytest` with either `trio`, `asyncio` or `uvloop` to run tests on the specified async backend. You can pass multiple async backends to run tests on all of them.
+
+Example:
+```bash
+source .env/bin/activate
+pytest -v --async-backend=trio --async-backend=asyncio
+```
+

@@ -1,0 +1,131 @@
+---
+title: 'Build from source'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 2
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Build from source
+
+**Note:** See the [Troubleshooting](#troubleshooting) section below for possible solutions to problems.
+
+### Prerequisites
+
+**Software Dependencies**
+
+- git
+- GCC
+- pkg-config
+- cmake
+- protoc (protobuf compiler) >= v29.1
+- openssl
+- openssl-dev
+- rustup
+- Java 11
+- ziglang and zigbuild (for GNU Linux only)
+- valkey (for testing)
+
+**Valkey installation**
+
+See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
+
+**Dependencies installation for Ubuntu**
+
+```bash
+sudo apt update -y
+sudo apt install -y openjdk-11-jdk git gcc pkg-config openssl libssl-dev unzip cmake
+# Install rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+# Check that the Rust compiler is installed
+rustc --version
+```
+
+Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+
+**Dependencies installation for CentOS**
+
+```bash
+sudo yum update -y
+sudo yum install -y java-11-openjdk-devel git gcc pkgconfig openssl openssl-devel unzip cmake
+# Install rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+
+**Dependencies installation for MacOS**
+
+```bash
+brew update
+brew install openjdk@11 git gcc pkgconfig openssl cmake
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
+
+Continue with **Install protobuf compiler** below.
+It is not necessary to **Install `ziglang` and `zigbuild`** for MacOS.
+
+**Install protobuf compiler**
+
+Only protobuf v29.1 is supported. Other versions are not supported and may cause build issues.
+
+Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/tag/v29.1).
+Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
+
+```bash
+PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+curl -LO $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
+unzip protoc-29.1-linux-x86_64.zip -d $HOME/.local
+export PATH="$PATH:$HOME/.local/bin"
+# Check that the protobuf compiler version 29.1 or higher is installed
+protoc --version
+```
+
+> [!NOTE]
+> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+
+**Install `ziglang` and `zigbuild`**
+
+```bash
+pip3 install ziglang
+cargo install --locked cargo-zigbuild
+```
+
+### Building and installation steps
+
+Before starting this step, make sure you've installed all software dependencies.
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/valkey-io/valkey-glide.git
+    cd valkey-glide/java
+    ```
+
+2. Build the Java wrapper (Choose a build option from the following and run it from the `java` folder):
+
+    1. Enter the java directory:
+
+    ```bash
+    cd java
+    ```
+
+    2. Build the project:
+
+    ```bash
+    ./gradlew :client:buildAll
+    ```
+

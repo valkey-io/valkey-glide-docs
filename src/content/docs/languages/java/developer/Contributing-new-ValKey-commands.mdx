@@ -1,0 +1,32 @@
+---
+title: 'Contributing new ValKey commands'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 9
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Contributing new ValKey commands
+
+A Valkey command can either have a standalone or cluster implementation which is dependent on their specifications.
+
+- A node is an instance of a Valkey server, and a valkey cluster is composed of multiple nodes working in tandem.
+- A cluster command will require a note to indicate a node will follow a specific routing.
+Refer to https://valkey.io/docs/topics/cluster-spec for more details on how hash slots work for cluster commands.
+
+When you start implementing a new command, check the [command_request.proto](https://github.com/valkey-io/valkey-glide/blob/main/glide-core/src/protobuf/command_request.proto) and [request_type.rs](https://github.com/valkey-io/valkey-glide/blob/main/glide-core/src/request_type.rs) files to see whether the command has already been implemented in another language such as Python or Node.js.
+
+Standalone and cluster clients both extend [BaseClient.java](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/BaseClient.java) and implement methods from the interfaces listed in `java/client/src/main/java/glide/api/commands`.
+The return types of these methods are in the form of a `CompletableFuture`, which fulfill the purpose of the asynchronous features of the program.
+

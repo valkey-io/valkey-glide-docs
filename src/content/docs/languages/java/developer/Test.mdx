@@ -1,0 +1,94 @@
+---
+title: 'Test'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 6
+ badge:
+   text: Draft
+   variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Test
+
+To run all tests, use the following command:
+
+```bash
+./gradlew test
+```
+
+To run the unit tests, use the following command:
+
+```bash
+./gradlew :client:test
+```
+
+To run FFI tests between Java and Rust, use the following command:
+
+```bash
+./gradlew :client:testFfi
+```
+
+To run end-to-end tests, use the following command:
+
+```bash
+./gradlew :integTest:test
+```
+
+To run integration tests for pubsub feature:
+
+```bash
+./gradlew :integTest:pubsubTest
+```
+
+IT suite start the server for testing - standalone and cluster installation using `cluster_manager` script.
+By default, it starts servers without TLS; to activate TLS add `-Dtls=true` to the command line:
+
+```bash
+./gradlew :integTest:test -Dtls=true
+```
+
+To run a single test, use the following command:
+
+```bash
+./gradlew :integTest:test --tests '*.functionLoad_and_functionList' --rerun
+```
+
+To run one class, use the following command:
+
+```bash
+./gradlew :client:test --tests 'BatchTests' --rerun
+```
+
+To run IT tests against an existing cluster and/or standalone endpoint, use:
+
+```bash
+./gradlew :integTest:test -Dcluster-endpoints=localhost:7000 -Dstandalone-endpoints=localhost:6379
+```
+
+If those endpoints use TLS, add `-Dtls=true` (applied to both endpoints):
+
+```bash
+./gradlew :integTest:test -Dcluster-endpoints=localhost:7000 -Dstandalone-endpoints=localhost:6379 -Dtls=true
+```
+
+You can combine this with test filter as well:
+
+```bash
+./gradlew :integTest:test -Dcluster-endpoints=localhost:7000 -Dstandalone-endpoints=localhost:6379 --tests 'BatchTests' -Dtls=true
+```
+
+To run server modules test (it doesn't start servers):
+
+```bash
+./gradlew :integTest:modulesTest -Dcluster-endpoints=localhost:7000 -Dtls=true
+```
+
