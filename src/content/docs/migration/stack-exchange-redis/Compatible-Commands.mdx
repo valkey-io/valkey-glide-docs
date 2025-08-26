@@ -1,0 +1,48 @@
+---
+title: Compatible Commands
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Compatible Commands
+The following Commands are currently supported and are fully compatible[^1]
+
+| | | |
+|---|---|---|
+| ExecuteAsync | CustomCommand | Exec |
+| KeyMoveAsync | KeyCopyAsync | KeyDeleteAsync |
+| KeyUnlinkAsync | KeyExistsAsync | KeyExpireAsync |
+| KeyTimeToLiveAsync | KeyTypeAsync | KeyRenameAsync |
+| KeyRenameNXAsync | KeyPersistAsync | KeyDumpAsync |
+| KeyRestoreAsync | KeyRestoreDateTimeAsync | KeyTouchAsync |
+| HashGetAsync | HashGetAllAsync | HashSetAsync |
+| HashDeleteAsync | HashExistsAsync | HashLengthAsync |
+| HashStringLengthAsync | HashValuesAsync | HashRandomFieldAsync |
+| HashRandomFieldsAsync | HashRandomFieldsWithValuesAsync | ListLeftPopAsync |
+| ListLeftPushAsync | ListRightPushAsync | ListRightPopAsync |
+| ListLengthAsync | ListRemoveAsync | ListTrimAsync |
+| ListRangeAsync | Info | EchoAsync |
+| PingAsync | SetAddAsync | SetRemoveAsync |
+| SetMembersAsync | SetLengthAsync | SetIntersectionLengthAsync |
+| SetPopAsync | SetUnionAsync | SetIntersectAsync |
+| SetDifferenceAsync | SetUnionStoreAsync | SetIntersectStoreAsync |
+| SetDifferenceStoreAsync | SortedSetAddAsync | SortedSetRemoveAsync |
+| SortedSetLengthAsync | SortedSetCardAsync | SortedSetCountAsync |
+| SortedSetRangeByRankAsync | SortedSetRangeByRankWithScoresAsync | SortedSetRangeByScoreAsync |
+| SortedSetRangeByScoreWithScoresAsync | SortedSetRangeByValueAsync | StringSetAsync |
+| StringGetAsync | StringGetRangeAsync | StringSetRangeAsync |
+| StringLengthAsync | StringAppendAsync | StringDecrementAsync |
+| StringIncrementAsync | | |
+

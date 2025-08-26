@@ -195,6 +195,12 @@ export default defineConfig({
 					items: [
 						{ label: 'Index', slug: 'migration/overview' },
 						{ label: 'Lettuce', autogenerate: { directory: 'migration/lettuce' }},
+						{ label: 'Jedis', autogenerate: { directory: 'migration/jedis' }},
+						{ label: "Go-Redis", autogenerate: { "directory": "migration/go-redis" } },
+						{ label: "Ioredis", autogenerate: { "directory": "migration/ioredis" } },
+						{ label: "Redis-py", autogenerate: { "directory": "migration/redis-py" } },
+						{ label: "Redisson", autogenerate: { "directory": "migration/redisson" } },
+						{ label: "StackExchange.Redis", autogenerate: { "directory": "migration/stack-exchange-redis" } },
 						{
 							label: 'From Redis Clients',
 							items: [

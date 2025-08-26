@@ -1,0 +1,27 @@
+---
+title: TODO
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## TODO:
+* Describe which parameters are removed from configuration options and from connection string. List which new parameters added.
+
+* SER automatically pipelines all async API, while GLIDE - don’t.
+
+* Exception handling - exception mapping SER \<-\> GLIDE. TBD - do we need to rename our exceptions and/or change namespace?
+
+---
+[^1]: `CommandFlags` values other than `CommandFlags.None` are not currently supported and will throw an error if used.

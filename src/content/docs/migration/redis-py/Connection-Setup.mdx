@@ -1,0 +1,200 @@
+---
+title: Connection Setup
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Connection Setup
+
+### Constructor Differences
+
+- **redis-py** offers multiple constructors for different connection configurations
+- **Glide** uses a **configuration object** that comes pre-configured with best practices
+
+Glide typically requires minimal configuration changes for:
+- Timeout settings
+- TLS configuration
+- Read from replica settings
+- User authentication (username & password)
+
+For advanced configurations, refer to the **[Glide Wiki - Python](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper)**.
+
+<details>
+<summary><b style="font-size:22px;">Standalone Mode</b></summary>
+
+**redis-py**
+```python
+import redis
+
+# Simple connection
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+# With options
+r_with_options = redis.Redis(
+    host='localhost',
+    port=6379,
+    username='user',
+    password='password',
+    decode_responses=True  # Return strings instead of bytes
+)
+```
+
+**Glide**
+```python
+from glide import GlideClient, GlideClientConfiguration, NodeAddress, ServerCredentials
+
+# Simple connection
+addresses = [NodeAddress("localhost", 6379)]
+client_config = GlideClientConfiguration(addresses)
+client = await GlideClient.create(client_config)
+
+# With options
+addresses = [NodeAddress("localhost", 6379)]
+client_config = GlideClientConfiguration(
+    addresses,
+    use_tls=True,
+    credentials=ServerCredentials(username="user", password="password"),
+    read_from=ReadFrom.AZ_AFFINITY,
+    request_timeout=2000,
+    connection_backoff=ConnectionBackoffStrategy(
+        number_of_retries=5,
+        factor=2,
+        exponent_base=2,
+        jitter_percent=10
+    ),
+    advanced_configuration=AdvancedGlideClientConfiguration(
+        connection_timeout=5000,
+        tls_advanced_configuration=TlsAdvancedConfiguration(
+            use_insecure_tls=False
+        )
+    )
+)
+client_with_options = await GlideClient.create(client_config)
+```
+
+</details>
+
+<details>
+<summary><b style="font-size:22px;">Cluster Mode</b></summary>
+
+**redis-py**  
+```python
+from redis.cluster import RedisCluster
+
+# Simple connection
+rc = RedisCluster(
+    startup_nodes=[
+        {"host": "127.0.0.1", "port": 6379},
+        {"host": "127.0.0.1", "port": 6380}
+    ],
+    decode_responses=True
+)
+
+# With options
+rc_with_options = RedisCluster(
+    startup_nodes=[
+        {"host": "127.0.0.1", "port": 6379},
+        {"host": "127.0.0.1", "port": 6380}
+    ],
+    password="password",
+    decode_responses=True
+)
+```
+
+**Glide**  
+```python
+from glide import GlideClusterClient, GlideClusterClientConfiguration, NodeAddress, ServerCredentials
+
+# Simple connection
+addresses = [
+    NodeAddress("127.0.0.1", 6379),
+    NodeAddress("127.0.0.1", 6380)
+]
+client_config = GlideClusterClientConfiguration(addresses)
+client = await GlideClusterClient.create(client_config)
+
+# With options
+addresses = [
+    NodeAddress("127.0.0.1", 6379),
+    NodeAddress("127.0.0.1", 6380)
+]
+credentials = ServerCredentials(password="password")
+client_config = GlideClusterClientConfiguration(
+    addresses,
+    use_tls=True,
+    credentials=credentials,
+    read_from=ReadFrom.AZ_AFFINITY,
+    request_timeout=2000,
+    connection_backoff=ConnectionBackoffStrategy(
+        number_of_retries=5,
+        factor=2,
+        exponent_base=2,
+        jitter_percent=10
+    ),
+    advanced_configuration=AdvancedGlideClusterClientConfiguration(
+        connection_timeout=5000,
+        tls_advanced_configuration=TlsAdvancedConfiguration(
+            use_insecure_tls=False
+        )
+    )
+)
+client_with_options = await GlideClusterClient.create(client_config)
+```
+
+</details>
+
+<details>
+<summary><b style="font-size:22px;">Constructor Parameters Comparison</b></summary>
+
+The table below compares **redis-py constructors** with **Glide configuration parameters**:
+
+| **redis-py Parameter** | **Equivalent Glide Configuration** |
+|--------------------------|--------------------------------------|
+| `host: str`              | `addresses: [NodeAddress(host="host", port=port)]` |
+| `port: int`              | `addresses: [NodeAddress(host="host", port=port)]` |
+| `db: int`                |  - Use `client.select(db)` after connection |
+| `username: str`          | `credentials: ServerCredentials(username="username")` |
+| `password: str`          | `credentials: ServerCredentials(password="password")` |
+| `socket_timeout: float`  | `request_timeout: int` (in milliseconds) |
+| `socket_connect_timeout: float` | `advanced_configuration: AdvancedGlideClientConfiguration(connection_timeout=timeout)` |
+| `decode_responses: bool` | Use `.decode()` on returned bytes |
+| `retry_on_timeout: bool` | `connection_backoff: ConnectionBackoffStrategy(number_of_retries=retries, factor=factor, exponent_base=base, jitter_percent=percent)` |
+| `ssl: bool`              | `use_tls: bool` |
+| `client_name: str`       | `client_name: str` |
+| `read_from_replicas: bool` | `read_from: ReadFrom.REPLICA` / `read_from: ReadFrom.PREFER_REPLICA` / `read_from: ReadFrom.AZ_AFFINITY` / `read_from: ReadFrom.AZ_AFFINITY_REPLICAS_AND_PRIMARY` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+| `lazy_connect: bool`     | `lazy_connect: bool` |
+
+**Advanced configuration**
+
+**Standalone Mode** uses `GlideClientConfiguration` and **Cluster Mode** uses `GlideClusterClientConfiguration`, but the usage is similar:
+
+```python
+# Standalone mode
+client_config = GlideClientConfiguration(
+    addresses=[NodeAddress(host="localhost", port=6379)],
+    request_timeout=500  # 500ms timeout
+)
+client = await GlideClient.create(client_config)
+
+# Cluster mode
+cluster_config = GlideClusterClientConfiguration(
+    addresses=[NodeAddress(host="localhost", port=6379)],
+    request_timeout=500  # 500ms timeout
+)
+cluster_client = await GlideClusterClient.create(cluster_config)
+```
+
+</details>
+

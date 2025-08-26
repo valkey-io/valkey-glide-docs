@@ -1,0 +1,42 @@
+---
+title: Configuration Considerations
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+## Configuration Considerations
+
+### Connection Strings
+Valkey.Glide uses the same connection string format as StackExchange.Redis, so your existing configuration should work without changes:
+
+```csharp
+var connectionString = "localhost:6379,abortConnect=false";
+var connection = ConnectionMultiplexer.Connect(connectionString);
+```
+
+### Configuration Options
+Most configuration options from StackExchange.Redis are supported in Valkey.Glide:
+
+```csharp
+var config = new ConfigurationOptions
+{
+    EndPoints = { "localhost:6379" },
+    AbortOnConnectFail = false,
+    ConnectTimeout = 5000,
+    SyncTimeout = 5000
+};
+var connection = ConnectionMultiplexer.Connect(config);
+```
+
