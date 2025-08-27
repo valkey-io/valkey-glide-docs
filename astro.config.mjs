@@ -19,7 +19,7 @@ export default defineConfig({
 				// Relative path to your custom CSS file
 				'./src/styles/custom.css',
 			],
-			favicon: '/valkey-favicon.svg',
+			favicon: '/favicon-32x32.png',
 			editLink: {
 				baseUrl: 'https://github.com/valkey-io/valkey-glide-docs/edit/main/',
 			},
