@@ -1,21 +1,15 @@
 # Valkey Glide Documentations
 
-The home of great documentation for Valkey GLIDE.  
+The home for Valkey GLIDE documentations.  
 
 The public site can be found at:
 https://valkey.io/valkey-glide-docs/
-
-The documentation will
-- have a developer's perspective
-- take the best parts of the existing documentation, consolidated and upgraded to best-in-class content
-- Deliver a superior onboarding experience
-- deliver an effective sales pitch indicating why GLIDE is the best choice in its class
 
 ## Technology
 
 The site is built with [Starlight](https://starlight.astro.build/), an Astro framework for building static documentation sites. 
 
-The framework provides out-of-the-box features for building documentations like components, site search, navigations, and integrations with MDX files. It also leverages Astro's features like island architecture to build dynamic components.
+The framework provides out-of-the-box features for building documentations like UI components, site search, navigations, and integrations with MDX files. It also leverages Astro's features like island architecture to build dynamic components.
 
 ## Getting Started
 
