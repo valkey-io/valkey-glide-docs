@@ -7,15 +7,15 @@ sidebar:
     variant: caution
     order: 1
 ---
+
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Prerequisites
 
@@ -38,7 +38,9 @@ Once set up, you can run the basic examples.
 Additionally, consider installing the Gradle plugin, [OS Detector](https://github.com/google/osdetector-gradle-plugin) to help you determine what classifier to use.
 
 ## Classifiers
+
 There are 4 types of classifiers for Valkey GLIDE which are
+
 ```
 osx-aarch_64
 osx-x86_64
@@ -47,118 +49,125 @@ linux-x86_64
 ```
 
 <Tabs syncKey="exmaple">
-<TabItem label="Gradle" >
-<Aside type="caution">
-- Copy the snippet and paste it in the `build.gradle` dependencies section.
-- **IMPORTANT** must include a `classifier` to specify your platform.
-</Aside>
-```groovy
-// osx-aarch_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-aarch_64'
-}
+  <TabItem label="Gradle">
+    <Aside type="caution">
+      * Copy the snippet and paste it in the `build.gradle` dependencies section.
+      * **IMPORTANT** must include a `classifier` to specify your platform.
+    </Aside>
 
-// osx-x86_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-x86_64'
-}
+    ```groovy
+    // osx-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-aarch_64'
+    }
 
-// linux-aarch_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-aarch_64'
-}
+    // osx-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-x86_64'
+    }
 
-// linux-x86_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-x86_64'
-}
+    // linux-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-aarch_64'
+    }
 
-// with osdetector
-plugins {
-    id "com.google.osdetector" version "1.7.3"
-}
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: osdetector.classifier
-}
-```
-</TabItem>
-<TabItem label="Maven" >
-- **IMPORTANT** must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
-```xml
+    // linux-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-x86_64'
+    }
 
-<!-- osx-x86_64 -->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>osx-x86_64</classifier>
-   <version>[1.0.0,)</version>
-</dependency>
+    // with osdetector
+    plugins {
+        id "com.google.osdetector" version "1.7.3"
+    }
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: osdetector.classifier
+    }
+    ```
+  </TabItem>
 
-<!-- osx-aarch_64 -->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>osx-aarch_64</classifier>
-   <version>[1.0.0,)</version>
-</dependency>
+  <TabItem label="Maven">
+    * **IMPORTANT** must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
 
-<!-- linux-aarch_64 -->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>linux-aarch_64</classifier>
-   <version>[1.0.0,)</version>
-</dependency>
+    ```xml
 
-<!-- linux-x86_64 -->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>linux-x86_64</classifier>
-   <version>[1.0.0,)</version>
-</dependency>
-
-<!-- with os-maven-plugin -->
-<build>
-    <extensions>
-        <extension>
-            <groupId>kr.motd.maven</groupId>
-            <artifactId>os-maven-plugin</artifactId>
-        </extension>
-    </extensions>
-</build>
-<dependencies>
+    <!-- osx-x86_64 -->
     <dependency>
-        <groupId>io.valkey</groupId>
-        <artifactId>valkey-glide</artifactId>
-        <classifier>${os.detected.classifier}</classifier>
-        <version>[1.0.0,)</version>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>osx-x86_64</classifier>
+       <version>[1.0.0,)</version>
     </dependency>
-</dependencies>
-```
-</TabItem>
-<TabItem label="SBT" >
-- **IMPORTANT** must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
-```scala
-// osx-aarch_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"
 
-// osx-x86_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-x86_64"
+    <!-- osx-aarch_64 -->
+    <dependency>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>osx-aarch_64</classifier>
+       <version>[1.0.0,)</version>
+    </dependency>
 
-// linux-aarch_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-aarch_64"
+    <!-- linux-aarch_64 -->
+    <dependency>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>linux-aarch_64</classifier>
+       <version>[1.0.0,)</version>
+    </dependency>
 
-// linux-x86_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-x86_64"
-```
-</TabItem>
+    <!-- linux-x86_64 -->
+    <dependency>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>linux-x86_64</classifier>
+       <version>[1.0.0,)</version>
+    </dependency>
+
+    <!-- with os-maven-plugin -->
+    <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+            </extension>
+        </extensions>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>io.valkey</groupId>
+            <artifactId>valkey-glide</artifactId>
+            <classifier>${os.detected.classifier}</classifier>
+            <version>[1.0.0,)</version>
+        </dependency>
+    </dependencies>
+    ```
+  </TabItem>
+
+  <TabItem label="SBT">
+    * **IMPORTANT** must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+
+    ```scala
+    // osx-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"
+
+    // osx-x86_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-x86_64"
+
+    // linux-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-aarch_64"
+
+    // linux-x86_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-x86_64"
+    ```
+  </TabItem>
 </Tabs>
+
 ## Setting up the Java module
 
 To use Valkey GLIDE in a Java project with modules, include a module-info.java in your project.
 
 For example, if your program is called `App`, you can follow this path
+
 ```java
 app/src/main/java/module-info.java
 ```
@@ -167,6 +176,7 @@ and inside the module it will specifically require the line
 `requires glide.api;`
 
 For example, if your project has a module called playground, it would look like this
+
 ```java
 module playground {
     requires glide.api;

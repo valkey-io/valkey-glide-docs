@@ -9,11 +9,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Why Valkey Glide?
 
@@ -31,20 +30,19 @@ Valkey GLIDE uses a single, battle-tested Rust core with thin language bindings.
 
 Built specifically for production workloads with features that are important to your business:
 
-- **Intelligent connection management** with automatic failover
-- **Built-in request throttling** prevents server overload (configurable, defaults to 1000 concurrent requests)
-- **Cluster topology awareness** with automatic slot migration handling
-- **Comprehensive monitoring** with OpenTelemetry integration out of the box
+* **Intelligent connection management** with automatic failover
+* **Built-in request throttling** prevents server overload (configurable, defaults to 1000 concurrent requests)
+* **Cluster topology awareness** with automatic slot migration handling
+* **Comprehensive monitoring** with OpenTelemetry integration out of the box
 
 ### Cloud-Native Architecture
 
 Designed for modern cloud deployments:
 
-- **Availability zone awareness** for optimal performance in multi-AZ setups
-- **Automatic retry logic** with exponential backoff
-- **TLS support** for secure communication
-- **Cross-platform consistency** across operating systems and environments
-
+* **Availability zone awareness** for optimal performance in multi-AZ setups
+* **Automatic retry logic** with exponential backoff
+* **TLS support** for secure communication
+* **Cross-platform consistency** across operating systems and environments
 
 ## Client Comparison
 
@@ -81,9 +79,9 @@ Designed for modern cloud deployments:
 | **Multi-language projects** | Inconsistent with other clients | Identical behavior across languages |
 | **PubSub reliability** | Connection issues common | Robust with automatic reconnection |
 
-### Node.js: node_redis vs Valkey GLIDE
+### Node.js: node\_redis vs Valkey GLIDE
 
-| Feature | node_redis | Valkey GLIDE |
+| Feature | node\_redis | Valkey GLIDE |
 |---------|------------|--------------|
 | **TypeScript support** | Good | Excellent with full type safety |
 | **Cluster management** | Manual topology updates | Automatic topology awareness |
@@ -101,17 +99,20 @@ Designed for modern cloud deployments:
 | **Connection pooling** | Standard | Advanced with AZ awareness |
 | **Status** | Mature | Public preview with active development |
 
----
+***
 
 ## Architecture That Scales
 
 ### The Power of a Unified Core
+
 Valkey GLIDE uses a layered architecture with a Rust core and language-specific bindings. This design ensures consistency across languages while allowing for idiomatic interfaces in each supported programming language
 
 ![Valkey GLIDE Architecture](../../../assets/architecture-diagram.png)
 
 ## Key Components Explained
+
 ### Application Layer
+
 This is where your application code interacts with Valkey GLIDE. The application layer is responsible for:
 
 Command Creation: Applications construct commands using language-specific APIs
@@ -121,6 +122,7 @@ Error Handling: Application-level error handling and recovery strategies
 Applications can interact with Valkey GLIDE in both synchronous and asynchronous modes, depending on the language and configuration.
 
 ### Language Binding Layer
+
 The language binding layer provides idiomatic interfaces for each supported programming language:
 
 Python: Offers Pythonic APIs with support for async/await, context managers, and type hints
@@ -136,6 +138,7 @@ API Design: Providing language-appropriate patterns and idioms
 Documentation: Generating language-specific documentation and examples
 
 ### FFI Boundary Layer
+
 The Foreign Function Interface (FFI) boundary is the critical bridge between language-specific code and the Rust core. This layer:
 
 Defines Data Exchange Contracts: Strict interfaces for passing data between languages
@@ -150,6 +153,7 @@ Node.js: Uses N-API
 Go: Uses CGO
 
 ### Rust Core Layer
+
 The heart of Valkey GLIDE is implemented in Rust, providing:
 
 Command Routing: Determines which node should receive each command
@@ -160,6 +164,7 @@ Error Handling: Implements retry logic
 The Rust core ensures consistent behavior across all language bindings while leveraging Rust's safety guarantees and performance characteristics.
 
 ### Network Communication Layer
+
 The network layer handles all communication with Valkey/Redis servers:
 
 TCP Connection Management: Establishes and maintains TCP connections

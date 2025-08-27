@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. Glide 2.0 introduces a robust Batch API with two primary modes:
 
@@ -24,7 +23,8 @@ In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the 
 Both modes leverage the same classes— `Batch` for standalone mode and `ClusterBatch` for cluster mode — distinguished by an `isAtomic` flag. Extra configuration is provided via `BatchOptions` or `ClusterBatchOptions`, allowing control over timeouts, routings, and retry strategies.
 
 ## Concepts
-###  **Atomic Batch (Transaction)**
+
+### **Atomic Batch (Transaction)**
 
 * **Definition:** A set of commands executed together as a single, indivisible operation.
 * **Guarantees:** Sequential execution without interruption. Other clients cannot interleave commands between the batched operations.
@@ -42,7 +42,9 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * **See:** [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
 ## What's Next?
-For detailed documentation, see - 
+
+For detailed documentation, see -
+
 * [Python wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/Python-wrapper#batch-transaction-and-pipelining-glide-20)
 * [NodeJS wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-wrapper#batch-transaction-and-pipelining-glide-20)
 * [Java wrapper - Batch: Transaction and Pipelining](https://github.com/valkey-io/valkey-glide/wiki/Java-wrapper#batch-transaction-and-pipelining-glide-20)

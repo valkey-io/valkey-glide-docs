@@ -11,14 +11,15 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-
 ## Protobuf
----
+
+***
+
 During the initial build, Python protobuf files were created in `python/glide-shared/glide_shared/protobuf`. If modifications are made to the protobuf definition files (`.proto` files located in `glide-core/src/protofuf`), it becomes necessary to regenerate the Python protobuf files.
 
 Protobuf files are automatically regenerated as part of the `build` process. If you only need to regenerate the protobuf files (e.g., after editing `.proto` files), you can use the standalone command the root `python/` directory:
@@ -28,4 +29,3 @@ python3 dev.py protobuf
 ```
 
 This generates `.py` and `.pyi` interface files for type checking and places them in the `python/glide-shared/glide_shared/protobuf` folder.
-

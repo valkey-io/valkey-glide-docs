@@ -10,15 +10,15 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Configuration Considerations
 
 ### Connection Strings
+
 Valkey.Glide uses the same connection string format as StackExchange.Redis, so your existing configuration should work without changes:
 
 ```csharp
@@ -27,6 +27,7 @@ var connection = ConnectionMultiplexer.Connect(connectionString);
 ```
 
 ### Configuration Options
+
 Most configuration options from StackExchange.Redis are supported in Valkey.Glide:
 
 ```csharp
@@ -39,4 +40,3 @@ var config = new ConfigurationOptions
 };
 var connection = ConnectionMultiplexer.Connect(config);
 ```
-

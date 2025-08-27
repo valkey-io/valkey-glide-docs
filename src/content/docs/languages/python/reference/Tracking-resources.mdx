@@ -10,18 +10,17 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ### Tracking resources
 
 GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns a `Dict` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
 
-- `total_connections` contains the number of active connections across **all** clients
-- `total_clients` contains the number of active clients (regardless of its type)
+* `total_connections` contains the number of active connections across **all** clients
+* `total_clients` contains the number of active clients (regardless of its type)
 
 ```python
 from glide import (

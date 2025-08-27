@@ -3,10 +3,11 @@
 ## 1. Entry Point Strategy (valkey.io/docs)
 
 ### 1.1 GLIDE Landing Section
+
 ```
 valkey.io/docs/glide/
 ├── overview                      # "Why GLIDE?" - 30-second elevator pitch
-├── quick-compare                 # GLIDE vs other Redis/Valkey clients 
+├── quick-compare                 # GLIDE vs other Redis/Valkey clients
 ├── supported-languages           # Java | Node.js | Python | Go | C# | PHP
  → redirect
 ```
@@ -14,9 +15,10 @@ valkey.io/docs/glide/
 **Automatic Redirect Rule:** `valkey.io/docs/glide/*` → `https://glide.valkey.io/*`
 
 ### 1.2 Integration with Main Valkey Docs
-- Add GLIDE tile to main docs navigation
-- Cross-link from server documentation where relevant
-- Include GLIDE in client comparison matrices
+
+* Add GLIDE tile to main docs navigation
+* Cross-link from server documentation where relevant
+* Include GLIDE in client comparison matrices
 
 ## 2. Main Documentation Architecture (glide.valkey.io)
 
@@ -25,6 +27,7 @@ valkey.io/docs/glide/
 Note: Each section will contain language specific example. For convinience, user will have ability to easily switch between languages:
 
 #### Choose Your Language
+
 ```xml
 <Tabs groupId="languages">
   <TabItem value="python" label="Python">
@@ -274,66 +277,71 @@ glide.valkey.io/
     │   └── migration/
     │       └── from-stackexchange-redis.md
     └── php/                        # Future: PHP support
-````
+```
 
 ## 3. Content Mapping from Existing Sources
 
 ### 3.1 Repository README Files
-| Source | Destination |
-|--------|-------------|
-| `/README.md` | `getting-started/overview.md` + `concepts/architecture/` |
-| `/java/README.md` | `languages/java/getting-started/` |
-| `/node/README.md` | `languages/nodejs/getting-started/` |
-| `/python/README.md` | `languages/python/getting-started/` |
-| `/go/README.md` | `languages/go/getting-started/` |
+
+| Source              | Destination                                              |
+| ------------------- | -------------------------------------------------------- |
+| `/README.md`        | `getting-started/overview.md` + `concepts/architecture/` |
+| `/java/README.md`   | `languages/java/getting-started/`                        |
+| `/node/README.md`   | `languages/nodejs/getting-started/`                      |
+| `/python/README.md` | `languages/python/getting-started/`                      |
+| `/go/README.md`     | `languages/go/getting-started/`                          |
 
 ### 3.2 Wiki Pages Mapping
-| Wiki Page | Primary Destination | Secondary Destinations |
-|-----------|-------------------|----------------------|
-| General Concepts | `concepts/architecture/` | Language-specific concept pages |
-| NodeJS Wrapper | `languages/nodejs/` | Cross-references in shared how-to |
-| Python Wrapper | `languages/python/` | Cross-references in shared how-to |
-| Golang Wrapper | `languages/go/` | Cross-references in shared how-to |
-| Java Wrapper | `languages/java/` | Cross-references in shared how-to |
-| Migration Guide Jedis | `migration/from-redis-clients/jedis-to-glide/` | `languages/java/migration/` |
-| Migration Guide ioredis | `migration/from-redis-clients/ioredis-to-glide/` | `languages/nodejs/migration/` |
-| Known Issues | `concepts/limitations/known-issues.md` | Language-specific troubleshooting |
+
+| Wiki Page               | Primary Destination                              | Secondary Destinations            |
+| ----------------------- | ------------------------------------------------ | --------------------------------- |
+| General Concepts        | `concepts/architecture/`                         | Language-specific concept pages   |
+| NodeJS Wrapper          | `languages/nodejs/`                              | Cross-references in shared how-to |
+| Python Wrapper          | `languages/python/`                              | Cross-references in shared how-to |
+| Golang Wrapper          | `languages/go/`                                  | Cross-references in shared how-to |
+| Java Wrapper            | `languages/java/`                                | Cross-references in shared how-to |
+| Migration Guide Jedis   | `migration/from-redis-clients/jedis-to-glide/`   | `languages/java/migration/`       |
+| Migration Guide ioredis | `migration/from-redis-clients/ioredis-to-glide/` | `languages/nodejs/migration/`     |
+| Known Issues            | `concepts/limitations/known-issues.md`           | Language-specific troubleshooting |
 
 ### 3.3 New Content Suggestions
-- Docker Compose setup files for quick-start
 
+* Docker Compose setup files for quick-start
 
 ## 4. Multi-Language Implementation Strategy
 
 ### 4.1 Shared vs Language-Specific Content
 
 **Keep Shared (Language-Agnostic):**
-_All code examples in the shared documentation will remain language specific with ability for user to choose language._
+*All code examples in the shared documentation will remain language specific with ability for user to choose language.*
 
-- Valkey/GLIDE concepts and architecture
-- Deployment and operational guidance
-- Security best practices
-- Performance optimization theory
-- Migration strategy planning
+* Valkey/GLIDE concepts and architecture
+* Deployment and operational guidance
+* Security best practices
+* Performance optimization theory
+* Migration strategy planning
 
 **Make Language-Specific:**
-- Installation procedures
-- Framework integrations
-- Async/sync API patterns
-- Error handling idioms
-- Testing approaches
-- Build and deployment specifics
+
+* Installation procedures
+* Framework integrations
+* Async/sync API patterns
+* Error handling idioms
+* Testing approaches
+* Build and deployment specifics
 
 ### 4.2 Navigation Strategy
 
 **Global Navigation:**
-- Persistent language selector (stored in localStorage)
-- "See this in [Language]" links in shared content
-- Breadcrumb navigation showing shared → specific context
-- Quick-switch between equivalent pages
+
+* Persistent language selector (stored in localStorage)
+* "See this in \[Language]" links in shared content
+* Breadcrumb navigation showing shared → specific context
+* Quick-switch between equivalent pages
 
 **Language-Specific Navigation:**
-- Each language section mirrors main structure
-- Cross-links to shared conceptual content
-- Language-specific entry points for each tutorial
-- Progressive disclosure of advanced topics
+
+* Each language section mirrors main structure
+* Cross-links to shared conceptual content
+* Language-specific entry points for each tutorial
+* Progressive disclosure of advanced topics

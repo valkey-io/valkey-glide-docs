@@ -10,17 +10,16 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site under construction and is not yet complete!
+  This documentation site under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ### Authentication
 
 By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
 
-Valkey GLIDE also offers support for an authenticated connection mode. 
+Valkey GLIDE also offers support for an authenticated connection mode.
 
 In authenticated mode, you have the following options:
 
@@ -53,7 +52,6 @@ GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder
 GlideClusterClient client = GlideClusterClient.createClient(config).get();
 ```
 
-
 #### Example - Connecting with Username and Password to a Standalone
 
 ```java
@@ -77,6 +75,7 @@ GlideClient client = GlideClient.createClient(config).get();
 ```
 
 #### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+
 See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
 
 The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
@@ -168,6 +167,7 @@ class ElasticachePasswordGenerator {
 ```
 
 **Usage example -**
+
 ```java
 import glide.api.GlideClusterClient;
 import glide.api.models.configuration.NodeAddress;
@@ -238,9 +238,10 @@ public class Main {
 
 **Token generation using AWS Java SDK v1**
 
-NOTE: Java SDK v1 is going to be [EOS effective December 31, 2025](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-java-v1-x-on-december-31-2025/). 
+NOTE: Java SDK v1 is going to be [EOS effective December 31, 2025](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-java-v1-x-on-december-31-2025/).
 
-**Token generation (Java SDK v1)** - 
+**Token generation (Java SDK v1)** -
+
 ```java
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -330,7 +331,8 @@ public class ElastiCacheIAMProvider {
 }
 ```
 
-**Usage example** - 
+**Usage example** -
+
 ```java
 import glide.api.GlideClusterClient;
 import glide.api.models.configuration.NodeAddress;
@@ -398,4 +400,3 @@ public class Main {
         }
     }
 ```
-

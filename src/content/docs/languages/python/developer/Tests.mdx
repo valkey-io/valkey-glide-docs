@@ -11,24 +11,26 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-
 ## Tests
----
+
+***
 
 Ensure you have installed `valkey-server` and `valkey-cli` on your host (or `redis-server` and `redis-cli`).
 See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
 
 You can run all tests from the root `python/` directory using:
+
 ```bash
 python3 dev.py test
 ```
 
 To pass additional arguments to `pytest`, use the `--args` flag:
+
 ```bash
 # Run a specific test
 python3 dev.py test --args -k <test_name>
@@ -39,4 +41,3 @@ python3 dev.py test --args \
   --cluster-endpoints=localhost:7000 \
   --standalone-endpoints=localhost:6379
 ```
-

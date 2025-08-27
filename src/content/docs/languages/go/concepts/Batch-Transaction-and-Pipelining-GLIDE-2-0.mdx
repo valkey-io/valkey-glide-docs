@@ -10,9 +10,9 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
 Valkey GLIDE 2.0 introduces the concept of **Batch** and **ClusterBatch**.
@@ -45,9 +45,11 @@ Both modes leverage the same classes — `StandaloneBatch` for standalone mode a
 * **See:** [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
 ### Classes and API
+
 **`StandaloneBatch`**
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
+
 ```go
 import "github.com/valkey-io/valkey-glide/go/v2/pipeline";
 
@@ -62,6 +64,7 @@ pipeline := pipeline.NewStandaloneBatch(false)
 **`ClusterBatch`**
 
 For **cluster** (cluster mode enabled) clients (Mirrors `StandaloneBatch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support)).
+
 ```go
 import "github.com/valkey-io/valkey-glide/go/v2/pipeline";
 
@@ -70,14 +73,16 @@ transaction := pipeline.NewClusterBatch(true)
 // Create a non-atomic cluster batch (pipeline may span multiple slots)
 pipeline := pipeline.NewClusterBatch(false)
 ```
-<Aside> 
-When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support).
-If the client is configured to read from replicas (`PreferReplica`, `AzAffinity`, `AzAffinityReplicaAndPrimary`) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration. 
+
+<Aside>
+  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support).
+  If the client is configured to read from replicas (`PreferReplica`, `AzAffinity`, `AzAffinityReplicaAndPrimary`) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 </Aside>
 
 **Error handling - `Return an Error`**
 
 Determines how errors are surfaced when calling `Exec(...)` and `ExecWithOptions(...)`. It is passed directly:
+
 ```go
 // Standalone Mode
 Exec(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool) ([]any, error)
@@ -91,14 +96,15 @@ ExecWithOptions(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError b
 Behavior:
 
 * `raiseOnError = true`:
-When set to `true`, the first encountered error within the batch (after all configured retries and redirections have been executed) is raised as a `RequestException`.
+  When set to `true`, the first encountered error within the batch (after all configured retries and redirections have been executed) is raised as a `RequestException`.
 
 * `raiseOnError = false`:
-    * When set to `false`, errors are returned as part of the response array rather than thrown.
-    * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned `[]any`.
-    * Allows processing of both successful and failed commands together.
+  * When set to `false`, errors are returned as part of the response array rather than thrown.
+  * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned `[]any`.
+  * Allows processing of both successful and failed commands together.
 
 **Example:**
+
 ```go
 // Cluster pipeline with raiseOnError = false
 pipeline := pipeline.NewClusterBatch(false).
@@ -109,6 +115,7 @@ res, err := clusterClient.Exec(ctx, *pipeline, false)
 fmt.Printf("Result is: %+v\n", res)
 // Output: Result is: [OK WRONGTYPE: Operation against a key holding the wrong kind of value An error was signalled by the server: - ResponseError: no such key]
 ```
+
 ```go
 // Transaction with raiseOnError = true
 transaction := pipeline.NewStandaloneBatch(true).
@@ -145,7 +152,6 @@ Configuration for cluster batches.
 | `retryStrategy` | `ClusterBatchRetryStrategy` | nil (defaults to no retries)  | Configures retry settings for server and connection errors. Not supported if`isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
 |     `route`     |  `config.SingleNodeRoute`   |              nil              |                                                       Configures single-node routing for the batch request.                                                       |
 
-
 **`ClusterBatchRetryStrategy`**
 
 Defines retry behavior (only for **non-atomic** cluster batches).
@@ -161,8 +167,9 @@ retryStrategy := pipeline.NewClusterBatchRetryStrategy().
 	WithRetryConnectionError(true).
 	WithRetryServerError(true)
 ```
-<Aside> 
-The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be returned.
+
+<Aside>
+  The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be returned.
 </Aside>
 
 **Full usage**
@@ -180,6 +187,7 @@ options := pipeline.NewStandaloneBatchOptions().
 ```
 
 ### Configuration Details
+
 **Timeout**
 
 * Specifies the maximum time to wait for the batch (atomic or non-atomic) request to complete.
@@ -189,13 +197,13 @@ options := pipeline.NewStandaloneBatchOptions().
 **Retry Strategies (Cluster Only, Non-Atomic Batches)**
 
 * **Retry on Server Errors**
-    * Applies when a command fails with a retriable server error (e.g., `TRYAGAIN`).
-    * GLIDE will automatically retry the failed command on the same node or the new master, depending on the topology update.
-    * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
+  * Applies when a command fails with a retriable server error (e.g., `TRYAGAIN`).
+  * GLIDE will automatically retry the failed command on the same node or the new master, depending on the topology update.
+  * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-    * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support))  is retried from the start.
-    * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
+  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support))  is retried from the start.
+  * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
 
@@ -206,7 +214,9 @@ If a redirection error occurs:
 * **For Non-Atomic Batches (Pipelines):** only the commands that encountered redirection errors will be redirected.
 
 ### Usage Examples
+
 **Standalone (Atomic Batch)**
+
 ```go
 import (
 	glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -238,7 +248,9 @@ res, err := client.Exec(ctx, *transaction, true)
 fmt.Printf("Atomic Batch Results: %+v\n", res)
 // Atomic Batch Results: [OK OK 50 50 50]
 ```
+
 **Standalone (Non-Atomic Batch)**
+
 ```go
 import (
 	glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -270,6 +282,7 @@ fmt.Printf("Atomic Batch Results: %+v\n", res)
 ```
 
 **Cluster (Atomic Batch)**
+
 ```go
 import (
 	glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -299,11 +312,13 @@ res, err := client.Exec(ctx, *transaction, true)
 fmt.Printf("Atomic Batch Results: %+v\n", res)
 // Atomic Cluster Batch Results: [OK 6 6]
 ```
-<Aside type="caution"> 
-If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
+
+<Aside type="caution">
+  If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
 </Aside>
 
 **Cluster (Non-Atomic Batch / Pipeline)**
+
 ```go
 import (
 	glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -360,13 +375,13 @@ When errors occur during pipeline execution, GLIDE handles them efficiently and 
 GLIDE distinguishes between different types of errors and handles them as follows:
 
 * **Redirection Errors (e.g., `MOVED` or `ASK`):**
-    These are always handled automatically. GLIDE will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
+  These are always handled automatically. GLIDE will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
 * **Retriable Server Errors (e.g., `TRYAGAIN`):**
-    If the `retryServerError` option is enabled in the batch's retry strategy, GLIDE will retry commands that fail with retriable server errors. 
-    ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
+  If the `retryServerError` option is enabled in the batch's retry strategy, GLIDE will retry commands that fail with retriable server errors.
+  ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
 * **Connection Errors:**
-    If the `retryConnectionError` option is enabled, GLIDE will retry the batch if a connection failure occurs. 
-    ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
+  If the `retryConnectionError` option is enabled, GLIDE will retry the batch if a connection failure occurs.
+  ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
 
 Retry strategies are currently supported only for **non-atomic (pipeline) cluster batches.** You can configure these using the `ClusterBatchRetryStrategy` options:
 
@@ -381,7 +396,9 @@ Suppose you issue the following commands:
 MGET key {key}:1
 SET key "value"
 ```
+
 When keys are empty, the result is expected to be:
+
 ```
 [null, null]
 OK
@@ -390,8 +407,8 @@ OK
 However, suppose the slot of `key` is migrating. In this case, both commands will return an `ASK` error and be redirected.
 Upon `ASK` redirection, a multi-key command (like `MGET`) may return a `TRYAGAIN` error (triggering a retry), while the `SET` command succeeds immediately.
 This can result in an unintended reordering of commands if the first command is retried after the slot stabilizes:
+
 ```
 ["value", null]
 OK
 ```
-

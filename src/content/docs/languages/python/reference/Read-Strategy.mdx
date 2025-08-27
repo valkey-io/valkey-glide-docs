@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ### Read Strategy
 
@@ -29,7 +28,7 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZ_AFFINITY`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
 |`AZ_AFFINITY_REPLICAS_AND_PRIMARY`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
 
-#### Example - Use PREFER_REPLICA Read Strategy
+#### Example - Use PREFER\_REPLICA Read Strategy
 
 ```python
 from glide import (
@@ -48,8 +47,9 @@ await client.set("key1", "val1")
 await client.get("key1")
 ```
 
-#### Example - Use AZ_AFFINITY Read Strategy
-If ReadFrom strategy is AZ_AFFINITY, 'client_az' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
+#### Example - Use AZ\_AFFINITY Read Strategy
+
+If ReadFrom strategy is AZ\_AFFINITY, 'client\_az' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
 
 ```python
 from glide import (
@@ -68,8 +68,9 @@ await client.set("key1", "val1")
 await client.get("key1")
 ```
 
-#### Example - Use AZ_AFFINITY_REPLICAS_AND_PRIMARY Read Strategy
-If ReadFrom strategy is AZ_AFFINITY_REPLICAS_AND_PRIMARY, 'client_az' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
+#### Example - Use AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY Read Strategy
+
+If ReadFrom strategy is AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY, 'client\_az' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
 
 ```python
 from glide import (
@@ -87,4 +88,3 @@ await client.set("key1", "val1")
 # get will read from one of the replicas or the primary in the same client's availability zone if exits.
 await client.get("key1")
 ```
-

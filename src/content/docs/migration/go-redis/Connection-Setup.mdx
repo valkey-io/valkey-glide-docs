@@ -10,207 +10,207 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Connection Setup
 
 ### Constructor Differences
 
-- **go-redis** offers multiple client types and configuration options for different connection scenarios
-- **Glide** uses a **single configuration object** that comes pre-configured with best practices
+* **go-redis** offers multiple client types and configuration options for different connection scenarios
+* **Glide** uses a **single configuration object** that comes pre-configured with best practices
 
 Glide typically requires minimal configuration changes for:
-- Timeout settings
-- TLS configuration
-- Read from replica settings
-- User authentication (username & password)
+
+* Timeout settings
+* TLS configuration
+* Read from replica settings
+* User authentication (username & password)
 
 For advanced configurations, refer to the **[Valkey Glide Wiki - Go](https://github.com/valkey-io/valkey-glide/wiki/Go-wrapper)**.
 
 <details>
-<summary><b style="font-size:22px;">Standalone Mode</b></summary>
+  <summary><b style="font-size:22px;">Standalone Mode</b></summary>
 
-**go-redis**
-```go
-import (
-    "context"
-    "github.com/redis/go-redis/v9"
-)
+  **go-redis**
 
-var ctx = context.Background()
+  ```go
+  import (
+      "context"
+      "github.com/redis/go-redis/v9"
+  )
 
-// Simple connection
-rdb := redis.NewClient(&redis.Options{
-    Addr: "localhost:6379",
-})
+  var ctx = context.Background()
 
-// With options
-rdbWithOptions := redis.NewClient(&redis.Options{
-    Addr:     "localhost:6379",
-    Username: "user",
-    Password: "password",
-})
-```
+  // Simple connection
+  rdb := redis.NewClient(&redis.Options{
+      Addr: "localhost:6379",
+  })
 
-**Glide**
-```go
-import (
-    "context"
-    "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
+  // With options
+  rdbWithOptions := redis.NewClient(&redis.Options{
+      Addr:     "localhost:6379",
+      Username: "user",
+      Password: "password",
+  })
+  ```
 
-var ctx = context.Background()
+  **Glide**
 
-// Simple connection
-client, err := glide.NewClient(&config.ClientConfiguration{
-    Addresses: []config.NodeAddress{
-        {Host: "localhost", Port: 6379},
-    },
-})
+  ```go
+  import (
+      "context"
+      "github.com/valkey-io/valkey-glide/go/v2"
+      "github.com/valkey-io/valkey-glide/go/v2/config"
+  )
 
-// With options
-clientWithOptions, err := glide.NewClient(&config.ClientConfiguration{
-    Addresses: []config.NodeAddress{
-        {Host: "localhost", Port: 6379},
-    },
-    UseTLS: true,
-    Credentials: &config.ServerCredentials{
-        Username: "user",
-        Password: "password",
-    },
-    ReadFrom: config.ReadFromAZAffinity,
-    RequestTimeout: 2000 * time.Millisecond,
-    ConnectionBackoff: &config.ConnectionBackoffStrategy{
-        NumberOfRetries: 5,
-        Factor:          2,
-        ExponentBase:    2,
-        JitterPercent:   10,
-    },
-    AdvancedConfiguration: &config.AdvancedClientConfiguration{
-        ConnectionTimeout: 5000 * time.Millisecond,
-        TLSAdvancedConfiguration: &config.TLSAdvancedConfiguration{
-            UseInsecureTLS: false,
-        },
-    },
-    DatabaseId: 0,
-})
-```
+  var ctx = context.Background()
 
+  // Simple connection
+  client, err := glide.NewClient(&config.ClientConfiguration{
+      Addresses: []config.NodeAddress{
+          {Host: "localhost", Port: 6379},
+      },
+  })
+
+  // With options
+  clientWithOptions, err := glide.NewClient(&config.ClientConfiguration{
+      Addresses: []config.NodeAddress{
+          {Host: "localhost", Port: 6379},
+      },
+      UseTLS: true,
+      Credentials: &config.ServerCredentials{
+          Username: "user",
+          Password: "password",
+      },
+      ReadFrom: config.ReadFromAZAffinity,
+      RequestTimeout: 2000 * time.Millisecond,
+      ConnectionBackoff: &config.ConnectionBackoffStrategy{
+          NumberOfRetries: 5,
+          Factor:          2,
+          ExponentBase:    2,
+          JitterPercent:   10,
+      },
+      AdvancedConfiguration: &config.AdvancedClientConfiguration{
+          ConnectionTimeout: 5000 * time.Millisecond,
+          TLSAdvancedConfiguration: &config.TLSAdvancedConfiguration{
+              UseInsecureTLS: false,
+          },
+      },
+      DatabaseId: 0,
+  })
+  ```
 </details>
 
 <details>
-<summary><b style="font-size:22px;">Cluster Mode</b></summary>
+  <summary><b style="font-size:22px;">Cluster Mode</b></summary>
 
-**go-redis**  
-```go
-import (
-    "github.com/redis/go-redis/v9"
-)
+  **go-redis**
 
-cluster := redis.NewClusterClient(&redis.ClusterOptions{
-    Addrs: []string{"127.0.0.1:6379", "127.0.0.1:6380"},
-})
+  ```go
+  import (
+      "github.com/redis/go-redis/v9"
+  )
 
-// With options
-clusterWithOptions := redis.NewClusterClient(&redis.ClusterOptions{
-    Addrs:    []string{"127.0.0.1:6379", "127.0.0.1:6380"},
-    Username: "user",
-    Password: "password",
-})
-```
+  cluster := redis.NewClusterClient(&redis.ClusterOptions{
+      Addrs: []string{"127.0.0.1:6379", "127.0.0.1:6380"},
+  })
 
-**Glide**  
-```go
-import (
-    "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
+  // With options
+  clusterWithOptions := redis.NewClusterClient(&redis.ClusterOptions{
+      Addrs:    []string{"127.0.0.1:6379", "127.0.0.1:6380"},
+      Username: "user",
+      Password: "password",
+  })
+  ```
 
-client, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
-    Addresses: []config.NodeAddress{
-        {Host: "127.0.0.1", Port: 6379},
-        {Host: "127.0.0.1", Port: 6380},
-    },
-})
+  **Glide**
 
-// With options
-clientWithOptions, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
-    Addresses: []config.NodeAddress{
-        {Host: "127.0.0.1", Port: 6379},
-        {Host: "127.0.0.1", Port: 6380},
-    },
-    UseTLS: true,
-    Credentials: &config.ServerCredentials{
-        Username: "user",
-        Password: "password",
-    },
-    ReadFrom: config.ReadFromAZAffinity,
-    RequestTimeout: 2000 * time.Millisecond,
-    ConnectionBackoff: &config.ConnectionBackoffStrategy{
-        NumberOfRetries: 5,
-        Factor:          2,
-        ExponentBase:    2,
-        JitterPercent:   10,
-    },
-    AdvancedConfiguration: &config.AdvancedClusterClientConfiguration{
-        ConnectionTimeout: 5000 * time.Millisecond,
-        TLSAdvancedConfiguration: &config.TLSAdvancedConfiguration{
-            UseInsecureTLS: false,
-        },
-    },
-})
-```
+  ```go
+  import (
+      "github.com/valkey-io/valkey-glide/go/v2"
+      "github.com/valkey-io/valkey-glide/go/v2/config"
+  )
 
+  client, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
+      Addresses: []config.NodeAddress{
+          {Host: "127.0.0.1", Port: 6379},
+          {Host: "127.0.0.1", Port: 6380},
+      },
+  })
+
+  // With options
+  clientWithOptions, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
+      Addresses: []config.NodeAddress{
+          {Host: "127.0.0.1", Port: 6379},
+          {Host: "127.0.0.1", Port: 6380},
+      },
+      UseTLS: true,
+      Credentials: &config.ServerCredentials{
+          Username: "user",
+          Password: "password",
+      },
+      ReadFrom: config.ReadFromAZAffinity,
+      RequestTimeout: 2000 * time.Millisecond,
+      ConnectionBackoff: &config.ConnectionBackoffStrategy{
+          NumberOfRetries: 5,
+          Factor:          2,
+          ExponentBase:    2,
+          JitterPercent:   10,
+      },
+      AdvancedConfiguration: &config.AdvancedClusterClientConfiguration{
+          ConnectionTimeout: 5000 * time.Millisecond,
+          TLSAdvancedConfiguration: &config.TLSAdvancedConfiguration{
+              UseInsecureTLS: false,
+          },
+      },
+  })
+  ```
 </details>
 
 <details>
-<summary><b style="font-size:22px;">Constructor Parameters Comparison</b></summary>
+  <summary><b style="font-size:22px;">Constructor Parameters Comparison</b></summary>
 
-The table below compares **go-redis options** with **Glide configuration parameters**:
+  The table below compares **go-redis options** with **Glide configuration parameters**:
 
-| **go-redis Parameter** | **Equivalent Glide Configuration** |
-|--------------------------|--------------------------------------|
-| `Addr: string`           | `Addresses: []config.NodeAddress{{Host: string, Port: int}}` |
-| `Username: string`       | `Credentials: &config.ServerCredentials{Username: string}` |
-| `Password: string`       | `Credentials: &config.ServerCredentials{Password: string}` |
-| `DB: int`                | `DatabaseId: int` |
-| `TLSConfig: *tls.Config` | `UseTLS: true` |
-| `DialTimeout: time.Duration` | `RequestTimeout: time.Duration` |
-| `ReadTimeout: time.Duration` | `RequestTimeout: time.Duration` |
-| `WriteTimeout: time.Duration` | `RequestTimeout: time.Duration` |
-| `MaxRetries: int`        | `ConnectionBackoff: &config.ConnectionBackoffStrategy{NumberOfRetries: int}` |
-| `MinRetryBackoff: time.Duration` | `ConnectionBackoff: &config.ConnectionBackoffStrategy{Factor: int, ExponentBase: int}` |
-| `MaxRetryBackoff: time.Duration` | `ConnectionBackoff: &config.ConnectionBackoffStrategy{Factor: int, ExponentBase: int}` |
-| `ClientName: string`     | `ClientName: string` |
-| `ReadFrom: ReadFrom`     | `ReadFrom: config.ReadFrom.Replica` / `config.ReadFrom.PreferReplica` / `config.ReadFrom.AZAffinity` / `config.ReadFrom.AZAffinityReplicasAndPrimary` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
-| `LazyConnect: bool`      | `LazyConnect: bool` |
+  | **go-redis Parameter** | **Equivalent Glide Configuration** |
+  |--------------------------|--------------------------------------|
+  | `Addr: string`           | `Addresses: []config.NodeAddress{{Host: string, Port: int}}` |
+  | `Username: string`       | `Credentials: &config.ServerCredentials{Username: string}` |
+  | `Password: string`       | `Credentials: &config.ServerCredentials{Password: string}` |
+  | `DB: int`                | `DatabaseId: int` |
+  | `TLSConfig: *tls.Config` | `UseTLS: true` |
+  | `DialTimeout: time.Duration` | `RequestTimeout: time.Duration` |
+  | `ReadTimeout: time.Duration` | `RequestTimeout: time.Duration` |
+  | `WriteTimeout: time.Duration` | `RequestTimeout: time.Duration` |
+  | `MaxRetries: int`        | `ConnectionBackoff: &config.ConnectionBackoffStrategy{NumberOfRetries: int}` |
+  | `MinRetryBackoff: time.Duration` | `ConnectionBackoff: &config.ConnectionBackoffStrategy{Factor: int, ExponentBase: int}` |
+  | `MaxRetryBackoff: time.Duration` | `ConnectionBackoff: &config.ConnectionBackoffStrategy{Factor: int, ExponentBase: int}` |
+  | `ClientName: string`     | `ClientName: string` |
+  | `ReadFrom: ReadFrom`     | `ReadFrom: config.ReadFrom.Replica` / `config.ReadFrom.PreferReplica` / `config.ReadFrom.AZAffinity` / `config.ReadFrom.AZAffinityReplicasAndPrimary` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+  | `LazyConnect: bool`      | `LazyConnect: bool` |
 
-**Advanced configuration**
+  **Advanced configuration**
 
-Both **Standalone** and **Cluster** modes support advanced configuration options:
+  Both **Standalone** and **Cluster** modes support advanced configuration options:
 
-```go
-// Standalone mode
-client, err := glide.NewClient(&config.ClientConfiguration{
-    Addresses: []config.NodeAddress{{Host: "localhost", Port: 6379}},
-    RequestTimeout: 500 * time.Millisecond,
-    UseTLS: true,
-    ClientName: "my-client",
-})
+  ```go
+  // Standalone mode
+  client, err := glide.NewClient(&config.ClientConfiguration{
+      Addresses: []config.NodeAddress{{Host: "localhost", Port: 6379}},
+      RequestTimeout: 500 * time.Millisecond,
+      UseTLS: true,
+      ClientName: "my-client",
+  })
 
-// Cluster mode
-clusterClient, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
-    Addresses: []config.NodeAddress{{Host: "localhost", Port: 6379}},
-    RequestTimeout: 500 * time.Millisecond,
-    UseTLS: true,
-    ClientName: "my-cluster-client",
-})
-```
-
+  // Cluster mode
+  clusterClient, err := glide.NewClusterClient(&config.ClusterClientConfiguration{
+      Addresses: []config.NodeAddress{{Host: "localhost", Port: 6379}},
+      RequestTimeout: 500 * time.Millisecond,
+      UseTLS: true,
+      ClientName: "my-cluster-client",
+  })
+  ```
 </details>
-

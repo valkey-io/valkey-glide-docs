@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Quick Installation
 
@@ -30,12 +29,14 @@ Add the following dependency to your `pom.xml` file:
 
 ## Full Installation
 
-To use Valkey Glide, you must include a classifier to specify your platform architecture.  
+To use Valkey Glide, you must include a classifier to specify your platform architecture.\
 This section includes setup instructions for Gradle, Maven, and SBT, with or without OS detection tools.
 
 Gradle:
-- Copy the snippet and paste it in the `build.gradle` dependencies section.
-- **IMPORTANT** must include a `classifier` to specify your platform.
+
+* Copy the snippet and paste it in the `build.gradle` dependencies section.
+* **IMPORTANT** must include a `classifier` to specify your platform.
+
 ```groovy
 // osx-aarch_64
 dependencies {
@@ -62,7 +63,9 @@ dependencies {
 ```
 
 Maven:
-- **IMPORTANT** must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
+
+* **IMPORTANT** must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
+
 ```xml
 
 <!--osx-aarch_64-->
@@ -109,7 +112,9 @@ Maven:
 ```
 
 SBT:
-- **IMPORTANT** must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+
+* **IMPORTANT** must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+
 ```scala
 // osx-aarch_64
 libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"

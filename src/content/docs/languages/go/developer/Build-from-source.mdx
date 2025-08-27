@@ -11,11 +11,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Build from source
 
@@ -23,18 +22,18 @@ For official Valkey GLIDE documentation, please refer to the official [Valkey GL
 
 Software Dependencies
 
-- Go
-- GNU Make
-- git
-- GCC
-- pkg-config
-- cmake
-- protoc (protobuf compiler) >= v3.20.0
-- openssl
-- openssl-dev
-- rustup
-- ziglang and zigbuild (for GNU Linux only)
-- valkey (for testing)
+* Go
+* GNU Make
+* git
+* GCC
+* pkg-config
+* cmake
+* protoc (protobuf compiler) >= v3.20.0
+* openssl
+* openssl-dev
+* rustup
+* ziglang and zigbuild (for GNU Linux only)
+* valkey (for testing)
 
 **Valkey installation**
 
@@ -55,7 +54,7 @@ source "$HOME/.cargo/env"
 rustc --version
 ```
 
-> [!NOTE]
+> \[!NOTE]
 > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
 Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
@@ -77,7 +76,7 @@ source "$HOME/.cargo/env"
 rustc --version
 ```
 
-> [!NOTE]
+> \[!NOTE]
 > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
 Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
@@ -94,7 +93,7 @@ source "$HOME/.cargo/env"
 rustc --version
 ```
 
-> [!NOTE]
+> \[!NOTE]
 > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
 Continue with **Install protobuf compiler** below.
@@ -114,7 +113,7 @@ export PATH="$PATH:$HOME/.local/bin"
 protoc --version
 ```
 
-> [!NOTE]
+> \[!NOTE]
 > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
 **Install `ziglang` and `zigbuild`**
@@ -130,36 +129,35 @@ Before starting this step, make sure you've installed all software requirements.
 
 1. Clone the repository:
 
-    ```bash
-    VERSION=2.0.0 # You can modify this to other released version or set it to "main" to get the unstable branch
-    git clone --branch ${VERSION} https://github.com/valkey-io/valkey-glide.git
-    cd valkey-glide
-    ```
+   ```bash
+   VERSION=2.0.0 # You can modify this to other released version or set it to "main" to get the unstable branch
+   git clone --branch ${VERSION} https://github.com/valkey-io/valkey-glide.git
+   cd valkey-glide
+   ```
 
 2. Install build dependencies:
 
-    ```bash
-    cd go
-    make install-build-tools
-    ```
+   ```bash
+   cd go
+   make install-build-tools
+   ```
 
 3. Build the Go wrapper:
 
-    ```bash
-    make build
-    ```
+   ```bash
+   make build
+   ```
 
 4. Run tests:
-    1. Ensure that you have installed valkey-server and valkey-cli on your host. You can find the Valkey installation guide at the following link: [Valkey Installation Guide](https://valkey.io/topics/installation/).
-    2. Execute the following command from the go folder:
+   1. Ensure that you have installed valkey-server and valkey-cli on your host. You can find the Valkey installation guide at the following link: [Valkey Installation Guide](https://valkey.io/topics/installation/).
+   2. Execute the following command from the go folder:
 
-        ```bash
-        go test -race ./...
-        ```
+      ```bash
+      go test -race ./...
+      ```
 
 5. Install Go development tools with:
 
-    ```bash
-    make install-dev-tools
-    ```
-
+   ```bash
+   make install-dev-tools
+   ```

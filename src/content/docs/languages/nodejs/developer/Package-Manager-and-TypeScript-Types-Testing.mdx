@@ -11,22 +11,20 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Package Manager and TypeScript Types Testing
 
 The project includes tests for TypeScript types and package manager compatibility:
 
-- Tests proper TypeScript declaration file generation for downstream packages
-- Verifies compatibility with Yarn package manager in addition to npm
-- Tests library use in both direct consumer packages and transitive dependencies
+* Tests proper TypeScript declaration file generation for downstream packages
+* Verifies compatibility with Yarn package manager in addition to npm
+* Tests library use in both direct consumer packages and transitive dependencies
 
 The test structure in `node/pm-and-types-tests/` includes:
 
-- `depend-on-glide-package/`: A library that depends on valkey-glide
-- `depend-on-glide-dependent/`: An application that depends on depend-on-glide-package (transitive dependency)
-
+* `depend-on-glide-package/`: A library that depends on valkey-glide
+* `depend-on-glide-dependent/`: An application that depends on depend-on-glide-package (transitive dependency)

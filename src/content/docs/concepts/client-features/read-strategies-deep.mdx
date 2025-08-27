@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
 
@@ -28,8 +27,10 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZ_AFFINITY_REPLICAS_AND_PRIMARY`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
 
 ## What's Next?
-For detailed documentation, see langge specific examples 
+
+For detailed documentation, see langge specific examples
 TODO: fix links
+
 * [Python wrapper - Read Strategies]()
 * [NodeJS wrapper - Read Strategies]()
 * [Java wrapper - Read Strategies]()

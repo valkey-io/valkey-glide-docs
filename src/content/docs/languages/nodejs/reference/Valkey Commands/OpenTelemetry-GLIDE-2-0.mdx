@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ### OpenTelemetry (GLIDE 2.0)
 
@@ -47,6 +46,7 @@ This distinction helps developers separate client-side queuing latency from serv
 
 **⚠ Note:**
 Some advanced commands are not yet included in tracing instrumentation:
+
 * The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
 * Lua scripting commands (EVAL, EVALSHA)
 
@@ -78,6 +78,7 @@ When initializing OpenTelemetry, you can customize behavior using the `openTelem
 **Note**: Both `traces` and `metrics` are optional—but **at least one must be provided** in the `openTelemetryConfig`. If neither is set, OpenTelemetry will not emit any data.
 
 #### Tracing
+
 ```typescript
 openTelemetryConfig.traces
 ```
@@ -87,6 +88,7 @@ openTelemetryConfig.traces
   * For production, a low sampling rate (1–5%) is recommended to balance performance and insight.
 
 #### Metrics
+
 ```typescript
 openTelemetryConfig.metrics
 ```
@@ -94,6 +96,7 @@ openTelemetryConfig.metrics
 * **endpoint** (required): The metrics collector endpoint.
 
 #### Flush Interval
+
 ```typescript
 openTelemetryConfig.flushIntervalMs
 ```
@@ -119,8 +122,8 @@ If using `file://` as the endpoint:
 
 ⚠️ **Important**: `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
 
-
 #### Full Example (Node.js)
+
 ```typescript
 import { OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig } from "@valkey/valkey-glide";
 
@@ -147,4 +150,3 @@ OpenTelemetry.init(openTelemetryConfig);
 ```
 
 > ✅ In this example, both traces and metrics are configured, but you can configure only one of them if you wish. At least one must be provided.
-

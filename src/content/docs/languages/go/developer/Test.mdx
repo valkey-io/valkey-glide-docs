@@ -11,11 +11,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Test
 
@@ -28,10 +27,10 @@ The Valkey GLIDE Go wrapper has three main categories of tests:
 1. **Unit Tests**: Tests that verify individual components in isolation
 2. **Example Tests**: Runnable examples that serve as documentation and basic functionality tests
 3. **Integration Tests**: Tests that verify the integration with Valkey/Redis servers
-   - **Standard Integration Tests**: Tests basic functionality against Valkey/Redis servers
-   - **Module Tests**: Tests specific Valkey/Redis modules functionality
-   - **PubSub Tests**: Tests PubSub functionality
-   - **Long Timeout Tests**: Runs tests with timeouts that may take longer than normal tests
+   * **Standard Integration Tests**: Tests basic functionality against Valkey/Redis servers
+   * **Module Tests**: Tests specific Valkey/Redis modules functionality
+   * **PubSub Tests**: Tests PubSub functionality
+   * **Long Timeout Tests**: Runs tests with timeouts that may take longer than normal tests
 
 To run unit tests, use:
 
@@ -97,4 +96,3 @@ Alongside terminal output, test reports are generated in `reports` folder.
 An example of what the report looks like when an error occurs:
 
 ![Image of HIncrByFloat Failing](../../../../../assets/go/FailingTestReportExample.png)
-

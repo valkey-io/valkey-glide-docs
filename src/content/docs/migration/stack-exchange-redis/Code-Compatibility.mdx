@@ -10,17 +10,17 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Code Compatibility
 
 Most of your existing StackExchange.Redis code should work with minimal or no changes after updating the namespace. Common patterns that remain compatible include:
 
 ### Connection Management
+
 ```csharp
 // Connection string and basic setup remain the same
 var connection = ConnectionMultiplexer.Connect("localhost:6379");
@@ -28,6 +28,7 @@ var database = connection.GetDatabase();
 ```
 
 ### Basic Operations
+
 ```csharp
 // String operations
 await database.StringSetAsync("key", "value");
@@ -43,6 +44,7 @@ var item = await database.ListRightPopAsync("list:key");
 ```
 
 ### Advanced Features
+
 ```csharp
 // Transactions
 var transaction = database.CreateTransaction();
@@ -57,4 +59,3 @@ var task2 = batch.StringSetAsync("key2", "value2");
 batch.Execute();
 await Task.WhenAll(task1, task2);
 ```
-

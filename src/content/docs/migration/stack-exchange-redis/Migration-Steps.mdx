@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Migration Steps
 
@@ -25,6 +24,7 @@ Migrating from StackExchange.Redis to Valkey.Glide requires just two main steps:
 Remove the `StackExchange.Redis` NuGet package and add the `Valkey.Glide` package to your project.
 
 #### Using Package Manager Console:
+
 ```powershell
 # Remove StackExchange.Redis
 Uninstall-Package StackExchange.Redis
@@ -34,6 +34,7 @@ Install-Package Valkey.Glide
 ```
 
 #### Using .NET CLI:
+
 ```bash
 # Remove StackExchange.Redis
 dotnet remove package StackExchange.Redis
@@ -43,6 +44,7 @@ dotnet add package Valkey.Glide
 ```
 
 #### Using PackageReference in .csproj:
+
 ```xml
 <!-- Remove this line -->
 <!-- <PackageReference Include="StackExchange.Redis" Version="2.x.x" /> -->
@@ -56,6 +58,7 @@ dotnet add package Valkey.Glide
 Update all `StackExchange.Redis` namespace references to `Valkey.Glide` in your code.
 
 #### Option A: Update Individual Files
+
 Replace namespace imports in each file:
 
 ```csharp
@@ -67,6 +70,7 @@ using Valkey.Glide;
 ```
 
 #### Option B: Global Using Directive (Recommended)
+
 For simplicity, add a global using directive to your `.csproj` file so you only need to make the change in one location:
 
 ```xml
@@ -90,4 +94,3 @@ For simplicity, add a global using directive to your `.csproj` file so you only 
 ```
 
 With this approach, you won't need to add `using Valkey.Glide;` statements to individual files.
-

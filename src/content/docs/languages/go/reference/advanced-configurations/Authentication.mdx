@@ -10,17 +10,16 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ### Authentication
 
 By default, when connecting to Valkey, Valkey GLIDE operates in an unauthenticated mode.
 
-Valkey GLIDE also offers support for an authenticated connection mode. 
+Valkey GLIDE also offers support for an authenticated connection mode.
 
 In authenticated mode, you have the following options:
 
@@ -48,7 +47,6 @@ func ConnectClusterWithCredentials() {
 }
 ```
 
-
 #### Example - Connecting with Username and Password to a Standalone
 
 ```go
@@ -65,4 +63,3 @@ func ConnectStandaloneWithCredentials() {
     client, err := glide.NewClient(myConfig)
 }
 ```
-

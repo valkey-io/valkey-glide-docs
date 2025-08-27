@@ -10,21 +10,22 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-
 ## Valkey commands
+
 For information on the supported commands and their corresponding parameters, we recommend referring to the documentation in the code. This documentation provides in-depth insights into the usage and options available for each command.
 
 ### Batch: Transaction and Pipelining (Glide 2.0)
 
-In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. 
+In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs.
 This change provides greater flexibility by supporting both **atomic batches** (Transactions) and **non-atomic batches** (Pipelining), while ensuring easy configuration and clear, detailed examples for each scenario.
 
 #### Overview
+
 Glide 2.0 introduces a robust Batch API with two primary modes:
 
 * **Atomic Batch:** Guarantees that all commands in a batch execute as a single, atomic unit. No other commands can interleave (similar to [MULTI](https://valkey.io/commands/multi/)/[EXEC](https://valkey.io/commands/exec/)).
@@ -52,9 +53,11 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * See: [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
 #### Classes and API
+
 **`Batch`**
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
+
 ```python
 from glide import Batch
 
@@ -63,11 +66,13 @@ batch = Batch(True)
 # Create a non-atomic batch (pipeline)
 batch = Batch(False)
 ```
+
 > Note: Standalone Batches are executed on primary node.
 
 **`ClusterBatch`**
 
-For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support)). 
+For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support)).
+
 ```python
 from glide import ClusterBatch
 
@@ -76,12 +81,14 @@ batch = ClusterBatch(True)
 # Create a non-atomic cluster batch (pipeline may span multiple slots)
 const batch = ClusterBatch(False)
 ```
+
 > **Note:** When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support).
-> If the client is configured to read from replicas (ReplicaPrefered, AZ_AFFINITY,  AZ_AFFINITY_REPLICAS_AND_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+> If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 
 **Error handling - `Raise on Error`**
 
 Determines how errors are surfaced when calling `exec(...)`. It is passed directly:
+
 ```python
 # Standalone Mode
 async def exec(
@@ -103,14 +110,15 @@ async def exec(
 Behavior:
 
 * `raiseOnError = true`:
-When set to `true`, the first encountered error within the batch (after all configured retries and redirections have been executed) is raised as a `RequestException`.
+  When set to `true`, the first encountered error within the batch (after all configured retries and redirections have been executed) is raised as a `RequestException`.
 
 * `raiseOnError = false`:
-    * When set to `false`, errors are returned as part of the response array rather than thrown.
-    * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned array.
-    * Allows processing of both successful and failed commands together.
+  * When set to `false`, errors are returned as part of the response array rather than thrown.
+  * Each failed command’s error details appear as a `RequestException` instance in the corresponding position of the returned array.
+  * Allows processing of both successful and failed commands together.
 
 **Example:**
+
 ```python
 # Cluster pipeline with raiseOnError = False
 batch = ClusterBatch(False)
@@ -124,6 +132,7 @@ result = await GlideClusterClient.exec(batch, raise_on_error=False)
 print("Result is:", result)
 # Output: Result is: ['OK', RequestError('WRONGTYPE: Operation against a key holding the wrong kind of value'), 1, RequestError('An error was signalled by the server: - ResponseError: no such key')]
 ```
+
 ```python
 # Transaction with raiseOnError = true
 batch = ClusterBatch(True)
@@ -164,10 +173,9 @@ Configuration for cluster batches.
 | `retryStrategy` | `ClusterBatchRetryStrategy` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if `isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
 |     `route`     |      `SingleNodeRoute`      |              null             |                                                       Configures single-node routing for the batch request.                                                       |
 
-
 **`ClusterBatchRetryStrategy`**
 
-Defines retry behavior (only for **non-atomic** cluster batches). 
+Defines retry behavior (only for **non-atomic** cluster batches).
 |         Option         |    Type   | Default |                                                               Description                                                               |
 |:----------------------:|:---------:|:-------:|:---------------------------------------------------------------------------------------------------------------------------------------:|
 |   `retryServerError`   | `boolean` | `false` |                 Retry commands that fail with retriable server errors (e.g.`TRYAGAIN`). May cause out-of-order results.                 |
@@ -178,6 +186,7 @@ from glide import BatchRetryStrategy
 
 retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error= False)
 ```
+
 > **Note:** The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
 
 **Full usage**
@@ -190,6 +199,7 @@ options = ClusterBatchOptions(retry_strategy=retry_strategy)
 ```
 
 #### Configuration Details
+
 **Timeout**
 
 * Specifies the maximum time (in milliseconds) to wait for the batch (atomic or non-atomic) request to complete.
@@ -199,13 +209,13 @@ options = ClusterBatchOptions(retry_strategy=retry_strategy)
 **Retry Strategies (Cluster Only, Non-Atomic Batches)**
 
 * **Retry on Server Errors**
-    * Applies when a command fails with a retriable server error (e.g., `TRYAGAIN`).
-    * Glide will automatically retry the failed command on the same node or the new master, depending on the topology update.
-    * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
+  * Applies when a command fails with a retriable server error (e.g., `TRYAGAIN`).
+  * Glide will automatically retry the failed command on the same node or the new master, depending on the topology update.
+  * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-    * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support))  is retried from the start.
-    * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
+  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Python-Wrapper#multi-node-support))  is retried from the start.
+  * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
 
@@ -216,7 +226,9 @@ If a redirection error occurs:
 * **For Non-Atomic Batches (Pipelines):** only the commands that encountered redirection errors will be redirected.
 
 #### Usage Examples
+
 **Standalone (Atomic Batch)**
+
 ```python
 from glide import (
  GlideClientConfiguration,
@@ -254,7 +266,9 @@ try:
  except RequestError as e:
     print(f"Batch failed:", e)
 ```
+
 **Standalone (Non-Atomic Batch)**
+
 ```python
 from glide import (
     GlideClientConfiguration,
@@ -290,6 +304,7 @@ print("Pipeline Results:", results)
 ```
 
 **Cluster (Atomic Batch)**
+
 ```python
 from glide import (
     GlideClusterClientConfiguration,
@@ -325,9 +340,11 @@ try:
 except RequestError as e:
     print("Atomic cluster batch failed:", e)
 ```
+
 > **Important:** If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
 
 **Cluster (Non-Atomic Batch / Pipeline)**
+
 ```python
 from glide import (
     GlideClusterClientConfiguration,
@@ -391,13 +408,13 @@ When errors occur during pipeline execution, Glide handles them efficiently and 
 Glide distinguishes between different types of errors and handles them as follows:
 
 * **Redirection Errors (e.g., `MOVED` or `ASK`):**
-    These are always handled automatically. Glide will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
+  These are always handled automatically. Glide will update the topology map if needed and redirect the command to the appropriate node, regardless of the retry configuration.
 * **Retriable Server Errors (e.g., `TRYAGAIN`):**
-    If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors.  
-    ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
+  If the `retryServerError` option is enabled in the batch's retry strategy, Glide will retry commands that fail with retriable server errors.\
+  ⚠️ Retrying may cause out-of-order execution for commands targeting the same slot.
 * **Connection Errors:**
-    If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs.  
-    ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
+  If the `retryConnectionError` option is enabled, Glide will retry the batch if a connection failure occurs.\
+  ⚠️ Retrying after a connection error may result in duplicate executions, since the server might have already received and processed the request before the error occurred.
 
 Retry strategies are currently supported only for **non-atomic (pipeline) cluster batches.** You can configure these using the `ClusterBatchRetryStrategy` options:
 
@@ -412,15 +429,18 @@ Suppose you issue the following commands:
 MGET key {key}:1
 SET key "value"
 ```
+
 When keys are empty, the result is expected to be:
+
 ```
 [null, null]
 OK
 ```
 
-However, suppose the slot of `key` is migrating. In this case, both commands will return an `ASK` error and be redirected. 
-Upon `ASK` redirection, a multi-key command (like `MGET`) may return a `TRYAGAIN` error (triggering a retry), while the `SET` command succeeds immediately. 
+However, suppose the slot of `key` is migrating. In this case, both commands will return an `ASK` error and be redirected.
+Upon `ASK` redirection, a multi-key command (like `MGET`) may return a `TRYAGAIN` error (triggering a retry), while the `SET` command succeeds immediately.
 This can result in an unintended reordering of commands if the first command is retried after the slot stabilizes:
+
 ```
 ["value", null]
 OK
@@ -432,9 +452,9 @@ OK
 * **Replacement:** Use `Batch` or `ClusterBatch` with `isAtomic = true` to achieve transaction-like (atomic) behavior.
 * **Migration Tips**:
 
-    * Replace calls to `new Transaction()` with `new Batch(true)`.
-    * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
-    * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
+  * Replace calls to `new Transaction()` with `new Batch(true)`.
+  * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
+  * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
 
 ### OpenTelemetry (GLIDE 2.0)
 
@@ -467,6 +487,7 @@ This distinction helps developers separate client-side queuing latency from serv
 
 **⚠ Note:**
 Some advanced commands are not yet included in tracing instrumentation:
+
 * The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
 * Lua scripting commands (EVAL, EVALSHA)
 
@@ -498,6 +519,7 @@ When initializing OpenTelemetry, you can customize behavior using the `openTelem
 **Note**: Both `traces` and `metrics` are optional—but **at least one must be provided** in the `openTelemetryConfig`. If neither is set, OpenTelemetry will not emit any data.
 
 #### Tracing
+
 ```python
 openTelemetryConfig.traces
 ```
@@ -507,6 +529,7 @@ openTelemetryConfig.traces
   * For production, a low sampling rate (1–5%) is recommended to balance performance and insight.
 
 #### Metrics
+
 ```python
 openTelemetryConfig.metrics
 ```
@@ -514,6 +537,7 @@ openTelemetryConfig.metrics
 * **endpoint** (required): The metrics collector endpoint.
 
 #### Flush Interval
+
 ```python
 openTelemetryConfig.flush_interval_ms
 ```
@@ -539,8 +563,8 @@ If using `file://` as the endpoint:
 
 ⚠️ **Important**: `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
 
-
 #### Full Example (Python)
+
 ```python
    from glide import OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig
 
@@ -555,4 +579,3 @@ If using `file://` as the endpoint:
             flush_interval_ms=1000  # Optional, defaults to 5000
         ))
 ```
-

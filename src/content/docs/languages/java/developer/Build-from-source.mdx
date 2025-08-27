@@ -11,11 +11,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Build from source
 
@@ -25,17 +24,17 @@ For official Valkey GLIDE documentation, please refer to the official [Valkey GL
 
 **Software Dependencies**
 
-- git
-- GCC
-- pkg-config
-- cmake
-- protoc (protobuf compiler) >= v29.1
-- openssl
-- openssl-dev
-- rustup
-- Java 11
-- ziglang and zigbuild (for GNU Linux only)
-- valkey (for testing)
+* git
+* GCC
+* pkg-config
+* cmake
+* protoc (protobuf compiler) >= v29.1
+* openssl
+* openssl-dev
+* rustup
+* Java 11
+* ziglang and zigbuild (for GNU Linux only)
+* valkey (for testing)
 
 **Valkey installation**
 
@@ -94,7 +93,7 @@ export PATH="$PATH:$HOME/.local/bin"
 protoc --version
 ```
 
-> [!NOTE]
+> \[!NOTE]
 > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
 **Install `ziglang` and `zigbuild`**
@@ -110,22 +109,21 @@ Before starting this step, make sure you've installed all software dependencies.
 
 1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/valkey-io/valkey-glide.git
-    cd valkey-glide/java
-    ```
+   ```bash
+   git clone https://github.com/valkey-io/valkey-glide.git
+   cd valkey-glide/java
+   ```
 
 2. Build the Java wrapper (Choose a build option from the following and run it from the `java` folder):
 
-    1. Enter the java directory:
+   1. Enter the java directory:
 
-    ```bash
-    cd java
-    ```
+   ```bash
+   cd java
+   ```
 
-    2. Build the project:
+   2. Build the project:
 
-    ```bash
-    ./gradlew :client:buildAll
-    ```
-
+   ```bash
+   ./gradlew :client:buildAll
+   ```

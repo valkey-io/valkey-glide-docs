@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
@@ -22,87 +21,102 @@ Valkey General Language Independent Driver for the Enterprise (GLIDE) is the off
 
 ## Why Choose Valkey GLIDE?
 
+* **Community and Open Source**: Join our vibrant community and contribute to the project. We are always here to respond, and the client is for the community.
 
-- **Community and Open Source**: Join our vibrant community and contribute to the project. We are always here to respond, and the client is for the community.
-- [**Reliability**](concepts/client-features/reliability.html): Built with best practices learned from over a decade of operating Redis OSS-compatible services.
-- **Performance**: Optimized for high performance and low latency.
-- [**High Availability**](concepts/client-features/reliability.html): Designed to ensure your applications are always up and running.
-- **Cross-Language Support**: Implemented using a core driver framework written in Rust, with language-specific extensions to ensure consistency and reduce complexity.  Clients available in <button type="button" onclick="setPreferredLanguage('Python')" class="language-link">Python</button>, 
-<button type="button" onclick="setPreferredLanguage('Java')" class="language-link">Java</button>,
-<button type="button" onclick="setPreferredLanguage('Node.js')" class="language-link">Node.js</button>
- and <button type="button" onclick="setPreferredLanguage('Go')" class="language-link">Go</button>.
+* [**Reliability**](concepts/client-features/reliability.html): Built with best practices learned from over a decade of operating Redis OSS-compatible services.
 
-- [**Stability and Fault Tolerance**](concepts/client-features/reliability.html): We brought our years of experience to create a bulletproof client.
-- **Backed and Supported by AWS and GCP**: Ensuring robust support and continuous improvement of the project.
+* **Performance**: Optimized for high performance and low latency.
+
+* [**High Availability**](concepts/client-features/reliability.html): Designed to ensure your applications are always up and running.
+
+* **Cross-Language Support**: Implemented using a core driver framework written in Rust, with language-specific extensions to ensure consistency and reduce complexity.  Clients available in <button type="button" onclick="setPreferredLanguage('Python')" class="language-link">Python</button>,
+  <button type="button" onclick="setPreferredLanguage('Java')" class="language-link">Java</button>,
+  <button type="button" onclick="setPreferredLanguage('Node.js')" class="language-link">Node.js</button>
+  and <button type="button" onclick="setPreferredLanguage('Go')" class="language-link">Go</button>.
+
+* [**Stability and Fault Tolerance**](concepts/client-features/reliability.html): We brought our years of experience to create a bulletproof client.
+
+* **Backed and Supported by AWS and GCP**: Ensuring robust support and continuous improvement of the project.
 
 ## Key Features
-- **[AZ Affinity](https://valkey.io/blog/az-affinity-strategy/)** – Ensures low-latency connections and minimal cross-zone costs by routing read traffic to replicas in the clients availability zone. **(Requires Valkey server version 8.0+ or AWS ElastiCache for Valkey 7.2+)**.
-- **[PubSub Auto-Reconnection](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=PubSub%20Support,Receiving%2C%20and%20Unsubscribing.)** – Seamless background resubscription on topology updates or disconnection.
-- **[Sharded PubSub](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=Receiving%2C%20and%20Unsubscribing.-,Subscribing,routed%20to%20the%20server%20holding%20the%20slot%20for%20the%20command%27s%20channel.,-Receiving)** – Native support for sharded PubSub across cluster slots.
-- **[Cluster-Aware MGET/MSET/DEL/FLUSHALL](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#multi-slot-command-handling:~:text=Multi%2DSlot%20Command%20Execution,JSON.MGET)** – Execute multi-key commands across cluster slots without manual key grouping.
-- **[Cluster Scan](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#cluster-scan)** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
-- **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
-- **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
-- **[Batching (Pipeline and Transaction)](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#batching-pipeline-and-transaction)** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
-- **[OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#opentelemetry)** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
+
+* **[AZ Affinity](https://valkey.io/blog/az-affinity-strategy/)** – Ensures low-latency connections and minimal cross-zone costs by routing read traffic to replicas in the clients availability zone. **(Requires Valkey server version 8.0+ or AWS ElastiCache for Valkey 7.2+)**.
+* **[PubSub Auto-Reconnection](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=PubSub%20Support,Receiving%2C%20and%20Unsubscribing.)** – Seamless background resubscription on topology updates or disconnection.
+* **[Sharded PubSub](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=Receiving%2C%20and%20Unsubscribing.-,Subscribing,routed%20to%20the%20server%20holding%20the%20slot%20for%20the%20command%27s%20channel.,-Receiving)** – Native support for sharded PubSub across cluster slots.
+* **[Cluster-Aware MGET/MSET/DEL/FLUSHALL](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#multi-slot-command-handling:~:text=Multi%2DSlot%20Command%20Execution,JSON.MGET)** – Execute multi-key commands across cluster slots without manual key grouping.
+* **[Cluster Scan](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#cluster-scan)** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
+* **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
+* **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
+* **[Batching (Pipeline and Transaction)](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#batching-pipeline-and-transaction)** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
+* **[OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#opentelemetry)** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
 
 ## Getting Started
 
 ### Select your language
 
 <span>Choose your preferred language: </span>
-<button type="button" onclick="setPreferredLanguage('Python')" class="language-link">Python</button> | 
+<button type="button" onclick="setPreferredLanguage('Python')" class="language-link">Python</button> |
 <button type="button" onclick="setPreferredLanguage('Java')" class="language-link">Java</button> |
-<button type="button" onclick="setPreferredLanguage('Node.js')" class="language-link">Node.js</button> | 
+<button type="button" onclick="setPreferredLanguage('Node.js')" class="language-link">Node.js</button> |
 <button type="button" onclick="setPreferredLanguage('Go')" class="language-link">Go</button>
-
 
 ### Check your language versions
 
 <Tabs syncKey="overview">
   <TabItem label="Python">
-  **Requirements:**
-    - Python 3.8 or higher
-    - pip package manager
+    **Requirements:**
+
+    * Python 3.8 or higher
+    * pip package manager
 
     **Check your Python version:**
+
     ```bash
     python --version
     # or
     python3 --version
     ```
   </TabItem>
+
   <TabItem label="Java">
-  **Requirements:**
-    - Java 11 or higher
-    - Maven 3.6+ or Gradle 6.0+
+    **Requirements:**
+
+    * Java 11 or higher
+    * Maven 3.6+ or Gradle 6.0+
 
     **Check your Java version:**
+
     ```bash
     java -version
     javac -version
     ```
   </TabItem>
+
   <TabItem label="Node.js">
-  **Requirements:**
-    - Node.js 16.0 or higher
-    - npm or yarn package manager
+    **Requirements:**
+
+    * Node.js 16.0 or higher
+    * npm or yarn package manager
 
     **Check your Node.js version:**
+
     ```bash
     node --version
     npm --version
     ```
   </TabItem>
+
   <TabItem label="Go">
-  **Requirements:**
-    - Go 1.19 or higher
+    **Requirements:**
+
+    * Go 1.19 or higher
 
     **Check your Go version:**
+
     ```bash
     go version
     ```
-</TabItem>
+  </TabItem>
 </Tabs>
 
 ### Start a local Valkey server
@@ -125,170 +139,172 @@ docker exec valkey-server valkey-cli ping
 ### Install GLIDE for your chosen language
 
 <Tabs syncKey="overview">
-    <TabItem label="Python">
-        ### Install via pip
+  <TabItem label="Python">
+    ### Install via pip
 
-        ```bash
-        # Install the latest version
-        pip install valkey-glide
+    ```bash
+    # Install the latest version
+    pip install valkey-glide
 
-        # Or install a specific version
-        pip install valkey-glide==1.3.0
-        ```
+    # Or install a specific version
+    pip install valkey-glide==1.3.0
+    ```
 
-        ### Verify Installation
+    ### Verify Installation
 
-        ```python
-        # Create a test file: test_glide.py
-        from glide import __version__
-        print(f"Valkey GLIDE version: {__version__}")
-        ```
+    ```python
+    # Create a test file: test_glide.py
+    from glide import __version__
+    print(f"Valkey GLIDE version: {__version__}")
+    ```
 
-        ```bash
-        # Run the test
-        python test_glide.py
-        ```
+    ```bash
+    # Run the test
+    python test_glide.py
+    ```
 
-        ### Virtual Environment (Recommended)
+    ### Virtual Environment (Recommended)
 
-        ```bash
-        # Create a virtual environment
-        python -m venv glide-env
+    ```bash
+    # Create a virtual environment
+    python -m venv glide-env
 
-        # Activate it (Linux/Mac)
-        source glide-env/bin/activate
+    # Activate it (Linux/Mac)
+    source glide-env/bin/activate
 
-        # Activate it (Windows)
-        glide-env\Scripts\activate
+    # Activate it (Windows)
+    glide-env\Scripts\activate
 
-        # Install GLIDE
-        pip install valkey-glide
-        ```
-    </TabItem>
-    <TabItem label="Java">
-        ### Maven Setup
+    # Install GLIDE
+    pip install valkey-glide
+    ```
+  </TabItem>
 
-        Add to your `pom.xml`:
+  <TabItem label="Java">
+    ### Maven Setup
 
-        ```xml
-        <dependencies>
-            <dependency>
-                <groupId>io.valkey</groupId>
-                <artifactId>valkey-glide</artifactId>
-                <version>1.3.0</version>
-            </dependency>
-        </dependencies>
-        ```
+    Add to your `pom.xml`:
 
-        ### Gradle Setup
+    ```xml
+    <dependencies>
+        <dependency>
+            <groupId>io.valkey</groupId>
+            <artifactId>valkey-glide</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+    </dependencies>
+    ```
 
-        Add to your `build.gradle`:
+    ### Gradle Setup
 
-        ```javascript
-        dependencies {
-            implementation 'io.valkey:valkey-glide:1.3.0'
+    Add to your `build.gradle`:
+
+    ```javascript
+    dependencies {
+        implementation 'io.valkey:valkey-glide:1.3.0'
+    }
+    ```
+
+    ### Verify Installation
+
+    Create a test file `TestGlide.java`:
+
+    ```java
+    import glide.api.GlideClient;
+
+    public class TestGlide {
+        public static void main(String[] args) {
+            System.out.println("Valkey GLIDE is ready!");
         }
-        ```
+    }
+    ```
 
-        ### Verify Installation
+    Compile and run:
 
-        Create a test file `TestGlide.java`:
+    ```bash
+    javac -cp "path/to/valkey-glide.jar" TestGlide.java
+    java -cp ".:path/to/valkey-glide.jar" TestGlide
+    ```
+  </TabItem>
 
-        ```java
-        import glide.api.GlideClient;
+  <TabItem label="Node.js">
+    ### Install via npm
 
-        public class TestGlide {
-            public static void main(String[] args) {
-                System.out.println("Valkey GLIDE is ready!");
-            }
-        }
-        ```
+    ```bash
+    # Install the latest version
+    npm install @valkey/valkey-glide
 
-        Compile and run:
-        ```bash
-        javac -cp "path/to/valkey-glide.jar" TestGlide.java
-        java -cp ".:path/to/valkey-glide.jar" TestGlide
-        ```
+    # Or install a specific version
+    npm install @valkey/valkey-glide@1.3.0
+    ```
 
-    </TabItem>
-    <TabItem label="Node.js">
-        ### Install via npm
+    ### Install via yarn
 
-        ```bash
-        # Install the latest version
-        npm install @valkey/valkey-glide
+    ```bash
+    # Install the latest version
+    yarn add @valkey/valkey-glide
+    ```
 
-        # Or install a specific version
-        npm install @valkey/valkey-glide@1.3.0
-        ```
+    ### Verify Installation
 
-        ### Install via yarn
+    Create a test file `test-glide.js`:
 
-        ```bash
-        # Install the latest version
-        yarn add @valkey/valkey-glide
-        ```
+    ```javascript
+    const { GlideClient } = require('@valkey/valkey-glide');
+    console.log('Valkey GLIDE is ready!');
+    ```
 
-        ### Verify Installation
+    Run the test:
 
-        Create a test file `test-glide.js`:
+    ```bash
+    node test-glide.js
+    ```
 
-        ```javascript
-        const { GlideClient } = require('@valkey/valkey-glide');
-        console.log('Valkey GLIDE is ready!');
-        ```
+    ### TypeScript Support
 
-        Run the test:
-        ```bash
-        node test-glide.js
-        ```
+    GLIDE includes TypeScript definitions out of the box:
 
-        ### TypeScript Support
+    ```bash
+    # No additional @types package needed
+    npm install @valkey/valkey-glide
+    ```
+  </TabItem>
 
-        GLIDE includes TypeScript definitions out of the box:
+  <TabItem label="Go">
+    ### Install via go get
 
-        ```bash
-        # No additional @types package needed
-        npm install @valkey/valkey-glide
-        ```
+    ```bash
+    # Initialize a new Go module (if needed)
+    go mod init your-project-name
 
-    </TabItem>
-    <TabItem label="Go">
+    # Install GLIDE
+    go get github.com/valkey-io/valkey-glide/go
+    ```
 
-        ### Install via go get
+    ### Verify Installation
 
-        ```bash
-        # Initialize a new Go module (if needed)
-        go mod init your-project-name
+    Create a test file:
 
-        # Install GLIDE
-        go get github.com/valkey-io/valkey-glide/go
-        ```
+    ```go
+    # main.go
+    package main
 
-        ### Verify Installation
+    import (
+        "fmt"
+        "github.com/valkey-io/valkey-glide/go/glide/api"
+    )
 
-        Create a test file:
+    func main() {
+        fmt.Println("Valkey GLIDE is ready!")
+    }
+    ```
 
-        ```go
-        # main.go
-        package main
+    Run the test:
 
-        import (
-            "fmt"
-            "github.com/valkey-io/valkey-glide/go/glide/api"
-        )
-
-        func main() {
-            fmt.Println("Valkey GLIDE is ready!")
-        }
-        ```
-
-        Run the test:
-        ```bash
-        go run main.go
-        ```
-    </TabItem>
+    ```bash
+    go run main.go
+    ```
+  </TabItem>
 </Tabs>
-
 
 You're now ready to use Valkey GLIDE in your project.  Check out how to make your [first connection](getting-started/quick-setup/first-connection.html) and explore our [basic operations](quick-setup/basic-operations.html).

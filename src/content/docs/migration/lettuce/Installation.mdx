@@ -7,13 +7,14 @@ sidebar:
     text: Draft
     variant: caution
 ---
+
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
 ## Quick Installation
@@ -30,104 +31,108 @@ Add the following dependency to your `pom.xml` file:
 
 ## Full Installations
 
-To use Valkey Glide, you must include a classifier to specify your platform architecture.  
+To use Valkey Glide, you must include a classifier to specify your platform architecture.\
 This section includes setup instructions for Gradle, Maven, and SBT, with or without OS detection tools.
 
 <Tabs>
-<TabItem label="Gradle">
-<Aside>must include a `classifier` to specify your platform.</Aside>
-```groovy
-// osx-aarch_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-aarch_64'
-}
+  <TabItem label="Gradle">
+    <Aside>must include a `classifier` to specify your platform.</Aside>
 
-// linux-aarch_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-aarch_64'
-}
+    ```groovy
+    // osx-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-aarch_64'
+    }
 
-// linux-x86_64
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-x86_64'
-}
+    // linux-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-aarch_64'
+    }
 
-// with osdetector
-plugins {
-    id "com.google.osdetector" version "1.7.3"
-}
-dependencies {
-    implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: osdetector.classifier
-}
-```
-</TabItem>
+    // linux-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-x86_64'
+    }
 
-<TabItem label="Maven">
-<Aside>
-Must include a `classifier`.
-</Aside>
-<Aside>
-Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the `pom.xml` file.
-</Aside>
-```xml
+    // with osdetector
+    plugins {
+        id "com.google.osdetector" version "1.7.3"
+    }
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: osdetector.classifier
+    }
+    ```
+  </TabItem>
 
-<!--osx-aarch_64-->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>osx-aarch_64</classifier>
-   <version>[1.0.0,2.0.0)</version>
-</dependency>
+  <TabItem label="Maven">
+    <Aside>
+      Must include a `classifier`.
+    </Aside>
 
-<!--linux-aarch_64-->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>linux-aarch_64</classifier>
-   <version>[1.0.0,2.0.0)</version>
-</dependency>
+    <Aside>
+      Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the `pom.xml` file.
+    </Aside>
 
-<!--linux-x86_64-->
-<dependency>
-   <groupId>io.valkey</groupId>
-   <artifactId>valkey-glide</artifactId>
-   <classifier>linux-x86_64</classifier>
-   <version>[1.0.0,2.0.0)</version>
-</dependency>
+    ```xml
 
-<!--with os-maven-plugin-->
-<build>
-    <extensions>
-        <extension>
-            <groupId>kr.motd.maven</groupId>
-            <artifactId>os-maven-plugin</artifactId>
-        </extension>
-    </extensions>
-</build>
-<dependencies>
+    <!--osx-aarch_64-->
     <dependency>
-        <groupId>io.valkey</groupId>
-        <artifactId>valkey-glide</artifactId>
-        <classifier>${os.detected.classifier}</classifier>
-        <version>[1.0.0,2.0.0)</version>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>osx-aarch_64</classifier>
+       <version>[1.0.0,2.0.0)</version>
     </dependency>
-</dependencies>
-```
-</TabItem>
-<TabItem label="SBT">
-<Aside>
-must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
-</Aside>
 
-```scala
-// osx-aarch_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"
+    <!--linux-aarch_64-->
+    <dependency>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>linux-aarch_64</classifier>
+       <version>[1.0.0,2.0.0)</version>
+    </dependency>
 
-// linux-aarch_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-aarch_64"
+    <!--linux-x86_64-->
+    <dependency>
+       <groupId>io.valkey</groupId>
+       <artifactId>valkey-glide</artifactId>
+       <classifier>linux-x86_64</classifier>
+       <version>[1.0.0,2.0.0)</version>
+    </dependency>
 
-// linux-x86_64
-libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-x86_64"
-```
-</TabItem>
+    <!--with os-maven-plugin-->
+    <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+            </extension>
+        </extensions>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>io.valkey</groupId>
+            <artifactId>valkey-glide</artifactId>
+            <classifier>${os.detected.classifier}</classifier>
+            <version>[1.0.0,2.0.0)</version>
+        </dependency>
+    </dependencies>
+    ```
+  </TabItem>
+
+  <TabItem label="SBT">
+    <Aside>
+      must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+    </Aside>
+
+    ```scala
+    // osx-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"
+
+    // linux-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-aarch_64"
+
+    // linux-x86_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-x86_64"
+    ```
+  </TabItem>
 </Tabs>

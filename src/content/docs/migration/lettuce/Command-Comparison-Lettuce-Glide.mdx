@@ -10,11 +10,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Command Comparison: Lettuce → Glide
 
@@ -38,854 +37,973 @@ Below is a [comprehensive list](#command-comparison-chart) of common Redis comma
 
 ### String Operations
 
-<a id="set-get"></a>
+<a id="set-get" />
+
 <details>
-<summary><b style="font-size:18px;">SET & GET</b></summary>
+  <summary><b style="font-size:18px;">SET & GET</b></summary>
 
-The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
-- Both **Lettuce** and **Glide** support these commands in a similar way.
-- **Glide** uses CompletableFuture for all operations.
+  The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
 
-**Lettuce**
-```java
-syncCommands.set("key", "value");
-String val = syncCommands.get("key"); // "value"
+  * Both **Lettuce** and **Glide** support these commands in a similar way.
+  * **Glide** uses CompletableFuture for all operations.
 
-// With options
-syncCommands.setex("key", 60, "value"); // Set with 60 second expiry
-```
+  **Lettuce**
 
-**Glide**
-```java
-client.set("key", "value");
-String val = client.get("key").get(); // "value"
+  ```java
+  syncCommands.set("key", "value");
+  String val = syncCommands.get("key"); // "value"
 
-// With options
-client.set("key", "value", 60);
-```
+  // With options
+  syncCommands.setex("key", 60, "value"); // Set with 60 second expiry
+  ```
+
+  **Glide**
+
+  ```java
+  client.set("key", "value");
+  String val = client.get("key").get(); // "value"
+
+  // With options
+  client.set("key", "value", 60);
+  ```
 </details>
 
-<a id="setex-set-with-expiry"></a>
+<a id="setex-set-with-expiry" />
+
 <details>
-<summary><b style="font-size:18px;">SETEX (Set with Expiry)</b></summary>
+  <summary><b style="font-size:18px;">SETEX (Set with Expiry)</b></summary>
 
-The `SETEX` command sets a key with an expiration time in seconds.
-- In **Lettuce**, this is a dedicated function.
-- In **Glide**, expiration is handled using an additional parameter in the `set()` command.
+  The `SETEX` command sets a key with an expiration time in seconds.
 
-**Lettuce**
-```java
-syncCommands.setex("key", 5, "value"); // Set with 5 second expiry
-```
+  * In **Lettuce**, this is a dedicated function.
+  * In **Glide**, expiration is handled using an additional parameter in the `set()` command.
 
-**Glide**
-```java
-client.set("key", "value", SetOptions.builder().expiry(Seconds(5L)).build()).get(); 
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.setex("key", 5, "value"); // Set with 5 second expiry
+  ```
+
+  **Glide**
+
+  ```java
+  client.set("key", "value", SetOptions.builder().expiry(Seconds(5L)).build()).get(); 
+  ```
 </details>
 
-<a id="setnx-set-if-not-exists"></a>
+<a id="setnx-set-if-not-exists" />
+
 <details>
-<summary><b style="font-size:18px;">SETNX (Set if Not Exists)</b></summary>
+  <summary><b style="font-size:18px;">SETNX (Set if Not Exists)</b></summary>
 
-The `SETNX` command sets a key only if it does not already exist.
-- In **Lettuce**, this is a dedicated function that returns true if the key was set, false if the key already exists.
-- In **Glide**, this is handled using conditional set options within the `set()` command.
+  The `SETNX` command sets a key only if it does not already exist.
 
-**Lettuce**
-```java
-Boolean result = syncCommands.setnx("key", "value"); // Returns true if key was set, false if key exists
-```
+  * In **Lettuce**, this is a dedicated function that returns true if the key was set, false if the key already exists.
+  * In **Glide**, this is handled using conditional set options within the `set()` command.
 
-**Glide**
-```java
-import glide.api.models.commands.SetOptions;
-import glide.api.models.commands.ConditionalChange;
+  **Lettuce**
 
-String result = client.set("key", "value", SetOptions.builder()
-    .conditionalSet(ConditionalChange.ONLY_IF_DOES_NOT_EXIST)
-    .build()).get(); // Returns "OK" if key was set, null if key exists
-```
+  ```java
+  Boolean result = syncCommands.setnx("key", "value"); // Returns true if key was set, false if key exists
+  ```
+
+  **Glide**
+
+  ```java
+  import glide.api.models.commands.SetOptions;
+  import glide.api.models.commands.ConditionalChange;
+
+  String result = client.set("key", "value", SetOptions.builder()
+      .conditionalSet(ConditionalChange.ONLY_IF_DOES_NOT_EXIST)
+      .build()).get(); // Returns "OK" if key was set, null if key exists
+  ```
 </details>
 
-<a id="mset-mget-multiple-setget"></a>
+<a id="mset-mget-multiple-setget" />
+
 <details>
-<summary><b style="font-size:18px;">MSET & MGET (Multiple Set/Get)</b></summary>
+  <summary><b style="font-size:18px;">MSET & MGET (Multiple Set/Get)</b></summary>
 
-The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
-- In **Lettuce**, `mset()` accepts a Map of key-value pairs.
-- In **Glide**, `mset()` also accepts a Map with key-value pairs.
-- For `mget()`, **Lettuce** accepts multiple keys as arguments, while **Glide** requires an array of keys.
+  The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
 
-**Lettuce**
-```java
-// Multiple set
-Map<String, String> map = new HashMap<>();
-map.put("key1", "value1");
-map.put("key2", "value2");
-syncCommands.mset(map);
+  * In **Lettuce**, `mset()` accepts a Map of key-value pairs.
+  * In **Glide**, `mset()` also accepts a Map with key-value pairs.
+  * For `mget()`, **Lettuce** accepts multiple keys as arguments, while **Glide** requires an array of keys.
 
-// Multiple get
-List<KeyValue<String, String>> values = syncCommands.mget("key1", "key2"); // [KeyValue[key1, value1], KeyValue[key2, value2]]
-```
+  **Lettuce**
 
-**Glide**
-```java
-// Multiple set
-Map<String, String> map = new HashMap<>();
-map.put("key1", "value1");
-map.put("key2", "value2");
-client.mset(map);
+  ```java
+  // Multiple set
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "value1");
+  map.put("key2", "value2");
+  syncCommands.mset(map);
 
-// Multiple get
-String[] values = client.mget(new String[]{"key1", "key2"}).get(); // ["value1", "value2"]
-```
+  // Multiple get
+  List<KeyValue<String, String>> values = syncCommands.mget("key1", "key2"); // [KeyValue[key1, value1], KeyValue[key2, value2]]
+  ```
+
+  **Glide**
+
+  ```java
+  // Multiple set
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "value1");
+  map.put("key2", "value2");
+  client.mset(map);
+
+  // Multiple get
+  String[] values = client.mget(new String[]{"key1", "key2"}).get(); // ["value1", "value2"]
+  ```
 </details>
 
-<a id="incr-decr"></a>
+<a id="incr-decr" />
+
 <details>
-<summary><b style="font-size:18px;">INCR & DECR</b></summary>
+  <summary><b style="font-size:18px;">INCR & DECR</b></summary>
 
-The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
-- Both **Lettuce** and **Glide** support these commands in the same way.
-- The key must contain an integer value, otherwise an error will be returned.
+  The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
 
-**Lettuce**
-```java
-syncCommands.incr("counter"); // counter = 1
-syncCommands.decr("counter"); // counter = 0
-```
+  * Both **Lettuce** and **Glide** support these commands in the same way.
+  * The key must contain an integer value, otherwise an error will be returned.
 
-**Glide**
-```java
-client.incr("counter").get(); // counter = 1
-client.decr("counter").get(); // counter = 0
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.incr("counter"); // counter = 1
+  syncCommands.decr("counter"); // counter = 0
+  ```
+
+  **Glide**
+
+  ```java
+  client.incr("counter").get(); // counter = 1
+  client.decr("counter").get(); // counter = 0
+  ```
 </details>
 
-<a id="incrby-decrby"></a>
+<a id="incrby-decrby" />
+
 <details>
-<summary><b style="font-size:18px;">INCRBY & DECRBY</b></summary>
+  <summary><b style="font-size:18px;">INCRBY & DECRBY</b></summary>
 
-The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
-- Both **Lettuce** and **Glide** support these commands in the same way.
-- The key must contain an integer value, otherwise an error will be returned.
+  The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
 
-**Lettuce**
-```java
-syncCommands.incrby("counter", 5); // 5
-syncCommands.decrby("counter", 2); // 3
-```
+  * Both **Lettuce** and **Glide** support these commands in the same way.
+  * The key must contain an integer value, otherwise an error will be returned.
 
-**Glide**
-```java
-client.incrBy("counter", 5).get(); // 5
-client.decrBy("counter", 2).get(); // 3
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.incrby("counter", 5); // 5
+  syncCommands.decrby("counter", 2); // 3
+  ```
+
+  **Glide**
+
+  ```java
+  client.incrBy("counter", 5).get(); // 5
+  client.decrBy("counter", 2).get(); // 3
+  ```
 </details>
 
-<a id="append"></a>
+<a id="append" />
+
 <details>
-<summary><b style="font-size:18px;">APPEND</b></summary>
+  <summary><b style="font-size:18px;">APPEND</b></summary>
 
-The `APPEND` command appends a value to the end of an existing string stored at a key.
-- Both **Lettuce** and **Glide** support this command in the same way.
-- Returns the length of the string after the append operation.
+  The `APPEND` command appends a value to the end of an existing string stored at a key.
 
-**Lettuce**
-```java
-syncCommands.set("greeting", "Hello");
-syncCommands.append("greeting", " World"); // Returns length: 11
-String result = syncCommands.get("greeting"); // "Hello World"
-```
+  * Both **Lettuce** and **Glide** support this command in the same way.
+  * Returns the length of the string after the append operation.
 
-**Glide**
-```java
-client.set("greeting", "Hello");
-client.append("greeting", " World").get(); // Returns length: 11
-String result = client.get("greeting").get(); // "Hello World"
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.set("greeting", "Hello");
+  syncCommands.append("greeting", " World"); // Returns length: 11
+  String result = syncCommands.get("greeting"); // "Hello World"
+  ```
+
+  **Glide**
+
+  ```java
+  client.set("greeting", "Hello");
+  client.append("greeting", " World").get(); // Returns length: 11
+  String result = client.get("greeting").get(); // "Hello World"
+  ```
 </details>
 
-<a id="getrange-setrange"></a>
+<a id="getrange-setrange" />
+
 <details>
-<summary><b style="font-size:18px;">GETRANGE & SETRANGE</b></summary>
+  <summary><b style="font-size:18px;">GETRANGE & SETRANGE</b></summary>
 
-The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
-- Both **Lettuce** and **Glide** support these commands in the same way.
+  The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
 
-**Lettuce**
-```java
-syncCommands.set("key", "Hello World");
-String result = syncCommands.getrange("key", 0, 4); // "Hello"
+  * Both **Lettuce** and **Glide** support these commands in the same way.
 
-syncCommands.setrange("key", 6, "Redis"); // Returns length: 11
-String updated = syncCommands.get("key"); // "Hello Redis"
-```
+  **Lettuce**
 
-**Glide**
-```java
-client.set("key", "Hello World");
-String result = client.getRange("key", 0, 4).get(); // "Hello"
+  ```java
+  syncCommands.set("key", "Hello World");
+  String result = syncCommands.getrange("key", 0, 4); // "Hello"
 
-client.setRange("key", 6, "Redis").get(); // Returns length: 11
-String updated = client.get("key").get(); // "Hello Redis"
-```
+  syncCommands.setrange("key", 6, "Redis"); // Returns length: 11
+  String updated = syncCommands.get("key"); // "Hello Redis"
+  ```
+
+  **Glide**
+
+  ```java
+  client.set("key", "Hello World");
+  String result = client.getRange("key", 0, 4).get(); // "Hello"
+
+  client.setRange("key", 6, "Redis").get(); // Returns length: 11
+  String updated = client.get("key").get(); // "Hello Redis"
+  ```
 </details>
 
 ### Key Operations
 
-<a id="del-delete"></a>
+<a id="del-delete" />
+
 <details>
-<summary><b style="font-size:18px;">DEL (Delete)</b></summary>
+  <summary><b style="font-size:18px;">DEL (Delete)</b></summary>
 
-The `DEL` command removes one or more keys from Valkey.
-- In **Lettuce**, `del()` accepts multiple keys as separate arguments.
-- In **Glide**, `del()` requires an array of keys.
+  The `DEL` command removes one or more keys from Valkey.
 
-**Lettuce**
-```java
-Long deleted = syncCommands.del("key1", "key2"); // 2 (number of keys deleted)
-```
+  * In **Lettuce**, `del()` accepts multiple keys as separate arguments.
+  * In **Glide**, `del()` requires an array of keys.
 
-**Glide**
-```java
-Long deleted = client.del(new String[]{"key1", "key2"}).get(); // 2 (number of keys deleted)
-```
+  **Lettuce**
+
+  ```java
+  Long deleted = syncCommands.del("key1", "key2"); // 2 (number of keys deleted)
+  ```
+
+  **Glide**
+
+  ```java
+  Long deleted = client.del(new String[]{"key1", "key2"}).get(); // 2 (number of keys deleted)
+  ```
 </details>
 
-<a id="exists"></a>
+<a id="exists" />
+
 <details>
-<summary><b style="font-size:18px;">EXISTS</b></summary>
+  <summary><b style="font-size:18px;">EXISTS</b></summary>
 
-The `EXISTS` command checks if one or more keys exist in Valkey.
-- In **Lettuce**, `exists()` accepts multiple keys as separate arguments and returns the number of keys that exist.
-- In **Glide**, `exists()` requires an array of keys and also returns the number of keys that exist.
+  The `EXISTS` command checks if one or more keys exist in Valkey.
 
-**Lettuce**
-```java
-Long count = syncCommands.exists("existKey", "nonExistKey"); // 1 (number of keys that exist)
-```
+  * In **Lettuce**, `exists()` accepts multiple keys as separate arguments and returns the number of keys that exist.
+  * In **Glide**, `exists()` requires an array of keys and also returns the number of keys that exist.
 
-**Glide**
-```java
-Long count = client.exists(new String[]{"existKey", "nonExistKey"}).get(); // 1 (number of keys that exist)
-```
+  **Lettuce**
+
+  ```java
+  Long count = syncCommands.exists("existKey", "nonExistKey"); // 1 (number of keys that exist)
+  ```
+
+  **Glide**
+
+  ```java
+  Long count = client.exists(new String[]{"existKey", "nonExistKey"}).get(); // 1 (number of keys that exist)
+  ```
 </details>
 
-<a id="expire-ttl"></a>
+<a id="expire-ttl" />
+
 <details>
-<summary><b style="font-size:18px;">EXPIRE & TTL</b></summary>
+  <summary><b style="font-size:18px;">EXPIRE & TTL</b></summary>
 
-The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
-- In **Lettuce**, `expire()` returns true if successful, false if the key doesn't exist or couldn't be expired.
-- In **Glide**, `expire()` returns 1 if successful, 0 otherwise.
+  The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
 
-**Lettuce**
-```java
-Boolean success = syncCommands.expire("key", 10); // true (success)
-Long ttl = syncCommands.ttl("key"); // 10 (seconds remaining)
-```
+  * In **Lettuce**, `expire()` returns true if successful, false if the key doesn't exist or couldn't be expired.
+  * In **Glide**, `expire()` returns 1 if successful, 0 otherwise.
 
-**Glide**
-```java
-Long success = client.expire("key", 10).get(); // 1 (success)
-Long ttl = client.ttl("key").get(); // 10 (seconds remaining)
-```
+  **Lettuce**
+
+  ```java
+  Boolean success = syncCommands.expire("key", 10); // true (success)
+  Long ttl = syncCommands.ttl("key"); // 10 (seconds remaining)
+  ```
+
+  **Glide**
+
+  ```java
+  Long success = client.expire("key", 10).get(); // 1 (success)
+  Long ttl = client.ttl("key").get(); // 10 (seconds remaining)
+  ```
 </details>
 
-<a id="keys-scan"></a>
+<a id="keys-scan" />
+
 <details>
-<summary><b style="font-size:18px;">KEYS & SCAN</b></summary>
+  <summary><b style="font-size:18px;">KEYS & SCAN</b></summary>
 
-The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
-- `KEYS` is not recommended for production use as it blocks the server until completion.
-- `SCAN` is the preferred method for iterating through keys in production environments.
+  The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
 
-**Lettuce**
-```java
-// KEYS (not recommended for production)
-List<String> allKeys = syncCommands.keys("*");
+  * `KEYS` is not recommended for production use as it blocks the server until completion.
+  * `SCAN` is the preferred method for iterating through keys in production environments.
 
-// SCAN (recommended for production)
-ScanCursor cursor = ScanCursor.INITIAL;
-ScanIterator<String> iterator = ScanIterator.scan(syncCommands, cursor);
+  **Lettuce**
 
-while (iterator.hasNext()) {
-    String key = iterator.next();
-    System.out.println("SCAN iteration: " + key);
-}
-```
+  ```java
+  // KEYS (not recommended for production)
+  List<String> allKeys = syncCommands.keys("*");
 
-**Glide**
-```java
-// KEYS (not recommended for production)
-String[] allKeys = client.keys("*").get();
+  // SCAN (recommended for production)
+  ScanCursor cursor = ScanCursor.INITIAL;
+  ScanIterator<String> iterator = ScanIterator.scan(syncCommands, cursor);
 
-// SCAN (recommended for production)
-String cursor = "0";
-Object[] result;
-do {
-    result = client.scan(cursor).get();
-    cursor = result[0].toString();
+  while (iterator.hasNext()) {
+      String key = iterator.next();
+      System.out.println("SCAN iteration: " + key);
+  }
+  ```
 
-    Object[] keys = (Object[]) result[1];
-    if (keys.length > 0) {
-        System.out.println("SCAN iteration: " + Arrays.toString(keys));
-    }
-} while (!cursor.equals("0"));
-```
+  **Glide**
+
+  ```java
+  // KEYS (not recommended for production)
+  String[] allKeys = client.keys("*").get();
+
+  // SCAN (recommended for production)
+  String cursor = "0";
+  Object[] result;
+  do {
+      result = client.scan(cursor).get();
+      cursor = result[0].toString();
+
+      Object[] keys = (Object[]) result[1];
+      if (keys.length > 0) {
+          System.out.println("SCAN iteration: " + Arrays.toString(keys));
+      }
+  } while (!cursor.equals("0"));
+  ```
 </details>
 
-<a id="rename-renamenx"></a>
+<a id="rename-renamenx" />
+
 <details>
-<summary><b style="font-size:18px;">RENAME & RENAMENX</b></summary>
+  <summary><b style="font-size:18px;">RENAME & RENAMENX</b></summary>
 
-The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
-- In **Lettuce**, `renamenx()` returns true if successful, false if the target key already exists.
-- In **Glide**, `renameNx()` returns 1 if successful, 0 if the target key already exists.
+  The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
 
-**Lettuce**
-```java
-syncCommands.set("oldkey", "value");
-String result = syncCommands.rename("oldkey", "newkey"); // "OK"
+  * In **Lettuce**, `renamenx()` returns true if successful, false if the target key already exists.
+  * In **Glide**, `renameNx()` returns 1 if successful, 0 if the target key already exists.
 
-syncCommands.set("key1", "value1");
-Boolean success = syncCommands.renamenx("key1", "key2"); // true (success)
-```
+  **Lettuce**
 
-**Glide**
-```java
-client.set("oldkey", "value");
-String result = client.rename("oldkey", "newkey").get(); // "OK"
+  ```java
+  syncCommands.set("oldkey", "value");
+  String result = syncCommands.rename("oldkey", "newkey"); // "OK"
 
-client.set("key1", "value1");
-Long success = client.renameNx("key1", "key2").get(); // 1 (success)
-```
+  syncCommands.set("key1", "value1");
+  Boolean success = syncCommands.renamenx("key1", "key2"); // true (success)
+  ```
+
+  **Glide**
+
+  ```java
+  client.set("oldkey", "value");
+  String result = client.rename("oldkey", "newkey").get(); // "OK"
+
+  client.set("key1", "value1");
+  Long success = client.renameNx("key1", "key2").get(); // 1 (success)
+  ```
 </details>
 
 ### Hash Operations
 
-<a id="hset-hget"></a>
+<a id="hset-hget" />
+
 <details>
-<summary><b style="font-size:18px;">HSET & HGET</b></summary>
+  <summary><b style="font-size:18px;">HSET & HGET</b></summary>
 
-The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
-- In **Lettuce**, `hset()` accepts field-value pairs as separate arguments or as a Map.
-- In **Glide**, `hset()` accepts a Map with field-value pairs.
+  The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
 
-**Lettuce**
-```java
-// Set multiple fields
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-Long added = syncCommands.hset("hash", map); // 2 (fields added)
+  * In **Lettuce**, `hset()` accepts field-value pairs as separate arguments or as a Map.
+  * In **Glide**, `hset()` accepts a Map with field-value pairs.
 
-// Get a single field
-String value = syncCommands.hget("hash", "key1"); // "1"
-```
+  **Lettuce**
 
-**Glide**
-```java
-// Set multiple fields
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-Long added = client.hset("hash", map).get(); // 2 (fields added)
+  ```java
+  // Set multiple fields
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  Long added = syncCommands.hset("hash", map); // 2 (fields added)
 
-// Get a single field
-String value = client.hget("hash", "key1").get(); // "1"
-```
+  // Get a single field
+  String value = syncCommands.hget("hash", "key1"); // "1"
+  ```
+
+  **Glide**
+
+  ```java
+  // Set multiple fields
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  Long added = client.hset("hash", map).get(); // 2 (fields added)
+
+  // Get a single field
+  String value = client.hget("hash", "key1").get(); // "1"
+  ```
 </details>
 
-<a id="hmset-hmget"></a>
+<a id="hmset-hmget" />
+
 <details>
-<summary><b style="font-size:18px;">HMSET & HMGET</b></summary>
+  <summary><b style="font-size:18px;">HMSET & HMGET</b></summary>
 
-The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
-- In **Lettuce**, `hmset()` accepts a Map of field-value pairs.
-- In **Glide**, there is no separate `hmset()` method; instead, `hset()` is used for setting multiple fields.
-- For `hmget()`, **Lettuce** accepts multiple fields as arguments, while **Glide** requires an array of fields.
+  The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
 
-**Lettuce**
-```java
-// Set multiple fields
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-String result = syncCommands.hmset("hash", map); // "OK"
+  * In **Lettuce**, `hmset()` accepts a Map of field-value pairs.
+  * In **Glide**, there is no separate `hmset()` method; instead, `hset()` is used for setting multiple fields.
+  * For `hmget()`, **Lettuce** accepts multiple fields as arguments, while **Glide** requires an array of fields.
 
-// Get multiple fields
-List<KeyValue<String, String>> values = syncCommands.hmget("hash", "key1", "key2"); // [KeyValue[key1, 1], KeyValue[key2, 2]]
-```
+  **Lettuce**
 
-**Glide**
-```java
-// Set multiple fields (same as hset in Glide)
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-Long added = client.hset("hash", map).get(); // 2 (fields added)
+  ```java
+  // Set multiple fields
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  String result = syncCommands.hmset("hash", map); // "OK"
 
-// Get multiple fields
-String[] values = client.hmget("hash", new String[]{"key1", "key2"}).get(); // ["1", "2"]
-```
+  // Get multiple fields
+  List<KeyValue<String, String>> values = syncCommands.hmget("hash", "key1", "key2"); // [KeyValue[key1, 1], KeyValue[key2, 2]]
+  ```
+
+  **Glide**
+
+  ```java
+  // Set multiple fields (same as hset in Glide)
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  Long added = client.hset("hash", map).get(); // 2 (fields added)
+
+  // Get multiple fields
+  String[] values = client.hmget("hash", new String[]{"key1", "key2"}).get(); // ["1", "2"]
+  ```
 </details>
 
-<a id="hgetall"></a>
+<a id="hgetall" />
+
 <details>
-<summary><b style="font-size:18px;">HGETALL</b></summary>
+  <summary><b style="font-size:18px;">HGETALL</b></summary>
 
-The `HGETALL` command retrieves all field-value pairs from a hash.
-- In **Lettuce**, it returns a Map with field names as keys and their values.
-- In **Glide**, it also returns a Map with field names as keys and their values.
+  The `HGETALL` command retrieves all field-value pairs from a hash.
 
-**Lettuce**
-```java
-Map<String, String> map = new HashMap<>();
-map.put("name", "John");
-map.put("age", "30");
-syncCommands.hset("user", map);
+  * In **Lettuce**, it returns a Map with field names as keys and their values.
+  * In **Glide**, it also returns a Map with field names as keys and their values.
 
-Map<String, String> user = syncCommands.hgetall("user"); // {name=John, age=30}
-```
+  **Lettuce**
 
-**Glide**
-```java
-Map<String, String> map = new HashMap<>();
-map.put("name", "John");
-map.put("age", "30");
-client.hset("user", map);
+  ```java
+  Map<String, String> map = new HashMap<>();
+  map.put("name", "John");
+  map.put("age", "30");
+  syncCommands.hset("user", map);
 
-Map<String, String> user = client.hgetall("user").get(); // {name=John, age=30}
-```
+  Map<String, String> user = syncCommands.hgetall("user"); // {name=John, age=30}
+  ```
+
+  **Glide**
+
+  ```java
+  Map<String, String> map = new HashMap<>();
+  map.put("name", "John");
+  map.put("age", "30");
+  client.hset("user", map);
+
+  Map<String, String> user = client.hgetall("user").get(); // {name=John, age=30}
+  ```
 </details>
 
-<a id="hdel-hexists"></a>
+<a id="hdel-hexists" />
+
 <details>
-<summary><b style="font-size:18px;">HDEL & HEXISTS</b></summary>
+  <summary><b style="font-size:18px;">HDEL & HEXISTS</b></summary>
 
-The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
-- In **Lettuce**, `hdel()` accepts multiple fields as separate arguments and returns the number of fields removed.
-- In **Glide**, `hdel()` requires an array of fields.
-- For `hexists()`, **Lettuce** returns true if the field exists, false if it doesn't, while **Glide** returns 1 or 0.
+  The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
 
-**Lettuce**
-```java
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-map.put("key3", "3");
-syncCommands.hset("hash", map);
+  * In **Lettuce**, `hdel()` accepts multiple fields as separate arguments and returns the number of fields removed.
+  * In **Glide**, `hdel()` requires an array of fields.
+  * For `hexists()`, **Lettuce** returns true if the field exists, false if it doesn't, while **Glide** returns 1 or 0.
 
-Long deleted = syncCommands.hdel("hash", "key1", "key2"); // 2 (fields deleted)
+  **Lettuce**
 
-Boolean exists = syncCommands.hexists("hash", "key3"); // true (exists)
-Boolean notExists = syncCommands.hexists("hash", "key1"); // false (doesn't exist)
-```
+  ```java
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  map.put("key3", "3");
+  syncCommands.hset("hash", map);
 
-**Glide**
-```java
-Map<String, String> map = new HashMap<>();
-map.put("key1", "1");
-map.put("key2", "2");
-map.put("key3", "3");
-client.hset("hash", map);
+  Long deleted = syncCommands.hdel("hash", "key1", "key2"); // 2 (fields deleted)
 
-Long deleted = client.hdel("hash", new String[]{"key1", "key2"}).get(); // 2 (fields deleted)
+  Boolean exists = syncCommands.hexists("hash", "key3"); // true (exists)
+  Boolean notExists = syncCommands.hexists("hash", "key1"); // false (doesn't exist)
+  ```
 
-Long exists = client.hexists("hash", "key3").get(); // 1 (exists)
-Long notExists = client.hexists("hash", "key1").get(); // 0 (doesn't exist)
-```
+  **Glide**
+
+  ```java
+  Map<String, String> map = new HashMap<>();
+  map.put("key1", "1");
+  map.put("key2", "2");
+  map.put("key3", "3");
+  client.hset("hash", map);
+
+  Long deleted = client.hdel("hash", new String[]{"key1", "key2"}).get(); // 2 (fields deleted)
+
+  Long exists = client.hexists("hash", "key3").get(); // 1 (exists)
+  Long notExists = client.hexists("hash", "key1").get(); // 0 (doesn't exist)
+  ```
 </details>
 
 ### List Operations
 
-<a id="lpush-rpush"></a>
+<a id="lpush-rpush" />
+
 <details>
-<summary><b style="font-size:18px;">LPUSH & RPUSH</b></summary>
+  <summary><b style="font-size:18px;">LPUSH & RPUSH</b></summary>
 
-The `LPUSH` command adds elements to the beginning of a list, while `RPUSH` adds elements to the end of a list.
-- In **Lettuce**, these commands accept multiple elements as separate arguments.
-- In **Glide**, they require an array of elements.
-- Both return the length of the list after the operation.
+  The `LPUSH` command adds elements to the beginning of a list, while `RPUSH` adds elements to the end of a list.
 
-**Lettuce**
-```java
-Long lengthOfList = syncCommands.lpush("list", "a", "b", "c"); // lengthOfList = 3
-lengthOfList = syncCommands.rpush("list", "d", "e"); // lengthOfList = 5
-```
+  * In **Lettuce**, these commands accept multiple elements as separate arguments.
+  * In **Glide**, they require an array of elements.
+  * Both return the length of the list after the operation.
 
-**Glide**
-```java
-Long lengthOfList = client.lpush("list", new String[]{"a", "b", "c"}).get(); // lengthOfList = 3
-lengthOfList = client.rpush("list", new String[]{"d", "e"}).get(); // lengthOfList = 5
-```
+  **Lettuce**
+
+  ```java
+  Long lengthOfList = syncCommands.lpush("list", "a", "b", "c"); // lengthOfList = 3
+  lengthOfList = syncCommands.rpush("list", "d", "e"); // lengthOfList = 5
+  ```
+
+  **Glide**
+
+  ```java
+  Long lengthOfList = client.lpush("list", new String[]{"a", "b", "c"}).get(); // lengthOfList = 3
+  lengthOfList = client.rpush("list", new String[]{"d", "e"}).get(); // lengthOfList = 5
+  ```
 </details>
 
-<a id="lpop-rpop"></a>
+<a id="lpop-rpop" />
+
 <details>
-<summary><b style="font-size:18px;">LPOP & RPOP</b></summary>
+  <summary><b style="font-size:18px;">LPOP & RPOP</b></summary>
 
-The `LPOP` command removes and returns the first element of a list, while `RPOP` removes and returns the last element.
-- Both **Lettuce** and **Glide** support these commands in the same way.
-- Returns null if the list doesn't exist or is empty.
+  The `LPOP` command removes and returns the first element of a list, while `RPOP` removes and returns the last element.
 
-**Lettuce**
-```java
-syncCommands.rpush("list", "a", "b", "c");
-String first = syncCommands.lpop("list"); // "a"
-String last = syncCommands.rpop("list"); // "c"
-```
+  * Both **Lettuce** and **Glide** support these commands in the same way.
+  * Returns null if the list doesn't exist or is empty.
 
-**Glide**
-```java
-client.rpush("list", new String[]{"a", "b", "c"});
-String first = client.lpop("list").get(); // "a"
-String last = client.rpop("list").get(); // "c"
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.rpush("list", "a", "b", "c");
+  String first = syncCommands.lpop("list"); // "a"
+  String last = syncCommands.rpop("list"); // "c"
+  ```
+
+  **Glide**
+
+  ```java
+  client.rpush("list", new String[]{"a", "b", "c"});
+  String first = client.lpop("list").get(); // "a"
+  String last = client.rpop("list").get(); // "c"
+  ```
 </details>
 
-<a id="lrange"></a>
+<a id="lrange" />
+
 <details>
-<summary><b style="font-size:18px;">LRANGE</b></summary>
+  <summary><b style="font-size:18px;">LRANGE</b></summary>
 
-The `LRANGE` command retrieves a range of elements from a list.
-- Both **Lettuce** and **Glide** support this command in the same way.
-- The range is specified by start and stop indices, where 0 is the first element, -1 is the last element.
+  The `LRANGE` command retrieves a range of elements from a list.
 
-**Lettuce**
-```java
-syncCommands.rpush("list", "a", "b", "c", "d", "e");
-List<String> elements = syncCommands.lrange("list", 0, 2); // ["a", "b", "c"]
-```
+  * Both **Lettuce** and **Glide** support this command in the same way.
+  * The range is specified by start and stop indices, where 0 is the first element, -1 is the last element.
 
-**Glide**
-```java
-client.rpush("list", new String[]{"a", "b", "c", "d", "e"});
-String[] elements = client.lrange("list", 0, 2).get(); // ["a", "b", "c"]
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.rpush("list", "a", "b", "c", "d", "e");
+  List<String> elements = syncCommands.lrange("list", 0, 2); // ["a", "b", "c"]
+  ```
+
+  **Glide**
+
+  ```java
+  client.rpush("list", new String[]{"a", "b", "c", "d", "e"});
+  String[] elements = client.lrange("list", 0, 2).get(); // ["a", "b", "c"]
+  ```
 </details>
 
 ### Set Operations
 
-<a id="sadd-smembers"></a>
+<a id="sadd-smembers" />
+
 <details>
-<summary><b style="font-size:18px;">SADD & SMEMBERS</b></summary>
+  <summary><b style="font-size:18px;">SADD & SMEMBERS</b></summary>
 
-The `SADD` command adds one or more members to a set, while `SMEMBERS` returns all members of a set.
-- In **Lettuce**, `sadd()` accepts multiple members as separate arguments.
-- In **Glide**, `sadd()` requires an array of members.
-- Both return the number of members that were added to the set (excluding members that were already present).
+  The `SADD` command adds one or more members to a set, while `SMEMBERS` returns all members of a set.
 
-**Lettuce**
-```java
-Long added = syncCommands.sadd("set", "a", "b", "c"); // 3 (members added)
-Set<String> members = syncCommands.smembers("set"); // ["a", "b", "c"]
-```
+  * In **Lettuce**, `sadd()` accepts multiple members as separate arguments.
+  * In **Glide**, `sadd()` requires an array of members.
+  * Both return the number of members that were added to the set (excluding members that were already present).
 
-**Glide**
-```java
-Long added = client.sadd("set", new String[]{"a", "b", "c"}).get(); // 3 (members added)
-String[] members = client.smembers("set").get(); // ["a", "b", "c"]
-```
+  **Lettuce**
+
+  ```java
+  Long added = syncCommands.sadd("set", "a", "b", "c"); // 3 (members added)
+  Set<String> members = syncCommands.smembers("set"); // ["a", "b", "c"]
+  ```
+
+  **Glide**
+
+  ```java
+  Long added = client.sadd("set", new String[]{"a", "b", "c"}).get(); // 3 (members added)
+  String[] members = client.smembers("set").get(); // ["a", "b", "c"]
+  ```
 </details>
 
-<a id="srem-sismember"></a>
+<a id="srem-sismember" />
+
 <details>
-<summary><b style="font-size:18px;">SREM & SISMEMBER</b></summary>
+  <summary><b style="font-size:18px;">SREM & SISMEMBER</b></summary>
 
-The `SREM` command removes one or more members from a set, while `SISMEMBER` checks if a value is a member of a set.
-- In **Lettuce**, `srem()` accepts multiple members as separate arguments and returns the number of members removed.
-- In **Glide**, `srem()` requires an array of members.
-- For `sismember()`, **Lettuce** returns true if the member exists, false if it doesn't, while **Glide** returns 1 or 0.
+  The `SREM` command removes one or more members from a set, while `SISMEMBER` checks if a value is a member of a set.
 
-**Lettuce**
-```java
-syncCommands.sadd("set", "a", "b", "c");
-Long removed = syncCommands.srem("set", "a", "b"); // 2 (members removed)
+  * In **Lettuce**, `srem()` accepts multiple members as separate arguments and returns the number of members removed.
+  * In **Glide**, `srem()` requires an array of members.
+  * For `sismember()`, **Lettuce** returns true if the member exists, false if it doesn't, while **Glide** returns 1 or 0.
 
-Boolean isMember = syncCommands.sismember("set", "c"); // true (is member)
-Boolean notMember = syncCommands.sismember("set", "a"); // false (not member)
-```
+  **Lettuce**
 
-**Glide**
-```java
-client.sadd("set", new String[]{"a", "b", "c"});
-Long removed = client.srem("set", new String[]{"a", "b"}).get(); // 2 (members removed)
+  ```java
+  syncCommands.sadd("set", "a", "b", "c");
+  Long removed = syncCommands.srem("set", "a", "b"); // 2 (members removed)
 
-Long isMember = client.sismember("set", "c").get(); // 1 (is member)
-Long notMember = client.sismember("set", "a").get(); // 0 (not member)
-```
+  Boolean isMember = syncCommands.sismember("set", "c"); // true (is member)
+  Boolean notMember = syncCommands.sismember("set", "a"); // false (not member)
+  ```
+
+  **Glide**
+
+  ```java
+  client.sadd("set", new String[]{"a", "b", "c"});
+  Long removed = client.srem("set", new String[]{"a", "b"}).get(); // 2 (members removed)
+
+  Long isMember = client.sismember("set", "c").get(); // 1 (is member)
+  Long notMember = client.sismember("set", "a").get(); // 0 (not member)
+  ```
 </details>
 
 ### Sorted Set Operations
 
-<a id="zadd-zrange"></a>
+<a id="zadd-zrange" />
+
 <details>
-<summary><b style="font-size:18px;">ZADD & ZRANGE</b></summary>
+  <summary><b style="font-size:18px;">ZADD & ZRANGE</b></summary>
 
-The `ZADD` command adds one or more members with scores to a sorted set, while `ZRANGE` retrieves members from a sorted set by index range.
-- In **Lettuce**, `zadd()` accepts score-member pairs as separate arguments or as a Map.
-- In **Glide**, `zadd()` requires an array of objects with score and member properties.
-- For `zrange()` with scores, **Lettuce** uses a boolean parameter, while **Glide** uses an options object.
+  The `ZADD` command adds one or more members with scores to a sorted set, while `ZRANGE` retrieves members from a sorted set by index range.
 
-**Lettuce**
-```java
-Map<String, Double> scoreMembers = new HashMap<>();
-scoreMembers.put("one", 1.0);
-scoreMembers.put("two", 2.0);
-scoreMembers.put("three", 3.0);
-Long added = syncCommands.zadd("sortedSet", scoreMembers); // 3 (members added)
+  * In **Lettuce**, `zadd()` accepts score-member pairs as separate arguments or as a Map.
+  * In **Glide**, `zadd()` requires an array of objects with score and member properties.
+  * For `zrange()` with scores, **Lettuce** uses a boolean parameter, while **Glide** uses an options object.
 
-List<String> members = syncCommands.zrange("sortedSet", 0, -1); // ["one", "two", "three"]
+  **Lettuce**
 
-// With scores
-List<ScoredValue<String>> withScores = syncCommands.zrangeWithScores("sortedSet", 0, -1);
-// [ScoredValue[score=1.0, value=one], ScoredValue[score=2.0, value=two], ScoredValue[score=3.0, value=three]]
-```
+  ```java
+  Map<String, Double> scoreMembers = new HashMap<>();
+  scoreMembers.put("one", 1.0);
+  scoreMembers.put("two", 2.0);
+  scoreMembers.put("three", 3.0);
+  Long added = syncCommands.zadd("sortedSet", scoreMembers); // 3 (members added)
 
-**Glide**
-```java
-// Glide requires an array of objects with score and member properties
-Object[] scoreMembers = new Object[] {
-    new Object[] { 1.0, "one" },
-    new Object[] { 2.0, "two" },
-    new Object[] { 3.0, "three" }
-};
-Long added = client.zadd("sortedSet", scoreMembers).get(); // 3 (members added)
+  List<String> members = syncCommands.zrange("sortedSet", 0, -1); // ["one", "two", "three"]
 
-String[] members = client.zrange("sortedSet", 0, -1).get(); // ["one", "two", "three"]
+  // With scores
+  List<ScoredValue<String>> withScores = syncCommands.zrangeWithScores("sortedSet", 0, -1);
+  // [ScoredValue[score=1.0, value=one], ScoredValue[score=2.0, value=two], ScoredValue[score=3.0, value=three]]
+  ```
 
-// With scores
-Object[] withScores = client.zrange("sortedSet", 0, -1, "WITHSCORES").get();
-// ["one", "1", "two", "2", "three", "3"]
-```
+  **Glide**
+
+  ```java
+  // Glide requires an array of objects with score and member properties
+  Object[] scoreMembers = new Object[] {
+      new Object[] { 1.0, "one" },
+      new Object[] { 2.0, "two" },
+      new Object[] { 3.0, "three" }
+  };
+  Long added = client.zadd("sortedSet", scoreMembers).get(); // 3 (members added)
+
+  String[] members = client.zrange("sortedSet", 0, -1).get(); // ["one", "two", "three"]
+
+  // With scores
+  Object[] withScores = client.zrange("sortedSet", 0, -1, "WITHSCORES").get();
+  // ["one", "1", "two", "2", "three", "3"]
+  ```
 </details>
 
-<a id="zrem-zscore"></a>
+<a id="zrem-zscore" />
+
 <details>
-<summary><b style="font-size:18px;">ZREM & ZSCORE</b></summary>
+  <summary><b style="font-size:18px;">ZREM & ZSCORE</b></summary>
 
-The `ZREM` command removes one or more members from a sorted set, while `ZSCORE` returns the score of a member in a sorted set.
-- In **Lettuce**, `zrem()` accepts multiple members as separate arguments.
-- In **Glide**, `zrem()` requires an array of members.
-- Both return the number of members that were removed from the sorted set.
+  The `ZREM` command removes one or more members from a sorted set, while `ZSCORE` returns the score of a member in a sorted set.
 
-**Lettuce**
-```java
-Map<String, Double> scoreMembers = new HashMap<>();
-scoreMembers.put("one", 1.0);
-scoreMembers.put("two", 2.0);
-scoreMembers.put("three", 3.0);
-syncCommands.zadd("sortedSet", scoreMembers);
+  * In **Lettuce**, `zrem()` accepts multiple members as separate arguments.
+  * In **Glide**, `zrem()` requires an array of members.
+  * Both return the number of members that were removed from the sorted set.
 
-Long removed = syncCommands.zrem("sortedSet", "one", "two"); // 2 (members removed)
+  **Lettuce**
 
-Double score = syncCommands.zscore("sortedSet", "three"); // 3.0
-```
+  ```java
+  Map<String, Double> scoreMembers = new HashMap<>();
+  scoreMembers.put("one", 1.0);
+  scoreMembers.put("two", 2.0);
+  scoreMembers.put("three", 3.0);
+  syncCommands.zadd("sortedSet", scoreMembers);
 
-**Glide**
-```java
-Object[] scoreMembers = new Object[] {
-    new Object[] { 1.0, "one" },
-    new Object[] { 2.0, "two" },
-    new Object[] { 3.0, "three" }
-};
-client.zadd("sortedSet", scoreMembers);
+  Long removed = syncCommands.zrem("sortedSet", "one", "two"); // 2 (members removed)
 
-Long removed = client.zrem("sortedSet", new String[]{"one", "two"}).get(); // 2 (members removed)
+  Double score = syncCommands.zscore("sortedSet", "three"); // 3.0
+  ```
 
-String score = client.zscore("sortedSet", "three").get(); // "3"
-```
+  **Glide**
+
+  ```java
+  Object[] scoreMembers = new Object[] {
+      new Object[] { 1.0, "one" },
+      new Object[] { 2.0, "two" },
+      new Object[] { 3.0, "three" }
+  };
+  client.zadd("sortedSet", scoreMembers);
+
+  Long removed = client.zrem("sortedSet", new String[]{"one", "two"}).get(); // 2 (members removed)
+
+  String score = client.zscore("sortedSet", "three").get(); // "3"
+  ```
 </details>
 
-<a id="zrank-zrevrank"></a>
+<a id="zrank-zrevrank" />
+
 <details>
-<summary><b style="font-size:18px;">ZRANK & ZREVRANK</b></summary>
+  <summary><b style="font-size:18px;">ZRANK & ZREVRANK</b></summary>
 
-The `ZRANK` command returns the rank (position) of a member in a sorted set, while `ZREVRANK` returns the rank in reverse order.
-- Both **Lettuce** and **Glide** support these commands in the same way.
-- Ranks are 0-based, meaning the member with the lowest score has rank 0.
-- `ZREVRANK` returns the rank in descending order, where the member with the highest score has rank 0.
+  The `ZRANK` command returns the rank (position) of a member in a sorted set, while `ZREVRANK` returns the rank in reverse order.
 
-**Lettuce**
-```java
-Map<String, Double> scoreMembers = new HashMap<>();
-scoreMembers.put("one", 1.0);
-scoreMembers.put("two", 2.0);
-scoreMembers.put("three", 3.0);
-syncCommands.zadd("sortedSet", scoreMembers);
+  * Both **Lettuce** and **Glide** support these commands in the same way.
+  * Ranks are 0-based, meaning the member with the lowest score has rank 0.
+  * `ZREVRANK` returns the rank in descending order, where the member with the highest score has rank 0.
 
-Long rank = syncCommands.zrank("sortedSet", "two"); // 1 (0-based index)
-Long revRank = syncCommands.zrevrank("sortedSet", "two"); // 1 (0-based index from end)
-```
+  **Lettuce**
 
-**Glide**
-```java
-Object[] scoreMembers = new Object[] {
-    new Object[] { 1.0, "one" },
-    new Object[] { 2.0, "two" },
-    new Object[] { 3.0, "three" }
-};
-client.zadd("sortedSet", scoreMembers);
+  ```java
+  Map<String, Double> scoreMembers = new HashMap<>();
+  scoreMembers.put("one", 1.0);
+  scoreMembers.put("two", 2.0);
+  scoreMembers.put("three", 3.0);
+  syncCommands.zadd("sortedSet", scoreMembers);
 
-Long rank = client.zrank("sortedSet", "two").get(); // 1 (0-based index)
-Long revRank = client.zrevrank("sortedSet", "two").get(); // 1 (0-based index from end)
-```
+  Long rank = syncCommands.zrank("sortedSet", "two"); // 1 (0-based index)
+  Long revRank = syncCommands.zrevrank("sortedSet", "two"); // 1 (0-based index from end)
+  ```
+
+  **Glide**
+
+  ```java
+  Object[] scoreMembers = new Object[] {
+      new Object[] { 1.0, "one" },
+      new Object[] { 2.0, "two" },
+      new Object[] { 3.0, "three" }
+  };
+  client.zadd("sortedSet", scoreMembers);
+
+  Long rank = client.zrank("sortedSet", "two").get(); // 1 (0-based index)
+  Long revRank = client.zrevrank("sortedSet", "two").get(); // 1 (0-based index from end)
+  ```
 </details>
 
 ### Transactions
 
-<a id="transactions-multi-exec"></a>
+<a id="transactions-multi-exec" />
+
 <details>
-<summary><b style="font-size:18px;">Transactions (MULTI / EXEC)</b></summary>
+  <summary><b style="font-size:18px;">Transactions (MULTI / EXEC)</b></summary>
 
-The `MULTI` command starts a transaction block, while `EXEC` executes all commands issued after MULTI.
-- In **Lettuce**, transactions are created using `syncCommands.multi()` and executed with `exec()`.
-- In **Glide**, transactions are created using the `Transaction` class and executed with `client.exec()`.
-- The result format differs: **Lettuce** returns a list of results, while **Glide** returns an array of results.
+  The `MULTI` command starts a transaction block, while `EXEC` executes all commands issued after MULTI.
 
-**Lettuce**
-```java
-syncCommands.multi();
-syncCommands.set("key", "value");
-syncCommands.get("key");
-TransactionResult result = syncCommands.exec();
-System.out.println(result.get(0)); // "OK"
-System.out.println(result.get(1)); // "value"
-```
+  * In **Lettuce**, transactions are created using `syncCommands.multi()` and executed with `exec()`.
+  * In **Glide**, transactions are created using the `Transaction` class and executed with `client.exec()`.
+  * The result format differs: **Lettuce** returns a list of results, while **Glide** returns an array of results.
 
-**Glide**
-```java
-Transaction transaction = new Transaction();
-transaction.set("key", "value");
-transaction.get("key");
-Object[] result = client.exec(transaction).get();
-System.out.println(result[0]); // "OK"
-System.out.println(result[1]); // "value"
-```
+  **Lettuce**
+
+  ```java
+  syncCommands.multi();
+  syncCommands.set("key", "value");
+  syncCommands.get("key");
+  TransactionResult result = syncCommands.exec();
+  System.out.println(result.get(0)); // "OK"
+  System.out.println(result.get(1)); // "value"
+  ```
+
+  **Glide**
+
+  ```java
+  Transaction transaction = new Transaction();
+  transaction.set("key", "value");
+  transaction.get("key");
+  Object[] result = client.exec(transaction).get();
+  System.out.println(result[0]); // "OK"
+  System.out.println(result[1]); // "value"
+  ```
 </details>
 
 ### Lua Scripts
 
-<a id="eval-evalsha"></a>
+<a id="eval-evalsha" />
+
 <details>
-<summary><b style="font-size:18px;">EVAL / EVALSHA</b></summary>
+  <summary><b style="font-size:18px;">EVAL / EVALSHA</b></summary>
 
-The `EVAL` command executes a Lua script on the server, while `EVALSHA` executes a script cached on the server using its SHA1 hash.
-- In **Lettuce**, these commands require specifying the number of keys and passing keys and arguments separately.
-- In **Glide**, scripts are created using the `Script` class and executed with `invokeScript()`, with keys and arguments passed in a single options object.
-- **Glide** automatically handles script caching, so there's no need for separate `EVALSHA` handling.
+  The `EVAL` command executes a Lua script on the server, while `EVALSHA` executes a script cached on the server using its SHA1 hash.
 
-**Lettuce**
-```java
-// EVAL
-String luaScript = "return { KEYS[1], ARGV[1] }";
-List<String> keys = Collections.singletonList("foo");
-List<String> args = Collections.singletonList("bar");
+  * In **Lettuce**, these commands require specifying the number of keys and passing keys and arguments separately.
+  * In **Glide**, scripts are created using the `Script` class and executed with `invokeScript()`, with keys and arguments passed in a single options object.
+  * **Glide** automatically handles script caching, so there's no need for separate `EVALSHA` handling.
 
-Object result = syncCommands.eval(luaScript, ScriptOutputType.MULTI, keys.toArray(new String[0]), args.toArray(new String[0]));
-System.out.println(result); // [foo, bar]
+  **Lettuce**
 
-// EVALSHA
-String sha = syncCommands.scriptLoad(luaScript);
-Object shaResult = syncCommands.evalsha(sha, ScriptOutputType.MULTI, keys.toArray(new String[0]), args.toArray(new String[0]));
-System.out.println(shaResult); // [foo, bar]
-```
+  ```java
+  // EVAL
+  String luaScript = "return { KEYS[1], ARGV[1] }";
+  List<String> keys = Collections.singletonList("foo");
+  List<String> args = Collections.singletonList("bar");
 
-**Glide**
-```java
-import glide.api.models.Script;
-import glide.api.models.ScriptOptions;
+  Object result = syncCommands.eval(luaScript, ScriptOutputType.MULTI, keys.toArray(new String[0]), args.toArray(new String[0]));
+  System.out.println(result); // [foo, bar]
 
-String luaScript = "return { KEYS[1], ARGV[1] }";
-Script script = new Script(luaScript, false);
-ScriptOptions options = ScriptOptions.builder()
-    .key("foo")
-    .arg("bar")
-    .build();
+  // EVALSHA
+  String sha = syncCommands.scriptLoad(luaScript);
+  Object shaResult = syncCommands.evalsha(sha, ScriptOutputType.MULTI, keys.toArray(new String[0]), args.toArray(new String[0]));
+  System.out.println(shaResult); // [foo, bar]
+  ```
 
-Object result = client.invokeScript(script, options).get();
-System.out.println(Arrays.toString((Object[]) result)); // [foo, bar]
-```
+  **Glide**
+
+  ```java
+  import glide.api.models.Script;
+  import glide.api.models.ScriptOptions;
+
+  String luaScript = "return { KEYS[1], ARGV[1] }";
+  Script script = new Script(luaScript, false);
+  ScriptOptions options = ScriptOptions.builder()
+      .key("foo")
+      .arg("bar")
+      .build();
+
+  Object result = client.invokeScript(script, options).get();
+  System.out.println(Arrays.toString((Object[]) result)); // [foo, bar]
+  ```
 </details>
 
 ### Authentication
 
-<a id="auth"></a>
+<a id="auth" />
+
 <details>
-<summary><b style="font-size:18px;">AUTH</b></summary>
+  <summary><b style="font-size:18px;">AUTH</b></summary>
 
-The `AUTH` command authenticates a client connection to the Valkey server.
-- In **Lettuce**, authentication is done using the `auth()` method.
-- In **Glide**, authentication is handled using `updateConnectionPassword()`.
+  The `AUTH` command authenticates a client connection to the Valkey server.
 
-**Lettuce**
-```java
-String result = syncCommands.auth("mypass"); // OK
-```
+  * In **Lettuce**, authentication is done using the `auth()` method.
+  * In **Glide**, authentication is handled using `updateConnectionPassword()`.
 
-**Glide**
-```java
-String result = client.updateConnectionPassword("mypass", true).get(); // OK
-```
+  **Lettuce**
+
+  ```java
+  String result = syncCommands.auth("mypass"); // OK
+  ```
+
+  **Glide**
+
+  ```java
+  String result = client.updateConnectionPassword("mypass", true).get(); // OK
+  ```
 </details>
 
 ### Custom Commands
 
-<a id="custom-commands"></a>
+<a id="custom-commands" />
+
 <details>
-<summary><b style="font-size:18px;">Custom Commands</b></summary>
+  <summary><b style="font-size:18px;">Custom Commands</b></summary>
 
-Both Lettuce and Glide provide ways to execute custom commands.
-- In **Lettuce**, you can execute raw commands using `dispatch()` or create custom commands using Lua scripts.
-- In **Glide**, you can execute raw commands using `customCommand()` or use the `Script` class for Lua scripts.
+  Both Lettuce and Glide provide ways to execute custom commands.
 
-**Lettuce**
-```java
-// Execute a raw command
-Object rawResult = syncCommands.dispatch(CommandType.SET, new StatusOutput<>(StringCodec.UTF8),
-                new CommandArgs<>(StringCodec.UTF8)
-                       .addKey("key")
-                       .addValue("value"));
-System.out.println(rawResult); // "OK"
-```
+  * In **Lettuce**, you can execute raw commands using `dispatch()` or create custom commands using Lua scripts.
+  * In **Glide**, you can execute raw commands using `customCommand()` or use the `Script` class for Lua scripts.
 
-**Glide**
-```java
-// Execute a raw command
-String rawResult = client.customCommand(new String[]{"SET", "key", "value"}).get();
-System.out.println(rawResult); // "OK"
-```
+  **Lettuce**
+
+  ```java
+  // Execute a raw command
+  Object rawResult = syncCommands.dispatch(CommandType.SET, new StatusOutput<>(StringCodec.UTF8),
+                  new CommandArgs<>(StringCodec.UTF8)
+                         .addKey("key")
+                         .addValue("value"));
+  System.out.println(rawResult); // "OK"
+  ```
+
+  **Glide**
+
+  ```java
+  // Execute a raw command
+  String rawResult = client.customCommand(new String[]{"SET", "key", "value"}).get();
+  System.out.println(rawResult); // "OK"
+  ```
 </details>
 
 ### Connection Management
 
-<a id="close-disconnect"></a>
+<a id="close-disconnect" />
+
 <details>
-<summary><b style="font-size:18px;">Close / Disconnect</b></summary>
+  <summary><b style="font-size:18px;">Close / Disconnect</b></summary>
 
-Properly closing connections is important to free up resources and avoid connection leaks.
-- In **Lettuce**, you need to close both the connection and shut down the client.
-- In **Glide**, you only need to call `close()` on the client.
+  Properly closing connections is important to free up resources and avoid connection leaks.
 
-**Lettuce**
-```java
-// Close connection and shutdown client
-connection.close();
-client.shutdown();
+  * In **Lettuce**, you need to close both the connection and shut down the client.
+  * In **Glide**, you only need to call `close()` on the client.
 
-// For cluster connections
-clusterConnection.close();
-clusterClient.shutdown();
-```
+  **Lettuce**
 
-**Glide**
-```java
-// Close client (works for both standalone and cluster)
-client.close();
-```
+  ```java
+  // Close connection and shutdown client
+  connection.close();
+  client.shutdown();
+
+  // For cluster connections
+  clusterConnection.close();
+  clusterClient.shutdown();
+  ```
+
+  **Glide**
+
+  ```java
+  // Close client (works for both standalone and cluster)
+  client.close();
+  ```
 </details>
-

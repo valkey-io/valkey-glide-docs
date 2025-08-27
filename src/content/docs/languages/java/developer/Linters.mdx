@@ -11,11 +11,10 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Linters
 
@@ -38,28 +37,28 @@ For Java, we use Spotless and SpotBugs.
 
 1. Spotless
 
-    ```bash
-    # Run from the `java` folder
-    ./gradlew :spotlessCheck # run first to see if there are any linting changes to make
-    ./gradlew :spotlessApply # to apply these changes
-    ```
+   ```bash
+   # Run from the `java` folder
+   ./gradlew :spotlessCheck # run first to see if there are any linting changes to make
+   ./gradlew :spotlessApply # to apply these changes
+   ```
 
 2. SpotBugs
 
    To run SpotBugs and generate reports:
 
-    ```bash
-    # Run from the `java` folder
-    ./gradlew spotbugsMain
-    ```
+   ```bash
+   # Run from the `java` folder
+   ./gradlew spotbugsMain
+   ```
 
    This command will generate HTML and XML reports in the `build/reports/spotbugs/` directory.
 
    To view the SpotBugs findings:
-    - Open the HTML report located at `build/reports/spotbugs/main/spotbugs.html` in a web browser.
-    - If you are using IntellJ Idea - open `build/reports/spotbugs/main/spotbugs.xml` in SpotBugs plugin as it will provide better experience.
+
+   * Open the HTML report located at `build/reports/spotbugs/main/spotbugs.html` in a web browser.
+   * If you are using IntellJ Idea - open `build/reports/spotbugs/main/spotbugs.xml` in SpotBugs plugin as it will provide better experience.
 
    Ensure any new findings are addressed and fixed before committing and pushing your changes.
 
-   _Note: The `spotbugs` task is currently configured to not fail the build on findings._
-
+   *Note: The `spotbugs` task is currently configured to not fail the build on findings.*

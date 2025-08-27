@@ -10,26 +10,30 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. When these commands receive keys that map to multiple slots, they are termed as **multi-slot commands**. GLIDE supports efficient handling of these commands, ensuring they execute correctly across the cluster.
 
 ### What are Multi-Slot Commands?
+
 Multi-slot commands are those which allow multiple keys as inputs, with each key potentially belonging to a different hash slot. In cluster mode, if keys within a command map to different hash slots, the command must be split according to each slot and executed separately. Examples of such commands include `MSET`, `MGET`, and `DEL`, which can target multiple keys that are not necessarily in the same slot.
 
 For example, the command:
+
 ```
 DEL {foo} {foo}1 bar
 ```
+
 should be split into:
+
 ```
 DEL {foo} {foo}1
 DEL bar
 ```
+
 Even if all slots are managed by the same shard, the command must be split by slot. However, certain commands, such as `SUNIONSTORE`, are **not** considered multi-slot because they require all keys to be in the same slot.
 
 ### Multi-Slot Command Execution in GLIDE
@@ -49,21 +53,23 @@ When handling multi-slot commands, GLIDE automatically splits the command based 
 
 The following commands are supported as multi-slot commands in GLIDE, meaning they can operate on keys distributed across multiple hash slots:
 
-- `MSET`
-- `MGET`
-- `DEL`
-- `UNLINK`
-- `EXISTS`
-- `TOUCH`
-- `WATCH`
-- `JSON.MGET`
+* `MSET`
+* `MGET`
+* `DEL`
+* `UNLINK`
+* `EXISTS`
+* `TOUCH`
+* `WATCH`
+* `JSON.MGET`
 
 ### Example Use Case
 
 Consider the command:
+
 ```
 MSET foo1 bar1 foo2 bar2 {foo3} bar3
 ```
+
 In this example, keys `foo1` and `foo2` hash to different slots from `{foo3}` due to their hash slots. GLIDE will split the `MSET` command into separate commands based on slot grouping to ensure each key is routed to the correct shard, and execute them asynchronously.
 
 ```
@@ -72,4 +78,3 @@ MSET {foo3} bar3
 ```
 
 This setup allows GLIDE to handle multi-slot commands efficiently across distributed nodes.
-

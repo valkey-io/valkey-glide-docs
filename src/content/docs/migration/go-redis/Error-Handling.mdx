@@ -10,17 +10,17 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
-This documentation site is under construction and is not yet complete!
+  This documentation site is under construction and is not yet complete!
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
 
 ## Error Handling
 
 Error handling differs between the two libraries:
 
 **go-redis**
+
 ```go
 val, err := rdb.Get(ctx, "nonexistent").Result()
 if err == redis.Nil {
@@ -33,6 +33,7 @@ if err == redis.Nil {
 ```
 
 **Glide**
+
 ```go
 val, err := client.Get(ctx, "nonexistent")
 if err != nil {
@@ -45,4 +46,3 @@ if val.IsNil() {
     fmt.Println("Value:", val.Value())
 }
 ```
-
