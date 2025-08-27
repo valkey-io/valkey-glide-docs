@@ -6,15 +6,26 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "prebuild": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh",
+    "prebuild": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh && pnpm run format",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "format:non-mdx": "prettier --write .",
+    "format:mdx": "remark --output --quiet \"**/*.{md,mdx}\"",
+    "format": "pnpm run format:non-mdx && pnpm run format:mdx"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.4",
     "@astrojs/starlight": "^0.35.2",
     "astro": "^5.6.1",
     "sharp": "^0.34.2"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "prettier-plugin-astro": "0.14.1",
+    "remark-cli": "12.0.1",
+    "remark-frontmatter": "5.0.0",
+    "remark-mdx": "3.1.0",
+    "remark-preset-lint-recommended": "7.0.1"
   }
 }

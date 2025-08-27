@@ -1,0 +1,2 @@
+# Ignore all MDX files as remark-cli is used for formatting them
+**/*.mdx
