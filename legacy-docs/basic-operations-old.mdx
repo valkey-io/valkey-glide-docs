@@ -1,6 +1,7 @@
 ---
-title: Basic Operations
+title: Basic Operations - OLD
 sidebar:
+  hidden: true
   badge:
     text: Draft
     variant: caution
@@ -16,29 +17,12 @@ import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE. We'll cover the most common commands: SET, GET, DEL, and more.
+Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE.
+By the end of this section we will cover some basic Valkey commands.
 
-## String Operations
+## SET and GET
 
-Strings are the most basic data type in Valkey/Redis. Let's start with simple key-value operations:
-
-### SET and GET
-
-{/* 
-  <Tabs syncKey="overview">
-  <TabItem label="Python">
-
-  </TabItem>
-  <TabItem label="Java">
-  </TabItem>
-  <TabItem label="Node.js">
-
-  </TabItem>
-  <TabItem label="Go">
-
-  </TabItem>
-  </Tabs> 
-  */}
+SET, GET can be used to update a single value at a time.
 
 <Tabs syncKey="overview">
   <TabItem label="Python">
@@ -58,13 +42,13 @@ Strings are the most basic data type in Valkey/Redis. Let's start with simple ke
             value = await client.get("user:1000")
             print(f"✓ Retrieved value: {value}")
             
-            # Set with expiration (10 seconds)
-            await client.set("session:abc123", "active", ex=10)
-            print("✓ Key set with expiration")
+            # # Set with expiration (10 seconds)
+            # await client.set("session:abc123", "active", ex=10)
+            # print("✓ Key set with expiration")
             
-            # Check if key exists
-            exists = await client.exists(["session:abc123"])
-            print(f"✓ Key exists: {exists}")
+            # # Check if key exists
+            # exists = await client.exists(["session:abc123"])
+            # print(f"✓ Key exists: {exists}")
             
         finally:
             await client.close()
@@ -96,14 +80,14 @@ Strings are the most basic data type in Valkey/Redis. Let's start with simple ke
                 String value = client.get("user:1000").get();
                 System.out.println("✓ Retrieved value: " + value);
                 
-                // Set with expiration (10 seconds)
-                SetOptions options = SetOptions.builder().expireSeconds(10L).build();
-                client.set("session:abc123", "active", options).get();
-                System.out.println("✓ Key set with expiration");
+                // // Set with expiration (10 seconds)
+                // SetOptions options = SetOptions.builder().expireSeconds(10L).build();
+                // client.set("session:abc123", "active", options).get();
+                // System.out.println("✓ Key set with expiration");
                 
-                // Check if key exists
-                Long exists = client.exists(new String[]{"session:abc123"}).get();
-                System.out.println("✓ Key exists: " + (exists > 0));
+                // // Check if key exists
+                // Long exists = client.exists(new String[]{"session:abc123"}).get();
+                // System.out.println("✓ Key exists: " + (exists > 0));
                 
             } catch (Exception e) {
                 System.err.println("Error: " + e.getMessage());
@@ -131,13 +115,13 @@ Strings are the most basic data type in Valkey/Redis. Let's start with simple ke
             const value = await client.get('user:1000');
             console.log(`✓ Retrieved value: ${value}`);
             
-            // Set with expiration (10 seconds)
-            await client.set('session:abc123', 'active', { ex: 10 });
-            console.log('✓ Key set with expiration');
+            // // Set with expiration (10 seconds)
+            // await client.set('session:abc123', 'active', { ex: 10 });
+            // console.log('✓ Key set with expiration');
             
-            // Check if key exists
-            const exists = await client.exists(['session:abc123']);
-            console.log(`✓ Key exists: ${exists > 0}`);
+            // // Check if key exists
+            // const exists = await client.exists(['session:abc123']);
+            // console.log(`✓ Key exists: ${exists > 0}`);
             
         } finally {
             client.close();
@@ -184,27 +168,27 @@ Strings are the most basic data type in Valkey/Redis. Let's start with simple ke
         }
         fmt.Printf("✓ Retrieved value: %s\n", value)
         
-        // Set with expiration (10 seconds)
-        err = client.SetWithExpiry("session:abc123", "active", 10*time.Second)
-        if err != nil {
-            log.Fatalf("SetWithExpiry failed: %v", err)
-        }
-        fmt.Println("✓ Key set with expiration")
+        // // Set with expiration (10 seconds)
+        // err = client.SetWithExpiry("session:abc123", "active", 10*time.Second)
+        // if err != nil {
+        //     log.Fatalf("SetWithExpiry failed: %v", err)
+        // }
+        // fmt.Println("✓ Key set with expiration")
         
-        // Check if key exists
-        exists, err := client.Exists([]string{"session:abc123"})
-        if err != nil {
-            log.Fatalf("Exists failed: %v", err)
-        }
-        fmt.Printf("✓ Key exists: %t\n", exists > 0)
+        // // Check if key exists
+        // exists, err := client.Exists([]string{"session:abc123"})
+        // if err != nil {
+        //     log.Fatalf("Exists failed: %v", err)
+        // }
+        // fmt.Printf("✓ Key exists: %t\n", exists > 0)
     }
     ```
   </TabItem>
 </Tabs>
 
-### Multiple Operations
+## Batch Operations
 
-You can work with multiple keys efficiently:
+Using [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/), you can perform operations in batch.
 
 <Tabs syncKey="overview">
   <TabItem label="Python">
@@ -418,9 +402,9 @@ Valkey/Redis can perform atomic operations on numeric values:
   </TabItem>
 </Tabs>
 
-## Key Management
+## SET With Expiration Time
 
-Learn how to manage keys effectively:
+When using SET, you can specify an expiration time after which the value will be removed.
 
 <Tabs syncKey="overview">
   <TabItem label="Python">
@@ -560,6 +544,12 @@ Learn how to manage keys effectively:
     ```
   </TabItem>
 </Tabs>
+
+To set expiration on existing keys use EXPIRE.
+
+You can also use PERSIST to remove the expriation time.
+
+### Peristing Values
 
 ## Complete Example
 
@@ -861,15 +851,6 @@ Here's a complete example that demonstrates all the operations we've covered:
   </TabItem>
 </Tabs>
 
-## What You've Learned
-
-Congratulations! You've mastered the basic operations in Valkey GLIDE:
-
-* **String Operations**: SET, GET, MSET, MGET
-* **Numeric Operations**: INCR, DECR, INCRBY, INCRBYFLOAT
-* **Key Management**: TTL, EXPIRE, PERSIST, EXISTS, DEL
-* **Best Practices**: Error handling, connection management, cleanup
-
 ## Next Steps
 
 Now that you understand the basics, you're ready to explore more advanced topics:
@@ -890,7 +871,5 @@ Now that you understand the basics, you're ready to explore more advanced topics
 
 * [GLIDE Architecture](../concepts/architecture.html) - How GLIDE works internally
 * [Batching vs Pipelining](../concepts/batching-pipelining.html) - Optimize command execution
-
-***
 
 **Previous**: [← First Connection](first-connection.html) | **Next**: [Build a Caching App →](../tutorials/caching-app.html)

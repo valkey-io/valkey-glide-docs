@@ -1,0 +1,60 @@
+---
+title: Overview
+sidebar:
+  order: 1
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+The **General Language Independent Driver for the Enterprise (GLIDE)** for Valkey is an official open-source client library for the Valkey datastore, supporting all Valkey commands.
+
+### One Core, Multiple Languages
+
+With a shared [Rust core](../../concepts/architecture/architecture/), Valkey GLIDE delivers consistent behavior across multiple languages and reduces complexity.
+
+### Performant and Reliable
+
+Valkey GLIDE is designed for reliability, optimized performance, and high-availability for Valkey and Redis OSS based applications.
+
+It also comes pre-configured, using the best practices learned from over a decade of operating Redis OSS-compatible services used by hundreds of thousands of customers.
+
+### Compatible with Redis OSS
+
+Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
+
+### Backed by AWS and GCP
+
+Valkey Glide is open source with a vibrant community. It is backed by AWS and GCP, ensuring robust support and continuous improvement into the future.
+
+### Key Features
+
+* **[AZ Affinity](https://valkey.io/blog/az-affinity-strategy/)** – Ensures low-latency connections and minimal cross-zone costs by routing read traffic to replicas in the clients availability zone. **(Requires Valkey server version 8.0+ or AWS ElastiCache for Valkey 7.2+)**.
+* **[PubSub Auto-Reconnection](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=PubSub%20Support,Receiving%2C%20and%20Unsubscribing.)** – Seamless background resubscription on topology updates or disconnection.
+* **[Sharded PubSub](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#pubsub-support:~:text=Receiving%2C%20and%20Unsubscribing.-,Subscribing,routed%20to%20the%20server%20holding%20the%20slot%20for%20the%20command%27s%20channel.,-Receiving)** – Native support for sharded PubSub across cluster slots.
+* **[Cluster-Aware MGET/MSET/DEL/FLUSHALL](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#multi-slot-command-handling:~:text=Multi%2DSlot%20Command%20Execution,JSON.MGET)** – Execute multi-key commands across cluster slots without manual key grouping.
+* **[Cluster Scan](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#cluster-scan)** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
+* **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
+* **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
+* **[Batching (Pipeline and Transaction)](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#batching-pipeline-and-transaction)** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
+* **[OpenTelemetry](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#opentelemetry)** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
+
+## What's Next
+
+<LinkCard title="Getting Started" href="getting-started/quickstart" description="Start here! This guide will walk you through a quickstart to connect to a Valkey datastore with GLIDE." />
+
+<LinkCard title="Migrating to Valkey" href="migration" description="Everything you need to know for migrating to Valkey GLIDE." />
+
+<LinkCard title="Concepts" href="concepts" description="Learn more about advanced Valkey GLIDE features and concepts." />
+
+<LinkCard title="Languages" href="languages" description="Explore language specific documentations for each of Valkey GLIDE drivers." />
+
+<LinkCard title="References" href="reference" description="Find information on API references, compatibilies, release notes and more." />

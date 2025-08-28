@@ -1,0 +1,289 @@
+---
+title: Basic Operations
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+import { Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+
+Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE.
+
+This section will go over some of the basics of GLIDE like how to send commands to Valkey.
+
+## Understanding GLIDE clients.
+
+To communicate with Valkey, GLIDE clients provide methods for users to send commands to Valkey.
+Under the hood, all clients share a common same Rust core to communicate with Valkey. This
+makes their behavior consistent between the different languages while still supporting language
+specific features.
+
+<Aside>
+  To find more infomation on the Rust core that power GLIDE clients, see [here](../../concepts/architecture/architecture/).
+</Aside>
+
+## Updating Keys
+
+To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/) and [GET](https://valkey.io/commands/get/) commands.
+
+<Tabs syncKey="langsync">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClient, NodeAddress
+
+    async def string_operations():
+        client = GlideClient([NodeAddress("localhost", 6379)])
+        
+        try:
+            # Set a key-value pair
+            await client.set("user:1000", "john_doe")
+            print("✓ Key set successfully")
+            
+            # Get the value
+            value = await client.get("user:1000")
+            print(f"✓ Retrieved value: {value}")
+
+        finally:
+            await client.close()
+
+    if __name__ == "__main__":
+        asyncio.run(string_operations())
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.commands.SetOptions;
+
+    public class StringOperations {
+        public static void main(String[] args) {
+            GlideClientConfiguration config = GlideClientConfiguration.builder()
+                .address(NodeAddress.builder().host("localhost").port(6379).build())
+                .build();
+            
+            try (GlideClient client = GlideClient.createClient(config).get()) {
+                // Set a key-value pair
+                client.set("user:1000", "john_doe").get();
+                System.out.println("✓ Key set successfully");
+                
+                // Get the value
+                String value = client.get("user:1000").get();
+                System.out.println("✓ Retrieved value: " + value);
+
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const { GlideClient } = require('@valkey/valkey-glide');
+
+    async function stringOperations() {
+        const client = GlideClient.createClient({
+            addresses: [{ host: 'localhost', port: 6379 }]
+        });
+        
+        try {
+            // Set a key-value pair
+            await client.set('user:1000', 'john_doe');
+            console.log('✓ Key set successfully');
+            
+            // Get the value
+            const value = await client.get('user:1000');
+            console.log(`✓ Retrieved value: ${value}`);
+            
+        } finally {
+            client.close();
+        }
+    }
+
+    stringOperations().catch(console.error);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "fmt"
+        "log"
+        "time"
+        
+        "github.com/valkey-io/valkey-glide/go/glide/api"
+    )
+
+    func main() {
+        config := &api.GlideClientConfiguration{
+            Addresses: []api.NodeAddress{
+                {Host: "localhost", Port: 6379},
+            },
+        }
+        
+        client := api.NewGlideClient(config)
+        defer client.Close()
+        
+        // Set a key-value pair
+        err := client.Set("user:1000", "john_doe")
+        if err != nil {
+            log.Fatalf("Set failed: %v", err)
+        }
+        fmt.Println("✓ Key set successfully")
+        
+        // Get the value
+        value, err := client.Get("user:1000")
+        if err != nil {
+            log.Fatalf("Get failed: %v", err)
+        }
+        fmt.Printf("✓ Retrieved value: %s\n", value)
+
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Batch Operations
+
+Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which is used to perform operations in batch atomically.
+
+<Tabs syncKey="langsync">
+  <TabItem label="Python">
+    ```python
+    # Set multiple keys at once
+    await client.mset({"user:1001": "alice", "user:1002": "bob", "user:1003": "charlie"})
+    print("✓ Multiple keys set")
+
+    # Get multiple keys at once
+    values = await client.mget(["user:1001", "user:1002", "user:1003"])
+    print(f"✓ Retrieved values: {values}")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Set multiple keys at once
+    Map<String, String> keyValues = Map.of(
+        "user:1001", "alice",
+        "user:1002", "bob", 
+        "user:1003", "charlie"
+    );
+    client.mset(keyValues).get();
+    System.out.println("✓ Multiple keys set");
+
+    // Get multiple keys at once
+    String[] keys = {"user:1001", "user:1002", "user:1003"};
+    String[] values = client.mget(keys).get();
+    System.out.println("✓ Retrieved values: " + Arrays.toString(values));
+    ```
+  </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    // Set multiple keys at once
+    await client.mset({
+        'user:1001': 'alice',
+        'user:1002': 'bob',
+        'user:1003': 'charlie'
+    });
+    console.log('✓ Multiple keys set');
+
+    // Get multiple keys at once
+    const values = await client.mget(['user:1001', 'user:1002', 'user:1003']);
+    console.log(`✓ Retrieved values: ${values}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Set multiple keys at once
+    keyValues := map[string]string{
+        "user:1001": "alice",
+        "user:1002": "bob",
+        "user:1003": "charlie",
+    }
+    err = client.MSet(keyValues)
+    if err != nil {
+        log.Fatalf("MSet failed: %v", err)
+    }
+    fmt.Println("✓ Multiple keys set")
+
+    // Get multiple keys at once
+    keys := []string{"user:1001", "user:1002", "user:1003"}
+    values, err := client.MGet(keys)
+    if err != nil {
+        log.Fatalf("MGet failed: %v", err)
+    }
+    fmt.Printf("✓ Retrieved values: %v\n", values)
+    ```
+  </TabItem>
+</Tabs>
+
+## Removing Keys
+
+Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete a list of keys.
+
+<Tabs syncKey="langsync">
+  <TabItem label="Python">
+    ```python
+    deleted_count = await client.delete(["user:1001", "user:1002", "user:1003"])
+    print(f"✓ Deleted {deleted_count} keys")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    String[] keys = {"user:1001", "user:1002", "user:1003"};
+    Long deletedCount = client.del(keys).get();
+    System.out.println("✓ Deleted " + deletedCount + " keys");
+    ```
+  </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const deletedCount = await client.del(['user:1001', 'user:1002', 'user:1003']);
+    console.log(`✓ Deleted ${deletedCount} keys`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    keys := []string{"user:1001", "user:1002", "user:1003"}
+
+    deletedCount, err := client.Del(keys)
+    if err != nil {
+        log.Fatalf("Del failed: %v", err)
+    }
+
+    fmt.Printf("✓ Deleted %d keys\n", deletedCount)
+    ```
+  </TabItem>
+</Tabs>
+
+## What's Next
+
+Now that you've understand the basics, take a look at other topics on Valkey GLIDE:
+
+<LinkCard title="Tutorials" href="../tutorials/caching-app" description="Continue with a tutorial on building a simple caching layer." />
+
+<LinkCard title="How-To" href="../../how-to" description="Visit the how-to section to get started on advanced guides on different topics on Valkey." />
+
+<LinkCard title="Concepts" href="../../concepts" description="Learn more about Valkey Glide features and concepts." />
+
+<LinkCard title="Languages" href="../../languages" description="Take a look at language specific documentations." />

@@ -1,0 +1,74 @@
+---
+title: Client Comparison (old)
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+{/* TODO: Need to figure out how the comparison is going to look like */}
+
+## Client Comparison
+
+### Java: Jedis vs Valkey GLIDE
+
+| Feature | Jedis | Valkey GLIDE |
+|---------|-------|--------------|
+| **Multi-language consistency** | Java-only | Consistent across all languages |
+| **Connection pooling** | Basic | Advanced with automatic failover |
+| **Cluster support** | Limited | Full cluster topology awareness |
+| **Built-in monitoring** | None | OpenTelemetry + metrics |
+| **Request throttling** | Manual implementation | Built-in with configurable limits |
+| **Async support** | Limited | Full async/await support |
+| **Production reliability** | Requires additional tooling | Enterprise-ready out of the box |
+
+### C#: StackExchange.Redis vs Valkey GLIDE
+
+| Feature | StackExchange.Redis | Valkey GLIDE |
+|---------|---------------------|--------------|
+| **Cross-language consistency** | C#-only | Consistent behavior across languages |
+| **Cluster failover** | Basic | Intelligent with slot migration handling |
+| **Monitoring integration** | Custom implementation needed | Built-in OpenTelemetry support |
+| **Connection management** | Good | Superior with AZ awareness |
+| **Development status** | Mature | Actively developed (C# in development) |
+
+### Python: redis-py vs Valkey GLIDE
+
+| Feature | redis-py | Valkey GLIDE |
+|---------|----------|--------------|
+| **Performance** | Pure Python overhead | Rust core performance |
+| **Cluster operations** | Basic | Advanced with intelligent routing |
+| **Connection reliability** | Manual retry logic | Automatic with exponential backoff |
+| **Monitoring** | Third-party tools required | Built-in metrics and tracing |
+| **Multi-language projects** | Inconsistent with other clients | Identical behavior across languages |
+| **PubSub reliability** | Connection issues common | Robust with automatic reconnection |
+
+### Node.js: node\_redis vs Valkey GLIDE
+
+| Feature | node\_redis | Valkey GLIDE |
+|---------|------------|--------------|
+| **TypeScript support** | Good | Excellent with full type safety |
+| **Cluster management** | Manual topology updates | Automatic topology awareness |
+| **Error handling** | Inconsistent patterns | Unified error handling across languages |
+| **Performance** | JavaScript overhead | Native Rust performance |
+| **Production features** | Requires additional libraries | Enterprise features built-in |
+
+### Go: go-redis vs Valkey GLIDE
+
+| Feature | go-redis | Valkey GLIDE |
+|---------|----------|--------------|
+| **Consistency with other languages** | Go-specific patterns | Unified API design |
+| **Cluster support** | Good | Superior with advanced features |
+| **Built-in observability** | Limited | Comprehensive monitoring |
+| **Connection pooling** | Standard | Advanced with AZ awareness |
+| **Status** | Mature | Public preview with active development |
+
+***
