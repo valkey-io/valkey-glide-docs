@@ -1,0 +1,17 @@
+---
+
+---
+
+<div class="button-grid">
+    <slot />
+    <div></div>
+
+    <style>
+        @media (min-width: 50em) {
+            .button-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+    </style>
+</div>

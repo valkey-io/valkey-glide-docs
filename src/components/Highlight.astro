@@ -1,0 +1,23 @@
+---
+interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="about">
+    <h1>{title}</h1>
+    <slot />
+</div>
+
+<style>
+    .about {
+        display: flex;
+        flex-direction: column; /* Stacks children vertically */
+        align-items: center; /* Horizontally centers children */
+        text-align: center; /* Ensures text within children is centered */
+
+        margin: 7rem 0;
+    }
+</style>
