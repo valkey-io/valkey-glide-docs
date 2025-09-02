@@ -32,10 +32,10 @@ const shouldRenderSearch =
                 label="Client Language"
                 value="go"
                 options={[
-			{ label: "Python", value: "python", selected: true },
-			{ label: "Java", value: "java", selected: false },
-			{ label: "Node.js", value: "nodejs" , selected: false},
-			{ label: "Go", value: "go" , selected: false},
+                  { label: "Python", value: "python", selected: true },
+                  { label: "Java", value: "java", selected: false },
+                  { label: "Node.js", value: "nodejs" , selected: false},
+                  { label: "Go", value: "go" , selected: false},
                 ]}
             />
         </div>
@@ -48,18 +48,18 @@ const shouldRenderSearch =
 <div class="valkey-gradient-header"></div>
 <style>
     @layer starlight.core {
-        .header {
-            display: flex;
-            gap: var(--sl-nav-gap);
-            justify-content: space-between;
-            align-items: center;
-      height: var(--sl-nav-bar-height) !important;
-    }
+      .header {
+        display: flex;
+        gap: var(--sl-nav-gap);
+        justify-content: space-between;
+        align-items: center;
+        height: var(--sl-nav-bar-height) !important;
+      }
 
     /* Site title styling */
     :global(a.site-title) {
       gap: 0.5rem;
-        }
+    }
 
     :global(a.site-title span) {
       color: var(--valkey-site-title-color);
@@ -69,26 +69,27 @@ const shouldRenderSearch =
       height: calc(var(--sl-nav-bar-height) - 2 * var(--sl-nav-pad-y));
     }
 
-        .title-wrapper {
-            /* Prevent long titles overflowing and covering the search and menu buttons on narrow viewports. */
-            overflow: clip;
-            /* Avoid clipping focus ring around link inside title wrapper. */
-            padding: 0.25rem;
-            margin: -0.25rem;
-            min-width: 0;
-        }
+    .title-wrapper {
+      /* Prevent long titles overflowing and covering the search and menu buttons on narrow viewports. */
+      overflow: clip;
+      /* Avoid clipping focus ring around link inside title wrapper. */
+      padding: 0.25rem;
+      margin: -0.25rem;
+      min-width: 0;
+    }
 
-        .right-group,
-        .social-icons {
-            gap: 1rem;
-            align-items: center;
-        }
+    .right-group,
+    .social-icons {
+        gap: 1rem;
+        align-items: center;
+    }
 
-        .social-icons::after {
-      content: "";
-            height: 2rem;
-      border-inline-end: 1px solid var(--sl-color-gray-5);
-      2rem;
+    .social-icons::after {
+        content: "";
+        height: 2rem;
+        border-inline-end: 1px solid var(--sl-color-gray-5);
+    }
+
     /* Valkey Gradient Header Styles */
     .valkey-gradient-header {
       background-image: linear-gradient(#3b2a66, #4e51bf);
@@ -100,16 +101,19 @@ const shouldRenderSearch =
       right: 50%;
       margin-left: -50vw;
       margin-right: -50vw;
-      solid
-      var(--sl-color-gray-5);
-      }
-        @media (min-width: 50rem) {
-            :global(:root[data-has-sidebar]) {
+    }
+
+
+
+    @media (min-width: 50rem) {
+      :global(:root[data-has-sidebar]) {
         --__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
       }
+
       :global(:root:not([data-has-toc])) {
         --__toc-width: 0rem;
       }
+
       .header {
         --__sidebar-width: max(
           0rem,
@@ -143,7 +147,6 @@ const shouldRenderSearch =
           /* 3 (right items): use the space that these need. */
           auto;
         align-content: center;
-            }
       }
-      <
+    }
 </style>
