@@ -10,6 +10,7 @@ export default defineConfig({
 		starlight({
 			components: {
 				Header: './src/components/Header.astro',
+				MobileMenuToggle: './src/components/MobileMenuToggle.astro',
 			},
 			title: 'Valkey Glide',
 			logo: {

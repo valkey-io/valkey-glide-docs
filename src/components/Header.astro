@@ -96,14 +96,8 @@ const shouldRenderSearch =
       height: var(--valkey-gradient-height);
       margin: 0;
       width: 100vw;
-      position: relative;
-      left: 50%;
-      right: 50%;
-      margin-left: -50vw;
-      margin-right: -50vw;
+      margin-left: calc(-1 * var(--sl-nav-pad-x));
     }
-
-
 
     @media (min-width: 50rem) {
       :global(:root[data-has-sidebar]) {
