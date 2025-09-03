@@ -107,7 +107,17 @@ Designed for modern cloud deployments:
 
 Valkey GLIDE uses a layered architecture with a Rust core and language-specific bindings. This design ensures consistency across languages while allowing for idiomatic interfaces in each supported programming language
 
-![Valkey GLIDE Architecture](../../../assets/architecture-diagram.png)
+```mermaid
+graph TD
+    A[Application Code] --> B[Language Binding - Java, Node.js, Python, Go, C#, PHP]
+    B --> C[GLIDE Core - Rust]
+    C --> D[Valkey/Redis Server]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#fff3e0
+    style D fill:#e8f5e8
+```
 
 ## Key Components Explained
 
