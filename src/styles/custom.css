@@ -29,15 +29,5 @@
       ); /* Desktop: original nav height + gradient header + padding */
       --sl-nav-bar-height: 4rem; /* Original navbar height for header container */
     }
-
-    /* Fix hamburger menu button alignment on desktop */
-    .sl-flex:has(starlight-menu-button) {
-      align-items: center !important;
-      height: var(--sl-nav-bar-height) !important;
-    }
-
-    starlight-menu-button {
-      align-self: center !important;
-    }
   }
 }
