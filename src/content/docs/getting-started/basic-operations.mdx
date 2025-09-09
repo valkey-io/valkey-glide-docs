@@ -16,11 +16,11 @@ import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
 
+export const baseUrl = import.meta.env.BASE_URL;
+
 Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE.
 
-This section will go over some of the basics of GLIDE like how to send commands to Valkey.
-
-## Understanding GLIDE clients.
+## Understanding Client Commands
 
 To communicate with Valkey, GLIDE clients provide methods for users to send commands to Valkey.
 Under the hood, all clients share a common same Rust core to communicate with Valkey. This
@@ -28,7 +28,7 @@ makes their behavior consistent between the different languages while still supp
 specific features.
 
 <Aside>
-  To find more infomation on the Rust core that power GLIDE clients, see [here](../../concepts/architecture/architecture/).
+  To find more infomation on the Rust core that power GLIDE clients, see <a href={`${baseUrl}/concepts/architecture/architecture/`}>here</a>.
 </Aside>
 
 ## Updating Keys
@@ -280,10 +280,10 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 
 Now that you've understand the basics, take a look at other topics on Valkey GLIDE:
 
-<LinkCard title="Tutorials" href="../tutorials/caching-app" description="Continue with a tutorial on building a simple caching layer." />
+<LinkCard title="Tutorials" href={`${baseUrl}/getting-started/tutorials/caching-app`} description="Continue with a tutorial on building a simple caching layer using Valkey GLIDE." />
 
-<LinkCard title="How-To" href="../../how-to" description="Visit the how-to section to get started on advanced guides on different topics on Valkey." />
+<LinkCard title="How-To" href={`${baseUrl}/how-to`} description="Visit the how-to section to get started on advanced guides to different topics on Valkey." />
 
-<LinkCard title="Concepts" href="../../concepts" description="Learn more about Valkey Glide features and concepts." />
+<LinkCard title="Concepts" href={`${baseUrl}/concepts`} description="Learn more about Valkey Glide features and concepts." />
 
-<LinkCard title="Languages" href="../../languages" description="Take a look at language specific documentations." />
+<LinkCard title="Languages" href={`${baseUrl}/languages`} description="Take a look at language specific documentations." />
