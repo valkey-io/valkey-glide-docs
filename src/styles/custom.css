@@ -30,4 +30,10 @@
       --sl-nav-bar-height: 4rem; /* Original navbar height for header container */
     }
   }
+
+  /* Apply rounded corner */
+  .starlight-aside,
+  .card {
+    border-radius: 0.75rem;
+  }
 }

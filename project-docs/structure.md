@@ -16,9 +16,9 @@ valkey.io/docs/glide/
 
 ### 1.2 Integration with Main Valkey Docs
 
-* Add GLIDE tile to main docs navigation
-* Cross-link from server documentation where relevant
-* Include GLIDE in client comparison matrices
+- Add GLIDE tile to main docs navigation
+- Cross-link from server documentation where relevant
+- Include GLIDE in client comparison matrices
 
 ## 2. Main Documentation Architecture (glide.valkey.io)
 
@@ -306,42 +306,42 @@ glide.valkey.io/
 
 ### 3.3 New Content Suggestions
 
-* Docker Compose setup files for quick-start
+- Docker Compose setup files for quick-start
 
 ## 4. Multi-Language Implementation Strategy
 
 ### 4.1 Shared vs Language-Specific Content
 
 **Keep Shared (Language-Agnostic):**
-*All code examples in the shared documentation will remain language specific with ability for user to choose language.*
+_All code examples in the shared documentation will remain language specific with ability for user to choose language._
 
-* Valkey/GLIDE concepts and architecture
-* Deployment and operational guidance
-* Security best practices
-* Performance optimization theory
-* Migration strategy planning
+- Valkey/GLIDE concepts and architecture
+- Deployment and operational guidance
+- Security best practices
+- Performance optimization theory
+- Migration strategy planning
 
 **Make Language-Specific:**
 
-* Installation procedures
-* Framework integrations
-* Async/sync API patterns
-* Error handling idioms
-* Testing approaches
-* Build and deployment specifics
+- Installation procedures
+- Framework integrations
+- Async/sync API patterns
+- Error handling idioms
+- Testing approaches
+- Build and deployment specifics
 
 ### 4.2 Navigation Strategy
 
 **Global Navigation:**
 
-* Persistent language selector (stored in localStorage)
-* "See this in \[Language]" links in shared content
-* Breadcrumb navigation showing shared → specific context
-* Quick-switch between equivalent pages
+- Persistent language selector (stored in localStorage)
+- "See this in \[Language]" links in shared content
+- Breadcrumb navigation showing shared → specific context
+- Quick-switch between equivalent pages
 
 **Language-Specific Navigation:**
 
-* Each language section mirrors main structure
-* Cross-links to shared conceptual content
-* Language-specific entry points for each tutorial
-* Progressive disclosure of advanced topics
+- Each language section mirrors main structure
+- Cross-links to shared conceptual content
+- Language-specific entry points for each tutorial
+- Progressive disclosure of advanced topics

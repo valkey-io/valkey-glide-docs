@@ -32,9 +32,9 @@ For development, run `pnpm dev`. It will spin up a hot-loading development serve
 
 In general, page contents are located under `src/content/docs`.
 
-* For simple content changes, update the appropriate `.mdx` files in the folder structure.
-* To create a new page, add a new `.mdx` file under `src/content/docs`.
-* To change the navigation bar, udpate `astro.config.mjs`.
+- For simple content changes, update the appropriate `.mdx` files in the folder structure.
+- To create a new page, add a new `.mdx` file under `src/content/docs`.
+- To change the navigation bar, udpate `astro.config.mjs`.
 
 Note that all `.mdx` files requires a header.
 

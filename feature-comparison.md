@@ -104,20 +104,20 @@ CompletableFuture<String> result = client.get("key");
 
 ### **Choose Valkey GLIDE When:**
 
-* Building new applications or modernizing existing ones
-* Need enterprise-grade reliability without operational complexity
-* Working with distributed/clustered deployments
-* Require built-in observability and monitoring
-* Want modern async/await patterns
-* Need intelligent failover and retry mechanisms
+- Building new applications or modernizing existing ones
+- Need enterprise-grade reliability without operational complexity
+- Working with distributed/clustered deployments
+- Require built-in observability and monitoring
+- Want modern async/await patterns
+- Need intelligent failover and retry mechanisms
 
 ### **Choose Jedis When:**
 
-* Working with legacy applications that require minimal changes
-* Need maximum throughput for simple, high-volume operations
-* Require extensive community support and documentation
-* Working in environments where battle-tested stability is critical
-* Need specific features not yet available in GLIDE
+- Working with legacy applications that require minimal changes
+- Need maximum throughput for simple, high-volume operations
+- Require extensive community support and documentation
+- Working in environments where battle-tested stability is critical
+- Need specific features not yet available in GLIDE
 
 ## Migration Considerations
 
@@ -129,6 +129,6 @@ CompletableFuture<String> result = client.get("key");
 | **Reliability**   | High       | Significant improvement      |
 | **Monitoring**    | High       | Built-in observability       |
 
-***
+---
 
-*This comparison is based on current capabilities. Both clients continue to evolve, and specific performance characteristics may vary based on your use case and environment.*
+_This comparison is based on current capabilities. Both clients continue to evolve, and specific performance characteristics may vary based on your use case and environment._
