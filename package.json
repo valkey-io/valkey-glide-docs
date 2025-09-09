@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "prebuild": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh && pnpm run format",
+    "badge": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh",
+    "prebuild": "pnpm run format",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "format:non-mdx": "prettier --write .",
-    "format:mdx": "remark --output --quiet \"**/*.{md,mdx}\"",
+    "format:mdx": "remark --output --quiet \"src/content/docs/**/*.{md,mdx}\"",
     "format": "pnpm run format:non-mdx && pnpm run format:mdx"
   },
   "dependencies": {
