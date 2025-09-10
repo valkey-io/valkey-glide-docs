@@ -2,15 +2,6 @@
 @layer starlight, valkey-overrides;
 
 @layer valkey-overrides {
-  /* Valkey gradient header height adjustments */
-  :root {
-    --valkey-site-title-color: hsl(0, 0%, 100%); /* White for dark mode */
-    --valkey-gradient-height: 3rem; /* Small gradient bar for branding */
-    --sl-nav-height: calc(
-      3.5rem + var(--valkey-gradient-height) + var(--sl-nav-pad-y)
-    ); /* Mobile: original nav height + gradient header + padding */
-    --sl-nav-bar-height: 3.5rem; /* Original navbar height for header container */
-  }
 
   :root[data-theme="light"],
   [data-theme="light"] ::backdrop {
@@ -19,16 +10,6 @@
       10%,
       10%
     ); /* Dark color for light mode */
-  }
-
-  @media (min-width: 50em) {
-    :root {
-      --valkey-gradient-height: 4rem; /* Slightly larger gradient bar for desktop */
-      --sl-nav-height: calc(
-        4rem + var(--valkey-gradient-height) + var(--sl-nav-pad-y)
-      ); /* Desktop: original nav height + gradient header + padding */
-      --sl-nav-bar-height: 4rem; /* Original navbar height for header container */
-    }
   }
 
   /* Apply rounded corner */
