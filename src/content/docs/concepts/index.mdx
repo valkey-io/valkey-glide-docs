@@ -1,10 +1,10 @@
 ---
-title: Index
-description: A reference page in my new Starlight docs site.
+title: Overview
 sidebar:
+  order: 1
   badge:
-    text: Placeholder
-    variant: note
+    text: Draft-Reivew
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,4 +15,15 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-This is a placeholder for `index.md`.
+import { LinkCard } from '@astrojs/starlight/components';
+
+This section contain various pages on topics about Valkey GLIDE's architecture, client features, and limtations. To get started, take a look at the following topics:
+
+export const baseUrl = import.meta.env.BASE_URL;
+
+<LinkCard title='Rust Core Design' href={`${baseUrl}/concepts/architecture/rust-core-design`} description='Learn more about the underlying Rust core that powers all Valkey GLIDE clients, and what makes it different.'/>
+
+<LinkCard title='Client Features' href={`${baseUrl}/concepts/client-feature`} description='Explore the various features supported by Valkey GLIDE clients'/>
+
+<LinkCard title='Limitations' href={`${baseUrl}/concepts/limitations`} description='Learn about Valkey GLIDE limitations'/>
+
