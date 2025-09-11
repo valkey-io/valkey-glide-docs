@@ -1,10 +1,9 @@
 ---
 title: Observability (OpenTelemetry)
-description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -23,7 +22,7 @@ OpenTelemetry support is available across all GLIDE 2.0 language clients and can
 
 ## Key Features
 
-### **Traces**
+### Traces
 
 For every Valkey command, GLIDE creates a trace span capturing the full client-side execution time. Each span includes:
 
@@ -33,7 +32,7 @@ For every Valkey command, GLIDE creates a trace span capturing the full client-s
 
 * In future versions, additional child spans will further decompose the command lifecycle into more granular phases, providing even deeper insight into where time is spent during request processing.
 
-### **Metrics**
+### Metrics
 
 GLIDE currently collects initial metrics covering key client behaviors:
 
@@ -45,11 +44,11 @@ GLIDE currently collects initial metrics covering key client behaviors:
 
 Additional metrics will be added in future releases to expand observability coverage.
 
-### **Configurable Sampling (Tracing only)**
+### Configurable Sampling (Tracing only)
 
 Sampling controls how many requests are instrumented with traces. This allows balancing observability depth with system overhead. Higher sampling rates offer richer data but may impact client performance. In production environments, low sampling rates (1-5%) are typically recommended for efficient statistical insight.
 
-### **Vendor-neutral Integration**
+### Vendor-neutral Integration
 
 Fully compatible with any OpenTelemetry-compliant backend (e.g., Prometheus, Jaeger, AWS CloudWatch, etc.), giving users flexibility in how telemetry data is processed, stored, and visualized.
 

@@ -3,11 +3,13 @@ title: Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+
+export const baseUrl = import.meta.env.BASE_URL;
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -25,16 +27,17 @@ See how to generate the token and GLIDE user examples in [Python](https://github
 
 ### Best Practices for Refreshing IAM Tokens and Re-authentication
 
-GLIDE supports dynamic updates to the password in the connection configuration at runtime (see [Dynamic Password Management](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#dynamic-password-management) for more details). This capability is required when using IAM authentication because:
+GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`${baseUrl}/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
+This capability is required when using IAM authentication because:
 
 * IAM tokens are only valid for 15 minutes.
 * Connections authenticated with IAM must be re-authenticated every 12 hours using the AUTH or HELLO command with a fresh IAM token. Otherwise, the connection will be terminated.
 
 To efficiently manage this, GLIDE provides the ability to update short-lived tokens using `updateConnectionPassword` (or `update_connection_password`) to periodically refresh the token without immediately re-authenticating. It also offers the option for immediate re-authentication using `immediateAuth` (or `immediate_auth`), which forces re-authentication and extends the connection for another 12 hours.
 
-**Best Practices**
+<Aside type="tip" title="Best Practices">
+  * Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
+  * Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
 
-* Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
-* Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
-
-This approach ensures seamless token management and connection stability when using IAM authentication with GLIDE.
+  This will ensures seamless token management and connection stability when using IAM authentication with GLIDE.
+</Aside>

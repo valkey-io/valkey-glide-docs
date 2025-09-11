@@ -24,7 +24,7 @@ By the end of this section we will cover some basic Valkey commands.
 
 SET, GET can be used to update a single value at a time.
 
-<Tabs syncKey="overview">
+<Tabs syncKey="langsync">
   <TabItem label="Python">
     ```python
     import asyncio
@@ -190,7 +190,7 @@ SET, GET can be used to update a single value at a time.
 
 Using [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/), you can perform operations in batch.
 
-<Tabs syncKey="overview">
+<Tabs syncKey="langsync">
   <TabItem label="Python">
     ```python
     # Set multiple keys at once
@@ -285,7 +285,7 @@ Using [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/comm
 
 Valkey/Redis can perform atomic operations on numeric values:
 
-<Tabs syncKey="overview">
+<Tabs syncKey="langsync">
   <TabItem label="Python">
     ```python
     # Set a numeric value
@@ -406,7 +406,7 @@ Valkey/Redis can perform atomic operations on numeric values:
 
 When using SET, you can specify an expiration time after which the value will be removed.
 
-<Tabs syncKey="overview">
+<Tabs syncKey="langsync">
   <TabItem label="Python">
     ```python
     # Set keys with different expiration times
@@ -555,7 +555,7 @@ You can also use PERSIST to remove the expriation time.
 
 Here's a complete example that demonstrates all the operations we've covered:
 
-<Tabs syncKey="overview">
+<Tabs syncKey="langsync">
   <TabItem label="Python">
     ```python
     import asyncio
