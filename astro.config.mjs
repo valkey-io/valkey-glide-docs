@@ -55,27 +55,48 @@ export default defineConfig({
         },
         {
           label: "Concepts",
-          collapsed: true,
-          autogenerate: { directory: "concepts" },
+          collapsed: false,
+          items: [
+            {
+              label: "Architecture",
+              autogenerate: { directory: "concepts/architecture" },
+            },
+            {
+              label: "Client Features",
+              autogenerate: { directory: "concepts/client-features" },
+            },
+            {
+              label: "Comparison",
+              autogenerate: { directory: "concepts/comparison" },
+            },
+            {
+              label: "Limitations",
+              autogenerate: { directory: "concepts/limitations" },
+            },
+            {
+              label: "Valkey Integrations",
+              autogenerate: { directory: "concepts/valkey-integrations" },
+            },
+          ],
         },
         {
           label: "How-To Guides",
-          collapsed: true,
+          collapsed: false,
           autogenerate: { directory: "how-to" },
         },
         {
           label: "Languages",
-          collapsed: true,
+          collapsed: false,
           autogenerate: { directory: "languages" },
         },
         {
           label: "Migration",
-          collapsed: true,
+          collapsed: false,
           autogenerate: { directory: "migration" },
         },
         {
           label: "Reference",
-          collapsed: true,
+          collapsed: false,
           autogenerate: { directory: "reference" },
         },
       ],
