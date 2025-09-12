@@ -7,7 +7,6 @@
     "dev": "astro dev",
     "start": "astro dev",
     "badge": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh",
-    "prebuild": "pnpm run format",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",

@@ -62,7 +62,7 @@ Batch pipeline = new Batch(false);
 ```
 
 <Aside>
-Standalone Batches are executed on primary node.
+  Standalone Batches are executed on primary node.
 </Aside>
 
 **`ClusterBatch`**
@@ -77,9 +77,10 @@ ClusterBatch atomicCluster = new ClusterBatch(true);
 // Create a non-atomic cluster batch (pipeline may span multiple slots)
 ClusterBatch pipelineCluster = new ClusterBatch(false);
 ```
+
 <Aside>
-When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support).
-If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support).
+  If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 </Aside>
 
 **Error handling - `Raise on Error`**
@@ -177,7 +178,7 @@ ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
 ```
 
 <Aside>
-The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
+  The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
 </Aside>
 
 **Full usage**

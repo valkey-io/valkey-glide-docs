@@ -28,8 +28,8 @@ Linux:
 * Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
 * Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
 
-<Aside type='caution' title="Important">
-Currently Alpine Linux / MUSL is NOT supported due to an incompatibility with a native Java component.
+<Aside type="caution" title="Important">
+  Currently Alpine Linux / MUSL is NOT supported due to an incompatibility with a native Java component.
 </Aside>
 
 macOS:
@@ -55,7 +55,7 @@ Refer to the [Supported Engine Versions table](../platform-support) for details.
 ## Prerequisites
 
 <Aside>
-For developers, please refer to Java's <a href={`${baseUrl}/languages/java/developer`}>developer guide</a> for further instruction on how to set up your development environment.
+  For developers, please refer to Java's <a href={`${baseUrl}/languages/java/developer`}>developer guide</a> for further instruction on how to set up your development environment.
 </Aside>
 
 **Java Requirements**
@@ -125,8 +125,9 @@ linux-x86_64
 
   <TabItem label="Maven">
     <Aside type="caution">
-    Must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
+      Must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
     </Aside>
+
     ```xml
 
     <!-- osx-x86_64 -->
@@ -183,7 +184,7 @@ linux-x86_64
 
   <TabItem label="SBT">
     <Aside type="caution">
-    Must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+      Must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
     </Aside>
 
     ```scala

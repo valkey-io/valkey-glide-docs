@@ -135,13 +135,15 @@ export default defineConfig({
                   label: "Concepts",
                   autogenerate: { directory: "languages/python/concepts" },
                 },
-                                {
+                {
                   label: "How-to",
                   autogenerate: { directory: "languages/python/how-to" },
                 },
                 {
                   label: "Valkey Commands",
-                  autogenerate: { directory: "languages/python/valkey-commands" },
+                  autogenerate: {
+                    directory: "languages/python/valkey-commands",
+                  },
                 },
                 {
                   label: "Migration",
@@ -171,7 +173,7 @@ export default defineConfig({
                   label: "Concepts",
                   autogenerate: { directory: "languages/java/concepts" },
                 },
-                                {
+                {
                   label: "How-to",
                   autogenerate: { directory: "languages/java/how-to" },
                 },
@@ -192,7 +194,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/java/reference" },
                 },
               ],
-            }
+            },
           ],
         },
         {
