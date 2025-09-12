@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 9
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,13 +16,9 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Packaging
-
-***
-
 This section explains how the `valkey-glide` (async client) and `valkey-glide-sync` (sync client) packages are built into Python wheels for local use and PyPI publishing.
 
-### Async Client (`valkey-glide`)
+## Async Client (`valkey-glide`)
 
 1. **Stage shared code**\
    Before packaging, we copy the `glide-shared/glide_shared` package directory into the `glide-async/python/` folder. This ensures the shared code is included in the final wheel.
@@ -45,7 +41,7 @@ This section explains how the `valkey-glide` (async client) and `valkey-glide-sy
    python dev.py build --client async --wheel
    ```
 
-### Sync Client (`valkey-glide-sync`)
+## Sync Client (`valkey-glide-sync`)
 
 1. **Vendoring dependencies (for both sdist and wheel)**\
    During the build process (for both source distributions and wheels), we vendor (copy) all required Rust crates and Python modules into the `glide-sync` directory.

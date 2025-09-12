@@ -3,8 +3,8 @@ title: Authentication
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -14,8 +14,6 @@ import { Aside } from '@astrojs/starlight/components';
 
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
-### Authentication
 
 By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
 
@@ -30,7 +28,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#acl-permissions-requirements) section for a detailed explanation about using ACLs with GLIDE.
 
-#### Example - Connecting with Username and Password to a Cluster
+## Example - Connecting with Username and Password to a Cluster
 
 ```python
 from glide import (
@@ -47,7 +45,7 @@ client_config = GlideClusterClientConfiguration(addresses, credentials=credentia
 client = await GlideClusterClient.create(client_config)
 ```
 
-#### Example - Connecting with Username and Password to a Standalone server
+## Example - Connecting with Username and Password to a Standalone server
 
 ```python
 from glide import (
@@ -68,7 +66,7 @@ client_config = GlideClientConfiguration(addresses, credentials=credentials)
 client = await GlideClient.create(client_config)
 ```
 
-#### Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+## Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
 
 See the [General Concepts](https://github.com/valkey-io/valkey-glide/wiki/General-Concepts#using-iam-authentication-with-glide-for-elasticache-and-memorydb) section for a detailed explanation about using IAM authentication with GLIDE.
 

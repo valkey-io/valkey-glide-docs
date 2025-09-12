@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 11
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,9 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Documentation Style
-
-### Example of a Properly Formatted Docstring in Functions
+## Example of a Properly Formatted Docstring in Functions
 
 ```python
 """
@@ -62,7 +60,7 @@ Examples:
 """
 ```
 
-### Example of Properly Formatted Documentation for a Class
+## Example of Properly Formatted Documentation for a Class
 
 ```python
 class BitOffsetMultiplier(BitFieldOffset):
@@ -89,7 +87,7 @@ class BitOffsetMultiplier(BitFieldOffset):
         return self._offset
 ```
 
-### Example of Properly Formatted Documentation for Enums
+## Example of Properly Formatted Documentation for Enums
 
 ```python
 class ConditionalChange(Enum):
@@ -104,9 +102,9 @@ class ConditionalChange(Enum):
     """ Only set key / add elements that does not already exist. Equivalent to `NX` in the Valkey API. """
 ```
 
-### Indentation and Spaces
+## Indentation and Spaces
 
-#### Args or Attributes
+### Args or Attributes
 
 To provide documentation for arguments or attributes, we can have each argument or attribute next to each other with descriptions that exceed the max line length indented on the next line:
 
@@ -131,7 +129,7 @@ Attributes:
     some_bool (bool): And then one-line descriptions are as usual.
 ```
 
-#### Return value(s)
+### Return value(s)
 
 Return values are a little special for sphinx. If we wanted to provide more context or multiple possible return values, the convention we will go for is that we should add a space between every different return value.
 
@@ -150,7 +148,7 @@ Returns:
     previous description.
 ```
 
-#### Lists
+### Lists
 
 We have to add a space between the previous line and a line after the list ends and also indent the list by one indent level:
 
@@ -172,7 +170,7 @@ Args:
     count (Optional[int]): An optional argument specifying the maximum count of stream entries to return.
 ```
 
-#### Examples or Code Blocks
+### Examples or Code Blocks
 
 For examples, we can use the `Example:` or `Examples:` keyword and indent the following code block:
 
@@ -213,7 +211,7 @@ Attributes:
         Should match the TLS configuration of the server/cluster, otherwise the connection attempt will fail
 ```
 
-### Constants
+## Constants
 
 We want to use `#:` to add documentation for constants:
 
@@ -222,11 +220,11 @@ We want to use `#:` to add documentation for constants:
 GET_COMMAND_STRING = "GET"
 ```
 
-### Enums
+## Enums
 
 We provide a general description at the top, and follow each enum value with a description beneath. Refer to [the example](#example-of-properly-formatted-documentation-for-enums).
 
-### Links and Hyperlinks
+## Links and Hyperlinks
 
 If we wanted to show a regular link, we can add it as is. If we wanted to show hyperlinks, follow the reStructuredText (rst) link format:
 

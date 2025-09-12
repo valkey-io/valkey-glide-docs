@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 8
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,13 +16,9 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Linters
-
-***
-
 Development on the Python wrapper may involve changes in either the Python or Rust code. Each language has distinct linter tests that must be passed before committing changes.
 
-### Python Linters
+## Python Linters
 
 This project uses the following Python linters and formatters:
 
@@ -44,7 +40,7 @@ If you want to only check formatting without modifying any files, pass the --che
 python3 dev.py lint --check
 ```
 
-### Rust Linters
+## Rust Linters
 
 For Rust code, run manually:
 
@@ -54,4 +50,6 @@ cargo clippy --all-features --all-targets -- -D warnings
 cargo fmt --manifest-path ./Cargo.toml --all
 ```
 
-> These are not included in the `dev.py` utility and should be run separately from the `python` root folder.
+<Aside>
+  These are not included in the `dev.py` utility and should be run separately from the `python` root folder.
+</Aside>

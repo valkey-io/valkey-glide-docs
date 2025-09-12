@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 6
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,20 +16,16 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Manually Running Tests
-
-***
-
 If needed, you can invoke `pytest` directly from the root `python/` directory for custom workflows:
 
-### Run all tests manually
+## Run all tests manually
 
 ```bash
 source .env/bin/activate
 pytest -v
 ```
 
-### Running with different async backends
+## Running with different async backends
 
 Python GLIDE supports both trio and asyncio. Pass the `--async-backend` flag to `pytest` with either `trio`, `asyncio` or `uvloop` to run tests on the specified async backend. You can pass multiple async backends to run tests on all of them.
 

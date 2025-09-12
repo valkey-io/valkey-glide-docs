@@ -4,21 +4,17 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 2
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
 
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
-## Prerequisites
-
-***
 
 Before building the package from source, make sure that you have installed the listed dependencies below:
 
@@ -34,85 +30,78 @@ Before building the package from source, make sure that you have installed the l
 * ziglang and zigbuild (for GNU Linux only)
 * valkey (for testing)
 
-**Valkey installation**
+## Valkey installation
 
 See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
 
 For your convenience, we wrapped the steps in a "copy-paste" code blocks for common operating systems:
 
-<details>
-  <summary>Ubuntu / Debian</summary>
+<Tabs syncKey="global">
+  <TabItem label="Ubuntu / Debian">
+    ```bash
+    sudo apt update -y
+    sudo apt install -y python3 python3-venv git gcc pkg-config openssl libssl-dev unzip cmake
+    # Install rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
 
-  ```bash
-  sudo apt update -y
-  sudo apt install -y python3 python3-venv git gcc pkg-config openssl libssl-dev unzip cmake
-  # Install rust
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  source "$HOME/.cargo/env"
-  # Check that the Rust compiler is installed
-  rustc --version
-  ```
+    Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+  </TabItem>
 
-  Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
-</details>
+  <TabItem label="CentOS">
+    ```bash
+    sudo yum update -y
+    sudo yum install -y python3 git gcc pkgconfig openssl openssl-devel unzip cmake
+    pip3 install virtualenv
+    # Install rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
 
-<details>
-  <summary>CentOS</summary>
+    Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+  </TabItem>
 
-  ```bash
-  sudo yum update -y
-  sudo yum install -y python3 git gcc pkgconfig openssl openssl-devel unzip cmake
-  pip3 install virtualenv
-  # Install rust
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  source "$HOME/.cargo/env"
-  # Check that the Rust compiler is installed
-  rustc --version
-  ```
+  <TabItem label="MacOS">
+    ```bash
+    brew update
+    brew install python3 git gcc pkgconfig openssl virtualenv cmake
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
 
-  Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
-</details>
+    Continue with **Install protobuf compiler** below.
+    It is not necessary to **Install `ziglang` and `zigbuild`** for MacOS.
+  </TabItem>
+</Tabs>
 
-<details>
-  <summary>MacOS</summary>
+## Install protobuf compiler (Optional)
 
-  ```bash
-  brew update
-  brew install python3 git gcc pkgconfig openssl virtualenv cmake
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  source "$HOME/.cargo/env"
-  # Check that the Rust compiler is installed
-  rustc --version
-  ```
+Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/v3.20.3).
+Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
 
-  Continue with **Install protobuf compiler** below.
-  It is not necessary to **Install `ziglang` and `zigbuild`** for MacOS.
-</details>
+```bash
+PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+curl -LO $PB_REL/download/v3.20.3/protoc-3.20.3-linux-x86_64.zip
+unzip protoc-3.20.3-linux-x86_64.zip -d $HOME/.local
+export PATH="$PATH:$HOME/.local/bin"
+# Check that the protobuf compiler is installed. A minimum version of 3.20.0 is required.
+protoc --version
+```
 
-<details>
-  <summary>Install protobuf compiler</summary>
+<Aside>
+  You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+</Aside>
 
-  Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/v3.20.3).
-  Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
+## Install `ziglang` and `zigbuild` (Optional)
 
-  ```bash
-  PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-  curl -LO $PB_REL/download/v3.20.3/protoc-3.20.3-linux-x86_64.zip
-  unzip protoc-3.20.3-linux-x86_64.zip -d $HOME/.local
-  export PATH="$PATH:$HOME/.local/bin"
-  # Check that the protobuf compiler is installed. A minimum version of 3.20.0 is required.
-  protoc --version
-  ```
-
-  > \[!NOTE]
-  > You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
-</details>
-
-<details>
-  <summary>Install `ziglang` and `zigbuild`</summary>
-
-  ```bash
-  pip3 install ziglang
-  cargo install --locked cargo-zigbuild
-  ```
-</details>
+```bash
+pip3 install ziglang
+cargo install --locked cargo-zigbuild
+```

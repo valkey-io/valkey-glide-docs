@@ -35,7 +35,7 @@ specific features.
 
 To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/) and [GET](https://valkey.io/commands/get/) commands.
 
-<Tabs syncKey="langsync">
+<Tabs syncKey="global">
   <TabItem label="Python">
     ```python
     import asyncio
@@ -163,7 +163,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
 
 Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which is used to perform operations in batch atomically.
 
-<Tabs syncKey="langsync">
+<Tabs syncKey="global">
   <TabItem label="Python">
     ```python
     # Set multiple keys at once
@@ -239,7 +239,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
 
 Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete a list of keys.
 
-<Tabs syncKey="langsync">
+<Tabs syncKey="global">
   <TabItem label="Python">
     ```python
     deleted_count = await client.delete(["user:1001", "user:1002", "user:1003"])

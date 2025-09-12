@@ -67,27 +67,100 @@ export default defineConfig({
             },
             {
               label: "Comparison",
+              collapsed: true,
               autogenerate: { directory: "concepts/comparison" },
             },
             {
               label: "Limitations",
+              collapsed: true,
               autogenerate: { directory: "concepts/limitations" },
             },
             {
               label: "Valkey Integrations",
+              collapsed: true,
               autogenerate: { directory: "concepts/valkey-integrations" },
             },
           ],
         },
         {
           label: "How-To Guides",
-          collapsed: false,
-          autogenerate: { directory: "how-to" },
+          collapsed: true,
+          // autogenerate: { directory: "how-to" },
+          items: [
+            {
+              label: "Cloud Development",
+              autogenerate: { directory: "how-to/cloud-development" },
+            },
+            {
+              label: "Connection Management",
+              autogenerate: { directory: "how-to/connection-management" },
+            },
+            {
+              label: "Framework Integration",
+              autogenerate: { directory: "how-to/framework-integration" },
+            },
+            {
+              label: "monitoring",
+              autogenerate: { directory: "how-to/monitoring" },
+            },
+            {
+              label: "operations",
+              autogenerate: { directory: "how-to/operations" },
+            },
+            {
+              label: "performance",
+              autogenerate: { directory: "how-to/performance" },
+            },
+            {
+              label: "security",
+              autogenerate: { directory: "how-to/security" },
+            },
+          ],
         },
         {
           label: "Languages",
           collapsed: false,
-          autogenerate: { directory: "languages" },
+          items: [
+            {
+              label: "Python",
+              items: [
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/python/getting-started",
+                  },
+                },
+                {
+                  label: "Concepts",
+                  collapsed: true,
+                  autogenerate: { directory: "languages/python/concepts" },
+                },
+                {
+                  label: "Features",
+                  autogenerate: { directory: "languages/python/features" },
+                },
+                {
+                  label: "How-to",
+                  collapsed: true,
+                  autogenerate: { directory: "languages/python/how-to" },
+                },
+                {
+                  label: "Migration",
+                  collapsed: true,
+                  autogenerate: { directory: "languages/python/migration" },
+                },
+                {
+                  label: "Developer",
+                  autogenerate: { directory: "languages/python/developer" },
+                },
+                {
+                  label: "Reference",
+                  collapsed: true,
+                  autogenerate: { directory: "languages/python/reference" },
+                },
+              ],
+            },
+          ],
         },
         {
           label: "Migration",

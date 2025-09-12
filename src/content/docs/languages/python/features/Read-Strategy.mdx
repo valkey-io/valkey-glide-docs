@@ -3,8 +3,8 @@ title: Read Strategy
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -14,8 +14,6 @@ import { Aside } from '@astrojs/starlight/components';
 
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
-### Read Strategy
 
 By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
 
@@ -28,7 +26,7 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZ_AFFINITY`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
 |`AZ_AFFINITY_REPLICAS_AND_PRIMARY`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
 
-#### Example - Use PREFER\_REPLICA Read Strategy
+## Example - Use PREFER\_REPLICA Read Strategy
 
 ```python
 from glide import (
@@ -47,7 +45,7 @@ await client.set("key1", "val1")
 await client.get("key1")
 ```
 
-#### Example - Use AZ\_AFFINITY Read Strategy
+## Example - Use AZ\_AFFINITY Read Strategy
 
 If ReadFrom strategy is AZ\_AFFINITY, 'client\_az' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
 
@@ -68,7 +66,7 @@ await client.set("key1", "val1")
 await client.get("key1")
 ```
 
-#### Example - Use AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY Read Strategy
+## Example - Use AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY Read Strategy
 
 If ReadFrom strategy is AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY, 'client\_az' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
 
