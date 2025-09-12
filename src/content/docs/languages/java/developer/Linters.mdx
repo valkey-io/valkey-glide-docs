@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 3
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,8 +15,6 @@ import { Aside } from '@astrojs/starlight/components';
 
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
-
-## Linters
 
 Development on the Java wrapper may involve changes in either the Java or Rust code. Each language has distinct linter tests that must be passed before committing changes.
 
@@ -30,7 +28,7 @@ cargo clippy --all-features --all-targets -- -D warnings
 cargo fmt --manifest-path ./Cargo.toml --all
 ```
 
-### Language-specific Linters and Static Code Analysis
+## Language-specific Linters and Static Code Analysis
 
 **Java:**
 For Java, we use Spotless and SpotBugs.
@@ -61,4 +59,6 @@ For Java, we use Spotless and SpotBugs.
 
    Ensure any new findings are addressed and fixed before committing and pushing your changes.
 
-   *Note: The `spotbugs` task is currently configured to not fail the build on findings.*
+   :::note
+   The `spotbugs` task is currently configured to not fail the build on findings.
+   :::

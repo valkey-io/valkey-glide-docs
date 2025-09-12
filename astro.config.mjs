@@ -123,6 +123,7 @@ export default defineConfig({
           items: [
             {
               label: "Python",
+              collapsed: true,
               items: [
                 {
                   label: "Getting Started",
@@ -132,21 +133,18 @@ export default defineConfig({
                 },
                 {
                   label: "Concepts",
-                  collapsed: true,
                   autogenerate: { directory: "languages/python/concepts" },
                 },
-                {
-                  label: "Features",
-                  autogenerate: { directory: "languages/python/features" },
-                },
-                {
+                                {
                   label: "How-to",
-                  collapsed: true,
                   autogenerate: { directory: "languages/python/how-to" },
                 },
                 {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/python/valkey-commands" },
+                },
+                {
                   label: "Migration",
-                  collapsed: true,
                   autogenerate: { directory: "languages/python/migration" },
                 },
                 {
@@ -155,11 +153,46 @@ export default defineConfig({
                 },
                 {
                   label: "Reference",
-                  collapsed: true,
                   autogenerate: { directory: "languages/python/reference" },
                 },
               ],
             },
+            {
+              label: "Java",
+              collapsed: true,
+              items: [
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/java/getting-started",
+                  },
+                },
+                {
+                  label: "Concepts",
+                  autogenerate: { directory: "languages/java/concepts" },
+                },
+                                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/java/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/java/valkey-commands" },
+                },
+                {
+                  label: "Migration",
+                  autogenerate: { directory: "languages/java/migration" },
+                },
+                {
+                  label: "Developer",
+                  autogenerate: { directory: "languages/java/developer" },
+                },
+                {
+                  label: "Reference",
+                  autogenerate: { directory: "languages/java/reference" },
+                },
+              ],
+            }
           ],
         },
         {

@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 2
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,11 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Build from source
-
-**Note:** See the [Troubleshooting](#troubleshooting) section below for possible solutions to problems.
-
-### Prerequisites
+## Prerequisites
 
 **Software Dependencies**
 
@@ -93,8 +89,9 @@ export PATH="$PATH:$HOME/.local/bin"
 protoc --version
 ```
 
-> \[!NOTE]
-> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+:::note
+You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+:::
 
 **Install `ziglang` and `zigbuild`**
 
@@ -103,7 +100,7 @@ pip3 install ziglang
 cargo install --locked cargo-zigbuild
 ```
 
-### Building and installation steps
+## Building and installation steps
 
 Before starting this step, make sure you've installed all software dependencies.
 
@@ -127,3 +124,13 @@ Before starting this step, make sure you've installed all software dependencies.
    ```bash
    ./gradlew :client:buildAll
    ```
+
+## Troubleshooting
+
+Some troubleshooting issues:
+
+* If the build fails after following the installation instructions, the `gradle` daemon may need to be
+  restarted (`./gradlew --stop`) so that it recognizes changes to environment variables (e.g. `$PATH`). If that doesn't work,
+  you may need to restart your machine. In particular, this may solve the following problems:
+  * Failed to find `cargo` after `rustup`.
+  * No Protobuf compiler (protoc) found.

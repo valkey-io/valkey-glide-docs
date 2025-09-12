@@ -4,8 +4,8 @@ description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 9
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -28,3 +28,7 @@ When you start implementing a new command, check the [command\_request.proto](ht
 
 Standalone and cluster clients both extend [BaseClient.java](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/BaseClient.java) and implement methods from the interfaces listed in `java/client/src/main/java/glide/api/commands`.
 The return types of these methods are in the form of a `CompletableFuture`, which fulfill the purpose of the asynchronous features of the program.
+
+## Implemented Commands
+
+See [closed-PRs](https://github.com/valkey-io/valkey-glide/pulls?q=is%3Apr+is%3Aclosed+label%3Ajava) to see commands that have been previously merged.

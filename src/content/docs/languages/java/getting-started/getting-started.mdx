@@ -1,11 +1,11 @@
 ---
-title: Installation
+title: Getting Started
 description: A reference page in my new Starlight docs site.
 sidebar:
+  order: 1
   badge:
-    text: Draft
-    variant: caution
-    order: 1
+    text: Draft Review
+    variant: success
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
@@ -17,9 +17,46 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
+export const baseUrl = import.meta.env.BASE_URL;
+
+## System Requirements
+
+The release of Valkey GLIDE was tested on the following platforms:
+
+Linux:
+
+* Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
+* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
+
+<Aside type='caution' title="Important">
+Currently Alpine Linux / MUSL is NOT supported due to an incompatibility with a native Java component.
+</Aside>
+
+macOS:
+
+* macOS 14.7 (Apple silicon/aarch\_64)
+* macOS 13.7 (x86\_64/amd64)
+
+## Layout of Java code
+
+The Java client contains the following parts:
+
+1. `src`: Rust dynamic library FFI to integrate with [GLIDE core library](../glide-core/).
+2. `client`: A Java-wrapper around the GLIDE core rust library and unit tests for it.
+3. `benchmark`: A dedicated benchmarking tool designed to evaluate and compare the performance of Valkey GLIDE and other Java clients.
+4. `integTest`: An integration test sub-project for API and E2E testing.
+
+An example app (called glide.examples.ExamplesApp) is also available under [examples app](../examples/java), to sanity check the project.
+
+## Supported Engine Versions
+
+Refer to the [Supported Engine Versions table](../platform-support) for details.
+
 ## Prerequisites
 
-For developers, please refer to Java's [DEVELOPER.md](./DEVELOPER.md) for further instruction on how to set up your development environment.
+<Aside>
+For developers, please refer to Java's <a href={`${baseUrl}/languages/java/developer`}>developer guide</a> for further instruction on how to set up your development environment.
+</Aside>
 
 **Java Requirements**
 
@@ -48,11 +85,11 @@ linux-aarch_64
 linux-x86_64
 ```
 
-<Tabs syncKey="global">
+<Tabs syncKey="javaBuildTool">
   <TabItem label="Gradle">
     <Aside type="caution">
       * Copy the snippet and paste it in the `build.gradle` dependencies section.
-      * **IMPORTANT** must include a `classifier` to specify your platform.
+      * Must include a `classifier` to specify your platform.
     </Aside>
 
     ```groovy
@@ -87,8 +124,9 @@ linux-x86_64
   </TabItem>
 
   <TabItem label="Maven">
-    * **IMPORTANT** must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
-
+    <Aside type="caution">
+    Must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
+    </Aside>
     ```xml
 
     <!-- osx-x86_64 -->
@@ -144,7 +182,9 @@ linux-x86_64
   </TabItem>
 
   <TabItem label="SBT">
-    * **IMPORTANT** must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+    <Aside type="caution">
+    Must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+    </Aside>
 
     ```scala
     // osx-aarch_64

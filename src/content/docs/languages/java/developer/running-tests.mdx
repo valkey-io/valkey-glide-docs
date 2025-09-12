@@ -1,11 +1,11 @@
 ---
-title: 'Test'
+title: 'Running Tests'
 description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 6
  badge:
-   text: Draft
-   variant: caution
+   text: Draft Review
+   variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,7 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Test
+## Running Tests
 
 To run all tests, use the following command:
 
@@ -89,4 +89,16 @@ To run server modules test (it doesn't start servers):
 
 ```bash
 ./gradlew :integTest:modulesTest -Dcluster-endpoints=localhost:7000 -Dtls=true
+```
+
+## JaCoCo Code Coverage Results
+
+JaCoCo results are automatically generated just by running the tests (due to the `finalizedBy jacocoTestReport` task). The generated files are located in `client/build/reports/jacoco` and `integTest/build/reports/jacoco`
+
+## Generating Protobuf Code
+
+To (re)generate protobuf code, use the following command:
+
+```bash
+./gradlew protobuf
 ```
