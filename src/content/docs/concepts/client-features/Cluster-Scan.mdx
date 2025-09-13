@@ -26,7 +26,7 @@ The `ScanState` is not held as a static or global object. Instead, a `ClusterSca
 
 To start iterating, create a `ClusterScanCursor`:
 
-<Tabs syncKey="global">
+<Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     ```py
     cursor = ClusterScanCursor()
@@ -34,7 +34,7 @@ To start iterating, create a `ClusterScanCursor`:
   </TabItem>
 
   <TabItem label="Java">
-    ```java
+    ```Java
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     ```
   </TabItem>
@@ -51,11 +51,9 @@ The `SCAN` command accepts three optional parameters:
 * `TYPE`: Filters the keys by a specific type.
 
 ## General Usage Example
-
-<Tabs syncKey="langsync">
+### Scan
+<Tabs syncKey="progLangExample">
   <TabItem label="Python">
-    #### Example 1
-
     ```py
     cursor = ClusterScanCursor()
     all_keys = []
@@ -63,43 +61,11 @@ The `SCAN` command accepts three optional parameters:
         cursor, keys = await client.scan(cursor)
         all_keys.extend(keys)
     ```
-
-    #### Example 2
-
-    ```py
-    await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
-    cursor = ClusterScanCursor()
-    await client.scan(cursor, match=b"*key*")
-    # Returns matching keys such as [b'my_key1', b'my_key2', b'not_my_key']
-    ```
-
-    #### Example 3
-
-    ```py
-    await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
-    cursor = ClusterScanCursor()
-    await client.scan(cursor, count=1)
-    # Returns around `count` amount of keys: [b'my_key1']
-    ```
-
-    #### Example 4
-
-    ```py
-    await client.mset({b'key1': b'value1', b'key2': b'value2', b'key3': b'value3'})
-    await client.sadd(b"this_is_a_set", [b"value4"])
-    cursor = ClusterScanCursor()
-    all_keys = []
-    while not cursor.is_finished():
-        cursor, keys = await client.scan(cursor, type=ObjectType.STRING)
-        all_keys.extend(keys)
-    print(all_keys)  # Output: [b'key1', b'key2', b'key3']
-    ```
   </TabItem>
 
   <TabItem label="Java">
-    #### Example 1
 
-    ```java
+    ```Java
     String key = "key:test_cluster_scan_simple" + UUID.randomUUID();
     Map<String, String> expectedData = new LinkedHashMap<>();
     for (int i = 0; i < 100; i++) {
@@ -120,10 +86,22 @@ The `SCAN` command accepts three optional parameters:
     }
     cursor.releaseCursorHandle();
     ```
+  </TabItem>
+</Tabs>
+### Scan Using Patterns
+<Tabs syncKey="progLangExample">
+  <TabItem label="Python">
+      ```py
+    await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
+    cursor = ClusterScanCursor()
+    await client.scan(cursor, match=b"*key*")
+    # Returns matching keys such as [b'my_key1', b'my_key2', b'not_my_key']
+    ```
+  </TabItem>
 
-    #### Example 2
+    <TabItem label="Java">
 
-    ```java
+    ```Java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     while (!cursor.isFinished()) {
@@ -146,10 +124,21 @@ The `SCAN` command accepts three optional parameters:
     }
     cursor.releaseCursorHandle();
     ```
+  </TabItem>
+</Tabs>
+### Scan With The Count Option
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+      ```py
+    await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
+    cursor = ClusterScanCursor()
+    await client.scan(cursor, count=1)
+    # Returns around `count` amount of keys: [b'my_key1']
+    ```
+  </TabItem>
 
-    #### Example 3
-
-    ```java
+    <TabItem label="Java">
+        ```Java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     while (!cursor.isFinished()) {
@@ -163,6 +152,21 @@ The `SCAN` command accepts three optional parameters:
           }
     }
     cursor.releaseCursorHandle();
+    ```
+  </TabItem>
+</Tabs>
+### Scan For a Specific Data Type.
+<Tabs syncKey="progLangExample">
+  <TabItem label="Python">
+      ```py
+    await client.mset({b'key1': b'value1', b'key2': b'value2', b'key3': b'value3'})
+    await client.sadd(b"this_is_a_set", [b"value4"])
+    cursor = ClusterScanCursor()
+    all_keys = []
+    while not cursor.is_finished():
+        cursor, keys = await client.scan(cursor, type=ObjectType.STRING)
+        all_keys.extend(keys)
+    print(all_keys)  # Output: [b'key1', b'key2', b'key3']
     ```
   </TabItem>
 </Tabs>

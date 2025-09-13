@@ -29,7 +29,7 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 
 ## Key Concepts
 
-**Atomic Batch (Transaction)**
+### Atomic Batch (Transaction)
 
 * **Definition:** A set of commands executed together as a single, indivisible operation.
 * **Guarantees:** Sequential execution without interruption. Other clients cannot interleave commands between the batched operations.
@@ -38,7 +38,7 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * **Use Case:** When you need consistency and isolation.
 * See: [Valkey Transactions](https://valkey.io/topics/transactions/).
 
-**Non-Atomic Batch (Pipeline)**
+### Non-Atomic Batch (Pipeline)
 
 * Definition: A group of commands sent in a single request, but executed without atomicity or isolation.
 * Behavior: Commands may be processed on different slots/nodes (in cluster mode), and other operations from different clients may interleave during execution.
@@ -228,7 +228,7 @@ If a redirection error occurs:
 
 ## Usage Examples
 
-**Standalone (Atomic Batch)**
+### Standalone (Atomic Batch)
 
 ```python
 from glide import (
@@ -304,7 +304,7 @@ print("Pipeline Results:", results)
 # Expected output: Pipeline Results: ['OK', 'OK', 'value1', 'value2']
 ```
 
-**Cluster (Atomic Batch)**
+### Cluster (Atomic Batch)
 
 ```python
 from glide import (
@@ -342,9 +342,11 @@ except RequestError as e:
     print("Atomic cluster batch failed:", e)
 ```
 
-> **Important:** If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
+:::caution[Important]
+If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
+:::
 
-**Cluster (Non-Atomic Batch / Pipeline)**
+### Cluster (Non-Atomic Batch / Pipeline)
 
 ```python
 from glide import (
