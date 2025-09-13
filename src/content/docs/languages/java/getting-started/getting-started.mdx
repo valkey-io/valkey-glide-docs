@@ -17,8 +17,6 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-export const baseUrl = import.meta.env.BASE_URL;
-
 ## System Requirements
 
 The release of Valkey GLIDE was tested on the following platforms:
@@ -41,21 +39,21 @@ macOS:
 
 The Java client contains the following parts:
 
-1. `src`: Rust dynamic library FFI to integrate with [GLIDE core library](../glide-core/).
+1. `src`: Rust dynamic library FFI to integrate with [GLIDE core library](https://github.com/valkey-io/valkey-glide/tree/main/glide-core).
 2. `client`: A Java-wrapper around the GLIDE core rust library and unit tests for it.
 3. `benchmark`: A dedicated benchmarking tool designed to evaluate and compare the performance of Valkey GLIDE and other Java clients.
 4. `integTest`: An integration test sub-project for API and E2E testing.
 
-An example app (called glide.examples.ExamplesApp) is also available under [examples app](../examples/java), to sanity check the project.
+An example app (called glide.examples.ExamplesApp) is also available under [examples app](https://github.com/valkey-io/valkey-glide/blob/main/examples/java), to sanity check the project.
 
 ## Supported Engine Versions
 
-Refer to the [Supported Engine Versions table](../platform-support) for details.
+Refer to the <a href={`${import.meta.env.BASE_URL}/reference/compatibility/platform-support`}>platform support</a> section for details.
 
 ## Prerequisites
 
 <Aside>
-  For developers, please refer to Java's <a href={`${baseUrl}/languages/java/developer`}>developer guide</a> for further instruction on how to set up your development environment.
+  For developers, please refer to Java's <a href={`${import.meta.env.BASE_URL}/languages/java/developer`}>developer guide</a> for further instruction on how to set up your development environment.
 </Aside>
 
 **Java Requirements**

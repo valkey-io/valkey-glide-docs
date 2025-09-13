@@ -28,7 +28,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication/#acl-permissions-requirements`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
-## Example - Connecting with Username and Password to a Cluster
+## Example:  Connecting with Username and Password to a Cluster
 
 ```python
 from glide import (
@@ -45,7 +45,7 @@ client_config = GlideClusterClientConfiguration(addresses, credentials=credentia
 client = await GlideClusterClient.create(client_config)
 ```
 
-## Example - Connecting with Username and Password to a Standalone server
+## Example:  Connecting with Username and Password to a Standalone server
 
 ```python
 from glide import (
@@ -66,7 +66,7 @@ client_config = GlideClientConfiguration(addresses, credentials=credentials)
 client = await GlideClient.create(client_config)
 ```
 
-## Example - Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+## Example:  Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/using-iam-authentication-with-glide-for-elasticache-and-memorydb`}>IAM Authentication with GLIDE</a> section for a detailed explanation about using IAM authentication with GLIDE.
 
@@ -124,7 +124,7 @@ class ElastiCacheIAMProvider(valkey.CredentialProvider):
         return (self.user, signed_url.removeprefix("https://"))
 ```
 
-**Usage example -**
+**Usage Example: **
 
 ```python
 from typing import Tuple, Union
