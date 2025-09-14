@@ -3,8 +3,8 @@ title: Tracking resources
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,9 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-### Tracking resources
-
-GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+GLIDE 1.2 introduces a new `NONE` Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
 
 * `total_connections` contains the number of active connections across **all** clients
 * `total_clients` contains the number of active clients (regardless of its type)

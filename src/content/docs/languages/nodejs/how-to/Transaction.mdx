@@ -3,8 +3,8 @@ title: Transaction
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,24 +15,22 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-### Transaction
-
 A transaction in Valkey Glide allows you to execute a group of commands in a single, atomic step. This ensures that all commands in the transaction are executed sequentially and without interruption. See [Valkey Transactions](https://valkey.io/topics/transactions).
 
 This is equivalent to the Valkey commands [MULTI](https://valkey.io/commands/multi/) / [EXEC](https://valkey.io/commands/exec/).
 
-#### Modes of Operation
+## Modes of Operation
 
 There are two primary modes for handling transactions in Glide:
 
 1. **Standalone Mode:** Use the `Transaction` class.
 2. **Cluster Mode:** Use the `ClusterTransaction` class.
 
-#### Reusing Transaction Objects
+## Reusing Transaction Objects
 
 Transaction objects can be reused. If you need to execute a particular group of commands multiple times, you can simply resend the same transaction object.
 
-#### Example Usage
+## Example Usage
 
 Here's a simple example demonstrating how to create and execute a transaction in standalone mode:
 
@@ -52,7 +50,7 @@ const result = await client.exec(transaction);
 console.log(result); // Output: [OK, OK, null]
 ```
 
-#### Command Chaining
+## Command Chaining
 
 Valkey Glide supports command chaining within a transaction, allowing for a more concise and readable code. Here's how you can use chaining in transactions:
 
@@ -72,7 +70,7 @@ console.log(result); // Output: [OK, 'value']
 
 **Cluster Mode Considerations:** When using `ClusterTransaction`, all keys in the transaction must be mapped to the same slot.
 
-#### Detailed Steps:
+## Detailed Steps
 
 **Creating a Transaction:** Initialize the `Transaction` or `ClusterTransaction` object.
 

@@ -55,7 +55,7 @@ export default defineConfig({
         },
         {
           label: "Concepts",
-          collapsed: false,
+          collapsed: true,
           items: [
             {
               label: "Architecture",
@@ -125,6 +125,7 @@ export default defineConfig({
               label: "Python",
               collapsed: true,
               items: [
+                "languages/python",
                 {
                   label: "Getting Started",
                   autogenerate: {
@@ -163,6 +164,7 @@ export default defineConfig({
               label: "Java",
               collapsed: true,
               items: [
+                "languages/java",
                 {
                   label: "Getting Started",
                   autogenerate: {
@@ -195,16 +197,53 @@ export default defineConfig({
                 },
               ],
             },
+            {
+              label: "Node.js",
+              collapsed: true,
+              items: [
+                "languages/nodejs",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/nodejs/getting-started",
+                  },
+                },
+                {
+                  label: "Concepts",
+                  autogenerate: { directory: "languages/nodejs/concepts" },
+                },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/nodejs/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/nodejs/valkey-commands" },
+                },
+                {
+                  label: "Migration",
+                  autogenerate: { directory: "languages/nodejs/migration" },
+                },
+                {
+                  label: "Developer",
+                  autogenerate: { directory: "languages/nodejs/developer" },
+                },
+                {
+                  label: "Reference",
+                  autogenerate: { directory: "languages/nodejs/reference" },
+                },
+              ],
+            }
           ],
         },
         {
           label: "Migration",
-          collapsed: false,
+          collapsed: true,
           autogenerate: { directory: "migration" },
         },
         {
           label: "Reference",
-          collapsed: false,
+          collapsed: true,
           autogenerate: { directory: "reference" },
         },
       ],

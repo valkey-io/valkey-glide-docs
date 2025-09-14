@@ -3,8 +3,8 @@ title: Advanced Configuration Settings
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,9 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Advanced Configuration Settings
-
-### Authentication
+# Authentication
 
 By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
 
@@ -32,7 +30,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication/#acl-permissions-requirements`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
-#### Example: Connecting with Username and Password to a Cluster
+## Example: Connecting with Username and Password to a Cluster
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -55,7 +53,7 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-#### Example: Connecting with Username and Password to a Standalone server
+### Example: Connecting with Username and Password to a Standalone server
 
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";
@@ -77,13 +75,13 @@ const client = await GlideClient.createClient({
 });
 ```
 
-#### Example: Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+### Example: Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/using-iam-authentication-with-glide-for-elasticache-and-memorydb`}>IAM Authentication with GLIDE</a> section for a detailed explanation about using IAM authentication with GLIDE.
 
 The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
 
-**Token generation-**
+#### Token generation
 
 ```typescript
 import { SignatureV4 } from "@smithy/signature-v4";
@@ -135,7 +133,7 @@ class ElastiCacheIAMProvider {
 }
 ```
 
-**Usage Example: **
+#### Usage Example
 
 ```typescript
 import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials, AdvancedGlideClusterClientConfiguration } from "@valkey/valkey-glide";
@@ -183,13 +181,13 @@ async function main() {
 }
 ```
 
-### TLS
+## TLS
 
 Valkey GLIDE supports secure TLS connections to a data store.
 
 It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
 
-#### Example: Connecting with TLS Mode Enabled to a Cluster
+### Example: Connecting with TLS Mode Enabled to a Cluster
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -207,7 +205,7 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-#### Example: Connecting with TLS Mode Enabled to a Standalone
+### Example: Connecting with TLS Mode Enabled to a Standalone
 
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";
@@ -225,7 +223,7 @@ const client = await GlideClient.createClient({
 });
 ```
 
-### Read Strategy
+## Read Strategy
 
 By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
 
@@ -238,7 +236,7 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZAffinity`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
 |`AZAffinityReplicasAndPrimary`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
 
-#### Example: Use preferReplica Read Strategy
+### Example: Use preferReplica Read Strategy
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -259,7 +257,7 @@ await client.set("key1", "val1");
 await client.get("key1");
 ```
 
-#### Example: Use AZAffinity Read Strategy
+### Example: Use AZAffinity Read Strategy
 
 If ReadFrom strategy is AZAffinity, 'clientAz' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
 
@@ -283,7 +281,7 @@ await client.set("key1", "val1");
 await client.get("key1");
 ```
 
-#### Example: Use AZAffinityReplicasAndPrimary Read Strategy
+### Example: Use AZAffinityReplicasAndPrimary Read Strategy
 
 If ReadFrom strategy is AZAffinityReplicasAndPrimary, 'clientAz' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
 
@@ -307,7 +305,7 @@ await client.set("key1", "val1");
 await client.get("key1");
 ```
 
-### Timeouts and Reconnect Strategy
+## Timeouts and Reconnect Strategy
 
 Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the `GlideClusterClientConfiguration` and `GlideClientConfiguration` parameters.
 
@@ -316,7 +314,7 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 |requestTimeout	|This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
 |connectionBackoff	|The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures	|Exponential backoff	|
 
-#### Example: Setting Increased Request Timeout for Long-Running Commands
+### Example: Setting Increased Request Timeout for Long-Running Commands
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -334,24 +332,24 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-### Transaction
+## Transaction
 
 A transaction in Valkey Glide allows you to execute a group of commands in a single, atomic step. This ensures that all commands in the transaction are executed sequentially and without interruption. See [Valkey Transactions](https://valkey.io/topics/transactions).
 
 This is equivalent to the Valkey commands [MULTI](https://valkey.io/commands/multi/) / [EXEC](https://valkey.io/commands/exec/).
 
-#### Modes of Operation
+### Modes of Operation
 
 There are two primary modes for handling transactions in Glide:
 
 1. **Standalone Mode:** Use the `Transaction` class.
 2. **Cluster Mode:** Use the `ClusterTransaction` class.
 
-#### Reusing Transaction Objects
+### Reusing Transaction Objects
 
 Transaction objects can be reused. If you need to execute a particular group of commands multiple times, you can simply resend the same transaction object.
 
-#### Example Usage
+### Example Usage
 
 Here's a simple example demonstrating how to create and execute a transaction in standalone mode:
 
@@ -371,7 +369,7 @@ const result = await client.exec(transaction);
 console.log(result); // Output: [OK, OK, null]
 ```
 
-#### Command Chaining
+### Command Chaining
 
 Valkey Glide supports command chaining within a transaction, allowing for a more concise and readable code. Here's how you can use chaining in transactions:
 
@@ -391,7 +389,7 @@ console.log(result); // Output: [OK, 'value']
 
 **Cluster Mode Considerations:** When using `ClusterTransaction`, all keys in the transaction must be mapped to the same slot.
 
-#### Detailed Steps:
+### Detailed Steps:
 
 **Creating a Transaction:** Initialize the `Transaction` or `ClusterTransaction` object.
 
@@ -422,9 +420,9 @@ const result = await client.exec(transaction)
 console.log(result);  // Output: [OK, 'value']
 ```
 
-### Tracking resources
+## Tracking resources
 
-GLIDE 1.2 introduces a new NONE Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+GLIDE 1.2 introduces a new `NONE` Valkey API: `getStatistics` which returns an `Object` with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
 
 * `total_connections` contains the number of active connections across **all** clients
 * `total_clients` contains the number of active clients (regardless of its type)

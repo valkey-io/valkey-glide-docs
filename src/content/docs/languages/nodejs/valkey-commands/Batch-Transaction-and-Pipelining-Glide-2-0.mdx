@@ -3,8 +3,8 @@ title: "Batch: Transaction and Pipelining (Glide 2.0)"
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -15,12 +15,10 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-### Batch: Transaction and Pipelining (Glide 2.0)
-
 In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs.
 This change provides greater flexibility by supporting both **atomic batches** (Transactions) and **non-atomic batches** (Pipelining), while ensuring easy configuration and clear, detailed examples for each scenario.
 
-#### Overview
+## Introduction
 
 Glide 2.0 introduces a robust Batch API with two primary modes:
 
@@ -29,7 +27,7 @@ Glide 2.0 introduces a robust Batch API with two primary modes:
 
 Both modes leverage the same classes— `Batch` for standalone mode and `ClusterBatch` for cluster mode — distinguished by an `isAtomic` flag. Extra configuration is provided via `BatchOptions` or `ClusterBatchOptions`, allowing control over timeouts, routings, and retry strategies.
 
-#### Key Concepts
+## Key Concepts
 
 **Atomic Batch (Transaction)**
 
@@ -48,9 +46,9 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * Use Case: Bulk reads or writes where each command is independent.
 * See: [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
-#### Classes and API
+## Classes and API
 
-**`Batch`**
+### **`Batch`**
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
 
@@ -63,11 +61,13 @@ const batch = new Batch(true)
 const batch = new Batch(false)
 ```
 
-> Note: Standalone Batches are executed on primary node.
+:::note
+Standalone Batches are executed on primary node.
+:::
 
-**`ClusterBatch`**
+### **`ClusterBatch`**
 
-For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-Wrapper#multi-node-support)).
+For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi-node-support)).
 
 ```typescript
 import {ClusterBatch} from "@valkey/valkey-glide";
@@ -78,10 +78,14 @@ const batch = new ClusterBatch(true)
 const batch = new ClusterBatch(false)
 ```
 
-> **Note:** When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-Wrapper#multi-node-support).
-> If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+:::note
+When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. 
+Read more in [Multi-Node support](#multi-node-support).
 
-**Error handling - `Raise on Error`**
+If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+:::
+
+### **Error handling - `Raise on Error`**
 
 Determines how errors are surfaced when calling `exec(...)`. It is passed directly:
 
@@ -142,7 +146,7 @@ try {
 // Output: Batch execution aborted:  RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value
 ```
 
-**`BatchOptions`**
+### **`BatchOptions`**
 
 Configuration for **standalone** batches.
 
@@ -158,7 +162,7 @@ const options: BatchOptions = {
 };
 ```
 
-**`ClusterBatchOptions`**
+### **`ClusterBatchOptions`**
 
 Configuration for cluster batches.
 
@@ -185,9 +189,11 @@ const retryStrategy : ClusterBatchRetryStrategy = {
 }
 ```
 
-> **Note:** The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
+:::note
+The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
+:::
 
-**Full usage**
+### **Full usage**
 
 ```typescript
 import {ClusterBatchOptions} from "@valkey/valkey-glide";
@@ -202,7 +208,7 @@ const options: ClusterBatchOptions = {
 };
 ```
 
-#### Configuration Details
+## Configuration Details
 
 **Timeout**
 
@@ -218,7 +224,7 @@ const options: ClusterBatchOptions = {
   * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-Wrapper#multi-node-support))  is retried from the start.
+  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](#multi-node-support))  is retried from the start.
   * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
@@ -229,7 +235,7 @@ If a redirection error occurs:
 * **For Atomic Batches (Transactions):** The entire transaction will be redirected.
 * **For Non-Atomic Batches (Pipelines):** only the commands that encountered redirection errors will be redirected.
 
-#### Usage Examples
+## Usage Examples
 
 **Standalone (Atomic Batch)**
 
@@ -340,7 +346,9 @@ try {
 }
 ```
 
-> **Important:** If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
+:::caution[Important]
+If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
+:::
 
 **Cluster (Non-Atomic Batch / Pipeline)**
 
@@ -384,7 +392,7 @@ console.log("Pipeline Cluster Results:", pipelineResults);
 // Expected output: Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
 ```
 
-#### Multi-Node Support
+## Multi-Node Support
 
 While atomic batches (transactions) are restricted to a single Valkey node— all commands must map to the same hash slot in cluster mode—non-atomic batches (pipelines) can span multiple nodes. This enables operations that involve keys located in different slots or even multi-node commands.
 
@@ -397,7 +405,7 @@ When Glide processes a pipeline:
 
 **Retry Strategy in Pipelines**
 
-When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](https://github.com/valkey-io/valkey-glide/wiki/NodeJS-Wrapper#classes-and-api) for how to handle these errors programmatically).
+When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](#classes-and-api) for how to handle these errors programmatically).
 
 Glide distinguishes between different types of errors and handles them as follows:
 
@@ -440,7 +448,7 @@ This can result in an unintended reordering of commands if the first command is 
 OK
 ```
 
-#### Deprecation Notice
+## Deprecation Notice
 
 * **Deprecated Classes:** `Transaction` and `ClusterTransaction` are deprecated in Glide 2.0.
 * **Replacement:** Use `Batch` or `ClusterBatch` with `isAtomic = true` to achieve transaction-like (atomic) behavior.

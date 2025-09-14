@@ -67,7 +67,7 @@ Batch pipeline = new Batch(false);
 
 **`ClusterBatch`**
 
-For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support)).
+For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi-node-support)).
 
 ```java
 import glide.api.models.ClusterBatch;
@@ -79,7 +79,7 @@ ClusterBatch pipelineCluster = new ClusterBatch(false);
 ```
 
 <Aside>
-  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support).
+  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](#multi-node-support).
   If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 </Aside>
 
@@ -216,7 +216,7 @@ ClusterBatchOptions options = ClusterBatchOptions.builder()
   * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#multi-node-support))  is retried from the start.
+  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](#multi-node-support))  is retried from the start.
   * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
@@ -409,7 +409,7 @@ When Glide processes a pipeline:
 
 **Retry Strategy in Pipelines**
 
-When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](https://github.com/valkey-io/valkey-glide/wiki/Java-Wrapper#classes-and-api) for how to handle these errors programmatically).
+When errors occur during pipeline execution, Glide handles them efficiently and granularly — each command in the pipeline receives its own response, whether successful or not. This means pipeline execution is not all-or-nothing: some commands may succeed while others may return errors (See the ClusterBatchRetryStrategy configuration and error handling details in the [classes and API section](#classes-and-api) for how to handle these errors programmatically).
 
 Glide distinguishes between different types of errors and handles them as follows:
 
