@@ -28,7 +28,7 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZAffinity`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
 |`AzAffinityReplicaAndPrimary`	|Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
 
-#### Example:  Use PreferReplica Read Strategy
+#### Example: Use PreferReplica Read Strategy
 
 ```go
 import (
@@ -52,7 +52,7 @@ func ConnectClusterWithReadStrategyPreferReplica() {
 }
 ```
 
-#### Example:  Use AZAffinity Read Strategy
+#### Example: Use AZAffinity Read Strategy
 
 If ReadFrom strategy is AZAffinity, 'clientAZ' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
 
@@ -79,7 +79,7 @@ func ConnectClusterWithReadStrategyAZAffinity() {
 }
 ```
 
-#### Example:  Use AzAffinityReplicaAndPrimary Read Strategy
+#### Example: Use AzAffinityReplicaAndPrimary Read Strategy
 
 If ReadFrom strategy is AzAffinityReplicaAndPrimary, 'clientAZ' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
 

@@ -32,7 +32,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication/#acl-permissions-requirements`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
-#### Example:  Connecting with Username and Password to a Cluster
+#### Example: Connecting with Username and Password to a Cluster
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -55,7 +55,7 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-#### Example:  Connecting with Username and Password to a Standalone server
+#### Example: Connecting with Username and Password to a Standalone server
 
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";
@@ -77,7 +77,7 @@ const client = await GlideClient.createClient({
 });
 ```
 
-#### Example:  Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+#### Example: Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/using-iam-authentication-with-glide-for-elasticache-and-memorydb`}>IAM Authentication with GLIDE</a> section for a detailed explanation about using IAM authentication with GLIDE.
 
@@ -189,7 +189,7 @@ Valkey GLIDE supports secure TLS connections to a data store.
 
 It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
 
-#### Example:  Connecting with TLS Mode Enabled to a Cluster
+#### Example: Connecting with TLS Mode Enabled to a Cluster
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -207,7 +207,7 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-#### Example:  Connecting with TLS Mode Enabled to a Standalone
+#### Example: Connecting with TLS Mode Enabled to a Standalone
 
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";
@@ -238,7 +238,7 @@ Valkey GLIDE provides support for next read strategies, allowing you to choose t
 |`AZAffinity`	|Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.	|
 |`AZAffinityReplicasAndPrimary`	|Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed.	|
 
-#### Example:  Use preferReplica Read Strategy
+#### Example: Use preferReplica Read Strategy
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -259,7 +259,7 @@ await client.set("key1", "val1");
 await client.get("key1");
 ```
 
-#### Example:  Use AZAffinity Read Strategy
+#### Example: Use AZAffinity Read Strategy
 
 If ReadFrom strategy is AZAffinity, 'clientAz' setting is required to ensures that readonly commands are directed to replicas within the specified AZ if exits.
 
@@ -283,7 +283,7 @@ await client.set("key1", "val1");
 await client.get("key1");
 ```
 
-#### Example:  Use AZAffinityReplicasAndPrimary Read Strategy
+#### Example: Use AZAffinityReplicasAndPrimary Read Strategy
 
 If ReadFrom strategy is AZAffinityReplicasAndPrimary, 'clientAz' setting is required to ensures that readonly commands are directed to replicas or primary within the specified AZ if exits.
 
@@ -316,7 +316,7 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 |requestTimeout	|This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
 |connectionBackoff	|The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures	|Exponential backoff	|
 
-#### Example:  Setting Increased Request Timeout for Long-Running Commands
+#### Example: Setting Increased Request Timeout for Long-Running Commands
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";

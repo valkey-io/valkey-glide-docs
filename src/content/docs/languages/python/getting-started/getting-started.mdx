@@ -8,7 +8,7 @@ sidebar:
         variant: success
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -25,7 +25,9 @@ Linux:
 * Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
 * Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
 
-**Note: Currently Alpine Linux / MUSL is NOT supported.**
+:::caution
+Currently Alpine Linux / MUSL is NOT supported.
+:::
 
 macOS:
 
@@ -33,56 +35,31 @@ macOS:
 * macOS 13.7 (x86\_64/amd64)
 
 ## Python Supported Versions
-
-| Python Version |
-|----------------|
-| 3.9            |
-| 3.10           |
-| 3.11           |
-| 3.12           |
-| 3.13           |
+We currently support Python 3.9 to 3.13
 
 Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency frameworks.
 
 ## Installation and Setup
 
-### ✅ Async Client
+The Python client is available in synchronous and asynchronous version:
 
-To install the async version:
+<Tabs>
+    <TabItem label="Asynchronous">
+    ```bash
+    pip3 install valkey-glide
+    ```
+    </TabItem>
 
-```bash
-pip install valkey-glide
-```
+    <TabItem label="Synchrous">
+    ```bash
+    pip3 install valkey-glide-sync
+    ```
+    </TabItem>
+</Tabs>
 
-Verify installation:
+## Examples: Async Client
 
-```bash
-python3
->>> import glide
-```
-
-### ✅ Sync Client
-
-To install the sync version:
-
-```bash
-pip install valkey-glide-sync
-```
-
-Verify installation:
-
-```bash
-python3
->>> import glide_sync
-```
-
-***
-
-## Basic Examples
-
-### 🔁 Async Client
-
-### ✅ Async Cluster Mode
+### Async Cluster Mode
 
 ```python
 import asyncio
@@ -101,7 +78,7 @@ async def test_cluster_client():
 asyncio.run(test_cluster_client())
 ```
 
-#### ✅ Async Standalone Mode
+### Async Standalone Mode
 
 ```python
 import asyncio
@@ -123,11 +100,9 @@ async def test_standalone_client():
 asyncio.run(test_standalone_client())
 ```
 
-***
+## Examples: Sync Client
 
-### 🔂 Sync Client
-
-#### ✅ Sync Cluster Mode
+### Sync Cluster Mode
 
 ```python
 from glide_sync import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
@@ -145,7 +120,7 @@ def test_cluster_client():
 test_cluster_client()
 ```
 
-#### ✅ Sync Standalone Mode
+### Sync Standalone Mode
 
 ```python
 from glide_sync import GlideClientConfiguration, NodeAddress, GlideClient
@@ -165,8 +140,6 @@ def test_standalone_client():
 
 test_standalone_client()
 ```
-
-***
 
 For complete examples with error handling, please refer to:
 

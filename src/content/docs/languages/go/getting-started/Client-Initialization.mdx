@@ -29,7 +29,7 @@ To initialize a [`ClusterClient`](https://github.com/valkey-io/valkey-glide/blob
 
 The `NodeAddress` struct represents the host and port of a cluster node. The host can be either an IP address, a hostname, or a fully qualified domain name (FQDN).
 
-#### Example:  Connecting to a cluster
+#### Example: Connecting to a cluster
 
 ```go
 import (
@@ -65,7 +65,7 @@ The cluster's topology can change over time. New nodes can be added or removed, 
 
 Valkey GLIDE also supports Standalone deployments, where the database is hosted on a single primary node, optionally with replica nodes. To initialize a `Client` for a standalone setup, you should create a `ClientConfiguration` that includes the addresses of primary and all replica nodes.
 
-#### **Example:  Connecting to a standalone**
+#### **Example: Connecting to a standalone**
 
 ```go
 import (
