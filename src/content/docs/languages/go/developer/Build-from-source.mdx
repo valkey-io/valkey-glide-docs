@@ -2,13 +2,13 @@
 title: 'Build from source'
 description: A reference page in my new Starlight docs site.
 sidebar: 
- order: 2
- badge:
-   text: Draft
-   variant: caution
+  order: 2
+  badge:
+    text: Draft Review
+    variant: success
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -16,9 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Build from source
-
-### Prerequisites
+## Prerequisites
 
 Software Dependencies
 
@@ -35,71 +33,62 @@ Software Dependencies
 * ziglang and zigbuild (for GNU Linux only)
 * valkey (for testing)
 
-**Valkey installation**
+### Valkey Installation
 
 See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
 
-**Dependencies installation for Ubuntu**
+### Install Dependencies
+<Tabs>
+   <TabItem label="Ubuntu">
+      ```bash
+      sudo apt update -y
+      sudo apt install -y git gcc pkg-config openssl libssl-dev unzip make cmake
+      # Install Go
+      sudo snap install go --classic
+      export PATH="$PATH:$HOME/go/bin"
+      # Install rust
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      source "$HOME/.cargo/env"
+      # Check that the Rust compiler is installed
+      rustc --version
+      ```
+   </TabItem>
 
-```bash
-sudo apt update -y
-sudo apt install -y git gcc pkg-config openssl libssl-dev unzip make cmake
-# Install Go
-sudo snap install go --classic
-export PATH="$PATH:$HOME/go/bin"
-# Install rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-# Check that the Rust compiler is installed
-rustc --version
-```
+   <TabItem label="CentOS">
+      ```bash
+      sudo yum update -y
+      sudo yum install -y git gcc pkgconfig openssl openssl-devel unzip wget tar cmake
+      # Install Go
+      wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+      sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+      export PATH="$PATH:/usr/local/go/bin"
+      export PATH="$PATH:$HOME/go/bin"
+      # Install rust
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      source "$HOME/.cargo/env"
+      # Check that the Rust compiler is installed
+      rustc --version
+      ```
+   </TabItem>
 
-> \[!NOTE]
-> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+   <TabItem label="MacOS">
+      ```bash
+      brew update
+      brew install go make git gcc pkgconfig openssl cmake
+      export PATH="$PATH:$HOME/go/bin"
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      source "$HOME/.cargo/env"
+      # Check that the Rust compiler is installed
+      rustc --version
+      ```
+   </TabItem>
+</Tabs>
 
-Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+:::note
+You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+:::
 
-**Dependencies installation for CentOS**
-
-```bash
-sudo yum update -y
-sudo yum install -y git gcc pkgconfig openssl openssl-devel unzip wget tar cmake
-# Install Go
-wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
-export PATH="$PATH:/usr/local/go/bin"
-export PATH="$PATH:$HOME/go/bin"
-# Install rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-# Check that the Rust compiler is installed
-rustc --version
-```
-
-> \[!NOTE]
-> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
-
-Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
-
-**Dependencies installation for MacOS**
-
-```bash
-brew update
-brew install go make git gcc pkgconfig openssl cmake
-export PATH="$PATH:$HOME/go/bin"
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-# Check that the Rust compiler is installed
-rustc --version
-```
-
-> \[!NOTE]
-> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
-
-Continue with **Install protobuf compiler** below.
-It is not necessary to **Install `ziglang` and `zigbuild`** for MacOS.
-
-**Install protobuf compiler**
+### Install Protobuf Compiler
 
 Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/v3.20.3).
 Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
@@ -113,21 +102,21 @@ export PATH="$PATH:$HOME/.local/bin"
 protoc --version
 ```
 
-> \[!NOTE]
-> You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
 
-**Install `ziglang` and `zigbuild`**
+### Install `ziglang` and `zigbuild` (Ubuntu and CentOS only)
 
 ```bash
 pip3 install ziglang
 cargo install --locked cargo-zigbuild
 ```
 
-### Building and installation steps
+
+## Building and installation steps
 
 Before starting this step, make sure you've installed all software requirements.
 
-1. Clone the repository:
+<Steps>
+1. Clone the repository.
 
    ```bash
    VERSION=2.0.0 # You can modify this to other released version or set it to "main" to get the unstable branch
@@ -135,29 +124,32 @@ Before starting this step, make sure you've installed all software requirements.
    cd valkey-glide
    ```
 
-2. Install build dependencies:
+2. Install build dependencies.
 
    ```bash
    cd go
    make install-build-tools
    ```
 
-3. Build the Go wrapper:
+3. Build the Go wrapper.
 
    ```bash
    make build
    ```
 
-4. Run tests:
-   1. Ensure that you have installed valkey-server and valkey-cli on your host. You can find the Valkey installation guide at the following link: [Valkey Installation Guide](https://valkey.io/topics/installation/).
-   2. Execute the following command from the go folder:
+4. Run tests.
+
+   :::note
+   Ensure that you have installed valkey-server and valkey-cli on your host. You can find the Valkey installation guide at the following link: [Valkey Installation Guide](https://valkey.io/topics/installation/).
+   :::
 
       ```bash
       go test -race ./...
       ```
 
-5. Install Go development tools with:
+5. Install Go development tools.
 
    ```bash
    make install-dev-tools
    ```
+</Steps>

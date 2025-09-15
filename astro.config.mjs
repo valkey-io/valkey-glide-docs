@@ -233,6 +233,43 @@ export default defineConfig({
                   autogenerate: { directory: "languages/nodejs/reference" },
                 },
               ],
+            },
+            {
+              label: "Go",
+              collapsed: true,
+              items: [
+                "languages/go",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/go/getting-started",
+                  },
+                },
+                {
+                  label: "Concepts",
+                  autogenerate: { directory: "languages/go/concepts" },
+                },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/go/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/go/valkey-commands" },
+                },
+                {
+                  label: "Migration",
+                  autogenerate: { directory: "languages/go/migration" },
+                },
+                {
+                  label: "Developer",
+                  autogenerate: { directory: "languages/go/developer" },
+                },
+                {
+                  label: "Reference",
+                  autogenerate: { directory: "languages/go/reference" },
+                },
+              ],
             }
           ],
         },

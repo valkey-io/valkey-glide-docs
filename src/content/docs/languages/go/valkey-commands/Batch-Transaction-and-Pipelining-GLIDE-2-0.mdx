@@ -3,8 +3,8 @@ title: "Batch: Transaction and Pipelining (GLIDE 2.0)"
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -25,7 +25,7 @@ GLIDE 2.0 introduces a robust Batch API with two primary modes:
 
 Both modes leverage the same classes — `StandaloneBatch` for standalone mode and `ClusterBatch` for cluster mode — distinguished by an `isAtomic` flag. Extra configuration is provided via `StandaloneBatchOptions` or `ClusterBatchOptions`, allowing control over timeouts, routings, and retry strategies.
 
-### Key Concepts
+## Key Concepts
 
 **Atomic Batch (Transaction)**
 
@@ -44,9 +44,9 @@ Both modes leverage the same classes — `StandaloneBatch` for standalone mode a
 * **Use Case:** Bulk reads or writes where each command is independent.
 * **See:** [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
-### Classes and API
+## Classes and API
 
-**`StandaloneBatch`**
+### **`StandaloneBatch`**
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
 
@@ -61,9 +61,9 @@ pipeline := pipeline.NewStandaloneBatch(false)
 
 <Aside> Standalone Batches are executed on primary node.</Aside>
 
-**`ClusterBatch`**
+### **`ClusterBatch`**
 
-For **cluster** (cluster mode enabled) clients (Mirrors `StandaloneBatch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support)).
+For **cluster** (cluster mode enabled) clients (Mirrors `StandaloneBatch` but routes commands based on slot ownership, splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi-node-support)).
 
 ```go
 import "github.com/valkey-io/valkey-glide/go/v2/pipeline";
@@ -75,11 +75,11 @@ pipeline := pipeline.NewClusterBatch(false)
 ```
 
 <Aside>
-  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support).
+  When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](#multi-node-support).
   If the client is configured to read from replicas (`PreferReplica`, `AzAffinity`, `AzAffinityReplicaAndPrimary`) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 </Aside>
 
-**Error handling - `Return an Error`**
+### **Error handling - `Return an Error`**
 
 Determines how errors are surfaced when calling `Exec(...)` and `ExecWithOptions(...)`. It is passed directly:
 
@@ -127,7 +127,7 @@ fmt.Printf("Batch execution aborted: %+v\n", res)
 // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
 ```
 
-**`BatchOptions`**
+### **`BatchOptions`**
 
 Configuration for **standalone** batches.
 
@@ -142,7 +142,7 @@ options := pipeline.NewStandaloneBatchOptions().
 	WithTimeout(2 * time.Second)  // 2-second timeout
 ```
 
-**`ClusterBatchOptions`**
+### **`ClusterBatchOptions`**
 
 Configuration for cluster batches.
 
@@ -152,7 +152,7 @@ Configuration for cluster batches.
 | `retryStrategy` | `ClusterBatchRetryStrategy` | nil (defaults to no retries)  | Configures retry settings for server and connection errors. Not supported if`isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
 |     `route`     |  `config.SingleNodeRoute`   |              nil              |                                                       Configures single-node routing for the batch request.                                                       |
 
-**`ClusterBatchRetryStrategy`**
+### **`ClusterBatchRetryStrategy`**
 
 Defines retry behavior (only for **non-atomic** cluster batches).
 |         Option         |  Type  | Default |                                                               Description                                                               |
@@ -172,7 +172,7 @@ retryStrategy := pipeline.NewClusterBatchRetryStrategy().
   The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches, If provided for an atomic cluster batch (a cluster transaction), an error will be returned.
 </Aside>
 
-**Full usage**
+### **Full usage**
 
 ```go
 import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
@@ -186,7 +186,7 @@ options := pipeline.NewStandaloneBatchOptions().
 	WithRoute(config.RandomRoute)
 ```
 
-### Configuration Details
+## Configuration Details
 
 **Timeout**
 
@@ -202,7 +202,7 @@ options := pipeline.NewStandaloneBatchOptions().
   * ⚠️ **Caveat**: Retried commands may arrive later than subsequent commands, leading to out-of-order execution if commands target the same slot.
 
 * **Retry on Connection Errors**
-  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](https://github.com/valkey-io/valkey-glide/wiki/Golang-Wrapper#multi-node-support))  is retried from the start.
+  * If a connection error occurs, the entire batch (or sub-pipeline, [Read more in Multi-Node support](#multi-node-support))  is retried from the start.
   * ⚠️ **Caveat**: If the server received and processed some or all commands before the connection failure, retrying the batch may lead to duplicate executions.
 
 **Route (Cluster Only)**
@@ -213,7 +213,7 @@ If a redirection error occurs:
 * **For Atomic Batches (Transactions):** The entire transaction will be redirected.
 * **For Non-Atomic Batches (Pipelines):** only the commands that encountered redirection errors will be redirected.
 
-### Usage Examples
+## Usage Examples
 
 **Standalone (Atomic Batch)**
 
@@ -357,7 +357,7 @@ fmt.Printf("Pipeline Cluster Results: %+v\n", res)
 // Pipeline Cluster Results: [OK 125 125 1 2 [user2 user1]]
 ```
 
-### Multi-Node Support
+## Multi-Node Support
 
 While atomic batches (transactions) are restricted to a single Valkey node — all commands must map to the same hash slot in cluster mode—non-atomic batches (pipelines) can span multiple nodes. This enables operations that involve keys located in different slots or even multi-node commands.
 

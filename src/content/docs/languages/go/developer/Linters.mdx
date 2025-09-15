@@ -2,10 +2,10 @@
 title: 'Linters'
 description: A reference page in my new Starlight docs site.
 sidebar: 
- order: 5
- badge:
-   text: Draft
-   variant: caution
+  order: 5
+  badge:
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,11 +16,9 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Linters
-
 Development on the Go wrapper may involve changes in either the Go or Rust code. Each language has distinct linter tests that must be passed before committing changes.
 
-### Language-specific Linters
+## Language-specific Linters
 
 **Go:**
 
@@ -29,7 +27,7 @@ Development on the Go wrapper may involve changes in either the Go or Rust code.
 * staticcheck
 * golines
 
-### Running the linters
+## Running the linters
 
 Run from the main `/go` folder
 
@@ -39,7 +37,7 @@ make install-dev-tools
 make lint
 ```
 
-### Fixing lint formatting errors
+## Fixing lint formatting errors
 
 The following command can be used to fix Go formatting errors reported by gofumpt or golines. Note that golines does not always format comments well if they surpass the max line length (127 characters).
 
