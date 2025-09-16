@@ -148,7 +148,14 @@ export default defineConfig({
                 },
                 {
                   label: "Migration",
-                  autogenerate: { directory: "languages/python/migration" },
+                  items: [
+                    "languages/python/migration",
+                    {
+                      label: "From redis-py",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/python/migration/redis-py"}
+                    },
+                  ]
                 },
                 {
                   label: "Developer",
@@ -185,7 +192,24 @@ export default defineConfig({
                 },
                 {
                   label: "Migration",
-                  autogenerate: { directory: "languages/java/migration" },
+                  items: [
+                    "languages/java/migration",
+                    {
+                      label: "From Jedis",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/java/migration/jedis"}
+                    },
+                    {
+                      label: "From Lettuce",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/java/migration/lettuce"}
+                    },
+                    {
+                      label: "From Redisson",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/java/migration/redisson"}
+                    }
+                  ]
                 },
                 {
                   label: "Developer",
@@ -222,7 +246,14 @@ export default defineConfig({
                 },
                 {
                   label: "Migration",
-                  autogenerate: { directory: "languages/nodejs/migration" },
+                  items: [
+                    "languages/nodejs/migration",
+                    {
+                      label: "From ioredis",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/nodejs/migration/ioredis"}
+                    },
+                  ]
                 },
                 {
                   label: "Developer",
@@ -259,7 +290,14 @@ export default defineConfig({
                 },
                 {
                   label: "Migration",
-                  autogenerate: { directory: "languages/go/migration" },
+                  items: [
+                    "languages/go/migration",
+                    {
+                      label: "From go-redis",
+                      collapsed: true,
+                      autogenerate: {directory: "languages/go/migration/go-redis"}
+                    },
+                  ]
                 },
                 {
                   label: "Developer",
@@ -276,7 +314,9 @@ export default defineConfig({
         {
           label: "Migration",
           collapsed: true,
-          autogenerate: { directory: "migration" },
+          items: [
+           "migration"
+          ]
         },
         {
           label: "Reference",

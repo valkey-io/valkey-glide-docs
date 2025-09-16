@@ -1,0 +1,235 @@
+---
+title: Connection Setup
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 3
+  badge:
+    text: Draft Review
+    variant: success
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+## Constructor Differences
+
+* **Jedis** offers multiple constructors for different connection configurations
+* **Glide** uses a **single configuration object** that comes pre-configured with best practices
+
+Glide typically requires minimal configuration changes for:
+
+* Timeout settings
+* TLS configuration
+* Read from replica settings
+* User authentication (username & password)
+
+For advanced configurations, refer to the <a href={`${import.meta.env.BASE_URL}/languages/java`}>Jave Glide Guides</a>.
+
+## Standalone Mode
+<Tabs>
+<TabItem label="Jedis">
+
+  ```java
+  // Simple connection
+  Jedis jedis = new Jedis("localhost", 6379);
+
+  // With options
+  Jedis jedisWithOptions = new Jedis("localhost", 6379, 2000);
+  jedisWithOptions.auth("password");
+  jedisWithOptions.select(0);
+  ```
+</TabItem>
+<TabItem label="Glide">
+
+  ```java
+  import glide.api.GlideClient;
+  import glide.api.models.configuration.GlideClientConfiguration;
+  import glide.api.models.configuration.AdvancedGlideClientConfiguration;
+  import glide.api.models.configuration.NodeAddress;
+  import glide.api.models.configuration.ServerCredentials;
+  import glide.api.models.configuration.ReadFrom;
+  import glide.api.models.configuration.BackoffStrategy;
+  import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+  // Simple connection
+  GlideClientConfiguration config = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .build();
+
+  GlideClient client = GlideClient.createClient(config).get();
+
+  // With options
+  GlideClientConfiguration configWithOptions = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .useTLS(true)
+      .credentials(ServerCredentials.builder()
+          .username("user")
+          .password("password")
+          .build())
+      .readFrom(ReadFrom.AZ_AFFINITY) 
+      .requestTimeout(2000)
+      .reconnectStrategy(BackoffStrategy.builder()
+          .numOfRetries(5)
+          .factor(2)
+          .exponentBase(2)
+          .jitterPercent(10)
+          .build())
+      .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+          .connectionTimeout(5000)
+          .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+              .useInsecureTLS(false)
+              .build())
+          .build())
+      .build();
+
+  GlideClient clientWithOptions = GlideClient.createClient(configWithOptions).get();
+  ```
+</TabItem>
+
+</Tabs>
+
+## Cluster Mode
+<Tabs>
+<TabItem label="Jedis">
+
+  ```java
+  // Simple cluster connection
+  Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+  jedisClusterNodes.add(new HostAndPort("127.0.0.1", 7000));
+  jedisClusterNodes.add(new HostAndPort("127.0.0.1", 7001));
+  JedisCluster cluster = new JedisCluster(jedisClusterNodes);
+
+  // With options
+  JedisPoolConfig poolConfig = new JedisPoolConfig();
+  poolConfig.setMaxTotal(128);
+  poolConfig.setMaxIdle(128);
+  poolConfig.setMinIdle(16);
+  poolConfig.setTestOnBorrow(true);
+  poolConfig.setTestOnReturn(true);
+  poolConfig.setTestWhileIdle(true);
+
+  JedisCluster clusterWithOptions = new JedisCluster(jedisClusterNodes, 2000, 2000, 5, "password", poolConfig);
+  ```
+</TabItem>
+
+
+<TabItem label="Glide">
+
+  ```java
+  import glide.api.GlideClusterClient;
+  import glide.api.models.configuration.GlideClusterClientConfiguration;
+  import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+  import glide.api.models.configuration.NodeAddress;
+  import glide.api.models.configuration.ServerCredentials;
+  import glide.api.models.configuration.ReadFrom;
+  import glide.api.models.configuration.BackoffStrategy;
+  import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+  // Simple cluster connection
+  GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7000)
+          .build())
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7001)
+          .build())
+      .build();
+
+  GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
+
+  // With options
+  GlideClusterClientConfiguration configWithOptions = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7000)
+          .build())
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7001)
+          .build())
+      .useTLS(true)
+      .credentials(ServerCredentials.builder()
+          .username("user")
+          .password("password")
+          .build())
+      .readFrom(ReadFrom.AZ_AFFINITY) 
+      .requestTimeout(2000)
+      .reconnectStrategy(BackoffStrategy.builder()
+          .numOfRetries(5)
+          .factor(2)
+          .exponentBase(2)
+          .jitterPercent(10)
+          .build())
+      .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+          .connectionTimeout(5000)
+          .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+              .useInsecureTLS(false)
+              .build())
+          .build())
+      .build();
+
+  GlideClusterClient clusterClientWithOptions = GlideClusterClient.createClient(configWithOptions).get();
+  ```
+</TabItem>
+
+</Tabs>
+
+## Constructor Parameters Comparison
+
+  The table below compares **Jedis constructors** with **Glide configuration parameters**:
+
+  | **Jedis Parameter** | **Equivalent Glide Configuration** |
+  |--------------------------|--------------------------------------|
+  | `host: String` | `address(NodeAddress.builder().host(host).build())` |
+  | `port: int` | `address(NodeAddress.builder().port(port).build())` |
+  | `timeout: int` | `requestTimeout(timeout)` |
+  | `password: String` | `credentials(ServerCredentials.builder().password(password).build())` |
+  | `user: String` | `credentials(ServerCredentials.builder().username(user).build())` |
+  | `db: int` | Use `client.select(db)` after connection |
+  | `ssl: boolean` | `useTLS(true)` |
+  | `maxAttempts: int` | `connectionBackoff(ConnectionBackoffStrategy.builder().numberOfRetries(maxAttempts).build())` |
+  | `clientName: String` | `clientName(String)` |
+  | `readFrom: ReadFrom` | `readFrom(ReadFrom.REPLICA)` / `readFrom(ReadFrom.PREFER_REPLICA)` / `readFrom(ReadFrom.AZ_AFFINITY)` / `readFrom(ReadFrom.AZ_AFFINITY_REPLICAS_AND_PRIMARY)` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+  | `lazyConnect: boolean` | Not supported yet |
+
+ ### Advanced configuration
+
+  **Standalone Mode** uses `GlideClientConfiguration` and **Cluster Mode** uses `GlideClusterClientConfiguration`, but the usage is similar:
+
+  ```java
+  // Standalone mode
+  GlideClientConfiguration config = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .requestTimeout(500)
+      .build();
+
+  GlideClient client = GlideClient.createClient(config).get();
+
+  // Cluster mode
+  GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(7000)
+          .build())
+      .requestTimeout(500)
+      .build();
+
+  GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+  ```
+

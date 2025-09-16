@@ -31,7 +31,7 @@ Note: Each section will contain language specific example. For convinience, user
 ```xml
 <Tabs groupId="languages">
   <TabItem value="python" label="Python">
-    pip install valkey-glide
+    pip3 install valkey-glide
   </TabItem>
   <TabItem value="java" label="Java">
     <!-- Maven/Gradle examples -->

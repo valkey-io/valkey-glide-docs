@@ -1,0 +1,107 @@
+---
+title: Command Comparison Chart
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 5
+  badge:
+    text: Draft Review
+    variant: success
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+
+Below is a comprehensive chart comparing common Redis commands between Lettuce and Valkey Glide:
+
+## Connection
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| Connect | `RedisClient.create("redis://host:port")` | `GlideClient.createClient(config)` |
+| Cluster | `RedisClusterClient.create(redisUri)` | `GlideClusterClient.createClient(config)` |
+| Auth | `syncCommands.auth("pass")` | `client.updateConnectionPassword("pass", true)` |
+| Select DB | `syncCommands.select(1)` | `client.select(1)` |
+## Strings
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| SET | `syncCommands.set("key", "val")` | `client.set("key", "val")` |
+| GET | `syncCommands.get("key")` | `client.get("key").get()` |
+| SETEX | `syncCommands.setex("key", 5, "val")` | `client.set("key", "value", SetOptions.builder().expiry(Seconds(5L)).build()).get()` |
+| SETNX | `syncCommands.setnx("key", "val")` | `client.set("key", "val", SetOptions.builder().conditionalSet(ConditionalChange.ONLY_IF_DOES_NOT_EXIST).build()).get()` |
+| MSET | `syncCommands.mset(map)` | `client.mset(map)` |
+| MGET | `syncCommands.mget("key1", "key2")` | `client.mget(new String[]{"key1", "key2"})` |
+| INCR | `syncCommands.incr("counter")` | `client.incr("counter")` |
+| DECR | `syncCommands.decr("counter")` | `client.decr("counter")` |
+| INCRBY | `syncCommands.incrby("counter", 5)` | `client.incrBy("counter", 5)` |
+| DECRBY | `syncCommands.decrby("counter", 5)` | `client.decrBy("counter", 5)` |
+| APPEND | `syncCommands.append("key", "val")` | `client.append("key", "val")` |
+| GETRANGE | `syncCommands.getrange("key", 0, 3)` | `client.getRange("key", 0, 3)` |
+| SETRANGE | `syncCommands.setrange("key", 0, "val")` | `client.setRange("key", 0, "val")` |
+## Keys
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| DEL | `syncCommands.del("key1", "key2")` | `client.del(new String[]{"key1", "key2"})` |
+| EXISTS | `syncCommands.exists("key1", "key2")` | `client.exists(new String[]{"key1", "key2"})` |
+| EXPIRE | `syncCommands.expire("key", 10)` | `client.expire("key", 10)` |
+| TTL | `syncCommands.ttl("key")` | `client.ttl("key")` |
+| KEYS | `syncCommands.keys("pattern")` | `client.keys("pattern")` |
+| SCAN | `ScanIterator.scan(syncCommands, cursor)` | `client.scan("0")` |
+| RENAME | `syncCommands.rename("old", "new")` | `client.rename("old", "new")` |
+| RENAMENX | `syncCommands.renamenx("old", "new")` | `client.renameNx("old", "new")` |
+## Hashes
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| HSET | `syncCommands.hset("hash", map)` | `client.hset("hash", map)` |
+| HGET | `syncCommands.hget("hash", "field")` | `client.hget("hash", "field")` |
+| HMSET | `syncCommands.hmset("hash", map)` | `client.hset("hash", map)` |
+| HMGET | `syncCommands.hmget("hash", "f1", "f2")` | `client.hmget("hash", new String[]{"f1", "f2"})` |
+| HGETALL | `syncCommands.hgetall("hash")` | `client.hgetall("hash")` |
+| HDEL | `syncCommands.hdel("hash", "f1", "f2")` | `client.hdel("hash", new String[]{"f1", "f2"})` |
+| HEXISTS | `syncCommands.hexists("hash", "field")` | `client.hexists("hash", "field")` |
+## Lists
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| LPUSH | `syncCommands.lpush("list", "a", "b")` | `client.lpush("list", new String[]{"a", "b"})` |
+| RPUSH | `syncCommands.rpush("list", "a", "b")` | `client.rpush("list", new String[]{"a", "b"})` |
+| LPOP | `syncCommands.lpop("list")` | `client.lpop("list")` |
+| RPOP | `syncCommands.rpop("list")` | `client.rpop("list")` |
+| LRANGE | `syncCommands.lrange("list", 0, -1)` | `client.lrange("list", 0, -1)` |
+## Sets
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| SADD | `syncCommands.sadd("set", "a", "b")` | `client.sadd("set", new String[]{"a", "b"})` |
+| SMEMBERS | `syncCommands.smembers("set")` | `client.smembers("set")` |
+| SREM | `syncCommands.srem("set", "a", "b")` | `client.srem("set", new String[]{"a", "b"})` |
+| SISMEMBER | `syncCommands.sismember("set", "a")` | `client.sismember("set", "a")` |
+## Sorted Sets
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| ZADD | `syncCommands.zadd("zset", scoreMembers)` | `client.zadd("zset", scoreMembers)` |
+| ZRANGE | `syncCommands.zrange("zset", 0, -1)` | `client.zrange("zset", 0, -1)` |
+| ZRANGE with scores | `syncCommands.zrangeWithScores("zset", 0, -1)` | `client.zrange("zset", 0, -1, "WITHSCORES")` |
+| ZREM | `syncCommands.zrem("zset", "a", "b")` | `client.zrem("zset", new String[]{"a", "b"})` |
+| ZSCORE | `syncCommands.zscore("zset", "a")` | `client.zscore("zset", "a")` |
+| ZRANK | `syncCommands.zrank("zset", "a")` | `client.zrank("zset", "a")` |
+| ZREVRANK | `syncCommands.zrevrank("zset", "a")` | `client.zrevrank("zset", "a")` |
+## Transactions
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| MULTI/EXEC | `syncCommands.multi(); syncCommands.set("k", "v"); syncCommands.exec();` | `client.exec(new Transaction().set("k", "v"))` |
+## Lua Scripts
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| EVAL | `syncCommands.eval(script, outputType, keys, args)` | `client.invokeScript(new Script(script), options)` |
+| EVALSHA | `syncCommands.evalsha(sha, outputType, keys, args)` | `client.invokeScript(new Script(script), options)` |
+## Custom Commands
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| Raw Command | `syncCommands.dispatch(commandType, output, args)` | `client.customCommand(new String[]{"CMD", "arg1", "arg2"})` |
+## Connection Management
+| Command | Lettuce | Valkey Glide |
+|---------|---------|--------------|
+| Close | `connection.close(); client.shutdown();` | `client.close()` |

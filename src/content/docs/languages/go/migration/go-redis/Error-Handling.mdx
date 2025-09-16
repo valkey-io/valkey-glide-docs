@@ -1,0 +1,48 @@
+---
+title: Error Handling
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft Review
+    variant: success
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+## Error Handling
+
+Error handling differs between the two libraries:
+
+**go-redis**
+
+```go
+val, err := rdb.Get(ctx, "nonexistent").Result()
+if err == redis.Nil {
+    fmt.Println("Key does not exist")
+} else if err != nil {
+    panic(err)
+} else {
+    fmt.Println("Value:", val)
+}
+```
+
+**Glide**
+
+```go
+val, err := client.Get(ctx, "nonexistent")
+if err != nil {
+    panic(err)
+}
+
+if val.IsNil() {
+    fmt.Println("Key does not exist")
+} else {
+    fmt.Println("Value:", val.Value())
+}
+```

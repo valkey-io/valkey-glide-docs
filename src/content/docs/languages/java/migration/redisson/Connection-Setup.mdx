@@ -1,0 +1,240 @@
+---
+title: Connection Setup
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 3
+  badge:
+    text: Draft Review
+    variant: success
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+### Constructor Differences
+
+* **Redisson** uses a configuration-based approach with `Config` objects and factory methods
+* **Glide** uses a **single configuration object** that comes pre-configured with best practices
+
+Glide typically requires minimal configuration changes for:
+
+* Timeout settings
+* TLS configuration
+* Read from replica settings
+* User authentication (username & password)
+
+For advanced configurations, refer to the <a href={`${import.meta.env.BASE_URL}/languages/java`}>Jave Glide Guides</a>.
+
+#### Standalone Mode
+
+  **Redisson**
+
+  ```java
+  import org.redisson.Redisson;
+  import org.redisson.api.RedissonClient;
+  import org.redisson.config.Config;
+
+  // Simple connection
+  Config config = new Config();
+  config.useSingleServer()
+      .setAddress("redis://localhost:6379");
+  RedissonClient redisson = Redisson.create(config);
+
+  // With options
+  Config configWithOptions = new Config();
+  configWithOptions.useSingleServer()
+      .setAddress("redis://localhost:6379")
+      .setPassword("password")
+      .setDatabase(0)
+      .setTimeout(2000);
+  RedissonClient redissonWithOptions = Redisson.create(configWithOptions);
+  ```
+
+  **Glide**
+
+  ```java
+  import glide.api.GlideClient;
+  import glide.api.models.configuration.GlideClientConfiguration;
+  import glide.api.models.configuration.AdvancedGlideClientConfiguration;
+  import glide.api.models.configuration.NodeAddress;
+  import glide.api.models.configuration.ServerCredentials;
+  import glide.api.models.configuration.ReadFrom;
+  import glide.api.models.configuration.BackoffStrategy;
+  import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+  // Simple connection
+  GlideClientConfiguration config = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .build();
+
+  GlideClient client = GlideClient.createClient(config).get();
+
+  // With basic options
+  GlideClientConfiguration configWithOptions = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .useTLS(true)
+      .credentials(ServerCredentials.builder()
+          .username("user")
+          .password("password")
+          .build())
+      .readFrom(ReadFrom.AZ_AFFINITY) 
+      .requestTimeout(2000)
+      .reconnectStrategy(BackoffStrategy.builder()
+          .numOfRetries(5)
+          .factor(2)
+          .exponentBase(2)
+          .jitterPercent(10)
+          .build())
+      .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+          .connectionTimeout(5000)
+          .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+              .useInsecureTLS(false)
+              .build())
+          .build())
+      .build();
+
+  GlideClient clientWithOptions = GlideClient.createClient(configWithOptions).get();
+  ```
+
+
+#### Cluster Mode
+
+  **Redisson**
+
+  ```java
+  import org.redisson.config.Config;
+
+  // Simple cluster connection
+  Config config = new Config();
+  config.useClusterServers()
+      .addNodeAddress("redis://127.0.0.1:7000")
+      .addNodeAddress("redis://127.0.0.1:7001");
+  RedissonClient cluster = Redisson.create(config);
+
+  // With options
+  Config configWithOptions = new Config();
+  configWithOptions.useClusterServers()
+      .addNodeAddress("redis://127.0.0.1:7000")
+      .addNodeAddress("redis://127.0.0.1:7001")
+      .setPassword("password")
+      .setTimeout(2000)
+      .setRetryAttempts(5);
+  RedissonClient clusterWithOptions = Redisson.create(configWithOptions);
+  ```
+
+  **Glide**
+
+  ```java
+  import glide.api.GlideClusterClient;
+  import glide.api.models.configuration.GlideClusterClientConfiguration;
+  import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+  import glide.api.models.configuration.NodeAddress;
+  import glide.api.models.configuration.ServerCredentials;
+  import glide.api.models.configuration.ReadFrom;
+  import glide.api.models.configuration.BackoffStrategy;
+  import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+  // Simple cluster connection
+  GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7000)
+          .build())
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7001)
+          .build())
+      .build();
+
+  GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
+
+  // With options
+  GlideClusterClientConfiguration configWithOptions = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7000)
+          .build())
+      .address(NodeAddress.builder()
+          .host("127.0.0.1")
+          .port(7001)
+          .build())
+      .useTLS(true)
+      .credentials(ServerCredentials.builder()
+          .username("user")
+          .password("password")
+          .build())
+      .readFrom(ReadFrom.AZ_AFFINITY) 
+      .requestTimeout(2000)
+      .reconnectStrategy(BackoffStrategy.builder()
+          .numOfRetries(5)
+          .factor(2)
+          .exponentBase(2)
+          .jitterPercent(10)
+          .build())
+      .advancedConfiguration(AdvancedGlideClientConfiguration.builder()
+          .connectionTimeout(5000)
+          .tlsAdvancedConfiguration(TlsAdvancedConfiguration.builder()
+              .useInsecureTLS(false)
+              .build())
+          .build())
+      .build();
+
+  GlideClusterClient clusterClientWithOptions = GlideClusterClient.createClient(configWithOptions).get();
+  ```
+
+
+#### Constructor Parameters Comparison
+
+  The table below compares **Redisson configuration** with **Glide configuration parameters**:
+
+  | **Redisson Parameter** | **Equivalent Glide Configuration** |
+  |--------------------------|--------------------------------------|
+  | `setAddress("redis://host:port")` | `address(NodeAddress.builder().host(host).port(port).build())` |
+  | `setTimeout(timeout)` | `requestTimeout(timeout)` |
+  | `setPassword("password")` | `credentials(ServerCredentials.builder().password(password).build())` |
+  | `setUsername("user")` | `credentials(ServerCredentials.builder().username(user).build())` |
+  | `setDatabase(db)` | - Use `client.select(db)` after connection |
+  | `setUseSsl(true)` | `useTLS(true)` |
+  | `setRetryAttempts(attempts)` | `connectionBackoff(ConnectionBackoffStrategy.builder().numberOfRetries(attempts).build())` |
+  | `setReadMode(ReadMode.REPLICA)` | `readFrom(ReadFrom.REPLICA)` / `readFrom(ReadFrom.PREFER_REPLICA)` / `readFrom(ReadFrom.AZ_AFFINITY)` / `readFrom(ReadFrom.AZ_AFFINITY_REPLICAS_AND_PRIMARY)` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+  | `setLazyInitialization(true)` | Not supported yet |
+
+  **Advanced configuration**
+
+  **Standalone Mode** uses `GlideClientConfiguration` and **Cluster Mode** uses `GlideClusterClientConfiguration`, but the usage is similar:
+
+  ```java
+  // Standalone mode
+  GlideClientConfiguration config = GlideClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(6379)
+          .build())
+      .requestTimeout(500)
+      .build();
+
+  GlideClient client = GlideClient.createClient(config).get();
+
+  // Cluster mode
+  GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("localhost")
+          .port(7000)
+          .build())
+      .requestTimeout(500)
+      .build();
+
+  GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+  ```
+

@@ -7,7 +7,7 @@ sidebar:
     variant: note
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -15,4 +15,13 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-This is a placeholder for `index.md`.
+For general guidance on migrating to Valkey GLIDE clients, take a look at
+<LinkCard title="Migration Strategy" description="How to plan for a successful migration to a Valkey GLIDE client." href={``}/>
+<LinkCard title="Testing Approach" description="Learn more about how to test after migration changes." href={``}/>
+
+For specific instructions, visit the migration section specific to each Glide client.
+<LinkCard title="Migrating to Python GLIDE" description="Instructions on migrating to the Python GLIDE client." href={``}/>
+<LinkCard title="Migrating to Java GLIDE" description="Instructions on migrating to the Java GLIDE client." href={``}/>
+<LinkCard title="Migrating to Node.js GLIDE " description="Instructions on migrating to the Node.js GLIDE client." href={``}/>
+<LinkCard title="Migrating to Golang GLIDE" description="Instructions on migrating to the Golang GLIDE client." href={``}/>
+
