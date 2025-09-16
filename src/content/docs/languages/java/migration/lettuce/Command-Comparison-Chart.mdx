@@ -17,17 +17,17 @@ import { Aside } from '@astrojs/starlight/components';
 </Aside>
 
 
-Below is a comprehensive chart comparing common Redis commands between Lettuce and Valkey Glide:
+Below is a comprehensive chart comparing common Redis commands between Lettuce and Valkey GLIDE:
 
 ## Connection
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | Connect | `RedisClient.create("redis://host:port")` | `GlideClient.createClient(config)` |
 | Cluster | `RedisClusterClient.create(redisUri)` | `GlideClusterClient.createClient(config)` |
 | Auth | `syncCommands.auth("pass")` | `client.updateConnectionPassword("pass", true)` |
 | Select DB | `syncCommands.select(1)` | `client.select(1)` |
 ## Strings
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | SET | `syncCommands.set("key", "val")` | `client.set("key", "val")` |
 | GET | `syncCommands.get("key")` | `client.get("key").get()` |
@@ -43,7 +43,7 @@ Below is a comprehensive chart comparing common Redis commands between Lettuce a
 | GETRANGE | `syncCommands.getrange("key", 0, 3)` | `client.getRange("key", 0, 3)` |
 | SETRANGE | `syncCommands.setrange("key", 0, "val")` | `client.setRange("key", 0, "val")` |
 ## Keys
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | DEL | `syncCommands.del("key1", "key2")` | `client.del(new String[]{"key1", "key2"})` |
 | EXISTS | `syncCommands.exists("key1", "key2")` | `client.exists(new String[]{"key1", "key2"})` |
@@ -54,7 +54,7 @@ Below is a comprehensive chart comparing common Redis commands between Lettuce a
 | RENAME | `syncCommands.rename("old", "new")` | `client.rename("old", "new")` |
 | RENAMENX | `syncCommands.renamenx("old", "new")` | `client.renameNx("old", "new")` |
 ## Hashes
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | HSET | `syncCommands.hset("hash", map)` | `client.hset("hash", map)` |
 | HGET | `syncCommands.hget("hash", "field")` | `client.hget("hash", "field")` |
@@ -64,7 +64,7 @@ Below is a comprehensive chart comparing common Redis commands between Lettuce a
 | HDEL | `syncCommands.hdel("hash", "f1", "f2")` | `client.hdel("hash", new String[]{"f1", "f2"})` |
 | HEXISTS | `syncCommands.hexists("hash", "field")` | `client.hexists("hash", "field")` |
 ## Lists
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | LPUSH | `syncCommands.lpush("list", "a", "b")` | `client.lpush("list", new String[]{"a", "b"})` |
 | RPUSH | `syncCommands.rpush("list", "a", "b")` | `client.rpush("list", new String[]{"a", "b"})` |
@@ -72,14 +72,14 @@ Below is a comprehensive chart comparing common Redis commands between Lettuce a
 | RPOP | `syncCommands.rpop("list")` | `client.rpop("list")` |
 | LRANGE | `syncCommands.lrange("list", 0, -1)` | `client.lrange("list", 0, -1)` |
 ## Sets
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | SADD | `syncCommands.sadd("set", "a", "b")` | `client.sadd("set", new String[]{"a", "b"})` |
 | SMEMBERS | `syncCommands.smembers("set")` | `client.smembers("set")` |
 | SREM | `syncCommands.srem("set", "a", "b")` | `client.srem("set", new String[]{"a", "b"})` |
 | SISMEMBER | `syncCommands.sismember("set", "a")` | `client.sismember("set", "a")` |
 ## Sorted Sets
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | ZADD | `syncCommands.zadd("zset", scoreMembers)` | `client.zadd("zset", scoreMembers)` |
 | ZRANGE | `syncCommands.zrange("zset", 0, -1)` | `client.zrange("zset", 0, -1)` |
@@ -89,19 +89,19 @@ Below is a comprehensive chart comparing common Redis commands between Lettuce a
 | ZRANK | `syncCommands.zrank("zset", "a")` | `client.zrank("zset", "a")` |
 | ZREVRANK | `syncCommands.zrevrank("zset", "a")` | `client.zrevrank("zset", "a")` |
 ## Transactions
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | MULTI/EXEC | `syncCommands.multi(); syncCommands.set("k", "v"); syncCommands.exec();` | `client.exec(new Transaction().set("k", "v"))` |
 ## Lua Scripts
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | EVAL | `syncCommands.eval(script, outputType, keys, args)` | `client.invokeScript(new Script(script), options)` |
 | EVALSHA | `syncCommands.evalsha(sha, outputType, keys, args)` | `client.invokeScript(new Script(script), options)` |
 ## Custom Commands
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | Raw Command | `syncCommands.dispatch(commandType, output, args)` | `client.customCommand(new String[]{"CMD", "arg1", "arg2"})` |
 ## Connection Management
-| Command | Lettuce | Valkey Glide |
+| Command | Lettuce | Valkey GLIDE |
 |---------|---------|--------------|
 | Close | `connection.close(); client.shutdown();` | `client.close()` |

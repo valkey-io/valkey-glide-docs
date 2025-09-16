@@ -16,7 +16,7 @@ import { Aside, LinkCard } from '@astrojs/starlight/components';
 
 export const baseUrl = import.meta.env.BASE_URL;
 
-In Valkey Glide 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. Glide 2.0 introduces a robust Batch API with two primary modes:
+In Valkey GLIDE 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs. Glide 2.0 introduces a robust Batch API with two primary modes:
 
 * **Atomic Batch:** Guarantees that all commands in a batch execute as a single, atomic unit. No other commands can interleave (similar to [MULTI](https://valkey.io/commands/multi/)/[EXEC](https://valkey.io/commands/exec/)).
 * **Non-Atomic Batch** (Pipeline): Sends multiple commands in one request without atomic guarantees. Commands can span multiple slots/nodes in a cluster and do not block other operations from being processed between them.

@@ -18,17 +18,17 @@ import { Aside } from '@astrojs/starlight/components';
 
 
 
-Below is a comprehensive chart comparing common Valkey commands between go-redis and Valkey Glide:
+Below is a comprehensive chart comparing common Valkey commands between go-redis and Valkey GLIDE:
 
 ### Connection
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | Connect | `redis.NewClient(&redis.Options{Addr: "localhost:6379"})` | `glide.NewClient(&config.ClientConfiguration{Addresses: []config.NodeAddress{{Host: "localhost", Port: 6379}}})` |
 | Cluster | `redis.NewClusterClient(&redis.ClusterOptions{Addrs: []string{"127.0.0.1:6379"}})` | `glide.NewClusterClient(&config.ClusterClientConfiguration{Addresses: []config.NodeAddress{{Host: "127.0.0.1", Port: 6379}}})` |
 | Auth | `rdb.Auth(ctx, "password")` | Set in `config.ServerCredentials{Password: "password"}` during connection |
 | Select DB | `rdb.Select(ctx, 1)` | Set `DatabaseId: 1` in configuration |
 ### Strings
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | SET | `rdb.Set(ctx, "key", "val", 0)` | `client.Set(ctx, "key", "val")` |
 | GET | `rdb.Get(ctx, "key")` | `client.Get(ctx, "key")` |
@@ -44,7 +44,7 @@ Below is a comprehensive chart comparing common Valkey commands between go-redis
 | GETRANGE | `rdb.GetRange(ctx, "key", 0, 3)` | `client.GetRange(ctx, "key", 0, 3)` |
 | SETRANGE | `rdb.SetRange(ctx, "key", 0, "val")` | `client.SetRange(ctx, "key", 0, "val")` |
 ### Keys
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | DEL | `rdb.Del(ctx, "key1", "key2")` | `client.Del(ctx, []string{"key1", "key2"})` |
 | EXISTS | `rdb.Exists(ctx, "key1", "key2")` | `client.Exists(ctx, []string{"key1", "key2"})` |
@@ -55,7 +55,7 @@ Below is a comprehensive chart comparing common Valkey commands between go-redis
 | RENAME | `rdb.Rename(ctx, "old", "new")` | `client.Rename(ctx, "old", "new")` |
 | RENAMENX | `rdb.RenameNX(ctx, "old", "new")` | `client.RenameNX(ctx, "old", "new")` |
 ### Hashes
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | HSET | `rdb.HSet(ctx, "hash", "k1", "v1", "k2", "v2")` | `client.HSet(ctx, "hash", map[string]string{"k1": "v1", "k2": "v2"})` |
 | HGET | `rdb.HGet(ctx, "hash", "field")` | `client.HGet(ctx, "hash", "field")` |
@@ -65,7 +65,7 @@ Below is a comprehensive chart comparing common Valkey commands between go-redis
 | HDEL | `rdb.HDel(ctx, "hash", "k1", "k2")` | `client.HDel(ctx, "hash", []string{"k1", "k2"})` |
 | HEXISTS | `rdb.HExists(ctx, "hash", "field")` | `client.HExists(ctx, "hash", "field")` |
 ### Lists
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | LPUSH | `rdb.LPush(ctx, "list", "a", "b")` | `client.LPush(ctx, "list", []string{"a", "b"})` |
 | RPUSH | `rdb.RPush(ctx, "list", "a", "b")` | `client.RPush(ctx, "list", []string{"a", "b"})` |
@@ -73,14 +73,14 @@ Below is a comprehensive chart comparing common Valkey commands between go-redis
 | RPOP | `rdb.RPop(ctx, "list")` | `client.RPop(ctx, "list")` |
 | LRANGE | `rdb.LRange(ctx, "list", 0, -1)` | `client.LRange(ctx, "list", 0, -1)` |
 ### Sets
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | SADD | `rdb.SAdd(ctx, "set", "a", "b")` | `client.SAdd(ctx, "set", []string{"a", "b"})` |
 | SMEMBERS | `rdb.SMembers(ctx, "set")` | `client.SMembers(ctx, "set")` |
 | SREM | `rdb.SRem(ctx, "set", "a", "b")` | `client.SRem(ctx, "set", []string{"a", "b"})` |
 | SISMEMBER | `rdb.SIsMember(ctx, "set", "a")` | `client.SIsMember(ctx, "set", "a")` |
 ### Sorted Sets
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | ZADD | `rdb.ZAdd(ctx, "zset", redis.Z{Score: 1, Member: "a"}, redis.Z{Score: 2, Member: "b"})` | `client.ZAdd(ctx, "zset", map[string]float64{"a": 1.0, "b": 2.0})` |
 | ZRANGE | `rdb.ZRange(ctx, "zset", 0, -1)` | `client.ZRange(ctx, "zset", options.RangeByIndex{Start: 0, End: -1})` |
@@ -90,19 +90,19 @@ Below is a comprehensive chart comparing common Valkey commands between go-redis
 | ZRANK | `rdb.ZRank(ctx, "zset", "a")` | `client.ZRank(ctx, "zset", "a")` |
 | ZREVRANK | `rdb.ZRevRank(ctx, "zset", "a")` | `client.ZRevRank(ctx, "zset", "a")` |
 ### Transactions
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | MULTI/EXEC | `pipe := rdb.TxPipeline(); pipe.Set(ctx, "k", "v", 0); pipe.Get(ctx, "k"); pipe.Exec(ctx)` | `batch := pipeline.NewStandaloneBatch(); batch.Set("k", "v"); batch.Get("k"); client.Exec(ctx, batch, false)` |
 ### Lua Scripts
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | EVAL | `rdb.Eval(ctx, script, []string{"key"}, "arg")` | `client.InvokeScriptWithOptions(ctx, options.NewScript(script), options.ScriptOptions{Keys: []string{"key"}, Args: []string{"arg"}})` |
 | EVALSHA | `rdb.EvalSha(ctx, sha, []string{"key"}, "arg")` | `client.InvokeScriptWithOptions(ctx, options.NewScript(script), options.ScriptOptions{Keys: []string{"key"}, Args: []string{"arg"}})` |
 ### Custom Commands
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | Raw Command | `rdb.Do(ctx, "SET", "key", "value")` | `client.CustomCommand(ctx, []string{"SET", "key", "value"})` |
 ### Connection Management
-| Command | go-redis | Valkey Glide |
+| Command | go-redis | Valkey GLIDE |
 |---------|----------|--------------|
 | Close | `rdb.Close()` | `client.Close()` |

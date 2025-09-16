@@ -17,7 +17,7 @@ export default defineConfig({
         Header: "./src/components/Header.astro",
         MobileMenuToggle: "./src/components/MobileMenuToggle.astro",
       },
-      title: "Valkey Glide",
+      title: "Valkey GLIDE",
       logo: {
         src: "./src/assets/valkey-logo.svg",
       },

@@ -18,17 +18,17 @@ import { Aside } from '@astrojs/starlight/components';
 
 
 
-Below is a comprehensive chart comparing common Redis commands between Redisson and Valkey Glide:
+Below is a comprehensive chart comparing common Redis commands between Redisson and Valkey GLIDE:
 
 ### Connection
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | Connect | `Redisson.create(config)` | `GlideClient.createClient(config).get()` |
 | Cluster | `config.useClusterServers()` | `GlideClusterClient.createClient(config).get()` |
 | Auth | `config.setPassword("pass")` | `client.updateConnectionPassword("pass", true).get()` |
 | Select DB | `config.setDatabase(1)` | `client.select(1).get()` |
 ### Strings
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | SET | `redisson.getBucket("key").set("val")` | `client.set("key", "val")` |
 | GET | `redisson.getBucket("key").get()` | `client.get("key").get()` |
@@ -44,7 +44,7 @@ Below is a comprehensive chart comparing common Redis commands between Redisson 
 | GETRANGE | Manual substring operation | `client.getRange("key", 0, 3).get()` |
 | SETRANGE | Manual string manipulation | `client.setRange("key", 0, "val").get()` |
 ### Keys
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | DEL | `redisson.getKeys().delete("k1", "k2")` | `client.del(new String[]{"k1", "k2"}).get()` |
 | EXISTS | `redisson.getKeys().countExists("k1", "k2")` | `client.exists(new String[]{"k1", "k2"}).get()` |
@@ -55,7 +55,7 @@ Below is a comprehensive chart comparing common Redis commands between Redisson 
 | RENAME | `bucket.rename("newkey")` | `client.rename("old", "new").get()` |
 | RENAMENX | `bucket.renamenx("newkey")` | `client.renameNx("old", "new").get()` |
 ### Hashes
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | HSET | `redisson.getMap("hash").putAll(map)` | `client.hset("hash", map).get()` |
 | HGET | `redisson.getMap("hash").get("field")` | `client.hget("hash", "field").get()` |
@@ -65,7 +65,7 @@ Below is a comprehensive chart comparing common Redis commands between Redisson 
 | HDEL | `redisson.getMap("hash").remove("field")` | `client.hdel("hash", new String[]{"f1", "f2"}).get()` |
 | HEXISTS | `redisson.getMap("hash").containsKey("field")` | `client.hexists("hash", "field").get()` |
 ### Lists
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | LPUSH | `redisson.getList("list").addFirst("val")` | `client.lpush("list", new String[]{"a", "b"}).get()` |
 | RPUSH | `redisson.getList("list").add("val")` | `client.rpush("list", new String[]{"a", "b"}).get()` |
@@ -73,14 +73,14 @@ Below is a comprehensive chart comparing common Redis commands between Redisson 
 | RPOP | `redisson.getList("list").removeLast()` | `client.rpop("list").get()` |
 | LRANGE | `redisson.getList("list").range(0, -1)` | `client.lrange("list", 0, -1).get()` |
 ### Sets
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | SADD | `redisson.getSet("set").add("val")` | `client.sadd("set", new String[]{"a", "b"}).get()` |
 | SMEMBERS | `redisson.getSet("set").readAll()` | `client.smembers("set").get()` |
 | SREM | `redisson.getSet("set").remove("val")` | `client.srem("set", new String[]{"a", "b"}).get()` |
 | SISMEMBER | `redisson.getSet("set").contains("val")` | `client.sismember("set", "a").get()` |
 ### Sorted Sets
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | ZADD | `redisson.getScoredSortedSet("zset").add(1.0, "a")` | `client.zadd("zset", scoreMembers).get()` |
 | ZRANGE | `redisson.getScoredSortedSet("zset").valueRange(0, -1)` | `client.zrange("zset", 0, -1).get()` |
@@ -90,19 +90,19 @@ Below is a comprehensive chart comparing common Redis commands between Redisson 
 | ZRANK | `redisson.getScoredSortedSet("zset").rank("a")` | `client.zrank("zset", "a").get()` |
 | ZREVRANK | `redisson.getScoredSortedSet("zset").revRank("a")` | `client.zrevrank("zset", "a").get()` |
 ### Transactions
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | MULTI/EXEC | `redisson.createBatch().execute()` | `client.exec(new Transaction().set("k", "v")).get()` |
 ### Lua Scripts
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | EVAL | `redisson.getScript().eval(script, keys, args)` | `client.invokeScript(new Script(script), options).get()` |
 | EVALSHA | `redisson.getScript().evalSha(sha, keys, args)` | `client.invokeScript(new Script(script), options).get()` |
 ### Custom Commands
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | Raw Command | Not directly supported | `client.customCommand(new String[]{"SET", "key", "value"}).get()` |
 ### Connection Management
-| Command | Redisson | Valkey Glide |
+| Command | Redisson | Valkey GLIDE |
 |---------|---------|--------------|
 | Close | `redisson.shutdown();` | `client.close()` |

@@ -15,7 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-A transaction in Valkey Glide allows you to execute a group of commands in a single, atomic step. This ensures that all commands in the transaction are executed sequentially and without interruption. See [Valkey Transactions](https://valkey.io/topics/transactions).
+A transaction in Valkey GLIDE allows you to execute a group of commands in a single, atomic step. This ensures that all commands in the transaction are executed sequentially and without interruption. See [Valkey Transactions](https://valkey.io/topics/transactions).
 
 This is equivalent to the Valkey commands [MULTI](https://valkey.io/commands/multi/) / [EXEC](https://valkey.io/commands/exec/).
 
@@ -52,7 +52,7 @@ console.log(result); // Output: [OK, OK, null]
 
 ## Command Chaining
 
-Valkey Glide supports command chaining within a transaction, allowing for a more concise and readable code. Here's how you can use chaining in transactions:
+Valkey GLIDE supports command chaining within a transaction, allowing for a more concise and readable code. Here's how you can use chaining in transactions:
 
 ```ts
 import {ClusterTransaction} from "@valkey/valkey-glide";
@@ -88,7 +88,7 @@ transaction.set('key', 'value');
 transaction.get('key');
 ```
 
-**Executing the Transaction:** Use the `exec` method of the Valkey Glide client to execute the transaction.
+**Executing the Transaction:** Use the `exec` method of the Valkey GLIDE client to execute the transaction.
 
 ```ts
 await client.exec(transaction);

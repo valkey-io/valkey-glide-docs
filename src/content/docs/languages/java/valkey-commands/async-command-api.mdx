@@ -15,7 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-Valkey Glide provides an async command API.  All single commands (including MULTI/EXEC, and EVAL) return a asynchronous promise to complete the command wrapped by a `CompletableFuture`.  The `CompletableFuture` object will return a result when the action is completed, or will throw an `Exception` if the action times out, is cancelled, or is interrupted.  If the command is otherwise unsuccessful, the result will contain an error result and message.
+Valkey GLIDE provides an async command API.  All single commands (including MULTI/EXEC, and EVAL) return a asynchronous promise to complete the command wrapped by a `CompletableFuture`.  The `CompletableFuture` object will return a result when the action is completed, or will throw an `Exception` if the action times out, is cancelled, or is interrupted.  If the command is otherwise unsuccessful, the result will contain an error result and message.
 
 Asynchronous APIs lend themselves well to concurrent calls.  See the [BenchmarkingApp](https://github.com/valkey-io/valkey-glide/blob/main/java/benchmarks/src/main/java/glide/benchmarks/utils/Benchmarking.java#L116) for an example on how to execute and handle results using an `ExecutorService`.
 
