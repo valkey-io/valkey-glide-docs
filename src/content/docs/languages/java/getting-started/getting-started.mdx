@@ -8,8 +8,9 @@ sidebar:
     variant: success
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
+import {javaGlideLatest} from '@data/versions.ts'
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -93,22 +94,22 @@ linux-x86_64
     ```groovy
     // osx-aarch_64
     dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-aarch_64'
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
     }
 
     // osx-x86_64
     dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'osx-x86_64'
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
     }
 
     // linux-aarch_64
     dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-aarch_64'
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
     }
 
     // linux-x86_64
     dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: 'linux-x86_64'
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
     }
 
     // with osdetector
@@ -116,68 +117,73 @@ linux-x86_64
         id "com.google.osdetector" version "1.7.3"
     }
     dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '1.+', classifier: osdetector.classifier
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
     }
     ```
   </TabItem>
+
+  {/* export const mycode = {` */}
 
   <TabItem label="Maven">
     <Aside type="caution">
       Must include a `classifier`. Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the pom.xml file.
     </Aside>
 
-    ```xml
+    <Code
+      lang="xml"
+      code={`
+  <!-- osx-x86_64 -->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>osx-x86_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
 
-    <!-- osx-x86_64 -->
+  <!-- osx-aarch_64 -->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>osx-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!-- linux-aarch_64 -->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!-- linux-x86_64 -->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!-- with os-maven-plugin -->
+
+  <build>
+    <extensions>
+        <extension>
+            <groupId>kr.motd.maven</groupId>
+            <artifactId>os-maven-plugin</artifactId>
+        </extension>
+    </extensions>
+  </build>
+  <dependencies>
     <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>osx-x86_64</classifier>
-       <version>[2.0.0,)</version>
+        <groupId>io.valkey</groupId>
+        <artifactId>valkey-glide</artifactId>
+        <classifier>\${os.detected.classifier}</classifier>
+        <version>${javaGlideLatest}</version>
     </dependency>
-
-    <!-- osx-aarch_64 -->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>osx-aarch_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
-
-    <!-- linux-aarch_64 -->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>linux-aarch_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
-
-    <!-- linux-x86_64 -->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>linux-x86_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
-
-    <!-- with os-maven-plugin -->
-    <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-            </extension>
-        </extensions>
-    </build>
-    <dependencies>
-        <dependency>
-            <groupId>io.valkey</groupId>
-            <artifactId>valkey-glide</artifactId>
-            <classifier>${os.detected.classifier}</classifier>
-            <version>[2.0.0,)</version>
-        </dependency>
-    </dependencies>
-    ```
+  </dependencies>;`
+      }
+    />
   </TabItem>
 
   <TabItem label="SBT">
@@ -187,16 +193,16 @@ linux-x86_64
 
     ```scala
     // osx-aarch_64
-    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-aarch_64"
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
 
     // osx-x86_64
-    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "osx-x86_64"
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-x86_64"
 
     // linux-aarch_64
-    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-aarch_64"
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-aarch_64"
 
     // linux-x86_64
-    libraryDependencies += "io.valkey" % "valkey-glide" % "1.+" classifier "linux-x86_64"
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
     ```
   </TabItem>
 </Tabs>

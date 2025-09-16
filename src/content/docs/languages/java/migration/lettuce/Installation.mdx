@@ -8,8 +8,9 @@ sidebar:
     variant: success
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
+import { javaGlideLatest } from '@data/versions';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -21,13 +22,16 @@ import { Aside } from '@astrojs/starlight/components';
 
 Add the following dependency to your `pom.xml` file:
 
-```xml
-<dependency>
+<Code
+  lang="xml"
+  code={`
+  <dependency>
     <groupId>io.valkey</groupId>
     <artifactId>valkey-glide</artifactId>
-    <version>[2.0.0,)</version>
-</dependency>
-```
+    <version>${javaGlideLatest}</version>
+  </dependency>
+  `}
+/>
 
 ## Full Installations
 
@@ -73,50 +77,51 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
       Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the `pom.xml` file.
     </Aside>
 
-    ```xml
+    <Code
+      lang="xml"
+      code={`
+  <!--osx-aarch_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>osx-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
 
-    <!--osx-aarch_64-->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>osx-aarch_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
+  <!--linux-aarch_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
 
-    <!--linux-aarch_64-->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>linux-aarch_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
+  <!--linux-x86_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
 
-    <!--linux-x86_64-->
-    <dependency>
-       <groupId>io.valkey</groupId>
-       <artifactId>valkey-glide</artifactId>
-       <classifier>linux-x86_64</classifier>
-       <version>[2.0.0,)</version>
-    </dependency>
-
-    <!--with os-maven-plugin-->
-    <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-            </extension>
-        </extensions>
-    </build>
-    <dependencies>
-        <dependency>
-            <groupId>io.valkey</groupId>
-            <artifactId>valkey-glide</artifactId>
-            <classifier>${os.detected.classifier}</classifier>
-            <version>[2.0.0,)</version>
-        </dependency>
-    </dependencies>
-    ```
+  <!--with os-maven-plugin-->
+  <build>
+      <extensions>
+          <extension>
+              <groupId>kr.motd.maven</groupId>
+              <artifactId>os-maven-plugin</artifactId>
+          </extension>
+      </extensions>
+  </build>
+  <dependencies>
+      <dependency>
+          <groupId>io.valkey</groupId>
+          <artifactId>valkey-glide</artifactId>
+          <classifier>\${os.detected.classifier}</classifier>
+          <version>${javaGlideLatest}</version>
+      </dependency>
+  </dependencies>`}
+  />
   </TabItem>
 
   <TabItem label="SBT">
