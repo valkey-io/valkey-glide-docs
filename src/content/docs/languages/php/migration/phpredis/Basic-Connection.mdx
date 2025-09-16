@@ -1,0 +1,30 @@
+---
+title: 'Basic Connection'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 3
+ badge:
+   text: Draft
+   variant: caution
+---
+
+## PHPRedis
+```php
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+$redis->auth('password');
+$redis->select(1);
+```
+
+## Valkey GLIDE PHP
+```php
+use ValkeyGlide\ValkeyGlide;
+
+$client = new ValkeyGlide(
+    addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+    use_tls: false,
+    credentials: ['password'],
+    database_id: 1
+);
+```
+

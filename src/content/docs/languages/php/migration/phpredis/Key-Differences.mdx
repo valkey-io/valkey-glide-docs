@@ -1,0 +1,73 @@
+---
+title: 'Key Differences'
+description: A reference page in my new Starlight docs site.
+sidebar: 
+ order: 6
+ badge:
+   text: Draft
+   variant: caution
+---
+
+The following are examples of the differences between GLIDE Php client and PhpRedis.
+
+## 1. Method Signatures
+- **PHPRedis**: Variadic arguments for multi-value operations
+- **Valkey GLIDE**: Supports both variadic arguments AND array parameters
+
+```php
+// Both PHPRedis and Valkey GLIDE support variadic style
+$redis->sadd('set', 'val1', 'val2', 'val3');
+$client->sadd('set', 'val1', 'val2', 'val3');
+
+// Valkey GLIDE also supports array style for consistency
+$client->del(['key1', 'key2', 'key3']); // Array style
+$client->del('key1', 'key2', 'key3');   // Variadic style
+```
+
+## 2. Return Types
+- **PHPRedis**: Mixed return types, sometimes inconsistent
+- **Valkey GLIDE**: Consistent, typed return values
+
+```php
+// PHPRedis - returns int|false
+$result = $redis->set('key', 'value');
+
+// Valkey GLIDE - returns string "OK" or throws exception
+$result = $client->set('key', 'value');
+```
+
+## 3. Error Handling
+- **PHPRedis**: Returns `false` on error, throws exceptions in constructors
+- **Valkey GLIDE**: Same pattern - returns `false` on method errors, throws exceptions only in constructors
+
+```php
+// Both PHPRedis and Valkey GLIDE - constructors throw exceptions
+try {
+    $client = new ValkeyGlide($config);
+} catch (Exception $e) {
+    // Handle connection/configuration errors
+}
+
+// Both PHPRedis and Valkey GLIDE - methods return false on error
+if ($client->get('nonexistent') === false) {
+    // Could be error or key doesn't exist - check with exists()
+}
+```
+
+## 4. Configuration
+- **PHPRedis**: Method chaining for configuration
+- **Valkey GLIDE**: Constructor parameters
+
+```php
+// PHPRedis
+$redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_JSON);
+$redis->setOption(Redis::OPT_PREFIX, 'myapp:');
+
+// Valkey GLIDE
+$client = new ValkeyGlide(
+    addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+    request_timeout: 5000,
+    client_name: 'myapp'
+);
+```
+
