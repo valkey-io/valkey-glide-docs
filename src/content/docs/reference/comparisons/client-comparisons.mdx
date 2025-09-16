@@ -1,9 +1,9 @@
 ---
-title: Client Comparison (old)
+title: Client Comparison
 sidebar:
   badge:
-    text: Draft
-    variant: caution
+    text: Draft Review
+    variant: success
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -14,11 +14,7 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-{/* TODO: Need to figure out how the comparison is going to look like */}
-
-## Client Comparison
-
-### Java: Jedis vs Valkey GLIDE
+## Java: Jedis vs Valkey GLIDE
 
 | Feature | Jedis | Valkey GLIDE |
 |---------|-------|--------------|
@@ -30,7 +26,7 @@ import { Aside } from '@astrojs/starlight/components';
 | **Async support** | Limited | Full async/await support |
 | **Production reliability** | Requires additional tooling | Enterprise-ready out of the box |
 
-### C#: StackExchange.Redis vs Valkey GLIDE
+## C#: StackExchange.Redis vs Valkey GLIDE
 
 | Feature | StackExchange.Redis | Valkey GLIDE |
 |---------|---------------------|--------------|
@@ -40,7 +36,7 @@ import { Aside } from '@astrojs/starlight/components';
 | **Connection management** | Good | Superior with AZ awareness |
 | **Development status** | Mature | Actively developed (C# in development) |
 
-### Python: redis-py vs Valkey GLIDE
+## Python: redis-py vs Valkey GLIDE
 
 | Feature | redis-py | Valkey GLIDE |
 |---------|----------|--------------|
@@ -51,7 +47,7 @@ import { Aside } from '@astrojs/starlight/components';
 | **Multi-language projects** | Inconsistent with other clients | Identical behavior across languages |
 | **PubSub reliability** | Connection issues common | Robust with automatic reconnection |
 
-### Node.js: node\_redis vs Valkey GLIDE
+## Node.js: node\_redis vs Valkey GLIDE
 
 | Feature | node\_redis | Valkey GLIDE |
 |---------|------------|--------------|
@@ -61,7 +57,7 @@ import { Aside } from '@astrojs/starlight/components';
 | **Performance** | JavaScript overhead | Native Rust performance |
 | **Production features** | Requires additional libraries | Enterprise features built-in |
 
-### Go: go-redis vs Valkey GLIDE
+## Go: go-redis vs Valkey GLIDE
 
 | Feature | go-redis | Valkey GLIDE |
 |---------|----------|--------------|

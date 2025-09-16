@@ -308,6 +308,16 @@ export default defineConfig({
                   autogenerate: { directory: "languages/go/reference" },
                 },
               ],
+            },
+            {
+              label: "C#",
+              collapsed: true,
+              autogenerate: {directory: "languages/csharp"}
+            },
+            {
+              label: "Php",
+              collapsed: true,
+              autogenerate: {directory: "languages/php"}
             }
           ],
         },
@@ -315,7 +325,12 @@ export default defineConfig({
           label: "Migration",
           collapsed: true,
           items: [
-           "migration"
+           "migration",
+           {
+            label: "Planning",
+            collapsed: true,
+            autogenerate: {directory: "migration/planning"}
+           }
           ]
         },
         {
