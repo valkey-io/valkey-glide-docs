@@ -2,7 +2,7 @@
 title: Cluster Scan
 sidebar:
   badge:
-    text: Draft Review
+    text: Review
     variant: success
 ---
 
@@ -34,7 +34,7 @@ To start iterating, create a `ClusterScanCursor`:
   </TabItem>
 
   <TabItem label="Java">
-    ```Java
+    ```java
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     ```
   </TabItem>
@@ -65,7 +65,7 @@ The `SCAN` command accepts three optional parameters:
 
   <TabItem label="Java">
 
-    ```Java
+    ```java
     String key = "key:test_cluster_scan_simple" + UUID.randomUUID();
     Map<String, String> expectedData = new LinkedHashMap<>();
     for (int i = 0; i < 100; i++) {
@@ -101,7 +101,7 @@ The `SCAN` command accepts three optional parameters:
 
     <TabItem label="Java">
 
-    ```Java
+    ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     while (!cursor.isFinished()) {
@@ -138,7 +138,7 @@ The `SCAN` command accepts three optional parameters:
   </TabItem>
 
     <TabItem label="Java">
-        ```Java
+        ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     while (!cursor.isFinished()) {
