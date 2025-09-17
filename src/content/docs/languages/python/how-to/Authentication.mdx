@@ -66,13 +66,13 @@ client_config = GlideClientConfiguration(addresses, credentials=credentials)
 client = await GlideClient.create(client_config)
 ```
 
-## Example: Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+## Example: Using IAM Authentication
 
 See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/using-iam-authentication-with-glide-for-elasticache-and-memorydb`}>IAM Authentication with GLIDE</a> section for a detailed explanation about using IAM authentication with GLIDE.
 
 The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
 
-**Token generation -**
+### Token generation
 
 ```python
 from typing import Tuple, Union
@@ -124,7 +124,7 @@ class ElastiCacheIAMProvider(valkey.CredentialProvider):
         return (self.user, signed_url.removeprefix("https://"))
 ```
 
-**Usage Example: **
+### Usage Example
 
 ```python
 from typing import Tuple, Union
