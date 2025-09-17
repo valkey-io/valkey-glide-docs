@@ -158,7 +158,7 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: "Developer",
+                  label: "Contributing",
                   autogenerate: { directory: "languages/python/developer" },
                 },
                 {
@@ -212,7 +212,7 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: "Developer",
+                  label: "Contributing",
                   autogenerate: { directory: "languages/java/developer" },
                 },
                 {
@@ -256,7 +256,7 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: "Developer",
+                  label: "Contributing",
                   autogenerate: { directory: "languages/nodejs/developer" },
                 },
                 {
@@ -300,7 +300,7 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: "Developer",
+                  label: "Contributing",
                   autogenerate: { directory: "languages/go/developer" },
                 },
                 {
