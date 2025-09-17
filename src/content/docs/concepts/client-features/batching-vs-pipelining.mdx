@@ -6,7 +6,7 @@ sidebar:
     variant: success
 ---
 
-import { Aside, LinkCard } from '@astrojs/starlight/components';
+import { Aside, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -32,6 +32,53 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * **Use Case:** When you need consistency and isolation.
 * See: [Valkey Transactions](https://valkey.io/topics/transactions/).
 
+#### Example
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import Batch
+
+    transaction = Batch(is_atomic=True)
+    transaction.set("key1", "value1")
+
+    client.exec(transaction)
+    ```
+  </TabItem>
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.Batch;
+
+    boolean isAtomic = true;
+    Batch batch = new Batch(isAtomic);
+    batch.set("key1", "value1");
+
+    var response = client.exec(batch);
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```typescript
+    import {Batch} from "@valkey/valkey-glide";
+
+    const isAtomic = true;
+    const batch = new Batch(isAtomic); 
+    batch.set("key1", "value1");
+
+    const response = await client.exec(batch);
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline";
+
+    isAtomic := true;
+    transaction := pipeline.NewStandaloneBatch(true)
+        .Set("key1", "value1");
+
+    res, err := client.Exec(context, transaction);
+    ```
+  </TabItem>
+</Tabs>
+
 ## Non-Atomic Batch (Pipeline)
 
 * **Definition:** A group of commands sent in a single request, but executed without atomicity or isolation.
@@ -40,6 +87,53 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
 * **Use Case:** Bulk reads or writes where each command is independent.
 * **See:** [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
+#### Example
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import Batch
+
+    transaction = Batch(is_atomic=False)
+    transaction.set("key1", "value1")
+
+    client.exec(transaction)
+    ```
+  </TabItem>
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.Batch;
+
+    boolean isAtomic = false;
+    Batch batch = new Batch(isAtomic);
+    batch.set("key1", "value1");
+
+    var response = client.exec(batch);
+    ```
+  </TabItem>
+  <TabItem label="Node.js">
+    ```typescript
+    import {Batch} from "@valkey/valkey-glide";
+
+    const isAtomic = false;
+    const batch = new Batch(isAtomic); 
+    batch.set("key1", "value1");
+
+    const response = await client.exec(batch);
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline";
+
+    isAtomic := true;
+    transaction := pipeline.NewStandaloneBatch(false)
+        .Set("key1", "value1");
+
+    res, err := client.Exec(context, transaction);
+    ```
+  </TabItem>
+</Tabs>
+
 ## What's Next?
 
 For detailed documentation, visit languages specific documentation:
@@ -47,4 +141,4 @@ For detailed documentation, visit languages specific documentation:
 * <a href={`${baseUrl}/languages/python/valkey-commands/batch-transaction-and-pipelining`}> Python wrapper - Batch: Transaction and Pipelining </a>
 * <a href={`${baseUrl}/languages/nodejs/valkey-commands/batch-transaction-and-pipelining`}> NodeJS wrapper - Batch: Transaction and Pipelining </a>
 * <a href={`${baseUrl}/languages/java/valkey-commands/batch-transaction-and-pipelining`}> Java wrapper - Batch: Transaction and Pipelining </a>
-* <a href={`${baseUrl}/languages/golang/valkey-commands/batch-transaction-and-pipelining`}> Golang wrapper - Batch: Transaction and Pipelining </a>
+* <a href={`${baseUrl}/languages/go/valkey-commands/batch-transaction-and-pipelining`}> Golang wrapper - Batch: Transaction and Pipelining </a>
