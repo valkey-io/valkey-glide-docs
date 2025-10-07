@@ -1,0 +1,88 @@
+---
+title: AWS IAM Authentication with GLIDE 2.2+
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft Review
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+GLIDE provides built-in support for **AWS Identity and Access Management (IAM) authentication** when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles **token generation** and **rotation**, making it simple to maintain **secure connections**.
+
+## How It Works
+
+* GLIDE automatically generates **temporary authentication tokens** that are valid for **15 minutes**
+* GLIDE **refreshes the token every 5 minutes**. On failure, it retries with **exponential backoff** and keeps using the **last valid token** until refreshed
+* Each connection remains valid for up to **12 hours** before requiring **re-authentication**
+* GLIDE handles all **token management** and **refresh operations** behind the scenes
+* Manual option available via **`refreshIamToken`**
+
+## Required Setup
+
+1. **AWS Credentials**: Your application must run in an environment with AWS credentials available (such as an **EC2 instance with an IAM role**, or **ECS task with a task role**).
+
+2. **Required Information**:
+
+* **username**: Your ElastiCache/MemoryDB username
+* **cluster\_name**: Your cluster's name
+* **service**: Either **ElastiCache** or **MemoryDB**
+* **region**: The AWS region where your cluster runs
+* **refreshIntervalSeconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
+
+## Node Example
+
+```ts
+// Automatically regenerates the token every 5 mins
+const client = await GlideClusterClient.createClient({
+  addresses: [{ host: "endpoint.example.com", port: 6379 }],
+  credentials: {
+    username: "username",
+    iamConfig: {
+      cluster_name: "clustername",
+      service: ServiceType.Elasticache, // or ServiceType.MemoryDB
+      region: "us-east-1",
+      // refreshIntervalSeconds: 100, // Optional, default is 300 seconds
+    }
+  }
+});
+
+// You can manually refresh the token too
+await client.refreshIamToken();
+```
+
+## Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+Connecting to an ElastiCache or MemoryDB cluster configured with IAM Authentication using GLIDE, requires:
+
+1. Generating an IAM Authentication token using AWS SDK.
+2. Initializing the GLIDE client by passing the IAM token as part of the credentials configuration.
+3. Refreshing the token periodically with GLIDE’s Dynamic Password Update Feature.
+
+See how to generate the token and GLIDE user examples:
+- <a href={`${import.meta.env.BASE_URL}/languages/python/how-to/authentication#example-using-iam-authentication`}>Python</a>
+- <a href={`${import.meta.env.BASE_URL}/languages/java/how-to/authentication#example-using-iam-authentication`}>Java</a>
+- <a href={`${import.meta.env.BASE_URL}/languages/nodejs/how-to/authentication#example-using-iam-authentication`}>Node.js</a>
+
+## Best Practices for Refreshing IAM Tokens and Re-authentication
+
+GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
+This capability is required when using IAM authentication because:
+
+* IAM tokens are only valid for 15 minutes.
+* Connections authenticated with IAM must be re-authenticated every 12 hours using the AUTH or HELLO command with a fresh IAM token. Otherwise, the connection will be terminated.
+
+To efficiently manage this, GLIDE provides the ability to update short-lived tokens using `updateConnectionPassword` (or `update_connection_password`) to periodically refresh the token without immediately re-authenticating. It also offers the option for immediate re-authentication using `immediateAuth` (or `immediate_auth`), which forces re-authentication and extends the connection for another 12 hours.
+
+<Aside type="tip" title="Best Practices">
+  * Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
+  * Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
+
+  This will ensures seamless token management and connection stability when using IAM authentication with GLIDE.
+</Aside>

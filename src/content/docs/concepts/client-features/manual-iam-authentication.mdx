@@ -1,10 +1,10 @@
 ---
-title: IAM Authentication
+title: Manual AWS IAM Authentication with GLIDE
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
-    text: Review
-    variant: success
+    text: Draft Review
+    variant: caution
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -17,7 +17,11 @@ export const baseUrl = import.meta.env.BASE_URL;
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-Connecting to an ElastiCache or MemoryDB cluster configured with IAM Authentication using GLIDE, requires:
+<Aside type="caution">
+  Starting with GLIDE version 2.2, GLIDE provides built-in support for AWS IAM Authentication. See <a href={`${import.meta.env.BASE_URL}/concepts/client-features/aws-iam-auth-with-glide`}>AWS IAM Authentication with GLIDE 2.2+</a> for more details.
+</Aside>
+
+AWS IAM Authentication using GLIDE to an ElastiCache or MemoryDB cluster can be configured manually by:
 
 1. Generating an IAM Authentication token using AWS SDK.
 2. Initializing the GLIDE client by passing the IAM token as part of the credentials configuration.
@@ -28,7 +32,7 @@ See how to generate the token and GLIDE user examples:
 - <a href={`${import.meta.env.BASE_URL}/languages/java/how-to/authentication#example-using-iam-authentication`}>Java</a>
 - <a href={`${import.meta.env.BASE_URL}/languages/nodejs/how-to/authentication#example-using-iam-authentication`}>Node.js</a>
 
-### Best Practices for Refreshing IAM Tokens and Re-authentication
+## Best Practices for Refreshing IAM Tokens and Re-authentication
 
 GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`${baseUrl}/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
 This capability is required when using IAM authentication because:

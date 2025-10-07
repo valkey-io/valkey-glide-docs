@@ -1,0 +1,163 @@
+---
+title: Lazy Connect
+sidebar:
+  badge:
+    text: Review
+    variant: success
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+GLIDE supports **lazy connection mode**, which defers the establishment of physical connections to Valkey servers until the first command is executed. This feature reduces startup latency and enables client creation in environments where the server may not be immediately available.
+
+## How Lazy Connect Works
+
+When lazy connect is enabled, the client initialization process completes without establishing actual network connections to the Valkey servers. Instead, connections are created on-demand when the first command is sent. This approach offers several advantages:
+
+- **Reduced Startup Time**: Client creation is faster since no network operations are performed during initialization
+- **Disconnected Environment Support**: Clients can be created even when Valkey servers are temporarily unavailable
+- **Resource Efficiency**: Network resources are only allocated when actually needed
+
+## Important Considerations
+
+- **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
+- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior
+- **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
+
+## Usage Examples
+
+<Tabs>
+  <TabItem syncKey="progLangInExamples" label="Node.js">
+    ```typescript
+    import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Standalone client with lazy connect
+    const standaloneClient = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        lazyConnect: true,
+        requestTimeout: 5000
+    });
+
+    // Cluster client with lazy connect
+    const clusterClient = await GlideClusterClient.createClient({
+        addresses: [
+            { host: "localhost", port: 7000 },
+            { host: "localhost", port: 7001 }
+        ],
+        lazyConnect: true,
+        requestTimeout: 5000
+    });
+
+    // No connection established yet - this will trigger the connection
+    const result = await standaloneClient.ping();
+    ```
+  </TabItem>
+
+  <TabItem vsyncKey="progLangInExamples" label="Python">
+    ```python
+    from glide import GlideClient, GlideClusterClient, NodeAddress
+
+    # Standalone client with lazy connect
+    standalone_config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        lazy_connect=True,
+        request_timeout=5000
+    )
+    standalone_client = await GlideClient.create(standalone_config)
+
+    # Cluster client with lazy connect
+    cluster_config = GlideClusterClientConfiguration(
+        addresses=[
+            NodeAddress("localhost", 7000),
+            NodeAddress("localhost", 7001)
+        ],
+        lazy_connect=True,
+        request_timeout=5000
+    )
+    cluster_client = await GlideClusterClient.create(cluster_config)
+
+    # No connection established yet - this will trigger the connection
+    result = await standalone_client.ping()
+    ```
+  </TabItem>
+
+  <TabItem syncKey="progLangInExamples" label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    // Standalone client with lazy connect
+    GlideClientConfiguration standaloneConfig = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .lazyConnect(true)
+        .requestTimeout(5000)
+        .build();
+
+    GlideClient standaloneClient = GlideClient.createClient(standaloneConfig).get();
+
+    // Cluster client with lazy connect
+    GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(7000).build())
+        .address(NodeAddress.builder().host("localhost").port(7001).build())
+        .lazyConnect(true)
+        .requestTimeout(5000)
+        .build();
+
+    GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+
+    // No connection established yet - this will trigger the connection
+    String result = standaloneClient.ping().get();
+    ```
+  </TabItem>
+
+  <TabItem syncKey="progLangInExamples" label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/glide/api"
+        "github.com/valkey-io/valkey-glide/go/glide/config"
+    )
+
+    // Standalone client with lazy connect
+    standaloneConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithLazyConnect(true).
+        WithRequestTimeout(5000 * time.Millisecond)
+
+    standaloneClient, err := api.NewClient(standaloneConfig)
+    if err != nil {
+        // Handle error
+    }
+
+    // Cluster client with lazy connect
+    clusterConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 7000}).
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 7001}).
+        WithLazyConnect(true).
+        WithRequestTimeout(5000 * time.Millisecond)
+
+    clusterClient, err := api.NewClusterClient(clusterConfig)
+    if err != nil {
+        // Handle error
+    }
+
+    // No connection established yet - this will trigger the connection
+    result, err := standaloneClient.Ping()
+    ```
+  </TabItem>
+</Tabs>
+
+## Best Practices
+
+- **Use for Development**: Lazy connect is particularly useful in development environments where services may start in different orders
+- **Container Orchestration**: Helpful in containerized environments where Valkey containers might not be ready immediately
+- **Health Checks**: Consider implementing application-level health checks that account for lazy connection behavior
+- **Error Handling**: Ensure proper error handling for the first command, as connection failures will manifest at that point
