@@ -1,5 +1,5 @@
 ---
-title: AWS IAM Authentication with GLIDE 2.2+
+title: AWS IAM Authentication with GLIDE
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
@@ -15,7 +15,11 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-GLIDE provides built-in support for **AWS Identity and Access Management (IAM) authentication** when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles **token generation** and **rotation**, making it simple to maintain **secure connections**.
+GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM) authentication** when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles **token generation** and **rotation**, making it simple to maintain **secure connections**.
+
+<Aside type="caution">
+For GLIDE versions below 2.2, see the [section](#iam-authentication-using-aws-sdk) for on how to configure IAM authentication using the AWS SDK.
+</Aside>
 
 ## How It Works
 
@@ -58,7 +62,7 @@ const client = await GlideClusterClient.createClient({
 await client.refreshIamToken();
 ```
 
-## Using IAM Authentication with GLIDE for ElastiCache and MemoryDB
+## IAM Authentication using AWS SDK
 Connecting to an ElastiCache or MemoryDB cluster configured with IAM Authentication using GLIDE, requires:
 
 1. Generating an IAM Authentication token using AWS SDK.
@@ -70,10 +74,10 @@ See how to generate the token and GLIDE user examples:
 - <a href={`${import.meta.env.BASE_URL}/languages/java/how-to/authentication#example-using-iam-authentication`}>Java</a>
 - <a href={`${import.meta.env.BASE_URL}/languages/nodejs/how-to/authentication#example-using-iam-authentication`}>Node.js</a>
 
-## Best Practices for Refreshing IAM Tokens and Re-authentication
+### Best Practices for Refreshing IAM Tokens and Re-authentication
 
 GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
-This capability is required when using IAM authentication because:
+This capability is required when perfoming IAM authentication with AWS SDK because:
 
 * IAM tokens are only valid for 15 minutes.
 * Connections authenticated with IAM must be re-authenticated every 12 hours using the AUTH or HELLO command with a fresh IAM token. Otherwise, the connection will be terminated.
