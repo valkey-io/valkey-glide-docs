@@ -4,7 +4,7 @@ description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
     text: Draft Review
-    variant: success
+    variant: caution
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -74,13 +74,18 @@ GlideClientConfiguration config = GlideClientConfiguration.builder()
 GlideClient client = GlideClient.createClient(config).get();
 ```
 
-## Example: Using IAM Authentication
+## Using IAM Authentication
 
-See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/aws-iam-auth-with-glide/#iam-authentication-using-aws-sdk`}>IAM Authentication with GLIDE</a> section for a detailed explanation about using IAM authentication with GLIDE.
+Starting with GLIDE 2.2+ built-in support for **AWS Identity and Access Management (IAM) authentication** is available when connecting to Amazon ElastiCache and MemoryDB clusters. 
+This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
-The example below utilizes the AWS SDK for the IAM token generation. Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+See the <a href={`${import.meta.env.BASE_URL}/concepts/client-features/aws-iam-auth-with-glide`}>IAM Authentication with GLIDE</a> section for a detailed explanation.
 
-### Token generation
+### IAM Authentication with AWS SDK
+This section shows how to utilize the AWS SDK for the IAM token generation. 
+Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
+
+#### Token generation
 
 This token generation example uses AWS SDK for Java v2. For token generation using AWS SDK for Java v1, see example below.
 
@@ -166,7 +171,7 @@ class ElasticachePasswordGenerator {
 }
 ```
 
-### Usage example
+#### Usage example
 
 ```java
 import glide.api.GlideClusterClient;
