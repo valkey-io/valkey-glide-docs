@@ -24,3 +24,5 @@ pnpm-debug.log*
 .vscode/
 
 doc-gen/docs/
+doc-gen/test/
+doc-gen/.venv/

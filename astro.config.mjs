@@ -174,8 +174,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/python/developer" },
                 },
                 {
-                  label: "Reference",
-                  autogenerate: { directory: "languages/python/reference" },
+                  label:"API", link:'languages/python/api', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
             },
@@ -224,8 +223,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/java/developer" },
                 },
                 {
-                  label: "Reference",
-                  autogenerate: { directory: "languages/java/reference" },
+                  label:"API Reference", link:'languages/java/api', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
             },
@@ -266,8 +264,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/nodejs/developer" },
                 },
                 {
-                  label: "Reference",
-                  autogenerate: { directory: "languages/nodejs/reference" },
+                  label:"API Reference", link:'languages/nodejs/api', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
             },
@@ -309,8 +306,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/go/developer" },
                 },
                 {
-                  label: "Reference",
-                  autogenerate: { directory: "languages/go/reference" },
+                  label:"API Reference", link:'https://www.google.ca', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
             },
