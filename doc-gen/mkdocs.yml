@@ -1,0 +1,81 @@
+site_name: GLIDE for Valkey - API Documentation
+site_url: https://valkey.io/valkey-glide
+repo_url: https://github.com/valkey-io/valkey-glide
+repo_name: GitHub
+docs_dir: mkdocs
+nav:
+  - Glide Async:   
+      - BaseClient: glide_async/base_client.md
+      - ClusterClient: glide_async/glide_cluster_client.md
+      - GlideClient: glide_async/glide_client.md
+      - Core: glide_async/core.md
+      - Commands:
+          - Cluster Commands: glide_async/cluster_commands.md
+          - Standalone Commands: glide_async/standalone_commands.md
+      - Logger: glide_async/logger.md
+  - Glide Sync:   
+      - BaseClient: glide_sync/base_client.md
+      - ClusterClient: glide_sync/glide_cluster_client.md
+      - GlideClient: glide_sync/glide_client.md
+      - Core: glide_sync/core.md
+      - Commands:
+          - Cluster Commands: glide_sync/cluster_commands.md
+          - Standalone Commands: glide_sync/standalone_commands.md
+      - Logger: glide_sync/logger.md
+  - Glide Shared:
+      - Base Batch: glide_shared/base_batch.md
+      - Cluster Batch: glide_shared/cluster_batch.md
+      - Config: glide_shared/config.md
+      - Core Options: glide_shared/core_options.md
+      - Exceptions: glide_shared/exceptions.md
+      - Standalone Batch: glide_shared/standalone_batch.md
+
+theme:
+  name: material
+  palette: 
+    scheme: valkey-glide
+  features:
+    - navigation.sections
+    - content.code.copy
+    - navigation.path
+    - navigation.footer
+    - navigation.top
+    - search.suggest
+    - search.highlight
+  highlightjs: true
+  font:
+    text: Roboto
+    code: Roboto Mono
+markdown_extensions:
+  - pymdownx.keys
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [
+            "valkey-glide/python/glide-shared",
+            "valkey-glide/python/glide-async/python",
+            "valkey-glide/python/glide-sync/"
+          ]
+          options:
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_root_heading: true
+  - search
+  - mkdocs-breadcrumbs-plugin:
+      delimiter: " / " # separator between sections
+      log_level: "CRITICAL" # "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+      additional_index_folders:
+        - temp_dir
+      generate_home_index: false
+extra:
+  generator: false
+extra_css:
+  - style.css
