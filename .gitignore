@@ -22,3 +22,5 @@ pnpm-debug.log*
 
 # VS-Code specific files
 .vscode/
+
+doc-gen/docs/

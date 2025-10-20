@@ -1,0 +1,17 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "valkey-glide/node/src/BaseClient.ts",
+        "valkey-glide/node/src/Batch.ts",
+        "valkey-glide/node/src/GlideClient.ts",
+        "valkey-glide/node/src/GlideClusterClient.ts",
+        "valkey-glide/node/src/Errors.ts",
+        "valkey-glide/node/src/Commands.ts",
+        "valkey-glide/node/src/Logger.ts",
+        "valkey-glide/node/src/server-modules/GlideFt.ts",
+        "valkey-glide/node/src/server-modules/FtOptions.ts",
+        "valkey-glide/node/src/server-modules/GlideJson.ts"
+    ],
+    "disableSources": true,
+    "includeHierarchySummary": true
+}
