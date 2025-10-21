@@ -3,7 +3,28 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import mermaid from "astro-mermaid";
 
-// https://astro.build/config
+function collapsed(isCollapsed = false, sidebarItems) {
+  return sidebarItems.map(item => {
+
+    if (item.items) {
+      return {
+        ...item,
+        collapsed: isCollapsed,
+        items: collapsed(isCollapsed, item.items),
+      };
+    }
+
+    if (item.autogenerate) {
+      return {
+        ...item,
+        collapsed: isCollapsed,
+      };
+    }
+
+    return item;
+  });
+}
+
 export default defineConfig({
   site: "https://valkey.io",
   base: "/valkey-glide-docs",
@@ -36,7 +57,7 @@ export default defineConfig({
           href: "https://github.com/valkey-io/valkey-glide",
         },
       ],
-      sidebar: [
+      sidebar: collapsed(true, [
         "overview",
         {
           label: "Getting Started",
@@ -46,7 +67,6 @@ export default defineConfig({
             "getting-started/basic-operations",
             {
               label: "Tutorials",
-              collapsed: true,
               autogenerate: {
                 directory: "getting-started/tutorials",
               },
@@ -55,7 +75,6 @@ export default defineConfig({
         },
         {
           label: "Concepts",
-          collapsed: true,
           items: [
             {
               label: "Architecture",
@@ -67,25 +86,20 @@ export default defineConfig({
             },
             {
               label: "Comparison",
-              collapsed: true,
               autogenerate: { directory: "concepts/comparison" },
             },
             {
               label: "Limitations",
-              collapsed: true,
               autogenerate: { directory: "concepts/limitations" },
             },
             {
               label: "Valkey Integrations",
-              collapsed: true,
               autogenerate: { directory: "concepts/valkey-integrations" },
             },
           ],
         },
         {
           label: "How-To Guides",
-          collapsed: true,
-          // autogenerate: { directory: "how-to" },
           items: [
             {
               label: "Cloud Development",
@@ -123,7 +137,6 @@ export default defineConfig({
           items: [
             {
               label: "Python",
-              collapsed: true,
               items: [
                 "languages/python",
                 {
@@ -152,7 +165,6 @@ export default defineConfig({
                     "languages/python/migration",
                     {
                       label: "From redis-py",
-                      collapsed: true,
                       autogenerate: {directory: "languages/python/migration/redis-py"}
                     },
                   ]
@@ -169,7 +181,6 @@ export default defineConfig({
             },
             {
               label: "Java",
-              collapsed: true,
               items: [
                 "languages/java",
                 {
@@ -196,17 +207,14 @@ export default defineConfig({
                     "languages/java/migration",
                     {
                       label: "From Jedis",
-                      collapsed: true,
                       autogenerate: {directory: "languages/java/migration/jedis"}
                     },
                     {
                       label: "From Lettuce",
-                      collapsed: true,
                       autogenerate: {directory: "languages/java/migration/lettuce"}
                     },
                     {
                       label: "From Redisson",
-                      collapsed: true,
                       autogenerate: {directory: "languages/java/migration/redisson"}
                     }
                   ]
@@ -223,7 +231,6 @@ export default defineConfig({
             },
             {
               label: "Node.js",
-              collapsed: true,
               items: [
                 "languages/nodejs",
                 {
@@ -250,7 +257,6 @@ export default defineConfig({
                     "languages/nodejs/migration",
                     {
                       label: "From ioredis",
-                      collapsed: true,
                       autogenerate: {directory: "languages/nodejs/migration/ioredis"}
                     },
                   ]
@@ -267,7 +273,6 @@ export default defineConfig({
             },
             {
               label: "Go",
-              collapsed: true,
               items: [
                 "languages/go",
                 {
@@ -294,7 +299,7 @@ export default defineConfig({
                     "languages/go/migration",
                     {
                       label: "From go-redis",
-                      collapsed: true,
+                      
                       autogenerate: {directory: "languages/go/migration/go-redis"}
                     },
                   ]
@@ -311,34 +316,29 @@ export default defineConfig({
             },
             {
               label: "C#",
-              collapsed: true,
               autogenerate: {directory: "languages/csharp"}
             },
             {
               label: "Php",
-              collapsed: true,
               autogenerate: {directory: "languages/php"}
             }
           ],
         },
         {
           label: "Migration",
-          collapsed: true,
           items: [
            "migration",
            {
             label: "Planning",
-            collapsed: true,
             autogenerate: {directory: "migration/planning"}
            }
           ]
         },
         {
           label: "Reference",
-          collapsed: true,
           autogenerate: { directory: "reference" },
         },
-      ],
+      ]),
     }),
   ],
 });
