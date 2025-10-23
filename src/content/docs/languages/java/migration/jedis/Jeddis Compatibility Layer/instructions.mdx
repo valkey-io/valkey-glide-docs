@@ -18,30 +18,7 @@ import { Aside, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
 
 This section outlines the steps and strategies for migrating to the Valkey GLIDE Jedis Compatibility Layer.
 
-## Before You Start
-1. **Audit your codebase** for unsupported features listed above.
-2. **Test thoroughly** in a development environment.
-3. **Review connection configurations** for compatibility. See our <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/configurations-mapping`}>connection mapping</a> on how Jedis configurations map to Valkey GLIDE configurations.
-4. **Plan for feature gaps** that may require code changes.
-1. **Check your Jedis version** as the compatibility layer may not support older Jedis versions.
-2. **Verify command types.** `sendCommand()` only supports `Protocol.Command` types, not custom `ProtocolCommand` implementations.
-3. **Test thoroughly** since classes may exist but lack implementation.
-4. **Expect runtime failures.**:Successful compilation doesn't guarantee runtime success.
-5. **Review SSL/TLS configurations.** Advanced SSL settings require manual migration to native Valkey GLIDE APIs.
-
-For a full list of supported features and configurations mapping, take a look at the <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/supported-features`} >Supported Features and Inputs</a> page.
-
-## Migration Strategies
-1. Start with simple applications using basic commands.
-2. Gradually migrate complex features to native Valkey GLIDE APIs.
-3. Consider using Valkey GLIDE to support unsupported features.
-4. Monitor performance and behavior differences.
-
-:::tip[Have a Rollback Plan]
-Be prepared to revert to your original Jedis dependency if you discover critical incompatibilities.
-:::
-
-##  Migartion Instructions
+## Instructions
 
 The migration can be done by simply replacing the `jedis` dependency with `valkey-glide-jedis-compatibility`.
 
@@ -81,6 +58,27 @@ After migration, it is crucial to throughly evaluate your application to ensure 
 1. **Test All Code Paths:** Do not rely on successful compilation. Test every part of your application that interacts with Jedis, not just simple `get`/`set` operations.
 2. **Monitor for Runtime Exceptions:** Specifically watch for errors from unsupported or stubbed methods.
 3. **Start with simple operations**: Keep it simple first by verifying basic compatibility.
+
+## Migration Checklist
+1. **Audit your codebase** for unsupported features. See our <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/supported-features`}>Supported Features</a> section for details.
+2. **Test thoroughly** in a development environment.
+3. **Review connection configurations** for compatibility. See our <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/configurations-mapping`}>Connection Mapping</a> page on how Jedis configurations are mapped to Valkey GLIDE configurations.
+4. **Plan for feature gaps** that may require code changes.
+1. **Check your Jedis version** as the compatibility layer may not support older Jedis versions.
+2. **Verify command types.** `sendCommand()` only supports `Protocol.Command` types, not custom `ProtocolCommand` implementations.
+3. **Test thoroughly** since classes may exist but lack implementation.
+4. **Expect runtime failures.**:Successful compilation doesn't guarantee runtime success.
+5. **Review SSL/TLS configurations.** Advanced SSL settings require manual migration to native Valkey GLIDE APIs.
+
+## Migration Strategies
+1. Start with simple applications using basic commands.
+2. Gradually migrate complex features to native Valkey GLIDE APIs.
+3. Consider using Valkey GLIDE to support unsupported features.
+4. Monitor performance and behavior differences.
+
+:::tip[Have a Rollback Plan]
+Be prepared to revert to your original Jedis dependency if you discover critical incompatibilities.
+:::
 
 ## Manual Migration
 
