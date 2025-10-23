@@ -1,5 +1,5 @@
 ---
-title: Migrating from Jedis.
+title: Jedis Migration
 description: A reference page in my new Starlight docs site.
 sidebar:
   order: 1
@@ -16,11 +16,12 @@ import { Aside, LinkCard } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-Looking to migrate from Jedis to Valkey GLIDE? 
-<LinkCard title="Jedis Compatibility Layer" 
-    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/`} 
-    description="A simple drop-in replacement to quickly connect your Jedis applications to Valkey."/>
+#### Looking to migrate from Jedis? 
 
-<LinkCard title="Jedis Migration Guide" 
+<LinkCard title="Quick Migration" 
+    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/`} 
+    description="A simple drop-in replacement using the Jedis Compatibility Layer."/>
+
+<LinkCard title="Full Migration" 
     href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/manual-migrations/`} 
-    description="Move fully to Valkey GLIDE to take avantage of native APIs features and performance."/> 
+    description="Take full avantage of Valkey GLIDE by moving to native APIs."/> 
