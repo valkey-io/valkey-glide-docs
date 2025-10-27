@@ -1,14 +1,16 @@
 ---
-title: 'Build from source'
+title: 'Build From Source'
 description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 2
  badge:
    text: Draft Review
-   variant: success
+   variant: caution
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+import { Content as InstallCommonPrereq } from '../../../commons/instructions/install-prereq.mdx';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -32,105 +34,81 @@ import { Aside } from '@astrojs/starlight/components';
 * ziglang and zigbuild (for GNU Linux only)
 * valkey (for testing)
 
-**Valkey installation**
+:::caution[Use Protobuf 29.1.x Only!]
+Protobuf 29.1.x are the only versions supported version for building the Java client.
+Using other client may results in build failures.
+:::
+
+## Valkey installation
 
 See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
 
-**Dependencies installation for Ubuntu**
+## Build Instructions
 
-```bash
-sudo apt update -y
-sudo apt install -y openjdk-11-jdk git gcc pkg-config openssl libssl-dev unzip cmake
-# Install rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-# Check that the Rust compiler is installed
-rustc --version
-```
+<Steps>
 
-Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
+1. #### Install Common Prerequisites
+    <InstallCommonPrereq/>
 
-**Dependencies installation for CentOS**
+2. #### Install JDK 11+
+   <Tabs syncKey="OSSyncKey">
+      <TabItem label="Ubuntu/Debian">
+         ```bash
+         sudo apt update
+         sudo apt install -y openjdk-11-jdk
+         ```
+   </TabItem>
+   <TabItem label="CentOS">
+         ```bash
+         sudo yum install -y java-11-openjdk-devel
+         ```
+   </TabItem>
+   <TabItem label="MacOS">
+         ```bash
+         brew install openjdk@11
+         ```
+   </TabItem> 
+   </Tabs>
 
-```bash
-sudo yum update -y
-sudo yum install -y java-11-openjdk-devel git gcc pkgconfig openssl openssl-devel unzip cmake
-# Install rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+3. #### Clone the repository
+    ```bash
+    mkdir -p $HOME/src
+    cd $HOME/src
+    git clone https://github.com/valkey-io/valkey-glide.git
+    cd valkey-glide
+    ```
 
-Continue with **Install protobuf compiler** and **Install `ziglang` and `zigbuild`** below.
-
-**Dependencies installation for MacOS**
-
-```bash
-brew update
-brew install openjdk@11 git gcc pkgconfig openssl cmake
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
-
-Continue with **Install protobuf compiler** below.
-It is not necessary to **Install `ziglang` and `zigbuild`** for MacOS.
-
-**Install protobuf compiler**
-
-Only protobuf v29.1 is supported. Other versions are not supported and may cause build issues.
-
-Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/tag/v29.1).
-Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
-
-```bash
-PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-curl -LO $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
-unzip protoc-29.1-linux-x86_64.zip -d $HOME/.local
-export PATH="$PATH:$HOME/.local/bin"
-# Check that the protobuf compiler version 29.1 or higher is installed
-protoc --version
-```
-
-:::note
-You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
-:::
-
-**Install `ziglang` and `zigbuild`**
-
-```bash
-pip3 install ziglang
-cargo install --locked cargo-zigbuild
-```
-
-## Building and installation steps
-
-Before starting this step, make sure you've installed all software dependencies.
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/valkey-io/valkey-glide.git
-   cd valkey-glide/java
-   ```
-
-2. Build the Java wrapper (Choose a build option from the following and run it from the `java` folder):
-
-   1. Enter the java directory:
+4. #### Build
 
    ```bash
    cd java
-   ```
-
-   2. Build the project:
-
-   ```bash
    ./gradlew :client:buildAll
    ```
 
+</Steps>
 ## Troubleshooting
 
-Some troubleshooting issues:
-
-* If the build fails after following the installation instructions, the `gradle` daemon may need to be
+### Build failures after installation
+If the build fails after following the installation instructions, the `gradle` daemon may need to be
   restarted (`./gradlew --stop`) so that it recognizes changes to environment variables (e.g. `$PATH`). If that doesn't work,
   you may need to restart your machine. In particular, this may solve the following problems:
   * Failed to find `cargo` after `rustup`.
   * No Protobuf compiler (protoc) found.
+
+### Protobuf Geneartion failed
+```
+> Task :client:compileJava FAILED
+/Users/Alex.Le/bq/valkey-glide/java/client/src/main/java/glide/models/protobuf/response/ResponseOuterClass.java:9: error: cannot find symbol
+public final class ResponseOuterClass extends com.google.protobuf.GeneratedFile {
+                                                                 ^
+  symbol:   class GeneratedFile
+  location: package com.google.protobuf
+```
+
+This error indicate that the Protobuf version is incorrect. 
+For Java client, only Protobuf version 29.1.x is supported.
+
+```bash
+%protoc --version
+libprotoc 29.1
+```

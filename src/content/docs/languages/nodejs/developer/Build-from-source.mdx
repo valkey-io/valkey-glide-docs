@@ -1,14 +1,16 @@
 ---
-title: 'Build from source'
+title: 'Build From Source'
 description: A reference page in my new Starlight docs site.
 sidebar: 
  order: 2
  badge:
    text: Draft Review
-   variant: success
+   variant: caution
 ---
 
-import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+import { Content as InstallCommonPrereq } from '../../../commons/instructions/install-prereq.mdx';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -16,20 +18,8 @@ import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-## Prerequisites
-
-### NodeJS supported version
-
-Node.js 16+
-
-**For npm users on linux it is recommended to use npm >=11 since it support optional download base on libc, yarn users should not be concerned**
-
-:::note
-The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which add a size to the package. 
-The package is using the protobufjs/minimal version, hence, if size matter, bundlers should be able to strip the unused code. It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
-:::
-
-### Software Dependencies
+## Software Dependencies
+* node.js 16+
 * npm
 * git
 * GCC
@@ -40,82 +30,58 @@ The package is using the protobufjs/minimal version, hence, if size matter, bund
 * openssl-dev
 * rustup
 
-:::note
-If your Node.js version is below the supported version specified in the client's [documentation](#nodejs-supported-version), you can upgrade it using [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#install--update-script).
+:::note[Upgrading Node.js]
+If your Node.js version is below the supported version, you can upgrade it using [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#install--update-script).
 :::
 
-**Dependencies installation for Ubuntu**
-
-```bash
-sudo apt update -y
-sudo apt install -y nodejs npm git gcc pkg-config openssl libssl-dev cmake
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-# Check the installed node version
-node -v
-```
-
-Continue with **Install protobuf compiler** below.
-
-:::note
-Ensure that you installed a supported Node.js version. For Ubuntu 22.04 or earlier, please refer to the instructions [here](#prerequisites) to upgrade your Node.js version.
+:::caution[Linux Users]
+For npm users on linux it is recommended to use **npm 11+** since it support optional download base on libc, yarn users should not be concerned
 :::
 
-**Dependencies installation for CentOS**
-
-```bash
-sudo yum update -y
-sudo yum install -y nodejs git gcc pkgconfig openssl openssl-devel gettext cmake
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
-
-Continue with **Install protobuf compiler** below.
-
-**Dependencies installation for MacOS**
-
-```bash
-brew update
-brew install nodejs git gcc pkgconfig openssl cmake
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
-
-Continue with **Install protobuf compiler** below.
-
-**Install protobuf compiler**
-
-Various platform-specific zips can be found [here](https://github.com/protocolbuffers/protobuf/releases/v3.20.3).
-Choose the appropriate zip for your system and run the commands below, adjusting for the zip you chose:
-
-```bash
-PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-curl -LO $PB_REL/download/v3.20.3/protoc-3.20.3-linux-x86_64.zip
-unzip protoc-3.20.3-linux-x86_64.zip -d $HOME/.local
-export PATH="$PATH:$HOME/.local/bin"
-# Check that the protobuf compiler is installed. A minimum version of 3.20.0 is required.
-protoc --version
-```
-
-:::note
-You may wish to add the entire `export PATH` line to your shell configuration file to persist this path addition, either `.bashrc` or `.zshrc` depending on which shell you are using.
+:::note[Package Size]
+The client is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which add a size to the package. 
+The package is using the protobufjs/minimal version, hence, if size matter, bundlers should be able to strip the unused code. 
+It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
 :::
+## Valkey installation
 
-**Valkey Server and CLI**
 See the [Valkey installation guide](https://valkey.io/topics/installation/) to install the Valkey server and CLI.
 
-## Building and installation steps
-
-Before starting this step, make sure you've installed all software requirments.
+## Build Instructions
 
 <Steps>
-1. Clone the repository.
-   ```bash
-   git clone https://github.com/valkey-io/valkey-glide.git
-   cd valkey-glide
-   ```
 
-2. Install all node dependencies.
+1. #### Install Common Prerequisites
+    <InstallCommonPrereq/>
+2. #### Clone the repository
+    ```bash
+    mkdir -p $HOME/src
+    cd $HOME/src
+    git clone https://github.com/valkey-io/valkey-glide.git
+    cd valkey-glide
+    ```
+
+2. #### Install Node.js and NPM
+    <Tabs syncKey="OSSyncKey">
+      <TabItem label="Ubuntu/Debian">
+        ```bash
+        sudo apt install -y nodejs npm 
+        ```
+      </TabItem>
+      <TabItem label="CentOS">
+        ```bash
+        sudo yum install -y nodejs
+        ```
+      </TabItem>
+      <TabItem label="MacOS">
+        ```bash
+        sudo brew install -y nodejs
+        ```
+      </TabItem>
+    </Tabs>
+
+
+3. #### Install NPM Dependencies
 
    ```bash
    cd node
@@ -125,25 +91,27 @@ Before starting this step, make sure you've installed all software requirments.
    cd ..
    ```
 
-3. Build using one of the following configurations.
+4. #### Build
    <Tabs>
       <TabItem label="release">
-         Build in release mode, stripped from all debug symbols (optimized and minimized binary size):
          ```bash
+         # Release Mode, stripped of all debug symbols.
+         # Optimized and minimized binary size.
          npm run build:release
          ```
       </TabItem>
 
       <TabItem label="benchmark">
-         Build in release mode with debug symbols (optimized but large binary size):
          ```bash
+         # Build in release mode with debug symbols.
+         # Optimized but large binary size.
          npm run build:benchmark
          ```
       </TabItem>
 
       <TabItem label="normal">
-         For testing purposes, you can execute an unoptimized but fast build using:
          ```bash
+         # For testing purposes, optimized but fast build.
          npm run build
          ```
       </TabItem>
@@ -151,7 +119,7 @@ Before starting this step, make sure you've installed all software requirments.
 
    Once building completed, you'll find the compiled JavaScript code in the`./build-ts` folder.
 
-4. Run tests.
+5. #### Run tests
    :::caution
    Ensure that you have installed server and valkey-cli on your host. You can download Valkey at the following link: [Valkey Download page](https://valkey.io/download/).
    :::
@@ -173,7 +141,7 @@ Before starting this step, make sure you've installed all software requirments.
       npm run test:modules
       ```
 
-5. Integrating the built GLIDE package into your project.
+6. #### Integrating the built GLIDE package into your project.
 
    Add the package to your project using the folder path with:
    ```bash
@@ -195,3 +163,4 @@ Once building completed, you'll find the compiled JavaScript code in the `node/b
 ## Troubleshooting
 
 * If the build fails after running `npx tsc` because `glide-rs` isn't found, check if your npm version is in the range 9.0.0-9.4.1, and if so, upgrade it. 9.4.2 contains a fix to a change introduced in 9.0.0 that is required in order to build the library.
+

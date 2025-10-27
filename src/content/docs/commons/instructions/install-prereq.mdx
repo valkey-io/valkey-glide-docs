@@ -1,0 +1,91 @@
+---
+title: 'Reusable Section'
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+import { Content as InstallZiglang } from './install-ziglang.mdx';
+
+<Tabs syncKey="OSSyncKey">
+  <TabItem label="Ubuntu / Debian">
+    ```bash
+    sudo apt update -y
+    sudo apt install -y git gcc pkg-config openssl libssl-dev unzip cmake python3
+    # Install rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
+
+  <InstallZiglang/>
+
+  </TabItem>
+
+  <TabItem label="CentOS">
+    ```bash
+    sudo yum update -y
+    sudo yum install -y git gcc pkgconfig openssl openssl-devel unzip cmake wget tar python3
+    # Install rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
+
+  <InstallZiglang/>
+  
+  </TabItem>
+
+  <TabItem label="MacOS">
+    ```bash
+    brew update
+    brew install git gcc pkgconfig openssl cmake unzip python3
+    # Install rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source "$HOME/.cargo/env"
+    # Check that the Rust compiler is installed
+    rustc --version
+    ```
+
+  </TabItem>
+</Tabs>
+
+#### Install Protobuf Compiler
+<Tabs syncKey='OSSyncKey'>
+    <TabItem label="Ubuntu/Debian">
+        ```bash
+        PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+        curl -LO $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
+        unzip protoc-29.1-linux-x86_64.zip -d $HOME/.local
+        export PATH="$PATH:$HOME/.local/bin"
+        protoc --version
+        ```
+    </TabItem>
+
+    <TabItem label="CentOS">
+        ```bash
+        PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+        curl -LO $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
+        unzip protoc-29.1-linux-x86_64.zip -d $HOME/.local
+        export PATH="$PATH:$HOME/.local/bin"
+        protoc --version
+        ```
+    </TabItem>
+
+    <TabItem label="MacOS">
+        ```bash
+        PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+        curl -LO $PB_REL/download/v29.1//protoc-29.1-osx-universal_binary.zip
+        unzip protoc-29.1-osx-universal_binary.zip -d $HOME/.local
+        export PATH="$PATH:$HOME/.local/bin"
+        protoc --version
+        ```
+    </TabItem>
+</Tabs>
+
+Other platform-specific binaries can be found [here](https://github.com/protocolbuffers/protobuf/releases/tag/v29.1).
+
+:::tip
+  You may wish to add the `export PATH` to `.bashrc` or `.zshrc`, depending on which shell you are using, to persist this path addition.
+:::
