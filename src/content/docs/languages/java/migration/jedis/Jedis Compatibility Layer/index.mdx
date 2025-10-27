@@ -5,7 +5,7 @@ sidebar:
   order: 1
   badge:
     text: Draft Review
-    variant: success
+    variant: caution
 ---
 
 import { Aside, LinkCard } from '@astrojs/starlight/components';
@@ -53,13 +53,13 @@ or depends heavily on unsupported features, a full migration to the native GLIDE
 Ready to get started?
   <LinkCard 
     title="Migration Instructions" 
-    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/instructions/`} 
+    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jedis-compatibility-layer/instructions/`} 
     description="Step-by-step instructions for migrating using the Jedis Compatibility Layer."/>
   <LinkCard 
     title="Supported Features" 
-    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/supported-features`} 
+    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jedis-compatibility-layer/supported-features`} 
     description="See how Jedis commands and configurations are supported."/>
   <LinkCard 
     title="Configuration Mapping" 
-    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jeddis-compatibility-layer/configurations-mapping`} 
+    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jedis-compatibility-layer/configurations-mapping`} 
     description="How Jedis configurations maps to Valkey GLIDE configurations."/>
