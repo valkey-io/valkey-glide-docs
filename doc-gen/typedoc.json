@@ -14,5 +14,5 @@
     ],
     "disableSources": true,
     "includeHierarchySummary": true,
-    "readme": "valkey-glide/../node-home.md"
+    "readme": "valkey-glide/../typedoc/node-home.md"
 }
