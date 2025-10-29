@@ -59,77 +59,28 @@ export default defineConfig({
       ],
       sidebar: collapsed(true, [
         "overview",
+        "whats-new",
         {
-          label: "Getting Started",
-          items: [
-            "getting-started/quickstart",
-            "getting-started/specifying-options",
-            "getting-started/basic-operations",
-            {
+          label: "Learn",
+          items: [    
+             "getting-started/quickstart",
+             "getting-started/specifying-options",
+             "getting-started/basic-operations",
+             {
               label: "Tutorials",
               autogenerate: {
                 directory: "getting-started/tutorials",
               },
-            },
-          ],
-        },
-        {
-          label: "Concepts",
-          items: [
-            {
-              label: "Architecture",
-              autogenerate: { directory: "concepts/architecture" },
-            },
-            {
-              label: "Client Features",
-              autogenerate: { directory: "concepts/client-features" },
-            },
-            {
-              label: "Comparison",
-              autogenerate: { directory: "concepts/comparison" },
-            },
-            {
-              label: "Limitations",
-              autogenerate: { directory: "concepts/limitations" },
-            },
-            {
-              label: "Valkey Integrations",
-              autogenerate: { directory: "concepts/valkey-integrations" },
-            },
-          ],
-        },
-        {
-          label: "How-To Guides",
-          items: [
-            {
-              label: "Cloud Development",
-              autogenerate: { directory: "how-to/cloud-development" },
-            },
-            {
-              label: "Connection Management",
-              autogenerate: { directory: "how-to/connection-management" },
-            },
-            {
-              label: "Framework Integration",
-              autogenerate: { directory: "how-to/framework-integration" },
-            },
-            {
-              label: "monitoring",
-              autogenerate: { directory: "how-to/monitoring" },
-            },
-            {
-              label: "operations",
-              autogenerate: { directory: "how-to/operations" },
-            },
-            {
-              label: "performance",
-              autogenerate: { directory: "how-to/performance" },
-            },
-            {
-              label: "security",
-              autogenerate: { directory: "how-to/security" },
-            },
-          ],
+             },
+              {
+                label: "Concepts",
+                autogenerate: { directory: "concepts" },  
+              },
+              {
+                label: "How-To Guides",
+                autogenerate: { directory: "how-to" },
+              },
+          ]
         },
         {
           label: "Languages",
