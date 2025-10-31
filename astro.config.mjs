@@ -78,12 +78,12 @@ export default defineConfig({
                 collapsed: true,
                 autogenerate: { directory: "concepts" },  
               },
-              {
-                label: "How-To Guides",
-                collapsed: true,
-                autogenerate: { directory: "how-to" },
-              },
           ]
+        },
+        {
+          label: "How-To Guides",
+          collapsed: true,
+          autogenerate: { directory: "how-to" },
         },
         {
           label: "Languages",
