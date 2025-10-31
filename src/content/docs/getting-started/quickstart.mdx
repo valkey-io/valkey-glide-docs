@@ -1,5 +1,5 @@
 ---
-title: Quickstart
+title: Quick start
 sidebar:
   order: 1
   badge:
@@ -227,4 +227,158 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
      ```
 </Steps>
 
-Congratulations, you are now connected to Valkey using GLIDE! Head over to the next section to see how you can configure your Valkey connection.
+## Connection Configuration
+
+GLIDE offers many configuration options. A typical configuration may look like following:
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClient, NodeAddress, GlideClientConfiguration
+
+    async def main():
+        # Setting up connection configuration
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)],
+            # Connection timeout (milliseconds)
+            request_timeout=5000,
+            # Connection pool size
+            connection_backoff_max_delay=1000,
+            # TLS configuration (if needed)
+            use_tls=False,
+            # Database selection (0-15 for Redis/Valkey)
+            database_id=0
+        )
+        
+        client = GlideClient(config)
+        
+        try:
+            # Test connection with custom message
+            response = await client.ping("Hello GLIDE!")
+            print(f"Server responded: {response}")
+            
+        finally:
+            await client.close()
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import java.time.Duration;
+
+    public class AdvancedConnection {
+        public static void main(String[] args) {
+            // Setting up connection configuration
+            GlideClientConfiguration config = GlideClientConfiguration.builder()
+                .address(NodeAddress.builder()
+                    .host("localhost")
+                    .port(6379)
+                    .build())
+                // Connection timeout
+                .requestTimeout(Duration.ofSeconds(5))
+                // TLS configuration (if needed)
+                .useTls(false)
+                // Database selection
+                .databaseId(0)
+                .build();
+            
+            try (GlideClient client = GlideClient.createClient(config).get()) {
+                // Test connection with custom message
+                String response = client.ping("Hello GLIDE!").get();
+                System.out.println("Server responded: " + response);
+                
+            } catch (Exception e) {
+                System.err.println("Connection failed: " + e.getMessage());
+            }
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const { GlideClient } = require('@valkey/valkey-glide');
+
+    async function main() {
+        // Setting up connection configuration
+        const configs = {
+            addresses: [{ host: 'localhost', port: 6379 }],
+            // Connection timeout (milliseconds)
+            requestTimeout: 5000,
+            // TLS configuration (if needed)
+            useTls: false,
+            // Database selection (0-15 for Redis/Valkey)
+            databaseId: 0
+        }
+
+        const client = GlideClient.createClient(configs);
+        
+        try {
+            // Test connection with custom message
+            const response = await client.ping('Hello GLIDE!');
+            console.log(`Server responded: ${response}`);
+            
+        } finally {
+            client.close();
+        }
+    }
+
+    main().catch(console.error);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "fmt"
+        "log"
+        "time"
+        
+        "github.com/valkey-io/valkey-glide/go/glide/api"
+    )
+
+    func main() {
+        // Setting up connection configuration
+        config := &api.GlideClientConfiguration{
+            Addresses: []api.NodeAddress{
+                {Host: "localhost", Port: 6379},
+            },
+            // Connection timeout
+            RequestTimeout: 5 * time.Second,
+            // TLS configuration (if needed)
+            UseTls: false,
+            // Database selection
+            DatabaseId: 0,
+        }
+        
+        client := api.NewGlideClient(config)
+        defer client.Close()
+        
+        // Test connection with custom message
+        response, err := client.PingWithMessage("Hello GLIDE!")
+        if err != nil {
+            log.Fatalf("Connection failed: %v", err)
+        }
+        
+        fmt.Printf("Server responded: %s\n", response)
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip
+For a full list of connection options, take a look at the <a href={`${import.meta.env.BASE_URL}/reference/configuration/connection-options`}>connection options</a> reference.
+:::
+
+## Next Steps
+
+Congratulations, you are now connected to Valkey using GLIDE! To see how to make basic operations take a look at the our <a href={`${import.meta.env.BASE_URL}/docs/getting-started/basic-operations`}> guide</a>.

@@ -64,7 +64,6 @@ export default defineConfig({
           label: "Learn",
           items: [    
              "getting-started/quickstart",
-             "getting-started/specifying-options",
              "getting-started/basic-operations",
              {
               label: "Tutorials",
