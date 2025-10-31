@@ -57,7 +57,7 @@ export default defineConfig({
           href: "https://github.com/valkey-io/valkey-glide",
         },
       ],
-      sidebar: collapsed(true, [
+      sidebar: [
         "overview",
         "whats-new",
         {
@@ -68,24 +68,26 @@ export default defineConfig({
              "getting-started/basic-operations",
              {
               label: "Tutorials",
+              collapsed: true,
               autogenerate: {
                 directory: "getting-started/tutorials",
               },
              },
               {
                 label: "Concepts",
+                collapsed: true,
                 autogenerate: { directory: "concepts" },  
               },
               {
                 label: "How-To Guides",
+                collapsed: true,
                 autogenerate: { directory: "how-to" },
               },
           ]
         },
         {
           label: "Languages",
-          collapsed: false,
-          items: [
+          items: collapsed(true, [
             {
               label: "Python",
               items: [
@@ -269,10 +271,11 @@ export default defineConfig({
               label: "Php",
               autogenerate: {directory: "languages/php"}
             }
-          ],
+          ]),
         },
         {
           label: "Migration",
+          collapsed: true,
           items: [
            "migration",
            {
@@ -283,9 +286,10 @@ export default defineConfig({
         },
         {
           label: "Reference",
+          collapsed: true,
           autogenerate: { directory: "reference" },
         },
-      ]),
+      ],
     }),
   ],
 });
