@@ -15,4 +15,117 @@ import { Aside } from '@astrojs/starlight/components';
   For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 </Aside>
 
-This is a placeholder for `whats-new.md`.
+## v2.1.1
+### What's Changed
+* Python: improve UDS socket error handling by @jbrinkman in https://github.com/valkey-io/valkey-glide/pull/4755
+* Python: backwards compatibility fix for module imports by @jamesx-improving in https://github.com/valkey-io/valkey-glide/pull/4803
+* Add explicit rustfmt and clippy components to install-rust-and-protoc action by @xShinnRyuu in https://github.com/valkey-io/valkey-glide/pull/4820
+* CORE: Persist Client Name Across Reconnections for CLIENT SETNAME Command by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4841
+* JAVA: Add cluster support for Move command by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4749
+* PYTHON: Add MOVE command support for cluster clients by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4751
+* NODE: add MOVE command support for cluster clients by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4750
+* GO: Add cluster support for Move command by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4748
+* JAVA: Move COPY command with database ID from standalone to base client by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4804
+* GO: Add DBDestination option  tests to CopyWithOptions command by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4802
+* NODE: move COPY command to BaseClient and add comprehensive tests by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4805
+* PYTHON: Consolidate COPY command implementation to CoreCommands by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4806
+* PYTHON: Fix documentation for copy command by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4859
+* FIX: SELECT Command Database Persistence Across Reconnections by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4764
+* PYTHON: Move SELECT command from StandaloneCommands to CoreCommands by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4851
+* Go: Add Select command support for ClusterClient by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4850
+* JAVA: Add SELECT command support for cluster mode by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4846
+* Node: Move SELECT command from GlideClient to BaseClient by @affonsov in https://github.com/valkey-io/valkey-glide/pull/4849
+
+**Full Changelog**: https://github.com/valkey-io/valkey-glide/compare/v2.1.0...v2.1.1
+**Github Release**: https://github.com/valkey-io/valkey-glide/releases/tag/v2.1.1
+
+---
+
+## v2.1.0
+
+### 🚀 Key Features
+
+- **Jedis Compatibility Layer:** Released a new compatibility layer for the Java client to greatly simplify migrating to Valkey GLIDE from Jedis.
+- **Valkey 9 Support:** Added multi-db and hash field expiration support to the Java, Node, Python and Go clients. These are new features in the upcoming Valkey 9 release.
+- **Sync API for Python:** Introduced a new Sync API for the Python client.
+- **Alpine Linux Support for Java and Go:** Added support for Alpine Linux in the Java and Go clients, enabling smaller Docker images.
+- **Lazy Connection for Java and Go:** Implemented lazy connection support, available for both Java and Go clients.
+
+### 🎉 New Contributors
+
+* @gulbaki made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4368
+* @mohsen-alizadeh made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4472
+* @ljmcg made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4478
+* @omida-bitquill made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4509
+* @Funk66 made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4367
+* @leszek-bq made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4656
+* @alexr-bq made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4634
+* @jeremyprime made their first contribution in https://github.com/valkey-io/valkey-glide/pull/4711
+
+**Full Changelog**: https://github.com/valkey-io/valkey-glide/compare/v2.0.1...v2.1.0
+
+**Thanks to everyone who contributed to this release!**
+
+@acarbonetto, @adarovadya, @affonsov, @alexr-bq, @amirreza8002, @Angraybill, @asafpamzn, @avifenesh, @barshaul, @BoazBD, @carthas, @cyip10, @EdricCua, @edlng, @eifrah-aws, @fenichelar, @Funk66, @GilboaAWS, @goller, @gulbaki, @ikolomi, @jamesx-improving, @janhavigupta007, @jeremyprime, @jhpung, @jbrinkman, @jonathanl-bq, @Juneezee, @karthiknathan06, @leszek-bq, @liorsve, @ljmcg, @Maayanshani25, @marcoreni, @meitalkra, @MikeMwita, @mo-amzn, @mohsen-alizadeh, @mortymacs, @mthemis-provenir, @niharikabhavaraju, @nihohit, @omangesg, @omida-bitquill, @prateek-kumar-improving, @rueian, @Sa1Gur, @SergioNR, @shohamazon, @thearchitector, @tjzhang-BQ, @umit, @X39, @yipin-chen, @Yury-Fridlyand
+
+**Github Release**: https://github.com/valkey-io/valkey-glide/releases/tag/v2.1.0
+
+---
+
+## v2.0.1
+### What's Changed
+* [Update TLS configuration to use aws-lc-rs crypto provider](https://github.com/valkey-io/valkey-glide/pull/4230) by @avifenesh
+
+
+**Full Changelog**: https://github.com/valkey-io/valkey-glide/compare/v2.0.0...v2.0.1
+**Github Release**: https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.1
+
+---
+
+## v2.0.0
+
+### 🚀 Key Features
+
+- **Valkey-Glide Go Client:** Released a new Go wrapper for Valkey, developed in collaboration with GCP.
+- **OpenTelemetry Support:** Enabled integration with OpenTelemetry for observability, including metrics and trace collection.
+- **Batch API:** Introduced a new API for batching (Pipeline and Transaction) to reduce latency and improve throughput.
+- **Lazy Connection:** Implemented lazy connection support, available for both Python and Node.js clients.
+
+
+### ⚠️ Breaking Changes
+
+- Java client - Customizing thread pool is no longer available,  `threadPoolResource` parameter has removed from client configuration. PR [#3004](https://github.com/valkey-io/valkey-glide/pull/3004)
+- Node client - The `exec` function signature has changed and now requires a new mandatory parameter `raiseOnError`. PR [#3702](https://github.com/valkey-io/valkey-glide/pull/3702)
+- Python client - The `exec` function signature has changed and now requires a new mandatory parameter `raise_on_error`. PR [#3555](https://github.com/valkey-io/valkey-glide/pull/3555) and PR [#4027](https://github.com/valkey-io/valkey-glide/pull/4027)
+
+### 🎉 New Contributors
+
+@jhpung made their first contribution in [#2558](https://github.com/valkey-io/valkey-glide/pull/2558)
+@niharikabhavaraju made their first contribution in [#2738](https://github.com/valkey-io/valkey-glide/pull/2738)
+@EdricCua made their first contribution in [#2756](https://github.com/valkey-io/valkey-glide/pull/2756)
+@Angraybill made their first contribution in [#2933](https://github.com/valkey-io/valkey-glide/pull/2933)
+@omangesg made their first contribution in [#3199](https://github.com/valkey-io/valkey-glide/pull/3199)
+@rueian made their first contribution in [#3208](https://github.com/valkey-io/valkey-glide/pull/3208)
+@karthiknathan06 made their first contribution in [#3380](https://github.com/valkey-io/valkey-glide/pull/3380)
+@fenichelar made their first contribution in [#3489](https://github.com/valkey-io/valkey-glide/pull/3489)
+@X39 made their first contribution in [#3362](https://github.com/valkey-io/valkey-glide/pull/3362)
+@dependabot made their first contribution in [#3497](https://github.com/valkey-io/valkey-glide/pull/3497)
+@goller made their first contribution in [#3548](https://github.com/valkey-io/valkey-glide/pull/3548)
+@amirreza8002 made their first contribution in [#3558](https://github.com/valkey-io/valkey-glide/pull/3558)
+@Juneezee made their first contribution in [#3648](https://github.com/valkey-io/valkey-glide/pull/3648)
+@mortymacs made their first contribution in [#3760](https://github.com/valkey-io/valkey-glide/pull/3760)
+@thearchitector made their first contribution in [#3465](https://github.com/valkey-io/valkey-glide/pull/3465)
+@meitalkra made their first contribution in [#3949](https://github.com/valkey-io/valkey-glide/pull/3949)
+@mthemis-provenir made their first contribution in [#3386](https://github.com/valkey-io/valkey-glide/pull/3386)
+@SergioNR made their first contribution in [#3982](https://github.com/valkey-io/valkey-glide/pull/3982)
+@marcoreni made their first contribution in [#4046](https://github.com/valkey-io/valkey-glide/pull/4046)
+
+**Full Changelog:** https://github.com/valkey-io/valkey-glide/compare/v1.3.4...release-2.0
+
+**Thanks to everyone who contributed to this release!**
+
+@GilboaAWS, @janhavigupta007, @umit, @MikeMwita, @avifenesh, @ikolomi, @jhpung, @Yury-Fridlyand, @tjzhang-BQ, @cyip10, @jamesx-improving, @acarbonetto, @niharikabhavaraju, @jbrinkman, @liorsve, @EdricCua, @prateek-kumar-improving, @barshaul, @shohamazon, @BoazBD, @nihohit, @yipin-chen, @jonathanl-bq, @eifrah-aws, @Angraybill, @mo-amzn, @Maayanshani25, @edlng, @adarovadya, @Sa1Gur, @prateek-kumar-improving, @omangesg, @jbrinkman, @rueian, @karthiknathan06, @fenichelar, @X39, @dependabot, @goller, @amirreza8002, @Juneezee, @carthas, @mortymacs, @thearchitector, @meitalkra, @mthemis-provenir, @SergioNR, @marcoreni, @asafpamzn
+
+**Github Release**: https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0
+
+---
