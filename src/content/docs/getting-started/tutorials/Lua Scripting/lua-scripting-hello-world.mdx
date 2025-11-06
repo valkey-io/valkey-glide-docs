@@ -1,0 +1,371 @@
+---
+title: "Lua Scripting: Hello World!"
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 1
+  badge:
+    text: Draft
+    variant: caution
+---
+
+:::caution[Work In Progress!]
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+:::
+
+## How to Use Lua Scripting with Valkey GLIDE for Python
+
+This tutorial will guide you, step-by-step, through creating your first "Hello World" application using Lua scripting with the Valkey GLIDE library for Python.
+
+By the end of this guide, you will have a working Python application that connects to a Valkey server, executes a custom Lua script, and retrieves the result.
+
+## What is covered in this tutorial
+
+In this tutorial, you will learn:
+
+  * What Lua scripting is in Valkey and why it's a powerful feature.
+  * How to set up the prerequisites, including the GLIDE library and a Valkey server.
+  * How to connect to Valkey using `GlideClient`.
+  * How to create and execute a simple "Hello World" Lua script.
+  * How to handle different return values from your scripts.
+  * How to pass data into your scripts using the `KEYS` and `ARGV` arrays.
+
+## The Feature in Valkey GLIDE: Lua Scripting
+
+Valkey allows you to execute scripts written in the Lua programming language directly on the server. This is an incredibly powerful feature with two primary benefits:
+
+1.  **Atomicity:** The entire Lua script is executed as a single, atomic operation. Valkey guarantees that no other command or script will run in the midst of your script's execution. This is perfect for complex "read-modify-write" patterns where you need to fetch data, perform logic on it, and write it back without interruption.
+2.  **Performance:** Executing logic on the server reduces network latency. Instead of making multiple round-trips from your Python application (e.g., `GET` a value, modify it in Python, `SET` the new value), you can send a single script that performs all operations on the server side.
+
+The Valkey GLIDE library provides a simple and efficient interface for this feature through the `Script` class and the `invoke_script` method.
+
+## Prerequisites
+
+Before you begin, you must have the following set up.
+
+### 1\. Python Environment
+
+You will need Python 3.9 or newer. We recommend using a virtual environment.
+
+### 2\. Install Valkey GLIDE
+
+Install the library using pip:
+
+```sh
+pip install glide-client
+```
+
+### 3\. Run a Valkey Server
+
+For this tutorial, the simplest way to get a Valkey server running is by using Docker. This command will start a new standalone Valkey instance, map it to port `6379`, and name the container `valkey-standalone`.
+
+```sh
+docker run -d --name valkey-standalone -p 6379:6379 valkey/valkey-server
+```
+
+You can verify your server is running with:
+
+```sh
+docker ps
+```
+
+You should see `valkey-standalone` in the list.
+
+## Tutorial: Your First Valkey Lua Script
+
+Let's build our application step-by-step.
+
+### Step 1: Set Up Imports and Async Function
+
+The GLIDE library is asynchronous, so we will use Python's `asyncio` library.
+
+Create a new Python file (e.g., `app.py`) and add the necessary imports and a basic `main` function.
+
+```python
+import asyncio
+from glide import (
+    Script,
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RequestError
+)
+
+async def main():
+    print("Starting the GLIDE Lua tutorial...")
+    # We will add our code here
+    pass
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Step 2: Connect to Valkey
+
+Inside your `main` function, add the code to connect to the standalone Valkey server you started with Docker. We will use a `try...finally` block to ensure the client connection is always closed.
+
+```python
+import asyncio
+from glide import (
+    Script,
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RequestError
+)
+
+async def main():
+    print("Starting the GLIDE Lua tutorial...")
+    
+    # Standalone client configuration
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = None # Define client outside try block
+
+    try:
+        # Create and connect the client
+        client = await GlideClient.create(config)
+        print("Successfully connected to Valkey.")
+
+        # Our script logic will go here
+    
+    except RequestError as e:
+        print(f"Error connecting or running command: {e}")
+
+    finally:
+        if client:
+            # Always close the client when done
+            await client.close()
+            print("Connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Run this script. If it connects and closes successfully, you are ready for the next step.
+
+```sh
+$ python app.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Connection closed.
+```
+
+### Step 3: Run "Hello, Valkey\!"
+
+Now for the main event. We will create a `Script` object with our Lua code and execute it using `client.invoke_script`.
+
+Add the following code inside the `try` block, right after the "Successfully connected" print statement.
+
+```python
+        # ... inside the try block ...
+        print("Successfully connected to Valkey.")
+
+        # 1. Create a simple 'Hello World' script
+        hello_script = Script("return 'Hello, Valkey!'")
+
+        # 2. Execute the script on the server
+        result = await client.invoke_script(hello_script)
+
+        # 3. Print the result
+        print(f"Script result: {result}")
+```
+
+Run your script again. You should see the following output:
+
+```sh
+$ python app.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Script result: b'Hello, Valkey!'
+Connection closed.
+```
+
+Notice the `b'...'` prefix. Valkey and GLIDE return strings as raw bytes. This is the expected behavior.
+
+### Step 4: Handle Different Return Values
+
+Lua scripts can return more than just strings. Let's try returning a number and an array. Add this code after your "Hello World" script.
+
+```python
+        # ... after the 'Hello World' script ...
+
+        # Example 2: Script that returns a number
+        num_script = Script("return 42")
+        num_result = await client.invoke_script(num_script)
+        print(f"Number script result: {num_result} (Type: {type(num_result)})")
+
+        # Example 3: Script that returns an array (list)
+        array_script = Script("return {1, 2, 3, 'hello'}")
+        array_result = await client.invoke_script(array_script)
+        print(f"Array script result: {array_result}")
+```
+
+Run the script again. Your output will show how GLIDE intelligently converts Lua types back to Python types:
+
+```sh
+$ python app.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Script result: b'Hello, Valkey!'
+Number script result: 42 (Type: <class 'int'>)
+Array script result: [1, 2, 3, b'hello']
+Connection closed.
+```
+
+### Step 5: Pass Data to Scripts (ARGV)
+
+Hard-coding values is limiting. Let's pass data into our script using the `ARGV` array. Lua scripts have access to a global `ARGV` array containing arguments you pass from the client.
+
+Add this code:
+
+```python
+        # ... after the array script ...
+
+        # Example 4: Script that uses arguments (ARGV)
+        # ARGV[1] is the first argument
+        greet_script = Script("return 'Hello, ' .. ARGV[1]")
+
+        # Pass arguments using the 'args' parameter
+        greet_result = await client.invoke_script(greet_script, args=["World"])
+        print(f"Greet script result: {greet_result}")
+```
+
+When you run this, you'll see:
+
+```sh
+Greet script result: b'Hello, World'
+```
+
+### Step 6: Interact with Keys (KEYS)
+
+To interact with data stored in Valkey, you pass key names using the `KEYS` array.
+
+**Important:** You *must* pass all keys your script will access via the `KEYS` array. This is critical for Valkey Cluster to ensure the script is routed to the correct node. Do not hardcode key names inside the Lua string.
+
+Let's write a script that sets a value for a given key. This combines both `KEYS` and `ARGV`.
+
+```python
+        # ... after the greet script ...
+
+        # Example 5: Script that sets a key-value pair
+        # KEYS[1] is the first key
+        # ARGV[1] is the first argument
+        set_script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+
+        # Execute with both keys and arguments
+        set_result = await client.invoke_script(
+            set_script,
+            keys=["user:1000:name"],
+            args=["John Doe"]
+        )
+        print(f"Set script result: {set_result}")
+
+        # Now, let's verify it with a simple GET
+        get_val = await client.get("user:1000:name")
+        print(f"Value retrieved with GET: {get_val}")
+```
+
+Your final output should look like this:
+
+```sh
+$ python app.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Script result: b'Hello, Valkey!'
+Number script result: 42 (Type: <class 'int'>)
+Array script result: [1, 2, 3, b'hello']
+Greet script result: b'Hello, World'
+Set script result: b'OK'
+Value retrieved with GET: b'John Doe'
+Connection closed.
+```
+
+### Full Example Code
+
+Here is the complete, runnable `app.py` file for your reference:
+
+```python
+import asyncio
+from glide import (
+    Script,
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RequestError
+)
+
+async def main():
+    print("Starting the GLIDE Lua tutorial...")
+    
+    # Standalone client configuration
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = None # Define client outside try block
+
+    try:
+        # Create and connect the client
+        client = await GlideClient.create(config)
+        print("Successfully connected to Valkey.")
+
+        # 1. Create a simple 'Hello World' script
+        hello_script = Script("return 'Hello, Valkey!'")
+        result = await client.invoke_script(hello_script)
+        print(f"Script result: {result}")
+
+        # 2. Script that returns a number
+        num_script = Script("return 42")
+        num_result = await client.invoke_script(num_script)
+        print(f"Number script result: {num_result} (Type: {type(num_result)})")
+
+        # 3. Script that returns an array (list)
+        array_script = Script("return {1, 2, 3, 'hello'}")
+        array_result = await client.invoke_script(array_script)
+        print(f"Array script result: {array_result}")
+
+        # 4. Script that uses arguments (ARGV)
+        greet_script = Script("return 'Hello, ' .. ARGV[1]")
+        greet_result = await client.invoke_script(greet_script, args=["World"])
+        print(f"Greet script result: {greet_result}")
+
+        # 5. Script that sets a key-value pair using KEYS and ARGV
+        set_script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+        set_result = await client.invoke_script(
+            set_script,
+            keys=["user:1000:name"],
+            args=["John Doe"]
+        )
+        print(f"Set script result: {set_result}")
+
+        # 6. Verify the set
+        get_val = await client.get("user:1000:name")
+        print(f"Value retrieved with GET: {get_val}")
+
+    except RequestError as e:
+        print(f"Error connecting or running command: {e}")
+
+    finally:
+        if client:
+            # Always close the client when done
+            await client.close()
+            print("Connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Summary
+
+Congratulations\! You have successfully executed your first Lua scripts in Valkey using the GLIDE Python library.
+
+In this tutorial, you learned:
+
+  * The benefits of Lua scripting: **atomicity** and **performance**.
+  * How to set up a Valkey server using **Docker**.
+  * How to connect to Valkey using `GlideClient`.
+  * How to create a `Script` and run it with `invoke_script`.
+  * How GLIDE handles return types like numbers, strings (bytes), and arrays (lists).
+  * How to pass data to your scripts using the `args` parameter (for `ARGV`) and the `keys` parameter (for `KEYS`).
+
+You now have the foundation to build powerful, atomic operations in your Python applications.
+
+Would you like to learn how to pre-load scripts onto the server for even better performance using `script_load` next?

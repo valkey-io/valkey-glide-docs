@@ -1,0 +1,372 @@
+---
+title: PubSub with Valkey Cluster
+description: A tutorial on building a resilient, cluster-aware PubSub application using Python and Valkey GLIDE. 
+sidebar: 
+  order: 3
+  badge: 
+    text: Draft 
+    variant: caution
+---
+
+:::caution[Work In Progress!]
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+:::
+
+## Building a Resilient Notification Service with Valkey GLIDE PubSub
+
+**Estimated Read Time:** 7 minutes
+
+This tutorial guides you through building a simple, yet robust, real-time notification service in Python using Valkey GLIDE. You will learn how to use the PubSub (Publish/Subscribe) messaging pattern on a Valkey Cluster and, most importantly, see how GLIDE automatically handles node failures to keep your application resilient.
+
+### What is covered in this tutorial
+
+  * An overview of the PubSub pattern in Valkey.
+  * How to set up a 6-node Valkey Cluster using Docker.
+  * How to create a Python "listener" (subscriber) that receives messages.
+  * How to create a Python "producer" (publisher) that sends messages.
+  * How to test and observe GLIDE's automatic failover handling when a cluster node is shut down.
+
+### The Feature: Resilient PubSub in Valkey GLIDE
+
+**PubSub** is a powerful messaging pattern where *publishers* send messages to *channels*, and *subscribers* listen to those channels without knowing who the publishers are. This decouples your services and is perfect for real-time chat applications, event notifications, and live updates.
+
+**Why use GLIDE for PubSub?**
+When you run Valkey in a high-availability cluster, nodes can fail. A primary node might go down, and a replica will be promoted to take its place. This is a **topology change**.
+
+GLIDE's PubSub model is designed for this reality.
+
+  * **Automatic Resubscription:** GLIDE is responsible for tracking topology changes in real time. If the node you're subscribed to fails, GLIDE automatically detects the new primary and resubscribes to the correct node for you.
+  * **Unified Interface:** The client provides a coherent interface, minimizing the differences between connecting to a single node or a massive cluster.
+  * **Immutable Configuration:** You define your subscriptions when you create the client. This immutable state allows GLIDE to know exactly what to resubscribe to after any disconnection or topology change.
+
+For this reason, it is a best practice to use a **dedicated client instance for your PubSub subscriptions**. Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+1.  **Python:** Version 3.9 to 3.13.
+2.  **Valkey GLIDE:** The Python package.
+    ```bash
+    pip install glide-binary
+    ```
+3.  **Docker and Docker Compose:** To create and manage your Valkey cluster.
+
+### Tutorial: Creating the Notification App
+
+#### Step 1: Set Up the Valkey Cluster
+
+First, we'll create a 6-node Valkey cluster (3 primary nodes and 3 replica nodes) using Docker Compose.
+
+1.  Create a file named `docker-compose.yml` and paste the following content into it:
+
+    ```yaml
+    version: '3.8'
+    services:
+      valkey-1:
+        image: valkey/valkey:7.2
+        container_name: valkey-1
+        ports:
+          - "7000:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+      valkey-2:
+        image: valkey/valkey:7.2
+        container_name: valkey-2
+        ports:
+          - "7001:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+      valkey-3:
+        image: valkey/valkey:7.2
+        container_name: valkey-3
+        ports:
+          - "7002:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+      valkey-4:
+        image: valkey/valkey:7.2
+        container_name: valkey-4
+        ports:
+          - "7003:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+      valkey-5:
+        image: valkey/valkey:7.2
+        container_name: valkey-5
+        ports:
+          - "7004:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+
+      valkey-6:
+        image: valkey/valkey:7.2
+        container_name: valkey-6
+        ports:
+          - "7005:6379"
+        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+    ```
+
+2.  Open your terminal and run `docker-compose` to start the nodes:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+3.  Now, initialize the cluster. Run the following `docker exec` command to tell the first node to form a cluster with the other five, creating one replica for each primary (`--cluster-replicas 1`):
+
+    ```bash
+    docker exec -it valkey-1 valkey-cli --cluster create \
+      valkey-1:6379 valkey-2:6379 valkey-3:6379 \
+      valkey-4:6379 valkey-5:6379 valkey-6:6379 \
+      --cluster-replicas 1 --cluster-yes
+    ```
+
+You should see an output ending with `[OK] All 16384 slots covered.`. Your resilient Valkey cluster is now running\!
+
+#### Step 2: Create the Notification Listener
+
+Now, let's create the Python script that will listen for messages. This client will *only* be used for subscribing.
+
+Create a file named `listener.py`:
+
+```python
+import asyncio
+import typing
+from glide import (
+    GlideClusterClient,
+    NodeAddress,
+    GlideClusterClientConfiguration,
+    PubSubChannelModes,
+    PubSubSubscriptions,
+    CoreCommands,
+)
+
+# This callback function will be triggered for every message
+def callback(msg: CoreCommands.PubSubMsg, context: typing.Any):
+    """
+    Prints the received message and the context.
+    The context is an optional object provided during configuration.
+    """
+    print(f"Callback context: {context}")
+    print(f"Received message: '{msg.message}' from channel: '{msg.channel}'")
+
+async def main():
+    # Define the addresses of our cluster nodes
+    # We only need to provide one or more nodes;
+    # the client will discover the rest of the cluster topology.
+    nodes = [
+        NodeAddress(host="localhost", port=7000),
+        NodeAddress(host="localhost", port=7001),
+        NodeAddress(host="localhost", port=7002),
+    ]
+
+    # Set up the subscription configuration
+    # We will listen to the 'notifications' channel
+    subscriptions = PubSubSubscriptions(
+        channels_and_patterns={
+            # We use 'Exact' to subscribe to a specific channel name
+            PubSubChannelModes.Exact: {"notifications"}
+        },
+        callback=callback,
+        context="UserNotificationService" # Optional context object
+    )
+
+    # Configure the cluster client
+    config = GlideClusterClientConfiguration(
+        nodes=nodes,
+        pubsub_subscriptions=subscriptions
+    )
+
+    client = None
+    stop_event = asyncio.Event()
+
+    try:
+        print("Starting listener client...")
+        # Create and connect the client
+        client = await GlideClusterClient.create(config)
+        print("Listener connected. Waiting for messages...")
+        print("Press CTRL+C to stop.")
+        
+        # Wait indefinitely until an interrupt (like CTRL+C) is received
+        await stop_event.wait()
+
+    except KeyboardInterrupt:
+        print("\nStopping listener...")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if client:
+            # Cleanly close the client.
+            # This handles unsubscribing from the server.
+            await client.close()
+            print("Listener client closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### Step 3: Create the Message Producer
+
+Next, let's create the script that will publish messages. This will be a *separate* client, following our best practice.
+
+Create a file named `producer.py`:
+
+```python
+import asyncio
+from glide import (
+    GlideClusterClient,
+    NodeAddress,
+    GlideClusterClientConfiguration
+)
+
+async def main():
+    # Cluster node addresses
+    nodes = [
+        NodeAddress(host="localhost", port=7000),
+        NodeAddress(host="localhost", port=7001),
+        NodeAddress(host="localhost", port=7002),
+    ]
+    
+    # This client has NO subscription config
+    config = GlideClusterClientConfiguration(nodes=nodes)
+    
+    client = None
+    
+    try:
+        # Create and connect the client
+        client = await GlideClusterClient.create(config)
+        print("Producer connected.")
+        
+        # Publish an initial "Hello World" message
+        channel = "notifications"
+        message = "Hello World!"
+        print(f"Publishing: '{message}' to channel '{channel}'")
+        # The 'publish' command routes to the correct node automatically
+        await client.publish(message, channel)
+        
+        print("Enter messages to publish. Type 'exit' to quit.")
+        
+        # Loop and wait for user input
+        while True:
+            message = input("Message: > ")
+            if message.lower() == 'exit':
+                break
+            
+            # Publish the user's message
+            await client.publish(message, channel)
+            print(f"Published: '{message}'")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if client:
+            await client.close()
+            print("Producer client closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### Step 4: Run the Application
+
+Let's see it in action. You will need two separate terminal windows.
+
+**In Terminal 1,** start the listener:
+
+```bash
+python listener.py
+```
+
+You should see:
+
+```
+Starting listener client...
+Listener connected. Waiting for messages...
+Press CTRL+C to stop.
+```
+
+**In Terminal 2,** start the producer:
+
+```bash
+python producer.py
+```
+
+It will connect and immediately publish "Hello World\!".
+
+```
+Producer connected.
+Publishing: 'Hello World!' to channel 'notifications'
+Enter messages to publish. Type 'exit' to quit.
+Message: >
+```
+
+**Look back at Terminal 1 (listener).** You will see the message arrive instantly:
+
+```
+Callback context: UserNotificationService
+Received message: 'Hello World!' from channel: 'notifications'
+```
+
+Now, go back to **Terminal 2 (producer)**, type a new message, and press Enter.
+
+```
+Message: > This is a resilience test!
+Published: 'This is a resilience test!'
+Message: >
+```
+
+**Terminal 1 (listener)** will immediately show the new message:
+
+```
+Callback context: UserNotificationService
+Received message: 'This is a resilience test!' from channel: 'notifications'
+```
+
+#### Step 5: Test Resilience and Failover
+
+This is where GLIDE shines. We are going to kill one of the primary Valkey nodes while our listener is running.
+
+1.  Leave both `listener.py` and `producer.py` running.
+
+2.  Open a **third terminal window**.
+
+3.  We'll stop `valkey-1`, which is one of the cluster's primary nodes.
+
+    ```bash
+    docker stop valkey-1
+    ```
+
+You will see `valkey-1` in the output. The node is now dead. The Valkey cluster will take a few seconds (\~5 seconds, based on our config) to detect this, hold an election, and promote one of its replicas to be the new primary.
+
+**This is a topology change.** The client's connection to `valkey-1` (if it was connected to it) is broken, and the cluster's internal map of "who holds what data" has changed.
+
+4.  Now, go back to **Terminal 2 (producer)** and send another message:
+
+    ```bash
+    Message: > Did this message make it?
+    Published: 'Did this message make it?'
+    Message: >
+    ```
+
+5.  Check **Terminal 1 (listener)**:
+
+    ```
+    Callback context: UserNotificationService
+    Received message: 'Did this message make it?' from channel: 'notifications'
+    ```
+
+**It worked\!**
+
+You may have noticed a very slight delay for that first message after the failure, but the message was delivered. You didn't have to write *any* code to handle the failure, catch exceptions, find the new primary, or resubscribe.
+
+The GLIDE client, honoring its immutable subscription configuration, handled the disconnection, tracked the topology change, reconnected to the correct new node, and re-applied its subscriptions, all automatically in the background.
+
+### Summary
+
+In this tutorial, you built a fully functional and resilient PubSub application. You set up a multi-node Valkey Cluster and demonstrated how the Valkey GLIDE client provides robustness "out of the box." By managing topology changes and automatically resubscribing, GLIDE simplifies the complex realities of working with a distributed, high-availability database, letting you focus on your application's logic.
+
+-----
+
+Would you like to explore other Valkey GLIDE features, such as transactions or Lua scripting?

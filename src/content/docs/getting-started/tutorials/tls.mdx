@@ -1,0 +1,218 @@
+---
+title: "How to Connect to Valkey with TLS using GLIDE for Python"
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+:::caution[Work In Progress!]
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+:::
+
+## How to Connect to Valkey with TLS using GLIDE for Python
+
+This tutorial will guide you through setting up a secure, TLS-enabled Valkey server using Docker and connecting to it with the Valkey GLIDE for Python client.
+
+By following these steps, you will build a secure development environment, starting with generating your own self-signed certificate, configuring a Valkey server to use it, and finally, writing a Python script to connect, set, and get data securely.
+
+### 🛡️ The Feature: Secure Connections with TLS
+
+In any production or data-sensitive environment, encrypting data in transit is non-negotiable. Connecting to your database over an unsecured network exposes all your commands and data to potential eavesdropping.
+
+Valkey GLIDE's TLS (Transport Layer Security) feature solves this by wrapping your connection in a secure, encrypted tunnel. It's the same technology that powers HTTPS on the web. Using TLS ensures that your data remains private and protected between your application and your Valkey server.
+
+### ✅ Prerequisites
+
+Before you begin, ensure you have the following tools installed:
+
+  * **Python:** Version 3.9 to 3.13.
+  * **Valkey GLIDE:** `pip install glide-core`
+  * **Docker & Docker Compose:** To run the Valkey server.
+  * **OpenSSL:** To generate a self-signed certificate (typically pre-installed on Linux/macOS; available for download on Windows).
+
+-----
+
+### 💡 Tutorial: Setting Up and Connecting
+
+We will follow an ordered, four-step process. You must complete each step in order to succeed.
+
+#### Step 1: Create a Self-Signed Certificate
+
+For development, we can create our own "self-signed" certificate. This provides the same level of encryption as a "real" certificate but without the cost and complex verification process.
+
+> **Note:** For production, you should always use a certificate signed by a trusted Certificate Authority (CA).
+
+1.  Open your terminal in an empty project directory.
+2.  Run the following OpenSSL command. This will create two files: `valkey.key` (your private key) and `valkey.crt` (your public certificate).
+
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout valkey.key \
+    -out valkey.crt \
+    -subj "/CN=localhost"
+```
+
+After running this, you will have `valkey.key` and `valkey.crt` in your directory.
+
+#### Step 2: Configure the Valkey Server
+
+Next, we need to tell the Valkey server to *use* these certificate files and to only accept TLS connections.
+
+1.  Create a file named `valkey.conf` in the same directory. This configuration file tells Valkey to load your certs and listen on the TLS port.
+
+    ```
+    # valkey.conf
+
+    # Disable the standard, non-secure port
+    port 0
+
+    # Enable the TLS port
+    tls-port 6379
+
+    # Point to the certificate and key files
+    # These paths are *inside* the Docker container, which we'll set up next.
+    tls-cert-file /certs/valkey.crt
+    tls-key-file /certs/valkey.key
+
+    # For this tutorial, we don't require clients to also have a certificate.
+    tls-auth-clients no
+    ```
+
+2.  Create a file named `docker-compose.yml`. This file defines our Valkey service, mounts our configuration and certificates, and exposes the port.
+
+    ```yaml
+    # docker-compose.yml
+    version: '3.8'
+
+    services:
+      valkey:
+        image: valkey/valkey
+        command: valkey-server /config/valkey.conf
+        ports:
+          # Map host port 6379 to container port 6379
+          - "6379:6379"
+        volumes:
+          # Mount our local config file into the container
+          - ./valkey.conf:/config/valkey.conf
+          # Mount our local certs into the container
+          - ./valkey.crt:/certs/valkey.crt
+          - ./valkey.key:/certs/valkey.key
+    ```
+
+#### Step 3: Run the Valkey Server
+
+With our configuration complete, starting the server is a single command.
+
+1.  In your terminal, run:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+2.  Your secure Valkey server is now running\! You can verify this by checking the logs:
+
+    ```bash
+    docker-compose logs valkey
+    ```
+
+    You should see lines indicating the server is ready and loaded the TLS port, something like: `Server initialized` and `Ready to accept connections on [::]:6379 (tls)`.
+
+#### Step 4: Connect with GLIDE for Python
+
+Now for the final step: writing the Python code to connect to our secure server.
+
+1.  Create a file named `connect_tls.py` in the same directory.
+2.  Add the following code. Pay close attention to the `GlideClientConfiguration`.
+
+
+```python
+import asyncio
+from glide import (
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress
+)
+
+async def main():
+    # 1. Define the address of our server
+    # We are connecting to localhost, as defined in our docker-compose.yml
+    addresses = [NodeAddress(host="localhost", port=6379)]
+
+    # 2. Configure the client for TLS
+    client_config = GlideClientConfiguration(
+        addresses,
+        # This is the magic flag to enable TLS
+        use_tls=True, 
+        
+        # This tells the client to trust our self-signed certificate.
+        # It's the path to the .crt file *on the machine running this script*.
+        ca_certs="valkey.crt" 
+    )
+
+    client = None
+    try:
+        # 3. Create the client
+        print("Connecting to Valkey with TLS...")
+        client = await GlideClient.create(client_config)
+
+        # 4. Run commands to prove it works
+        await client.set("foo", "bar")
+        value = await client.get("foo")
+
+        print(f"Successfully connected!")
+        print(f"SET 'foo' to 'bar'")
+        print(f"GET 'foo': {value}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if client:
+            # 5. Close the client
+            client.close()
+            print("Connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+3.  Run the script from your terminal:
+
+    ```bash
+    python connect_tls.py
+    ```
+
+4.  **Success\!** You should see the following output, confirming your secure connection worked:
+
+    ```
+    Connecting to Valkey with TLS...
+    Successfully connected!
+    SET 'foo' to 'bar'
+    GET 'foo': bar
+    Connection closed.
+    ```
+
+### ⚠️ Common Pitfalls
+
+  * **`CERTIFICATE_VERIFY_FAILED` Error:** This is the most common error. It means your Python script doesn't trust the server's self-signed certificate.
+
+      * **Fix:** Ensure you have added `ca_certs="valkey.crt"` to your `GlideClientConfiguration`. This explicitly tells the client, "Trust this specific certificate file."
+
+  * **`Connection refused` Error:**
+
+      * **Fix:** Ensure your Docker container is running (`docker ps`). Verify that the `ports` in your `docker-compose.yml` are correctly mapped (e.g., `"6379:6379"`).
+
+  * **File Not Found Error (from Python):**
+
+      * **Fix:** The Python script needs to read `valkey.crt`. Make sure you are running `python connect_tls.py` from the *same directory* where you generated your certificates.
+
+  * **File Not Found Error (from Docker logs):**
+
+      * **Fix:** This means your `volumes` in `docker-compose.yml` are incorrect. Double-check the paths. The path on the left (`./valkey.crt`) is on your host machine; the path on the right (`/certs/valkey.crt`) is *inside* the container and must match what's in `valkey.conf`.
+
+### 📜 Summary
+
+You have successfully configured a secure, TLS-enabled Valkey server and connected to it using Valkey GLIDE for Python. You now have the fundamental skill to secure your in-memory database connections, protecting your application's data from end to end. You can apply this same pattern to connect to any TLS-enabled Valkey or Redis server, whether in development or production.
