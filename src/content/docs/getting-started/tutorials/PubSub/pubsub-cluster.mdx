@@ -1,12 +1,12 @@
 ---
-title: PubSub with Valkey Cluster
+title: Pub/Sub in a Valkey Cluster
 description: A tutorial on building a resilient, cluster-aware PubSub application using Python and Valkey GLIDE. 
 sidebar: 
-  order: 3
   badge: 
     text: Draft 
     variant: caution
 ---
+import { Steps } from '@astrojs/starlight/components';
 
 :::caution[Work In Progress!]
 This documentation site is under construction and is not yet complete!
@@ -14,123 +14,129 @@ This documentation site is under construction and is not yet complete!
 For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 :::
 
-## Building a Resilient Notification Service with Valkey GLIDE PubSub
 
-**Estimated Read Time:** 7 minutes
+This tutorial guides you through building a simple real-time messaging app with Valkey GLIDE Python. 
 
-This tutorial guides you through building a simple, yet robust, real-time notification service in Python using Valkey GLIDE. You will learn how to use the PubSub (Publish/Subscribe) messaging pattern on a Valkey Cluster and, most importantly, see how GLIDE automatically handles node failures to keep your application resilient.
-
-### What is covered in this tutorial
-
-  * An overview of the PubSub pattern in Valkey.
-  * How to set up a 6-node Valkey Cluster using Docker.
-  * How to create a Python "listener" (subscriber) that receives messages.
-  * How to create a Python "producer" (publisher) that sends messages.
-  * How to test and observe GLIDE's automatic failover handling when a cluster node is shut down.
+By the end, you will learn:
+  * How to set up a multi-node Valkey cluster in Docker for testing.
+  * Creating a simple messaging app example using Valkey pubsub.
 
 ### The Feature: Resilient PubSub in Valkey GLIDE
 
-**PubSub** is a powerful messaging pattern where *publishers* send messages to *channels*, and *subscribers* listen to those channels without knowing who the publishers are. This decouples your services and is perfect for real-time chat applications, event notifications, and live updates.
-
-**Why use GLIDE for PubSub?**
-When you run Valkey in a high-availability cluster, nodes can fail. A primary node might go down, and a replica will be promoted to take its place. This is a **topology change**.
-
-GLIDE's PubSub model is designed for this reality.
+When a primary node fails in a cluster, a replica node will take its place changing the **topology**.
+GLIDE's PubSub model is designed for this this in mind.
 
   * **Automatic Resubscription:** GLIDE is responsible for tracking topology changes in real time. If the node you're subscribed to fails, GLIDE automatically detects the new primary and resubscribes to the correct node for you.
   * **Unified Interface:** The client provides a coherent interface, minimizing the differences between connecting to a single node or a massive cluster.
   * **Immutable Configuration:** You define your subscriptions when you create the client. This immutable state allows GLIDE to know exactly what to resubscribe to after any disconnection or topology change.
 
-For this reason, it is a best practice to use a **dedicated client instance for your PubSub subscriptions**. Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
+:::tip
+It is a best practice to use a **dedicated client instance for your PubSub subscriptions**. 
+Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
+:::
 
-### Prerequisites
+## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before you begin, ensure you have Docker installed.
 
-1.  **Python:** Version 3.9 to 3.13.
-2.  **Valkey GLIDE:** The Python package.
-    ```bash
-    pip install glide-binary
-    ```
-3.  **Docker and Docker Compose:** To create and manage your Valkey cluster.
+## Setting up Valkey Cluster
 
-### Tutorial: Creating the Notification App
+First, we'll create a 3-node Valkey cluster in Docker.
+The `devcontainer` is used to run the Valkey GLIDE clients. If we run the clients from the host machine, it
+will not be able to resolve the network addresses of the cluster which will result in timeout errors.
 
-#### Step 1: Set Up the Valkey Cluster
+1.  Create `docker-compose.yml`
+    <details>
+    <summary>`docker-compose.yml`</summary>
+      ```yaml
+      services:
+        # Container for running client scripts.
+        devcontainer:
+          image: python:3.11-slim
+          container_name: devcontainer
+          working_dir: /tutorial
+          volumes:
+            - .:/tutorial
+          networks:
+            - valkey-net
+          command: sh -c "pip install valkey-glide && tail -f /dev/null"
 
-First, we'll create a 6-node Valkey cluster (3 primary nodes and 3 replica nodes) using Docker Compose.
+        valkey-1:
+          image: valkey/valkey
+          container_name: valkey-1
+          command: >
+            valkey-server --port 6379 --cluster-enabled yes --cluster-config-file /data/nodes.conf
+            --cluster-node-timeout 5000 --cluster-port 16379 --appendonly yes --bind 0.0.0.0
+          ports:
+            - "7001:6379" # Kept for optional host access
+          volumes:
+            - valkey-data-1:/data
+          networks:
+            - valkey-net
 
-1.  Create a file named `docker-compose.yml` and paste the following content into it:
+        valkey-2:
+          image: valkey/valkey
+          container_name: valkey-2
+          command: >
+            valkey-server --port 6379 --cluster-enabled yes --cluster-config-file /data/nodes.conf
+            --cluster-node-timeout 5000 --cluster-port 16379 --appendonly yes --bind 0.0.0.0
+          ports:
+            - "7002:6379"
+          volumes:
+            - valkey-data-2:/data
+          networks:
+            - valkey-net
 
-    ```yaml
-    version: '3.8'
-    services:
-      valkey-1:
-        image: valkey/valkey:7.2
-        container_name: valkey-1
-        ports:
-          - "7000:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+        valkey-3:
+          image: valkey/valkey
+          container_name: valkey-3
+          command: >
+            valkey-server --port 6379 --cluster-enabled yes --cluster-config-file /data/nodes.conf
+            --cluster-node-timeout 5000 --cluster-port 16379 --appendonly yes --bind 0.0.0.0
+          ports:
+            - "7003:6379"
+          volumes:
+            - valkey-data-3:/data
+          networks:
+            - valkey-net
 
-      valkey-2:
-        image: valkey/valkey:7.2
-        container_name: valkey-2
-        ports:
-          - "7001:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
+      volumes:
+        valkey-data-1:
+        valkey-data-2:
+        valkey-data-3:
 
-      valkey-3:
-        image: valkey/valkey:7.2
-        container_name: valkey-3
-        ports:
-          - "7002:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-
-      valkey-4:
-        image: valkey/valkey:7.2
-        container_name: valkey-4
-        ports:
-          - "7003:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-
-      valkey-5:
-        image: valkey/valkey:7.2
-        container_name: valkey-5
-        ports:
-          - "7004:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-
-      valkey-6:
-        image: valkey/valkey:7.2
-        container_name: valkey-6
-        ports:
-          - "7005:6379"
-        command: valkey-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes
-    ```
-
-2.  Open your terminal and run `docker-compose` to start the nodes:
+      networks:
+        valkey-net:
+          driver: bridge
+      ```
+    </details>
+2.  Start the nodes with `docker-compose`
 
     ```bash
     docker-compose up -d
     ```
 
-3.  Now, initialize the cluster. Run the following `docker exec` command to tell the first node to form a cluster with the other five, creating one replica for each primary (`--cluster-replicas 1`):
+3.  Finally initialize the cluster
 
     ```bash
-    docker exec -it valkey-1 valkey-cli --cluster create \
+    docker exec valkey-1 valkey-cli --cluster create \
       valkey-1:6379 valkey-2:6379 valkey-3:6379 \
-      valkey-4:6379 valkey-5:6379 valkey-6:6379 \
-      --cluster-replicas 1 --cluster-yes
+      --cluster-yes
     ```
 
-You should see an output ending with `[OK] All 16384 slots covered.`. Your resilient Valkey cluster is now running\!
+## The Messaging App
 
-#### Step 2: Create the Notification Listener
+The example will have two scripts, a `listener.py` and `producer.py`. 
+Place them in the same folder as the `docker-copmose.yml`.
 
-Now, let's create the Python script that will listen for messages. This client will *only* be used for subscribing.
+### The Listener
+`listener.py` will listen for messages from the Valkey cluster using Pub/Sub until interupted.
 
-Create a file named `listener.py`:
+It connects to the cluster and subscribes to the messaging channel. 
+It uses a callback function to handle the message, printing the message's content.
 
+<details>
+<summary> `listener.py` </summary>
 ```python
 import asyncio
 import typing
@@ -138,13 +144,11 @@ from glide import (
     GlideClusterClient,
     NodeAddress,
     GlideClusterClientConfiguration,
-    PubSubChannelModes,
-    PubSubSubscriptions,
-    CoreCommands,
 )
+from glide.async_commands.core import PubSubMsg
 
 # This callback function will be triggered for every message
-def callback(msg: CoreCommands.PubSubMsg, context: typing.Any):
+def callback(msg: PubSubMsg, context: typing.Any):
     """
     Prints the received message and the context.
     The context is an optional object provided during configuration.
@@ -157,25 +161,23 @@ async def main():
     # We only need to provide one or more nodes;
     # the client will discover the rest of the cluster topology.
     nodes = [
-        NodeAddress(host="localhost", port=7000),
-        NodeAddress(host="localhost", port=7001),
-        NodeAddress(host="localhost", port=7002),
+        NodeAddress(host="valkey-1", port=6379)
     ]
 
     # Set up the subscription configuration
     # We will listen to the 'notifications' channel
-    subscriptions = PubSubSubscriptions(
+    subscriptions = GlideClusterClientConfiguration.PubSubSubscriptions(
         channels_and_patterns={
             # We use 'Exact' to subscribe to a specific channel name
-            PubSubChannelModes.Exact: {"notifications"}
+            GlideClusterClientConfiguration.PubSubChannelModes.Exact: {"messages"}
         },
         callback=callback,
-        context="UserNotificationService" # Optional context object
+        context=None
     )
 
     # Configure the cluster client
     config = GlideClusterClientConfiguration(
-        nodes=nodes,
+        addresses=nodes,
         pubsub_subscriptions=subscriptions
     )
 
@@ -188,7 +190,7 @@ async def main():
         client = await GlideClusterClient.create(config)
         print("Listener connected. Waiting for messages...")
         print("Press CTRL+C to stop.")
-        
+
         # Wait indefinitely until an interrupt (like CTRL+C) is received
         await stop_event.wait()
 
@@ -206,54 +208,50 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+</details>
 
-#### Step 3: Create the Message Producer
+### The Producer
 
-Next, let's create the script that will publish messages. This will be a *separate* client, following our best practice.
+Next, let's add the `producer.py`. It will send user inputs to the channel on the Valkey cluster.
 
-Create a file named `producer.py`:
-
+<details>
+<summary> `producer.py` </summary>
 ```python
 import asyncio
-from glide import (
-    GlideClusterClient,
-    NodeAddress,
-    GlideClusterClientConfiguration
-)
+import asyncio
+from glide import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
 
 async def main():
     # Cluster node addresses
     nodes = [
-        NodeAddress(host="localhost", port=7000),
-        NodeAddress(host="localhost", port=7001),
-        NodeAddress(host="localhost", port=7002),
+        NodeAddress(host="valkey-1", port=6379)
     ]
-    
+
     # This client has NO subscription config
-    config = GlideClusterClientConfiguration(nodes=nodes)
-    
+    config = GlideClusterClientConfiguration(addresses=nodes)
+
     client = None
-    
+
     try:
         # Create and connect the client
         client = await GlideClusterClient.create(config)
         print("Producer connected.")
-        
+
         # Publish an initial "Hello World" message
-        channel = "notifications"
+        channel = "messages"
         message = "Hello World!"
         print(f"Publishing: '{message}' to channel '{channel}'")
-        # The 'publish' command routes to the correct node automatically
         await client.publish(message, channel)
-        
+
+        # The 'publish' command routes to the correct node automatically
         print("Enter messages to publish. Type 'exit' to quit.")
-        
+
         # Loop and wait for user input
         while True:
             message = input("Message: > ")
             if message.lower() == 'exit':
                 break
-            
+
             # Publish the user's message
             await client.publish(message, channel)
             print(f"Published: '{message}'")
@@ -268,105 +266,50 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+</details>
 
-#### Step 4: Run the Application
+### Running the Example
 
-Let's see it in action. You will need two separate terminal windows.
-
-**In Terminal 1,** start the listener:
+First, start `listener.py` on the `devcontainer`
 
 ```bash
-python listener.py
+docker compose exec devcontainer python listener.py
 ```
 
-You should see:
+On a separate terminal, start `producer.py`
 
+```bash
+docker compose exec devcontainer python listener.py
 ```
+
+Once started, you should see that the listener have recieved a message "Hello World!"
+
+```bash
 Starting listener client...
 Listener connected. Waiting for messages...
 Press CTRL+C to stop.
+Callback context: None
+Received message: 'b'Hello World!'' from channel: 'b'notifications''
 ```
 
-**In Terminal 2,** start the producer:
+Now messages you sent from the producer 
 
 ```bash
-python producer.py
+Message: > Valkey Glide Python
+Published: 'Valkey Glide Python'
 ```
 
-It will connect and immediately publish "Hello World\!".
+Will be received on the listener
 
 ```
-Producer connected.
-Publishing: 'Hello World!' to channel 'notifications'
-Enter messages to publish. Type 'exit' to quit.
-Message: >
+Callback context: None
+Received message: 'b'Valkey Glide Python'' from channel: 'b'notifications''
 ```
 
-**Look back at Terminal 1 (listener).** You will see the message arrive instantly:
+## Summary
 
-```
-Callback context: UserNotificationService
-Received message: 'Hello World!' from channel: 'notifications'
-```
+In this tutorial, we have demonstrated a simple example of an application leveraging Valkey Pub/Sub.
+You can use this setup to test for Valkey GLIDE application or learn more about Valkey cluster mode.
 
-Now, go back to **Terminal 2 (producer)**, type a new message, and press Enter.
-
-```
-Message: > This is a resilience test!
-Published: 'This is a resilience test!'
-Message: >
-```
-
-**Terminal 1 (listener)** will immediately show the new message:
-
-```
-Callback context: UserNotificationService
-Received message: 'This is a resilience test!' from channel: 'notifications'
-```
-
-#### Step 5: Test Resilience and Failover
-
-This is where GLIDE shines. We are going to kill one of the primary Valkey nodes while our listener is running.
-
-1.  Leave both `listener.py` and `producer.py` running.
-
-2.  Open a **third terminal window**.
-
-3.  We'll stop `valkey-1`, which is one of the cluster's primary nodes.
-
-    ```bash
-    docker stop valkey-1
-    ```
-
-You will see `valkey-1` in the output. The node is now dead. The Valkey cluster will take a few seconds (\~5 seconds, based on our config) to detect this, hold an election, and promote one of its replicas to be the new primary.
-
-**This is a topology change.** The client's connection to `valkey-1` (if it was connected to it) is broken, and the cluster's internal map of "who holds what data" has changed.
-
-4.  Now, go back to **Terminal 2 (producer)** and send another message:
-
-    ```bash
-    Message: > Did this message make it?
-    Published: 'Did this message make it?'
-    Message: >
-    ```
-
-5.  Check **Terminal 1 (listener)**:
-
-    ```
-    Callback context: UserNotificationService
-    Received message: 'Did this message make it?' from channel: 'notifications'
-    ```
-
-**It worked\!**
-
-You may have noticed a very slight delay for that first message after the failure, but the message was delivered. You didn't have to write *any* code to handle the failure, catch exceptions, find the new primary, or resubscribe.
-
-The GLIDE client, honoring its immutable subscription configuration, handled the disconnection, tracked the topology change, reconnected to the correct new node, and re-applied its subscriptions, all automatically in the background.
-
-### Summary
-
-In this tutorial, you built a fully functional and resilient PubSub application. You set up a multi-node Valkey Cluster and demonstrated how the Valkey GLIDE client provides robustness "out of the box." By managing topology changes and automatically resubscribing, GLIDE simplifies the complex realities of working with a distributed, high-availability database, letting you focus on your application's logic.
-
------
-
-Would you like to explore other Valkey GLIDE features, such as transactions or Lua scripting?
+#### What's Next
+* [Learn](https://valkey.io/topics/cluster-tutorial/) more about how Valkey cluster works.
