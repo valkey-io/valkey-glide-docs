@@ -1,218 +1,249 @@
 ---
-title: "How to Connect to Valkey with TLS using GLIDE for Python"
+title: "Setting up TLS"
 description: A reference page in my new Starlight docs site.
 sidebar:
   badge:
     text: Draft
     variant: caution
 ---
+
+import { Steps } from '@astrojs/starlight/components';
+
 :::caution[Work In Progress!]
 This documentation site is under construction and is not yet complete!
 
 For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 :::
 
-## How to Connect to Valkey with TLS using GLIDE for Python
+Connecting to your Valkey database securely is crucial, especially when transmitting sensitive data over a network. 
+TLS encrypts the data in transit, preventing eavesdropping or "man-in-the-middle" attacks.
 
-This tutorial will guide you through setting up a secure, TLS-enabled Valkey server using Docker and connecting to it with the Valkey GLIDE for Python client.
+Valkey GLIDE supports TLS connections out-of-the-box. 
+It uses [rusttls](https://github.com/rustls/rustls) under the hood to handle the secure connection handshake and encryption. 
+When you enable TLS in the client, GLIDE ensures that it verifies the server's identity and encrypts all communication.
 
-By following these steps, you will build a secure development environment, starting with generating your own self-signed certificate, configuring a Valkey server to use it, and finally, writing a Python script to connect, set, and get data securely.
+This tutorial will guide you step-by-step through configuring the Valkey GLIDE client to connect 
+to a TLS-enabled (Transport Layer Security) Valkey instance. 
+Following these steps will ensure your Python application communicates securely with your database.
 
-### 🛡️ The Feature: Secure Connections with TLS
+We will cover two main scenarios:
 
-In any production or data-sensitive environment, encrypting data in transit is non-negotiable. Connecting to your database over an unsecured network exposes all your commands and data to potential eavesdropping.
+1.  Enabling a basic TLS connection.
+2.  Connecting to a server that uses a custom root certificate (like a self-signed certificate).
 
-Valkey GLIDE's TLS (Transport Layer Security) feature solves this by wrapping your connection in a secure, encrypted tunnel. It's the same technology that powers HTTPS on the web. Using TLS ensures that your data remains private and protected between your application and your Valkey server.
+By the end of this tutorial, you'll be able to securely connect your Python application to any TLS-enabled Valkey database using GLIDE.
 
-### ✅ Prerequisites
+## Prerequisites
 
-Before you begin, ensure you have the following tools installed:
+Before you begin, please ensure you have the following set up:
 
-  * **Python:** Version 3.9 to 3.13.
-  * **Valkey GLIDE:** `pip install glide-core`
-  * **Docker & Docker Compose:** To run the Valkey server.
-  * **OpenSSL:** To generate a self-signed certificate (typically pre-installed on Linux/macOS; available for download on Windows).
+  * **Python 3.9-3.13.**
+  * **Valkey GLIDE installed:** You can install it using pip:
+    ```bash
+    pip install glide-core
+    ```
+  * **A running Valkey instance with TLS enabled.** This tutorial assumes your server is already configured for TLS. For instructions on enabling TLS:
+    * [AWS Elasticache](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html)
+    * [Valkey](https://valkey.io/topics/encryption/)
 
------
+## Enabling TLS Connections
 
-### 💡 Tutorial: Setting Up and Connecting
+We'll start with the simplest case: connecting to a Valkey server that has TLS enabled and is using a certificate from a trusted public Certificate Authority (CA).
 
-We will follow an ordered, four-step process. You must complete each step in order to succeed.
+### Basic TLS Connection
 
-#### Step 1: Create a Self-Signed Certificate
+Enabling TLS is as simple as setting `use_tls=True` in your configuration.
+The client will use your system's default certificate trust store to verify the server.
 
-For development, we can create our own "self-signed" certificate. This provides the same level of encryption as a "real" certificate but without the cost and complex verification process.
-
-> **Note:** For production, you should always use a certificate signed by a trusted Certificate Authority (CA).
-
-1.  Open your terminal in an empty project directory.
-2.  Run the following OpenSSL command. This will create two files: `valkey.key` (your private key) and `valkey.crt` (your public certificate).
-
-
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout valkey.key \
-    -out valkey.crt \
-    -subj "/CN=localhost"
+```python
+client_config = GlideClientConfiguration(
+    addresses,
+    use_tls=True
+)
 ```
 
-After running this, you will have `valkey.key` and `valkey.crt` in your directory.
+<details>
+<summary>Full Example</summary>
+```python
+async def main():
+    # Define the address
+    addresses = [NodeAddress(host="your-valkey-server.example.com", port=6379)]
 
-#### Step 2: Configure the Valkey Server
+    # Configure the client to use TLS
+    client_config = GlideClientConfiguration(
+        addresses,
+        use_tls=True
+    )
 
-Next, we need to tell the Valkey server to *use* these certificate files and to only accept TLS connections.
+    client = None
+    try:
+        # Create the client
+        client = await GlideClient.create(client_config)
 
-1.  Create a file named `valkey.conf` in the same directory. This configuration file tells Valkey to load your certs and listen on the TLS port.
+        # Test the connection
+        response = await client.ping()
+        print(f"Connected successfully! Server responded: {response}")
 
-    ```
-    # valkey.conf
+        # You can now run other commands
+        await client.set("foo", "bar-tls")
+        value = await client.get("foo")
+        print(f"Got value: {value}")
 
-    # Disable the standard, non-secure port
-    port 0
+    except Exception as e:
+        print(f"Failed to connect or run command: {e}")
+    finally:
+        if client:
+            await client.close()
 
-    # Enable the TLS port
-    tls-port 6379
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
 
-    # Point to the certificate and key files
-    # These paths are *inside* the Docker container, which we'll set up next.
-    tls-cert-file /certs/valkey.crt
-    tls-key-file /certs/valkey.key
+### Connecting with a Custom Root Certificate
+A common scenario is when you might use self-signed certificates or an internal Certificate Authority (CA) for development or an internal network.
 
-    # For this tutorial, we don't require clients to also have a certificate.
-    tls-auth-clients no
-    ```
+GLIDE allows you to provide your own root certificate (or a chain of certificates) in PEM format. 
+This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlideClientConfiguration` classes.
 
-2.  Create a file named `docker-compose.yml`. This file defines our Valkey service, mounts our configuration and certificates, and exposes the port.
+<Steps>
+    1. **Load your root certificate file**
 
-    ```yaml
-    # docker-compose.yml
-    version: '3.8'
+        You **must** read your certificate file (e.g., `ca-cert.pem`) as bytes 
+        using the `"rb"` (read binary) mode when opening the file. 
 
-    services:
-      valkey:
-        image: valkey/valkey
-        command: valkey-server /config/valkey.conf
-        ports:
-          # Map host port 6379 to container port 6379
-          - "6379:6379"
-        volumes:
-          # Mount our local config file into the container
-          - ./valkey.conf:/config/valkey.conf
-          # Mount our local certs into the container
-          - ./valkey.crt:/certs/valkey.crt
-          - ./valkey.key:/certs/valkey.key
-    ```
+        ```python
+        # Path to your custom certificate file
+        cert_file_path = "/path/to/your/ca-cert.pem"
 
-#### Step 3: Run the Valkey Server
+        with open(cert_file_path, "rb") as f:
+            root_cert_bytes = f.read()
+        ```
 
-With our configuration complete, starting the server is a single command.
+        :::note
+        If you have multiple certificates in a chain, you can simply concatenate them.
+        ```python
+        with open("/path/to/cert1.pem", "rb") as f:
+            cert1 = f.read()
 
-1.  In your terminal, run:
+        with open("/path/to/cert2.pem", "rb") as f:
+            cert2 = f.read()
 
-    ```bash
-    docker-compose up -d
-    ```
+        combined_certs = cert1 + cert2
+        ```
+        :::
 
-2.  Your secure Valkey server is now running\! You can verify this by checking the logs:
+    2. **Create the advanced TLS configuration**
 
-    ```bash
-    docker-compose logs valkey
-    ```
+        Create an instance of `TlsAdvancedConfiguration` and pass your certificate bytes to the `root_pem_cacerts` parameter.
 
-    You should see lines indicating the server is ready and loaded the TLS port, something like: `Server initialized` and `Ready to accept connections on [::]:6379 (tls)`.
+        ```python
+        tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
+        ```
 
-#### Step 4: Connect with GLIDE for Python
+    3. **Create the advanced client configuration**
 
-Now for the final step: writing the Python code to connect to our secure server.
+        Wrap your `tls_config` in an `AdvancedGlideClientConfiguration`.
 
-1.  Create a file named `connect_tls.py` in the same directory.
-2.  Add the following code. Pay close attention to the `GlideClientConfiguration`.
+        ```python
+        advanced_config = AdvancedGlideClientConfiguration(
+            tls_advanced_configuration=tls_config
+        )
+        ```
 
+    4. **Configure the main client**
+
+        Finally, create your main `GlideClientConfiguration`. This time, you must provide **both** `use_tls=True` and your new `advanced_configuration`.
+
+        ```python
+        addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
+
+        client_config = GlideClientConfiguration(
+            addresses,
+            use_tls=True,  # Still required!
+            advanced_configuration=advanced_config
+        )
+        ```
+
+</Steps>
+
+<details>
+<summary> Full Example </summary>
+Let's put it all together in a runnable example.
 
 ```python
 import asyncio
 from glide import (
     GlideClient,
     GlideClientConfiguration,
-    NodeAddress
+    NodeAddress,
+    TlsAdvancedConfiguration,
+    AdvancedGlideClientConfiguration
 )
 
-async def main():
-    # 1. Define the address of our server
-    # We are connecting to localhost, as defined in our docker-compose.yml
-    addresses = [NodeAddress(host="localhost", port=6379)]
+async def main_with_custom_cert():
+    # Replace with your server's address and TLS port
+    addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
 
-    # 2. Configure the client for TLS
-    client_config = GlideClientConfiguration(
-        addresses,
-        # This is the magic flag to enable TLS
-        use_tls=True, 
-        
-        # This tells the client to trust our self-signed certificate.
-        # It's the path to the .crt file *on the machine running this script*.
-        ca_certs="valkey.crt" 
+    # 1. Load the certificate as bytes
+    cert_file_path = "/path/to/your/ca-cert.pem"
+    try:
+        with open(cert_file_path, "rb") as f:
+            root_cert_bytes = f.read()
+    except FileNotFoundError:
+        print(f"Error: Certificate file not found at {cert_file_path}")
+        return
+    except Exception as e:
+        print(f"Error reading certificate file: {e}")
+        return
+
+    # 2. Create TLS advanced configuration
+    tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
+
+    # 3. Create advanced client configuration
+    advanced_config = AdvancedGlideClientConfiguration(
+        tls_advanced_configuration=tls_config
     )
 
-    client = None
+    # 4. Create main client configuration
+    client_config = GlideClientConfiguration(
+        addresses,
+        use_tls=True,  # Don't forget this!
+        advanced_configuration=advanced_config
+    )
+
     try:
-        # 3. Create the client
-        print("Connecting to Valkey with TLS...")
+        # 5. Create the client
         client = await GlideClient.create(client_config)
 
-        # 4. Run commands to prove it works
-        await client.set("foo", "bar")
-        value = await client.get("foo")
-
-        print(f"Successfully connected!")
-        print(f"SET 'foo' to 'bar'")
-        print(f"GET 'foo': {value}")
+        response = await client.ping()
+        print(f"Connected successfully with custom cert! Server responded: {response}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Failed to connect with custom cert: {e}")
     finally:
-        if client:
-            # 5. Close the client
-            client.close()
-            print("Connection closed.")
+        if 'client' in locals() and client.is_connected():
+            await client.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main_with_custom_cert())
 ```
+</details>
 
-3.  Run the script from your terminal:
+Here is a more concise version of that text.
 
-    ```bash
-    python connect_tls.py
-    ```
+## Common Pitfalls
 
-4.  **Success\!** You should see the following output, confirming your secure connection worked:
+* **Forgetting `use_tls=True`:** You must set `use_tls=True` on the main `GlideClientConfiguration` even when providing advanced TLS settings.
+* **Reading Certificate in Text Mode:** Always read certificate files in binary mode (`"rb"`). The client requires a bytes object, not a string from reading in text mode (`"r"`).
+* **Certificate Verification Errors:** An error like `CERTIFICATE_VERIFY_FAILED` or `TlsError` means the server's identity check failed. Verify:
+    1.  **Hostname Mismatch:** The `NodeAddress` host must exactly match the name on the server's certificate.
+    2.  **Incorrect/Expired Certificate:** Ensure you are using the correct and valid root CA file.
+* **Forgetting `await`:** GLIDE is an `async` library. Forgetting to `await` client methods (like `GlideClient.create()`, `client.ping()`, etc.) will cause your code to hang or raise a `RuntimeWarning`.
 
-    ```
-    Connecting to Valkey with TLS...
-    Successfully connected!
-    SET 'foo' to 'bar'
-    GET 'foo': bar
-    Connection closed.
-    ```
+## Summary
 
-### ⚠️ Common Pitfalls
+You have now learned how to:
 
-  * **`CERTIFICATE_VERIFY_FAILED` Error:** This is the most common error. It means your Python script doesn't trust the server's self-signed certificate.
-
-      * **Fix:** Ensure you have added `ca_certs="valkey.crt"` to your `GlideClientConfiguration`. This explicitly tells the client, "Trust this specific certificate file."
-
-  * **`Connection refused` Error:**
-
-      * **Fix:** Ensure your Docker container is running (`docker ps`). Verify that the `ports` in your `docker-compose.yml` are correctly mapped (e.g., `"6379:6379"`).
-
-  * **File Not Found Error (from Python):**
-
-      * **Fix:** The Python script needs to read `valkey.crt`. Make sure you are running `python connect_tls.py` from the *same directory* where you generated your certificates.
-
-  * **File Not Found Error (from Docker logs):**
-
-      * **Fix:** This means your `volumes` in `docker-compose.yml` are incorrect. Double-check the paths. The path on the left (`./valkey.crt`) is on your host machine; the path on the right (`/certs/valkey.crt`) is *inside* the container and must match what's in `valkey.conf`.
-
-### 📜 Summary
-
-You have successfully configured a secure, TLS-enabled Valkey server and connected to it using Valkey GLIDE for Python. You now have the fundamental skill to secure your in-memory database connections, protecting your application's data from end to end. You can apply this same pattern to connect to any TLS-enabled Valkey or Redis server, whether in development or production.
+* Enable a **basic TLS connection** using the `use_tls=True` flag, which relies on the system's trust store.
+* Connect using a **custom root certificate** with `TlsAdvancedConfiguration` to handle self-signed or internal CAs.
