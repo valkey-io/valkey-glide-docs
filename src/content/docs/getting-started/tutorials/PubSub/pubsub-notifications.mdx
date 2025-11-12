@@ -1,0 +1,237 @@
+---
+title: Pub/Sub Notifications
+description: A reference page in my new Starlight docs site.
+sidebar:
+  badge:
+    text: Draft
+    variant: caution
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Work In Progress!">
+  This documentation site is under construction and is not yet complete!
+
+  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+</Aside>
+
+This tutorial guides you through building a simple notification app with Valkey GLIDE Python. 
+
+## Prerequisites
+
+You'll need the following:
+
+1.  **Python:** Valkey supports Python 3.9 to 3.13.
+2.  **Valkey GLIDE:** You'll need the `glide-client` library. You can install it using pip:
+    ```bash
+    pip install valkey-glide
+    ```
+3.  **Valkey Server:** You need a running Valkey instance. The easiest way to get one is with Docker. Run this command in your terminal to start a standalone Valkey server:
+    ```bash
+    docker run -d --name standalone-valkey -p 6379:6379 -d valkey/valkey
+    ```
+
+## The Notification App
+
+The example will have two scripts, a `listener.py` that listens for messages from `producer.py`. 
+Place them in the same folder as the `docker-copmose.yml`.
+
+:::tip
+It is a best practice to use a **dedicated client instance for your PubSub subscriptions**. 
+Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
+:::
+
+### The Listener
+`listener.py` will listen for messages from the Valkey instance using Pub/Sub until interupted.
+
+It connects to Valkey and subscribes to the messaging channel. 
+It uses a callback function to handle the message, printing the message's content.
+
+<details>
+<summary> `listener.py` </summary>
+```python
+import asyncio
+import typing
+from glide import (
+    GlideClient,
+    NodeAddress,
+    GlideClientConfiguration,
+)
+from glide.async_commands.core import PubSubMsg
+
+# This callback function will be triggered for every message
+def callback(msg: PubSubMsg, context: typing.Any):
+    """
+    Prints the received message and the context.
+    The context is an optional object provided during configuration.
+    """
+    print(f"Callback context: {context}")
+    print(f"Received message: '{msg.message}' from channel: '{msg.channel}'")
+
+async def main():
+    # Setup Valkey node address
+    nodes = [
+        NodeAddress(host="localhost", port=6379)
+    ]
+
+    # Set up the subscription configuration
+    # We will listen to the 'notifications' channel
+    subscriptions = GlideClientConfiguration.PubSubSubscriptions(
+        channels_and_patterns={
+            # We use 'Exact' to subscribe to a specific channel name
+            GlideClientConfiguration.PubSubChannelModes.Exact: {"notifications"}
+        },
+        callback=callback,
+        context=None
+    )
+
+    # Configure the client
+    config = GlideClientConfiguration(
+        addresses=nodes,
+        pubsub_subscriptions=subscriptions
+    )
+
+    client = None
+    stop_event = asyncio.Event()
+
+    try:
+        print("Starting listener client...")
+        # Create and connect the client
+        client = await GlideClient.create(config)
+
+        print("Listener connected. Waiting for messages...")
+        print("Press CTRL+C to stop.")
+
+        # Wait indefinitely until an interrupt (like CTRL+C) is received
+        await stop_event.wait()
+
+    except KeyboardInterrupt:
+        print("\nStopping listener...")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if client:
+            # Cleanly close the client.
+            # This handles unsubscribing from the server.
+            await client.close()
+            print("Listener client closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
+
+### The Producer
+
+Next, let's add the `producer.py`. It will send user inputs to the channel on the Valkey instance.
+
+<details>
+<summary> `producer.py` </summary>
+```python
+import asyncio
+import asyncio
+from glide import GlideClientConfiguration, NodeAddress, GlideClient
+
+async def main():
+    # Cluster node addresses
+    nodes = [
+        NodeAddress(host="localhost", port=6379)
+    ]
+
+    # This client has NO subscription config
+    config = GlideClientConfiguration(addresses=nodes)
+
+    client = None
+
+    try:
+        # Create and connect the client
+        client = await GlideClient.create(config)
+        print("Producer connected.")
+
+        # Publish an initial "Hello World" message
+        channel = "notifications"
+        message = "Hello World!"
+        print(f"Publishing: '{message}' to channel '{channel}'")
+        await client.publish(message, channel)
+
+        # The 'publish' command routes to the correct node automatically
+        print("Enter messages to publish. Type 'exit' to quit.")
+
+        # Loop and wait for user input
+        while True:
+            message = input("Message: > ")
+            if message.lower() == 'exit':
+                break
+
+            # Publish the user's message
+            await client.publish(message, channel)
+            print(f"Published: '{message}'")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if client:
+            await client.close()
+            print("Producer client closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
+
+### Running the Example
+
+First, start `listener.py`
+
+```bash
+% python listener.py
+Starting listener client...
+Listener connected. Waiting for messages...
+Press CTRL+C to stop.
+```
+
+On a separate terminal, start `producer.py`
+
+```bash
+% python producer.py
+Producer connected.
+Publishing: 'Hello World!' to channel 'notifications'
+Enter messages to publish. Type 'exit' to quit.
+Message: > 
+```
+
+Once started, you should see that the listener have recieved a message "Hello World!"
+
+```diff lang="bash"
+Starting listener client...
+Listener connected. Waiting for messages...
+Press CTRL+C to stop.
++ Callback context: None
++ Received message: 'b'Hello World!'' from channel: 'b'notifications''
+```
+
+Now messages you sent from the producer 
+
+```bash
+Message: > Valkey Glide Python
+Published: 'Valkey Glide Python'
+```
+
+Will be received on the listener
+
+```bash
+Callback context: None
+Received message: 'b'Valkey Glide Python'' from channel: 'b'notifications''
+```
+
+Next, try to have multiple listeners/producers started. 
+You'll see that new listeners and producers can freely connect to Valkey to send and recieve messages from the channel.
+
+Listener and producers have no knowledge of each other and instead communicate through Valkey. 
+This decoupling allows for greater scalability and a more dynamic network topology.
+
+## What's Next
+In this tutorial, we have demonstrated a simple example of an application leveraging Valkey Pub/Sub. 
+
+Take a look at the [documentation](https://valkey.io/topics/pubsub/) to learn more about how Valkey PubSub works.
+
