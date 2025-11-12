@@ -14,26 +14,11 @@ This documentation site is under construction and is not yet complete!
 For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
 :::
 
-
 This tutorial guides you through building a simple real-time messaging app with Valkey GLIDE Python. 
 
 By the end, you will learn:
   * How to set up a multi-node Valkey cluster in Docker for testing.
   * Creating a simple messaging app example using Valkey pubsub.
-
-### The Feature: Resilient PubSub in Valkey GLIDE
-
-When a primary node fails in a cluster, a replica node will take its place changing the **topology**.
-GLIDE's PubSub model is designed for this this in mind.
-
-  * **Automatic Resubscription:** GLIDE is responsible for tracking topology changes in real time. If the node you're subscribed to fails, GLIDE automatically detects the new primary and resubscribes to the correct node for you.
-  * **Unified Interface:** The client provides a coherent interface, minimizing the differences between connecting to a single node or a massive cluster.
-  * **Immutable Configuration:** You define your subscriptions when you create the client. This immutable state allows GLIDE to know exactly what to resubscribe to after any disconnection or topology change.
-
-:::tip
-It is a best practice to use a **dedicated client instance for your PubSub subscriptions**. 
-Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
-:::
 
 ## Prerequisites
 
@@ -131,6 +116,11 @@ will not be able to resolve the network addresses of the cluster which will resu
 
 The example will have two scripts, a `listener.py` and `producer.py`. 
 Place them in the same folder as the `docker-copmose.yml`.
+
+:::tip
+It is a best practice to use a **dedicated client instance for your PubSub subscriptions**. 
+Your application will have one client for listening (the subscriber) and another for all other commands, including publishing.
+:::
 
 ### The Listener
 `listener.py` will listen for messages from the Valkey cluster using Pub/Sub until interupted.
