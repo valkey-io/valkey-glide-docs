@@ -1,3 +1,6 @@
+/* Import Open Sans from Google Fonts CDN*/
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap');
+
 /* Define cascade layers - our overrides come after starlight */
 @layer starlight, valkey-overrides;
 
@@ -18,7 +21,10 @@
 	--sl-color-black: #17181c;
 	--vk-color-main-hsl: 236, 83%, 63%;
 	--overlay-color: hsla(var(--vk-color-main-hsl), 0.2);
+	--sl-font: 'Open Sans', system-ui, sans-serif;
+  	--sl-font-system: 'Open Sans', system-ui, sans-serif;
 }
+
 /* Light mode colors. */
 :root[data-theme='light'] {
 	--sl-color-accent-low: #ccd6f6;
@@ -49,4 +55,9 @@
   .card {
     border-radius: 0.75rem;
   }
+}
+
+/* Move the logo and title on the header bar closer to the center of the page. */
+.title-wrapper {
+	justify-content: right;
 }

@@ -29,16 +29,24 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-<Aside type="caution" title="Work In Progress!">
-  This documentation site is under construction and is not yet complete!
-
-  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
-</Aside>
-
 import { Tabs, TabItem, CardGrid, Card, LinkCard, LinkButton, Badge } from '@astrojs/starlight/components';
 
 import Highlight from '../../components/Highlight.astro';
 import ButtonGroup from '../../components/ButtonGroup.astro';
+
+## Available in Multiple Languages
+
+Using a single high-performance Rust core.
+
+<ButtonGroup>
+  <LinkButton icon="seti:python" iconPlacement="start" href={"languages/python"}> Python </LinkButton>
+  <LinkButton icon="seti:java" iconPlacement="start" href={"languages/java"}> Java </LinkButton>
+  <LinkButton icon="node" iconPlacement="start" href={"languages/nodejs"}> Node.js </LinkButton>
+  <LinkButton icon="seti:go" iconPlacement="start" href={"languages/go"}> Go </LinkButton>
+  <LinkButton icon="seti:c-sharp" iconPlacement="start" href={"languages/csharp"}> C# <Badge text="Preview" variant="caution" /> </LinkButton>
+  <LinkButton icon="seti:php" iconPlacement="start" href={"languages/php"}> Php <Badge text="Preview" variant="caution" /> </LinkButton>
+</ButtonGroup>
+
 
 ## Why Choose Valkey GLIDE?
 
@@ -67,16 +75,3 @@ import ButtonGroup from '../../components/ButtonGroup.astro';
     </p>
   </Card>
 </CardGrid>
-
-## Connect using Valkey GLIDE
-
-One core, multiple languages.
-
-<ButtonGroup>
-  <LinkButton icon="seti:python" iconPlacement="start" href={"languages/python"}> Python </LinkButton>
-  <LinkButton icon="seti:java" iconPlacement="start" href={"languages/java"}> Java </LinkButton>
-  <LinkButton icon="node" iconPlacement="start" href={"languages/nodejs"}> Node.js </LinkButton>
-  <LinkButton icon="seti:go" iconPlacement="start" href={"languages/go"}> Go </LinkButton>
-  <LinkButton icon="seti:c-sharp" iconPlacement="start" href={"languages/csharp"}> C# <Badge text="Preview" variant="caution" /> </LinkButton>
-  <LinkButton icon="seti:php" iconPlacement="start" href={"languages/php"}> Php <Badge text="Preview" variant="caution" /> </LinkButton>
-</ButtonGroup>
