@@ -44,7 +44,7 @@
 
 [data-has-hero] .page {
 	background:
-    linear-gradient(var(--sl-color-black), var(--overlay-color))
+    linear-gradient(var(--sl-color-black) 25%, var(--overlay-color) 75%)
 }
 
 [data-has-hero] .hero > img {
