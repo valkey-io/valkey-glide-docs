@@ -36,12 +36,11 @@ export default defineConfig({
     starlight({
       title: "Valkey Glide",
       logo: {
-        light: "./src/assets/valkey-logo-with-name-light.svg",
-        dark: "./src/assets/valkey-logo-with-name-dark.svg",
+        light: "./src/assets/valkey-glide-logo-with-name-light.svg",
+        dark: "./src/assets/valkey-glide-logo-with-name-dark.svg",
         replacesTitle: true,
       },
       customCss: [
-        // Relative path to your custom CSS file
         "./src/styles/custom.css",
       ],
       favicon: "/favicon-32x32.png",
