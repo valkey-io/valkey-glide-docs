@@ -8,6 +8,7 @@ sidebar:
 ---
 
 import { Aside, LinkCard } from '@astrojs/starlight/components';
+import { Content as SupportedEngineVersions } from './commons/supported-engine-versions.mdx';
 
 <Aside type="caution" title="Work In Progress!">
   This documentation site is under construction and is not yet complete!
@@ -47,12 +48,7 @@ Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
 
 ## Supported Engine Versions
 
-Valkey GLIDE is API-compatible with the following engine versions:
-
-| Engine Type           |  6.2  |  7.0  |   7.1  |  7.2  |  8.0  |  8.1  |
-|-----------------------|-------|-------|--------|-------|-------|-------|
-| Valkey                |   -   |   -   |   -    |   V   |   V   |   V   |
-| Redis                 |   V   |   V   |   V    |   V   |   -   |   -   |
+<SupportedEngineVersions/>
 
 ## What's Next
 
