@@ -123,7 +123,7 @@ export default defineConfig({
                   autogenerate: { directory: "languages/python/developer" },
                 },
                 {
-                  label:"API", link:'languages/python/api', attrs: { style: 'font-style: italic', target: '_blank'}
+                  label:"API Reference", link:'languages/python/api', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
             },
