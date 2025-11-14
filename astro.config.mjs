@@ -111,7 +111,6 @@ export default defineConfig({
                 {
                   label: "Migration",
                   items: [
-                    "languages/python/migration",
                     {
                       label: "From redis-py",
                       autogenerate: {directory: "languages/python/migration/redis-py"}
@@ -201,7 +200,6 @@ export default defineConfig({
                 {
                   label: "Migration",
                   items: [
-                    "languages/nodejs/migration",
                     {
                       label: "From ioredis",
                       autogenerate: {directory: "languages/nodejs/migration/ioredis"}
@@ -242,7 +240,6 @@ export default defineConfig({
                 {
                   label: "Migration",
                   items: [
-                    "languages/go/migration",
                     {
                       label: "From go-redis",
                       

@@ -24,7 +24,7 @@ The migration can be done by simply replacing the `jedis` dependency with `valke
 
 <Tabs>
     <TabItem label="Gradle">
-```diff lang="gradle"
+```diff lang="groovy"
 dependencies {
 -    implementation 'redis.clients:jedis:5.1.5'
 +    implementation group: 'io.valkey', name: 'valkey-glide-jedis-compatibility', version: '2.+', classifier: 'osx-aarch_64'
