@@ -76,11 +76,11 @@ export default defineConfig({
               },
           ]
         },
-        {
-          label: "How-To Guides",
-          collapsed: true,
-          autogenerate: { directory: "how-to" },
-        },
+        // {
+        //   label: "How-To Guides",
+        //   collapsed: true,
+        //   autogenerate: { directory: "how-to" },
+        // },
         {
           label: "Languages",
           items: collapsed(true, [
@@ -241,8 +241,7 @@ export default defineConfig({
                   label: "Migration",
                   items: [
                     {
-                      label: "From go-redis",
-                      
+                      label: "From go-redis",                
                       autogenerate: {directory: "languages/go/migration/go-redis"}
                     },
                   ]
@@ -263,10 +262,10 @@ export default defineConfig({
           collapsed: true,
           items: [
            "migration",
-           {
-            label: "Planning",
-            autogenerate: {directory: "migration/planning"}
-           }
+          //  {
+          //   label: "Planning",
+          //   autogenerate: {directory: "migration/planning"}
+          //  }
           ]
         },
         {
