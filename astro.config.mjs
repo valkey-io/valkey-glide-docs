@@ -255,14 +255,6 @@ export default defineConfig({
                   label:"API Reference", link:'https://www.google.ca', attrs: { style: 'font-style: italic', target: '_blank'}
                 },
               ],
-            },
-            {
-              label: "C#",
-              autogenerate: {directory: "languages/csharp"}
-            },
-            {
-              label: "Php",
-              autogenerate: {directory: "languages/php"}
             }
           ]),
         },
