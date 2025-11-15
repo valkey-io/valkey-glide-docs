@@ -56,8 +56,3 @@
     border-radius: 0.75rem;
   }
 }
-
-/* Move the logo and title on the header bar closer to the center of the page. */
-.title-wrapper {
-	justify-content: right;
-}
