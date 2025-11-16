@@ -1,19 +1,10 @@
 ---
 title: Migrating to Python GLIDE
 description: A reference page in my new Starlight docs site.
-draft: true
-sidebar:
-  badge:
-    text: Placeholder
-    variant: note
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 
-<Aside type="caution" title="Work In Progress!">
-  This documentation site is under construction and is not yet complete!
+### Where are you migrating from?
 
-  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
-</Aside>
-
-This is a placeholder for `index.md`.
+<LinkCard title='From redis-py' description='Guides on migrating from redis-py client.' href={`${import.meta.env.BASE_URL}/languages/python/migration/redis-py`}/>

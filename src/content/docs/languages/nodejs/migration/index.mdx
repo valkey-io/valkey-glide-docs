@@ -1,18 +1,10 @@
 ---
-title: Migrating to Node.js Glide
+title: Migrating to GLIDE Node.js
 description: A reference page in my new Starlight docs site.
-sidebar:
-  badge:
-    text: Draft Review
-    variant: success
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 
-<Aside type="caution" title="Work In Progress!">
-  This documentation site is under construction and is not yet complete!
+### Where are you migrating from?
 
-  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
-</Aside>
-
-This is a placeholder.
+<LinkCard title='From ioredis' description='Guides on migrating from ioredis client.' href={`${import.meta.env.BASE_URL}/languages/nodejs/migration/ioredis`}/>

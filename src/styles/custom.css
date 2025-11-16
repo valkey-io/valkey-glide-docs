@@ -56,3 +56,8 @@
     border-radius: 0.75rem;
   }
 }
+
+.hero {
+	padding-bottom: 1.25rem;
+	padding-top: 1.25rem;
+}
