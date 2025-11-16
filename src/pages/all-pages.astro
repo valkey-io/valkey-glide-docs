@@ -1,0 +1,127 @@
+---
+import { getCollection } from 'astro:content';
+
+// Get all Starlight documentation pages, excluding drafts
+const docPages = (await getCollection('docs')).filter(page => !page.data.draft && !page.filePath?.startsWith('src/content/docs/commons/'));
+
+// 2. Get all custom .astro pages (optional)
+const customPages = import.meta.glob('./**/*.astro');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>All Pages</title>
+    <style>
+      body { 
+        font-family: sans-serif; 
+        padding: 2rem; 
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      code {
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0052a3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>All Site Pages - Markdown Table</h1>
+    
+    <button onclick="copyToClipboard()">Copy Markdown Table</button>
+    
+    <pre><code id="markdownTable">{`| URL | Approved |
+|-----|----------|
+${docPages.map(page => {
+  const url = page.filePath
+    ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
+    .replaceAll('/index','')
+    .replaceAll('.mdx','')
+    .toLowerCase();
+  
+  return `| ${url} | ☐ |`;
+}).join('\n')}${Object.keys(customPages).map(pagePath => {
+  const url = pagePath
+    .replace('./', '/')
+    .replace('index.astro', '')
+    .replace('.astro', '');
+  
+  if (url === '/all-pages') return '';
+  
+  return `\n| ${url} | ☐ |`;
+}).filter(Boolean).join('')}`}</code></pre>
+
+    <script>
+      function copyToClipboard() {
+        const text = document.getElementById('markdownTable').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Markdown table copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy:', err);
+        });
+      }
+    </script>
+
+    <hr style="margin: 2rem 0;" />
+
+    <h2>Preview (HTML Table)</h2>
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Approved</th>
+        </tr>
+      </thead>
+      <tbody>
+        {docPages.map(page => {
+          
+          const url = page.filePath
+            ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
+            .replaceAll('/index','')
+            .replaceAll('.mdx','')
+            .toLowerCase();
+          
+          return (
+            <tr>
+              <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
+              <td> </td>
+            </tr>
+          );
+        })}
+        {Object.keys(customPages).map(pagePath => {
+          const url = pagePath
+            .replace('./', '/')
+            .replace('index.astro', '')
+            .replace('.astro', '');
+          
+          if (url === '/all-pages') return null;
+          
+          return (
+            <tr>
+              <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
+              <td> </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </body>
+</html>
