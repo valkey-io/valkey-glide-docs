@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 
 // Get all Starlight documentation pages, excluding drafts and common folder
 const docPages = (await getCollection('docs')).filter(page => 
-  !page.data.draft && !page.id.startsWith('common/')
+  !page.data.draft && !page.filePath.startsWith('src/content/docs/commons')
 );
 
 // 2. Get all custom .astro pages (optional)
