@@ -52,7 +52,10 @@ export default defineConfig({
         },
       ],
       sidebar: [
-        "overview",
+        {
+          label: "Overview", 
+          slug: "overview"
+        },
         "whats-new",
         {
           label: "Learn",
