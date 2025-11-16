@@ -273,8 +273,8 @@ export default defineConfig({
                   autogenerate: { directory: "languages/go/developer" },
                 },
                 {
-                  label: "API Reference",
-                  link: "https://www.google.ca",
+                  label: "Configuration API Reference",
+                  link: "https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
               ],
