@@ -17,6 +17,7 @@ const csvContent = [
       ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
       .replaceAll('/index','')
       .replaceAll('.mdx','')
+      .replaceAll(' ', '-')
       .toLowerCase();
     return `${url},`;
   }),
@@ -92,13 +93,8 @@ const csvContent = [
         </tr>
       </thead>
       <tbody>
-        {docPages.map(page => {
-          const url = page.filePath
-            ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
-            .replaceAll('/index','')
-            .replaceAll('.mdx','')
-            .toLowerCase();
-          
+        {csvContent.split(`\n`).map(line => {
+          const url = line.split(',')[0]
           return (
             <tr>
               <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
