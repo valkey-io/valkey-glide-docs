@@ -36,21 +36,13 @@ import { Aside } from '@astrojs/starlight/components';
 import { Tabs, TabItem, CardGrid, Card, LinkCard, LinkButton, Badge } from '@astrojs/starlight/components';
 
 import Highlight from '../../components/Highlight.astro';
-import ButtonGroup from '../../components/ButtonGroup.astro';
+import SupportedLanguages from 'commons/supported-languages-buttons.mdx'
 
 ## Select Your Language
 
 Backed by a high performance Rust core and a consistent interface.
 
-<ButtonGroup>
-  <LinkButton icon="seti:python" iconPlacement="start" href={"languages/python"}> Python </LinkButton>
-  <LinkButton icon="seti:java" iconPlacement="start" href={"languages/java"}> Java </LinkButton>
-  <LinkButton icon="node" iconPlacement="start" href={"languages/nodejs"}> Node.js </LinkButton>
-  <LinkButton icon="seti:go" iconPlacement="start" href={"languages/go"}> Go </LinkButton>
-  <LinkButton icon="seti:c-sharp" iconPlacement="start" href={"languages/csharp"}> C# <Badge text="Preview" variant="caution" /> </LinkButton>
-  <LinkButton icon="seti:php" iconPlacement="start" href={"languages/php"}> Php <Badge text="Preview" variant="caution" /> </LinkButton>
-</ButtonGroup>
-
+<SupportedLanguages/>
 
 ## Why Choose Valkey GLIDE?
 
