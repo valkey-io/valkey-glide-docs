@@ -1,17 +1,41 @@
 ---
 import { getCollection } from 'astro:content';
 
-// Get all Starlight documentation pages, excluding drafts
-const docPages = (await getCollection('docs')).filter(page => !page.data.draft && !page.filePath?.startsWith('src/content/docs/commons/'));
+// Get all Starlight documentation pages, excluding drafts and common folder
+const docPages = (await getCollection('docs')).filter(page => 
+  !page.data.draft && !page.id.startsWith('common/')
+);
 
 // 2. Get all custom .astro pages (optional)
 const customPages = import.meta.glob('./**/*.astro');
+
+// Generate CSV content
+const csvContent = [
+  'URL,Approved', // Header row
+  ...docPages.map(page => {
+    const url = page.filePath
+      ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
+      .replaceAll('/index','')
+      .replaceAll('.mdx','')
+      .toLowerCase();
+    return `${url},`;
+  }),
+  ...Object.keys(customPages).map(pagePath => {
+    const url = pagePath
+      .replace('./', '/')
+      .replace('index.astro', '')
+      .replace('.astro', '');
+    
+    if (url === '/all-pages') return null;
+    return `${url},`;
+  }).filter(Boolean)
+].join('\n');
 ---
 
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>All Pages</title>
+    <title>All Pages - CSV Export</title>
     <style>
       body { 
         font-family: sans-serif; 
@@ -29,8 +53,12 @@ const customPages = import.meta.glob('./**/*.astro');
         font-family: 'Courier New', monospace;
         font-size: 14px;
       }
-      button {
+      .button-group {
         margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+      }
+      button {
         padding: 0.5rem 1rem;
         background: #0066cc;
         color: white;
@@ -44,41 +72,14 @@ const customPages = import.meta.glob('./**/*.astro');
     </style>
   </head>
   <body>
-    <h1>All Site Pages - Markdown Table</h1>
+    <h1>All Site Pages - CSV Format</h1>
     
-    <button onclick="copyToClipboard()">Copy Markdown Table</button>
+    <div class="button-group">
+      <button onclick="copyToClipboard()">Copy CSV</button>
+      <button onclick="downloadCSV()">Download CSV File</button>
+    </div>
     
-    <pre><code id="markdownTable">{`| URL | Approved |
-|-----|----------|
-${docPages.map(page => {
-  const url = page.filePath
-    ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
-    .replaceAll('/index','')
-    .replaceAll('.mdx','')
-    .toLowerCase();
-  
-  return `| ${url} | ☐ |`;
-}).join('\n')}${Object.keys(customPages).map(pagePath => {
-  const url = pagePath
-    .replace('./', '/')
-    .replace('index.astro', '')
-    .replace('.astro', '');
-  
-  if (url === '/all-pages') return '';
-  
-  return `\n| ${url} | ☐ |`;
-}).filter(Boolean).join('')}`}</code></pre>
-
-    <script>
-      function copyToClipboard() {
-        const text = document.getElementById('markdownTable').textContent;
-        navigator.clipboard.writeText(text).then(() => {
-          alert('Markdown table copied to clipboard!');
-        }).catch(err => {
-          console.error('Failed to copy:', err);
-        });
-      }
-    </script>
+    <pre><code id="csvContent">{csvContent}</code></pre>
 
     <hr style="margin: 2rem 0;" />
 
@@ -92,7 +93,6 @@ ${docPages.map(page => {
       </thead>
       <tbody>
         {docPages.map(page => {
-          
           const url = page.filePath
             ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
             .replaceAll('/index','')
@@ -102,7 +102,7 @@ ${docPages.map(page => {
           return (
             <tr>
               <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
-              <td> </td>
+              <td></td>
             </tr>
           );
         })}
@@ -117,11 +117,35 @@ ${docPages.map(page => {
           return (
             <tr>
               <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
-              <td> </td>
+              <td></td>
             </tr>
           );
         })}
       </tbody>
     </table>
+
+    <script is:inline>
+      function copyToClipboard() {
+        const csvData = document.getElementById('csvContent').textContent;
+        navigator.clipboard.writeText(csvData).then(() => {
+          alert('CSV copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy:', err);
+        });
+      }
+      
+      function downloadCSV() {
+        const csvData = document.getElementById('csvContent').textContent;
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'all-pages.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    </script>
   </body>
 </html>
