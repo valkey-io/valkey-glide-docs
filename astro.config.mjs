@@ -96,10 +96,10 @@ export default defineConfig({
                     directory: "languages/python/getting-started",
                   },
                 },
-                {
-                  label: "Concepts",
-                  autogenerate: { directory: "languages/python/concepts" },
-                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/python/concepts" },
+                // },
                 {
                   label: "How-to",
                   autogenerate: { directory: "languages/python/how-to" },
@@ -142,10 +142,10 @@ export default defineConfig({
                     directory: "languages/java/getting-started",
                   },
                 },
-                {
-                  label: "Concepts",
-                  autogenerate: { directory: "languages/java/concepts" },
-                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/java/concepts" },
+                // },
                 {
                   label: "How-to",
                   autogenerate: { directory: "languages/java/how-to" },
@@ -199,10 +199,10 @@ export default defineConfig({
                     directory: "languages/nodejs/getting-started",
                   },
                 },
-                {
-                  label: "Concepts",
-                  autogenerate: { directory: "languages/nodejs/concepts" },
-                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/nodejs/concepts" },
+                // },
                 {
                   label: "How-to",
                   autogenerate: { directory: "languages/nodejs/how-to" },
@@ -245,10 +245,10 @@ export default defineConfig({
                     directory: "languages/go/getting-started",
                   },
                 },
-                {
-                  label: "Concepts",
-                  autogenerate: { directory: "languages/go/concepts" },
-                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/go/concepts" },
+                // },
                 {
                   label: "How-to",
                   autogenerate: { directory: "languages/go/how-to" },
