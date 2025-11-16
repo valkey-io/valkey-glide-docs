@@ -9,11 +9,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-<Aside type="caution" title="Work In Progress!">
-  This documentation site is under construction and is not yet complete!
 
-  For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
-</Aside>
 
 GLIDE's API is asynchronous and uses a multiplex connection to interact with Valkey.
 This means <u>all requests are sent through a single connection</u> as the Rust core takes advantage of Valkey's **pipelining** capabilities to improve performance.
