@@ -19,10 +19,11 @@ It uses [rusttls](https://github.com/rustls/rustls) under the hood to handle the
 When you enable TLS in the client, GLIDE ensures that it verifies the server's identity and encrypts all communication.
 
 This tutorial will guide you step-by-step through configuring the Valkey GLIDE client to connect 
-to a TLS-enabled (Transport Layer Security) Valkey instance. 
-Following these steps will ensure your Python application communicates securely with your database.
+to a TLS-enabled Valkey instance. 
 
-We will cover two main scenarios:
+## What You'll Learn
+
+This tutorial will go over:
 
 1.  Enabling a basic TLS connection.
 2.  Connecting to a server that uses a custom root certificate (like a self-signed certificate).
@@ -38,7 +39,8 @@ Before you begin, please ensure you have the following set up:
     ```bash
     pip install glide-core
     ```
-  * **A running Valkey instance with TLS enabled.** This tutorial assumes your server is already configured for TLS. For instructions on enabling TLS:
+  * **A running Valkey instance with TLS enabled.** This tutorial assumes your server is already configured for TLS. 
+    See the following on how to enable TLS:
     * [AWS Elasticache](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html)
     * [Valkey](https://valkey.io/topics/encryption/)
 
@@ -58,9 +60,16 @@ client_config = GlideClientConfiguration(
 )
 ```
 
+:::tip
+Connecting to a TLS enabled Valkey without `use_tls=True` will result in a `timed error.`
+:::
+
 <details>
 <summary>Full Example</summary>
 ```python
+import asyncio
+from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
 async def main():
     # Define the address
     addresses = [NodeAddress(host="your-valkey-server.example.com", port=6379)]
@@ -79,11 +88,6 @@ async def main():
         # Test the connection
         response = await client.ping()
         print(f"Connected successfully! Server responded: {response}")
-
-        # You can now run other commands
-        await client.set("foo", "bar-tls")
-        value = await client.get("foo")
-        print(f"Got value: {value}")
 
     except Exception as e:
         print(f"Failed to connect or run command: {e}")
@@ -226,11 +230,8 @@ if __name__ == "__main__":
 ```
 </details>
 
-Here is a more concise version of that text.
-
 ## Common Pitfalls
 
-* **Forgetting `use_tls=True`:** You must set `use_tls=True` on the main `GlideClientConfiguration` even when providing advanced TLS settings.
 * **Reading Certificate in Text Mode:** Always read certificate files in binary mode (`"rb"`). The client requires a bytes object, not a string from reading in text mode (`"r"`).
 * **Certificate Verification Errors:** An error like `CERTIFICATE_VERIFY_FAILED` or `TlsError` means the server's identity check failed. Verify:
     1.  **Hostname Mismatch:** The `NodeAddress` host must exactly match the name on the server's certificate.
