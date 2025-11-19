@@ -1,0 +1,335 @@
+---
+title: "Atomic Non-Primitive Operations"
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+One of the advantage of using Lua scipts is its atomicity. Valkey will guarantees this by blocking all activity until the script is finished.
+This means you can safely implement custom atomic operations using Lua scripts.
+
+In this tutorial, you will build a simple inventory deduction system by executing Lua scripts server-side. 
+By the end of this guide, you will understand how to guarantee data consistency and optimize network performance 
+using Lua scripts and the GLIDE client.
+
+#### What You'll Learn
+
+This tutorial will cover:
+  * A realistic example of Lua scripting.
+  * How to pass arguments using `KEYS` and `ARGV` input arguments.
+  * Understanding Script Caching and how it reduces network bandwidth.
+
+## Prerequisites
+
+Before starting, ensure you have the following:
+
+  * **Python:** Version 3.9 to 3.13.
+  * **Docker:** To run a standalone Valkey instance.
+  * **Valkey GLIDE:** The Python client library.
+  * **Basic Knowledge of Lua.**
+
+### Installation
+
+1.  Start a Valkey instance using Docker:
+    ```bash
+    docker run -d --name my-valkey -p 6379:6379 valkey/valkey:8
+    ```
+2.  Install the GLIDE client:
+    ```bash
+    pip install valkey-glide
+    ```
+
+## A Rare Sneaker Drop
+
+Imagine you are launching a limited-edition sneaker with only 100 pairs available. The moment the product page goes live, 
+you expect hundreds if not thousands of customers clicking “BUY NOW” simultaneously.
+
+How do you ensure no more than 100 pairs are purchased correctly? This is a classic race condition where multiple clients 
+tries to read the same object to then modify it.
+
+### Using Valkey Commands
+
+To avoid a race condition, a client will need to ensure that the item_key was not modified while it is operating on the item_key.
+To do this, we can use the `WATCH` commands in combination with `MULTI/EXEC`. The pseudo code would look something like:
+
+```
+FUNCTION purchase_item(item_key, quantity_requested):
+
+    # Start a retry loop. Necessary because the transaction might fail.
+    WHILE True:
+        
+        try:
+            # Watch the item_key for changes
+            # If another client modifies 'item_key' after this line, 
+            # our subsequent transaction will fail.
+            WATCH(item_key)
+
+            current_stock = GET(item_key)
+
+            IF current_stock < quantity_requested:
+                UNWATCH() # Clean up
+                RETURN "Fail: Insufficient Stock"
+
+            # Start the Transaction block
+            MULTI()
+            
+            # Queue the commands
+            DECRBY(item_key, quantity_requested)
+
+            # Execute
+            # This returns NULL/Empty if the item_key was modified by someone else
+            # since the WATCH command.
+            result = EXEC()
+
+            IF result is distinct from NULL:
+                RETURN "Success"
+            
+            # If result was NULL, the loop continues and we try again immediately.
+            
+        except Error:
+            BREAK loop
+```
+
+The pattern above is called optimistic locking. While it ensures consistency between your clients, it is not efficient 
+in high contention situations; Many clients are trying to buy the same item. Any client that fails to modify `item_key` successfully must retry until they they do.
+With large number of clients this can generate a “retry storm”, putting additional load on the Valkey server and increasing latency.
+
+## Using Lua Scripts
+
+A better alternative is to use Lua scripting. Lua scripts are executed as a single atomic operation, allowing you to implement custom atomic action safely and efficiently.
+
+The following Lua script implement our "purchase" logic. It checks for `current_stock >= requested_quantity`:
+* If yes, it deducts the stock.
+* If no, it fails.
+
+```lua
+local key = KEYS[1]
+local quantity_requested = tonumber(ARGV[1])
+
+-- Get current stock (if key doesn't exist, treat as 0)
+local current_stock = tonumber(server.call('GET', key) or 0)
+
+if current_stock >= quantity_requested then
+    -- Success: Deduct stock
+    server.call('DECRBY', key, quantity_requested)
+    return 1 
+else
+    -- Fail: Not enough stock
+    return 0 
+end
+```
+
+This script, when executed, is guranteed by Valkey to be all-or-nothing.
+
+You may noticed that we are using the `KEYS` and `ARGV` parameters in our scripts. 
+We will explain how this is used in the next sections.
+
+## Handling Inputs with KEYS and ARGV
+
+Valkey provides `KEYS` and `ARGV` to handles input parameters, each with their own specifc purpose:
+* `KEY` is used to pass in keys values in Valkey (ex: `product:123`).
+* `ARGV` is used for general input parameters. 
+
+```python
+buy_quantity = "3" 
+
+result = await client.invoke_script(
+    LUA_PURCHASE_SCRIPT, 
+    keys=[product_key],   # Maps to KEYS[1] in Lua
+    args=[buy_quantity]   # Maps to ARGV[1] in Lua
+)
+```
+
+#### Why Use `KEYS`?
+
+#### Why Use `ARGV`?
+
+`ARGV`
+
+
+
+
+
+
+
+
+## Putting It All Together
+
+
+
+
+## What's Next
+
+> **Note on KEYS vs. ARGV:**
+>
+>   * **KEYS:** Use this for any database key names (e.g., `product:123`). This is required for Valkey Cluster to route the command to the correct node.
+>   * **ARGV:** Use this for values/arguments (e.g., the quantity "3").
+
+Add this definition *outside* or at the top of your `main` function:
+
+```python
+# The Lua logic:
+# 1. keys[1] will hold the product key name
+# 2. argv[1] will hold the quantity to buy
+LUA_INVENTORY_SCRIPT = Script(r"""
+
+""")
+```
+
+<Steps>
+    1. Our Lua Scripts:
+</Steps>
+### Step 1: Import Modules and Configure Client
+
+First, we need to set up the asynchronous environment and define our connection settings.
+
+```python
+import asyncio
+from glide import GlideClient, GlideClientConfiguration, NodeAddress, Script
+
+async def main():
+    # Configure the client to connect to localhost on port 6379
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)]
+    )
+    
+    # Create the client
+    client = await GlideClient.create(config)
+    
+    # (We will add the rest of the logic here)
+    
+    # Always close the client when done
+    client.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Step 2: Define the Lua Script
+
+
+
+### Step 3: Initialize the Inventory
+
+To test the script, we need data. Let's seed the database with a product that has 100 items in stock.
+
+Add this inside your `main` function, after creating the client:
+
+```python
+    # Setup: Seed the database with 100 items
+    product_key = "product:iphone15:stock"
+    await client.set(product_key, "100")
+    print(f"Initial Stock: {await client.get(product_key)}")
+```
+
+### Step 4: Execute the Script
+
+Now we use `invoke_script`. This method handles the complexity of script caching for you. It sends the script to the server, executing the logic atomically.
+
+```python
+    # Scenario: Customer wants to buy 3 items
+    buy_quantity = "3" # Lua arguments are typically passed as strings
+
+    # invoke_script(script_object, keys_list, args_list)
+    result = await client.invoke_script(
+        LUA_INVENTORY_SCRIPT, 
+        keys=[product_key],   # Maps to KEYS[1] in Lua
+        args=[buy_quantity]   # Maps to ARGV[1] in Lua
+    )
+```
+
+### Step 5: Handle the Results
+
+Finally, we interpret the return value from Lua (`1` for success, `0` for failure) and verify the final state of the database.
+
+```python
+    if result == 1:
+        print("✅ Purchase Successful!")
+    else:
+        print("❌ Purchase Failed: Insufficient Stock.")
+
+    # Verify final stock
+    final_stock = await client.get(product_key)
+    print(f"Remaining Stock: {final_stock}")
+```
+
+-----
+
+## Full Application Code
+
+Here is the complete, runnable example combining all the steps above.
+
+```python
+import asyncio
+from glide import GlideClient, GlideClientConfiguration, NodeAddress, Script
+
+# 1. Define the Lua Script
+# This script checks stock and deducts it in a single atomic operation.
+LUA_INVENTORY_SCRIPT = Script(r"""
+    local key = KEYS[1]
+    local quantity_requested = tonumber(ARGV[1])
+    
+    -- Get current stock (handle nil as 0)
+    local current_stock = tonumber(server.call('GET', key) or 0)
+
+    if current_stock >= quantity_requested then
+        -- Success: Deduct stock
+        server.call('DECRBY', key, quantity_requested)
+        return 1 
+    else
+        -- Fail: Not enough stock
+        return 0 
+    end
+""")
+
+async def main():
+    # 2. Configure the Client
+    # Replace with your Valkey/Redis host and port
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)]
+    )
+    
+    client = await GlideClient.create(config)
+
+    # Setup: Let's seed the database with 100 items
+    product_key = "product:iphone15:stock"
+    await client.set(product_key, "100")
+    print(f"Initial Stock: {await client.get(product_key)}")
+
+    # 3. Execute the Script
+    # Scenario: Customer wants to buy 3 items
+    buy_quantity = "3" # Arguments must be strings
+
+    # invoke_script(script_object, keys_list, args_list)
+    # GLIDE automatically handles script hashing and caching here.
+    result = await client.invoke_script(
+        LUA_INVENTORY_SCRIPT, 
+        keys=[product_key],   # Maps to KEYS[1]
+        args=[buy_quantity]   # Maps to ARGV[1]
+    )
+
+    # 4. Handle the Result
+    if result == 1:
+        print("✅ Purchase Successful!")
+    else:
+        print("❌ Purchase Failed: Insufficient Stock.")
+
+    # Verify final stock
+    final_stock = await client.get(product_key)
+    print(f"Remaining Stock: {final_stock}")
+
+    # Cleanup
+    client.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Summary
+
+You have successfully created an atomic inventory system using Valkey GLIDE.
+
+  * **Logic:** You moved business logic into Lua to prevent race conditions.
+  * **Routing:** You correctly used `keys=` to ensure the script works in clustered environments.
+  * **Performance:** By using `invoke_script`, you leveraged automatic script caching, ensuring that subsequent calls to this script are extremely fast and bandwidth-efficient.
+
+**Next Step:** Would you like me to show you how to adapt this script to handle a "bulk purchase" scenario where you update multiple different products in a single transaction?
