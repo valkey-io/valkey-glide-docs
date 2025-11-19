@@ -1,0 +1,236 @@
+---
+title: "Lua Scripting Basics"
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 1
+---
+
+import { Steps, LinkCard } from '@astrojs/starlight/components';
+
+:::caution[Work In Progress!]
+This documentation site is under construction and is not yet complete!
+
+For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
+:::
+
+Valkey supports server-side scripting using [Lua](http://lua.org/about.html), a lightweight, embeddable programming language. 
+Lua scripts let you execute custom logic inside the Valkey server, providing atomicity and efficiency for tasks that would normally require multiple round trips or complex client-side coordination.
+
+Traditionally, Lua scripting can be achieved through the various Valkey commmands like `EVAL` and `EVALSHA`. 
+GLIDE provides a more user friendly interface through the `Script()` class and various methods.
+
+#### What You'll Learn
+
+This tutorial will cover:
+  * A brief overview of Lua Scripting in Valkey.   
+  * Creaing a "Hello World" example with GLIDE.
+  * How return types are handled.
+
+## Why Use Lua Scripts?
+Lua scripting has two primary benefits:
+1.  **Atomicity:** The entire Lua script is executed as a single, atomic operation. Valkey guarantees that no other command or script will run in the midst of your script's execution. 
+    This is perfect for complex "read-modify-write" patterns where you need to fetch data, perform logic on it, and write it back without interruption.
+2.  **Performance:** Executing logic on the server reduces network latency. Instead of making multiple round-trips from your 
+    application (e.g., `GET` a value, modify it, `SET` the new value), you can send a single script that performs all operations on the server side.
+
+You'll learn more about how to use Lua script to enable safe atomic operations in the 
+<a href={`${import.meta.env.BASE_URL}/getting-started/tutorials/lua-scripting/lua-scripting-atomic-non-primitives`}>next</a> tutorial.
+
+For more on Lua scripting in Valkey, see the [documentations](https://valkey.io/topics/eval-intro/).
+
+## Prerequisites
+
+Before you begin, you'll need a few things:
+
+1.  **Python:** Valkey supports Python 3.9 to 3.13.
+2.  **Valkey GLIDE:** You'll need the `glide-client` library. You can install it using pip:
+    ```bash
+    pip install valkey-glide
+    ```
+3.  **Valkey Server:** You need a running Valkey instance. The easiest way to get one is with Docker. Run this command in your terminal to start a standalone Valkey server:
+    ```bash
+    docker run -d --name standalone-valkey -p 6379:6379 -d valkey/valkey
+    ```
+4. **A Basic knowledge of Lua.**
+
+#### Prepare **`hello_world.py`.**
+
+The following skeleton application connects to our Valkey docker container and will be used in the example. The connection is then tested using `ping`.
+<details>
+<summary>hello_world.py</summary>
+```python
+import asyncio
+from glide import (
+    Script,
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RequestError
+)
+
+async def main():
+    print("Starting the GLIDE Lua tutorial...")
+    
+    # Standalone client configuration
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = None # Define client outside try block
+
+    try:
+        # Create and connect the client
+        client = await GlideClient.create(config)
+
+        # Check for connection
+        result = await client.ping()
+        if not result:
+            print("Error: Could not ping Valkey server. Check your connection with Valkey.")
+            return
+        
+        print("Successfully connected to Valkey.")
+
+        # Our script logic will go here
+    
+    except RequestError as e:
+        print(f"Error connecting or running command: {e}")
+
+    finally:
+        if client:
+            # Always close the client when done
+            await client.close()
+            print("Connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
+
+Make sure to run the script to check for a successful connection
+
+```bash
+$ python hello_world.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Connection closed.
+```
+
+## A Simple "Hello World"
+
+We will create a `Script` object with our Lua code and execute it using `client.invoke_script`.
+
+Add the following code block inside the `try` block after the client initialization.
+
+```python
+# ... inside the try block ...
+print("Successfully connected to Valkey.")
+
+# 1. Create a simple 'Hello World' script
+hello_script = Script("return 'Hello, Valkey!'")
+
+# 2. Execute the script on the server
+result = await client.invoke_script(hello_script)
+
+# 3. Print the result
+print(f"Script result: {result}")
+```
+
+Run your script again. You should see the following output:
+
+```bash
+$ python app.py
+Starting the GLIDE Lua tutorial...
+Successfully connected to Valkey.
+Script result: b'Hello, Valkey!'
+Connection closed.
+```
+
+Notice the `b'...'` prefix. Valkey and GLIDE return strings as raw bytes. This is the expected behavior.
+
+#### Handling Different Return Values
+
+Lua scripts can return more than just strings. Let's try returning a number and an array. 
+Add this code after your "Hello World" script.
+
+```python
+# ... after the 'Hello World' script ...
+
+# Example 2: Script that returns a number
+num_script = Script("return 42")
+num_result = await client.invoke_script(num_script)
+print(f"Number script result: {num_result} (Type: {type(num_result)})")
+
+# Example 3: Script that returns an array (list)
+array_script = Script("return {1, 2, 3, 'hello'}")
+array_result = await client.invoke_script(array_script)
+print(f"Array script result: {array_result}")
+```
+
+Run the script again. See how GLIDE converts Lua types back to Python types:
+
+```sh
+...
+Number script result: 42 (Type: <class 'int'>)
+Array script result: [1, 2, 3, b'hello']
+...
+```
+
+<details>
+<summary>Full Example Code</summary>
+```python
+import asyncio
+from glide import (
+    Script,
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RequestError
+)
+
+async def main():
+    print("Starting the GLIDE Lua tutorial...")
+    
+    # Standalone client configuration
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = None # Define client outside try block
+
+    try:
+        # Create and connect the client
+        client = await GlideClient.create(config)
+        print("Successfully connected to Valkey.")
+
+        # 1. Create a simple 'Hello World' script
+        hello_script = Script("return 'Hello, Valkey!'")
+        result = await client.invoke_script(hello_script)
+        print(f"Script result: {result}")
+
+        # 2. Script that returns a number
+        num_script = Script("return 42")
+        num_result = await client.invoke_script(num_script)
+        print(f"Number script result: {num_result} (Type: {type(num_result)})")
+
+        # 3. Script that returns an array (list)
+        array_script = Script("return {1, 2, 3, 'hello'}")
+        array_result = await client.invoke_script(array_script)
+        print(f"Array script result: {array_result}")
+
+    except RequestError as e:
+        print(f"Error connecting or running command: {e}")
+
+    finally:
+        if client:
+            # Always close the client when done
+            await client.close()
+            print("Connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
+
+## What's Next
+
+Congratulations! You have learned how to execute an arbitrary Lua scripts in Valkey using GLIDE.
+To continue, see:
+
+<LinkCard title="Atomic Non-Primitive Operations" 
+    description="A realistic example of how Lua scipting ensures atomicity between operations."
+    href={`${import.meta.env.BASE_URL}/getting-started/tutorials/lua-scripting/lua-scripting-atomic-non-primitives`}
+/> 
