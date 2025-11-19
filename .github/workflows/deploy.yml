@@ -23,22 +23,21 @@ jobs:
         with:
           package-manager: pnpm@10
 
-  # Deploy job temporarily disabled while working out a more robust deployment strategy
-  # deploy:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name != 'pull_request'
-  #   permissions:
-  #     contents: read
-  #     pages: write
-  #     id-token: write
-  #   concurrency:
-  #     group: pages
-  #     cancel-in-progress: true
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   steps:
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
