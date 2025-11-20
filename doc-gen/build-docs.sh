@@ -13,7 +13,7 @@ TARGET=${1:-all} # Default to 'all' if no argument provided
 rm -rf "$CURR_DIR/valkey-glide"
 
 # Shallow clone for efficiency
-git clone --depth 1 --branch main "$SOURCE" "$CURR_DIR/valkey-glide"
+# git clone --depth 1 --branch main "$SOURCE" "$CURR_DIR/valkey-glide"
 
 echo "Starting documentation generation for target: $TARGET"
 

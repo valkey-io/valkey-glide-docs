@@ -15,7 +15,7 @@ jobs:
   build-node-docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Main Repository
+      - name: Checkout Valkey Glide Docs
         uses: actions/checkout@v4
       
       - name: Checkout Valkey Glide Source
@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-docs
-          path: docs/node
+          path: doc-gen/docs/node
           retention-days: 1
 
   build-java-docs:
@@ -72,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-docs
-          path: docs/java
+          path: doc-gen/docs/java
           retention-days: 1
 
   build-python-docs:
@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-docs
-          path: docs/python
+          path: doc-gen/docs/python
           retention-days: 1
 
   # --- Main Site Build ---
@@ -135,6 +135,9 @@ jobs:
         with:
           name: python-docs
           path: public/languages/python/api
+
+      - name: ls
+        run: ls -R public/languages
 
       # Build the Astro Site
       - name: Install, build, and upload site

@@ -25,7 +25,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip3 install --upgrade pip
 pip3 install -r $SCRIPT_DIR/requirements.txt
-python3 -m mkdocs build --site-dir $OUT_LOCATION
+python3 -m mkdocs build --config-file "$SCRIPT_DIR/mkdocs.yml" --site-dir $OUT_LOCATION
 
 echo "Python client documentation generated successfully!"
 echo "Output location: $OUT_LOCATION"
