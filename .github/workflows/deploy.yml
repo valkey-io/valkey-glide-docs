@@ -117,12 +117,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Download and Organize Artifacts
       - name: Download Node Docs
         uses: actions/download-artifact@v4
         with:
           name: node-docs
-          path: public/languages/node/api
+          path: public/languages/nodejs/api
 
       - name: Download Java Docs
         uses: actions/download-artifact@v4
@@ -150,7 +149,7 @@ jobs:
   deploy:
     needs: build-site
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       pages: write
