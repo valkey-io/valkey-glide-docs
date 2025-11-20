@@ -7,9 +7,9 @@ This repository contains a set of shell scripts designed to automatically genera
 - **Node.js/TypeScript**: using TypeDoc
 - **Java**: using Javadoc
 - **Python**: using Mkdocs
-- **Go**: None. Docs are available on [pkg.dev.com](https://pkg.go.dev/)
+- **Go**: **None** - Docs are available on [pkg.dev.com](https://pkg.go.dev/)
 
-The main script `build-docs.sh` orchestrates the generation process by cloning the Valkey Glide repository and executing language-specific documentation builders in parallel. Additionally, a test deployment script `test-deploy.sh` is provided to integrate the generated docs with the regular documentations content for verification.
+The main script `build-docs.sh` orchestrates the generation process by executing all language-specific documentation builders in parallel. Additionally, a test deployment script `test-deploy.sh` is provided to integrate the generated docs with the regular documentations content for verification.
 
 ## Prerequisites
 
@@ -24,17 +24,22 @@ Before running these scripts, ensure you have the following installed on your sy
 
 ### Generate All Client Documentation
 
-To generate documentation for all clients (Node.js, Java, and Python):
+First, clone the Valkey GLIDE repository into the `doc-gen` folder.
+The scripts expects Valkey GLIDE repo to be in `doc-gen`.
+```bash
+cd doc-gen
+git clone --depth 1 --branch main <valkey-glide-repo-ssh>
+```
+
+To generate documentation for all clients:
 
 ```bash
 ./build-docs.sh
 ```
 
-This script will:
-1. Remove any existing `valkey-glide` directory
-2. Perform a shallow clone of the Valkey Glide repository
-3. Execute all language-specific documentation builders in parallel
-4. Output documentation to `./docs/node/`, `./docs/java/`, and `./docs/python/`
+This script will generate documentations from the source codes the clients. This process can take a long time.
+
+For developement purposes, you may not need the latest docs all the time. As such, building the docs once should be enough.
 
 ### Generate Documentation for Individual Clients
 
@@ -42,47 +47,30 @@ You can also generate documentation for specific clients by running the individu
 
 #### Node.js Documentation
 ```bash
-./build-node-docs.sh [optional-path-to-node-client]
+./build-node-docs.sh
 ```
 Output location: `./docs/node/`
 
 #### Java Documentation
 ```bash
-./build-java-docs.sh [optional-path-to-java-client]
+./build-java-docs.sh
 ```
 Output location: `./docs/java/`
 
 #### Python Documentation
 ```bash
-./build-python-docs.sh [optional-path-to-python-client]
+./build-python-docs.sh
 ```
 Output location: `./docs/python/`
 
-**Note:** Each script accepts an optional parameter to specify a custom path to the client directory. If not provided, the scripts will use the default path from the cloned `valkey-glide` repository.
-
 ## How to Use test-deploy.sh
 
-The `test-deploy.sh` script provides a complete end-to-end workflow for building, generating, and locally testing the Valkey Glide documentation website.
-
-### Running the Test Deployment
+The `test-deploy.sh` script spin up a test server to serve the Valkey GLIDE Docs site with the doc-gens deployed.
+This is because astro dev server could not serve our doc-gen files.
 
 ```bash
 ./test-deploy.sh
 ```
-
-### What It Does
-
-1. **Cleanup** - Removes existing test directories and API documentation
-2. **Build Process** - Builds the main Valkey Glide documentation site using pnpm
-3. **Generate API Docs** - Runs `build-docs.sh` to generate all client API documentation
-4. **Copy Files** - Assembles the complete documentation structure:
-   - Copies built site from `../dist` to `./test/valkey-glide-docs/`
-   - Copies Node.js API docs to `./test/valkey-glide-docs/languages/nodejs/api/`
-   - Copies Java API docs to `./test/valkey-glide-docs/languages/java/api/`
-   - Copies Python API docs to `./test/valkey-glide-docs/languages/python/api/`
-5. **Start Server** - Launches a local HTTP server on port 8000
-
-### Viewing the Documentation
 
 After running the script, open your browser and navigate to:
 ```
@@ -90,10 +78,6 @@ http://localhost:8000/valkey-glide-docs/
 ```
 
 You can now browse and verify the complete documentation site with all API references integrated.
-
-### Stopping the Server
-
-Press `Ctrl+C` in the terminal to stop the HTTP server.
 
 ## Output Structure
 
