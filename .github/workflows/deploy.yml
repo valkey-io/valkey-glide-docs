@@ -15,10 +15,18 @@ jobs:
   build-node-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
       
-      - name: Install Build Dependencies
-        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+      - name: Checkout Valkey Glide Source
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide
+          path: doc-gen/valkey-glide
+          ref: main
+
+      - name: Install Dependencies
+        run: ./doc-gen/install-deps.sh
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,7 +34,7 @@ jobs:
           node-version: 20
 
       - name: Generate Node Docs
-        run: ./doc-gen/build-docs.sh node
+        run: ./doc-gen/build-node-docs.sh
 
       - name: Upload Node Docs
         uses: actions/upload-artifact@v4
@@ -38,10 +46,18 @@ jobs:
   build-java-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
 
-      - name: Install Build Dependencies
-        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+      - name: Checkout Valkey Glide Source
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide
+          path: doc-gen/valkey-glide
+          ref: main
+
+      - name: Install Dependencies
+        run: ./doc-gen/install-deps.sh
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -50,7 +66,7 @@ jobs:
           java-version: '17'
 
       - name: Generate Java Docs
-        run: ./doc-gen/build-docs.sh java
+        run: ./doc-gen/build-java-docs.sh
 
       - name: Upload Java Docs
         uses: actions/upload-artifact@v4
@@ -62,18 +78,26 @@ jobs:
   build-python-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
 
-      - name: Install Build Dependencies
-        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+      - name: Checkout Valkey Glide Source
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide
+          path: doc-gen/valkey-glide
+          ref: main
+
+      - name: Install Dependencies
+        run: ./doc-gen/install-deps.sh
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13' 
+          python-version: '3.13'
 
       - name: Generate Python Docs
-        run: ./doc-gen/build-docs.sh python
+        run: ./doc-gen/build-python-docs.sh
 
       - name: Upload Python Docs
         uses: actions/upload-artifact@v4
@@ -112,7 +136,7 @@ jobs:
           name: python-docs
           path: public/languages/python/api
 
-      # Build the Astro Site (which now includes the API docs in public/)
+      # Build the Astro Site
       - name: Install, build, and upload site
         uses: withastro/action@v4
         with:

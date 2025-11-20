@@ -36,4 +36,4 @@ if [ -n "$GITHUB_PATH" ]; then
     echo "$HOME/.local/bin" >> $GITHUB_PATH
 fi
 
-echo "Dependencies installed successfully."
+echo "Dependencies installed successfully. "
