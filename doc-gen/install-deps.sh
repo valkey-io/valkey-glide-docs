@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install dependencies required for building Valkey Glide docs
+# Install common dependencies required for building Valkey Glide docs
 # Usage: ./doc-gen/install-deps.sh
 
 set -e
@@ -11,7 +11,7 @@ sudo apt-get install -y git gcc pkg-config openssl libssl-dev unzip cmake python
 
 echo "Installing Rust..."
 # -y flag added for non-interactive installation
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+curl --proto '=https' --tlsv1.2 -sSf --retry 3 --retry-delay 2 https://sh.rustup.rs | sh -s -- -y
 
 # Source cargo env for the current script execution
 source "$HOME/.cargo/env"
@@ -22,7 +22,7 @@ cargo install --locked cargo-zigbuild
 
 echo "Installing Protoc 29.1..."
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-curl -LO $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
+curl -LO --retry 3 --retry-delay 2 $PB_REL/download/v29.1/protoc-29.1-linux-x86_64.zip
 # -o to overwrite without prompting if file exists
 unzip -o protoc-29.1-linux-x86_64.zip -d $HOME/.local
 
