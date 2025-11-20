@@ -10,21 +10,118 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  # --- Parallel Documentation Build Jobs ---
+
+  build-node-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Build Dependencies
+        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate Node Docs
+        run: ./doc-gen/build-docs.sh node
+
+      - name: Upload Node Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-docs
+          path: docs/node
+          retention-days: 1
+
+  build-java-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate Java Docs
+        run: ./doc-gen/build-docs.sh java
+
+      - name: Upload Java Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-docs
+          path: docs/java
+          retention-days: 1
+
+  build-python-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        run: chmod +x ./doc-gen/install-deps.sh && ./doc-gen/install-deps.sh
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' 
+
+      - name: Generate Python Docs
+        run: ./doc-gen/build-docs.sh python
+
+      - name: Upload Python Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-docs
+          path: docs/python
+          retention-days: 1
+
+  # --- Main Site Build ---
+
+  build-site:
+    needs: [build-node-docs, build-java-docs, build-python-docs]
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install, build, and upload your site output
+      # Download and Organize Artifacts
+      - name: Download Node Docs
+        uses: actions/download-artifact@v4
+        with:
+          name: node-docs
+          path: public/languages/node/api
+
+      - name: Download Java Docs
+        uses: actions/download-artifact@v4
+        with:
+          name: java-docs
+          path: public/languages/java/api
+
+      - name: Download Python Docs
+        uses: actions/download-artifact@v4
+        with:
+          name: python-docs
+          path: public/languages/python/api
+
+      # Build the Astro Site (which now includes the API docs in public/)
+      - name: Install, build, and upload site
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
 
+  # --- Deployment ---
+
   deploy:
-    needs: build
+    needs: build-site
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     permissions:
