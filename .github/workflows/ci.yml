@@ -21,3 +21,12 @@ jobs:
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
+
+      - name: Link Checker (Lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check all HTML files in dist/
+          args: --verbose --no-progress './dist/**/*.html'
+          
+          # Fail the pipeline if any broken links are found
+          fail: true
