@@ -15,10 +15,8 @@ import { LinkCard } from '@astrojs/starlight/components';
 
 This section contain various pages on topics about Valkey GLIDE's architecture, client features, and limtations. To get started, take a look at the following topics:
 
-export const baseUrl = import.meta.env.BASE_URL;
+<LinkCard title="Rust Core Design" href={`/concepts/architecture/rust-core-design`} description="Learn more about the underlying Rust core that powers all Valkey GLIDE clients, and what makes it different." />
 
-<LinkCard title="Rust Core Design" href={`${baseUrl}/concepts/architecture/rust-core-design`} description="Learn more about the underlying Rust core that powers all Valkey GLIDE clients, and what makes it different." />
+<LinkCard title="Client Features" href={`/concepts/client-feature`} description="Explore the various features supported by Valkey GLIDE clients" />
 
-<LinkCard title="Client Features" href={`${baseUrl}/concepts/client-feature`} description="Explore the various features supported by Valkey GLIDE clients" />
-
-<LinkCard title="Limitations" href={`${baseUrl}/concepts/limitations`} description="Learn about Valkey GLIDE limitations" />
+<LinkCard title="Limitations" href={`/concepts/limitations`} description="Learn about Valkey GLIDE limitations" />
