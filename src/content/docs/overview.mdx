@@ -9,15 +9,11 @@ sidebar:
 import { Aside, LinkCard } from '@astrojs/starlight/components';
 import { Content as SupportedEngineVersions } from './commons/supported-engine-versions.mdx';
 
-
-
-export const baseUrl = import.meta.env.BASE_URL;
-
 The **General Language Independent Driver for the Enterprise (GLIDE)** for Valkey is an official open-source client library for the Valkey datastore, supporting all Valkey commands.
 
 ### One Core, Multiple Languages
 
-With a shared <a href={`${baseUrl}/concepts/architecture/rust-core-design/`}>Rust core</a>, Valkey GLIDE delivers consistent behavior across multiple languages and reduces complexity.
+With a shared <a href={`/concepts/architecture/rust-core-design/`}>Rust core</a>, Valkey GLIDE delivers consistent behavior across multiple languages and reduces complexity.
 
 ### Performant and Reliable
 
@@ -32,14 +28,14 @@ Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
 ### Key Features
 
 * **[AZ Affinity](https://valkey.io/blog/az-affinity-strategy/)** – Ensures low-latency connections and minimal cross-zone costs by routing read traffic to replicas in the clients availability zone. **(Requires Valkey server version 8.0+ or AWS ElastiCache for Valkey 7.2+)**.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/pubsub-model`} >PubSub Auto-Reconnection</a>** – Seamless background resubscription on topology updates or disconnection.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/pubsub-model#subscribing`} >Sharded PubSub</a>** – Native support for sharded PubSub across cluster slots.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/multi-slot-command-handling#multi-slot-command-execution-in-glide`} >Cluster-Aware MGET/MSET/DEL/FLUSHALL</a>** – Execute multi-key commands across cluster slots without manual key grouping.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/cluster-scan`} >Cluster Scan</a>** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
+* **<a href={`/concepts/client-features/pubsub-model`} >PubSub Auto-Reconnection</a>** – Seamless background resubscription on topology updates or disconnection.
+* **<a href={`/concepts/client-features/pubsub-model#subscribing`} >Sharded PubSub</a>** – Native support for sharded PubSub across cluster slots.
+* **<a href={`/concepts/client-features/multi-slot-command-handling#multi-slot-command-execution-in-glide`} >Cluster-Aware MGET/MSET/DEL/FLUSHALL</a>** – Execute multi-key commands across cluster slots without manual key grouping.
+* **<a href={`/concepts/client-features/cluster-scan`} >Cluster Scan</a>** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
 * **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
 * **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/batching-vs-pipelining`} >Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
-* **<a href={`${import.meta.env.BASE_URL}/concepts/client-features/observability-design`} >OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
+* **<a href={`/concepts/client-features/batching-vs-pipelining`} >Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
+* **<a href={`/concepts/client-features/observability-design`} >OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
 
 ## Supported Engine Versions
 
@@ -47,10 +43,10 @@ Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
 
 ## What's Next
 
-<LinkCard title="Getting Started" href={`${import.meta.env.BASE_URL}/getting-started/quickstart/`} description="Start here! This guide will walk you through a quickstart to connect to a Valkey datastore with GLIDE." />
+<LinkCard title="Getting Started" href={`/getting-started/quickstart/`} description="Start here! This guide will walk you through a quickstart to connect to a Valkey datastore with GLIDE." />
 
-<LinkCard title="Migrating to Valkey" href={`${import.meta.env.BASE_URL}/migration/`} description="Everything you need to know for migrating to Valkey GLIDE." />
+<LinkCard title="Migrating to Valkey" href={`/migration/`} description="Everything you need to know for migrating to Valkey GLIDE." />
 
-<LinkCard title="Languages" href={`${import.meta.env.BASE_URL}/languages/`} description="Explore language specific documentations for each of Valkey GLIDE drivers." />
+<LinkCard title="Languages" href={`/languages/`} description="Explore language specific documentations for each of Valkey GLIDE drivers." />
 
-<LinkCard title="The Rust Core" href={`${import.meta.env.BASE_URL}/concepts/architecture/rust-core-design`} description="Learn about the Rust core the powers all of the GLIDE clients." />
+<LinkCard title="The Rust Core" href={`/concepts/architecture/rust-core-design`} description="Learn about the Rust core the powers all of the GLIDE clients." />

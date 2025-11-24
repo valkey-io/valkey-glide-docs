@@ -56,9 +56,9 @@ After migration, it is crucial to throughly evaluate your application to ensure 
 3. **Start with simple operations**: Keep it simple first by verifying basic compatibility.
 
 ## Migration Checklist
-1. **Audit your codebase** for unsupported features. See our <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jedis-compatibility-layer/supported-features`}>Supported Features</a> section for details.
+1. **Audit your codebase** for unsupported features. See our <a href={`/languages/java/migration/jedis/jedis-compatibility-layer/supported-features`}>Supported Features</a> section for details.
 2. **Test thoroughly** in a development environment.
-3. **Review connection configurations** for compatibility. See our <a href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/jedis-compatibility-layer/configurations-mapping`}>Connection Mapping</a> page on how Jedis configurations are mapped to Valkey GLIDE configurations.
+3. **Review connection configurations** for compatibility. See our <a href={`/languages/java/migration/jedis/jedis-compatibility-layer/configurations-mapping`}>Connection Mapping</a> page on how Jedis configurations are mapped to Valkey GLIDE configurations.
 4. **Plan for feature gaps** that may require code changes.
 1. **Check your Jedis version** as the compatibility layer may not support older Jedis versions.
 2. **Verify command types.** `sendCommand()` only supports `Protocol.Command` types, not custom `ProtocolCommand` implementations.
@@ -82,6 +82,6 @@ If your application relies heavily on unsupported features or you want the maxim
 
 <LinkCard 
     title="Manual Migration" 
-    href={`${import.meta.env.BASE_URL}/languages/java/migration/jedis/manual-migrations/`} 
+    href={`/languages/java/migration/jedis/manual-migrations/`} 
     description="Migrate from Jedis to Valkey GLIDE using native APIs for full feature support."
 />

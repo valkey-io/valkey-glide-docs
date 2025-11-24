@@ -81,13 +81,13 @@ Connecting to an ElastiCache or MemoryDB cluster configured with IAM Authenticat
 3. Refreshing the token periodically with GLIDE’s Dynamic Password Update Feature.
 
 See how to generate the token and GLIDE user examples:
-- <a href={`${import.meta.env.BASE_URL}/languages/python/how-to/authentication#iam-authentication-with-aws-sdk`}>Python</a>
-- <a href={`${import.meta.env.BASE_URL}/languages/java/how-to/authentication#iam-authentication-with-aws-sdk`}>Java</a>
-- <a href={`${import.meta.env.BASE_URL}/languages/nodejs/how-to/authentication#iam-authentication-with-aws-sdk`}>Node.js</a>
+- <a href={`/languages/python/how-to/authentication#iam-authentication-with-aws-sdk`}>Python</a>
+- <a href={`/languages/java/how-to/authentication#iam-authentication-with-aws-sdk`}>Java</a>
+- <a href={`/languages/nodejs/how-to/authentication#iam-authentication-with-aws-sdk`}>Node.js</a>
 
 ### Best Practices for Refreshing IAM Tokens and Re-authentication
 
-GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`${import.meta.env.BASE_URL}/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
+GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
 This capability is required when perfoming IAM authentication with AWS SDK because:
 
 * IAM tokens are only valid for 15 minutes.
