@@ -17,7 +17,7 @@ jobs:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
 
-      - name: Install, build, and upload your site output
+      - name: Build
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
