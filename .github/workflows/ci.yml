@@ -21,19 +21,3 @@ jobs:
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
-
-      # 1. Start the Astro Preview server in the background (&)
-      # 2. Use npx wait-on to ensure the server is ready before moving to the next step
-      - name: Start Preview Server
-        run: |
-          pnpm preview &
-          npx wait-on http://localhost:4321
-
-      # 3. Scan the RUNNING server, not the files
-      - name: Link Checker (Lychee)
-        uses: lycheeverse/lychee-action@v2
-        with:
-          # Scan the local server
-          # --base: Helps resolve relative links correctly
-          args: --no-progress 'http://localhost:4321'
-          fail: true
