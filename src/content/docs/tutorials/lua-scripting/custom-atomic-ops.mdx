@@ -1,21 +1,16 @@
 ---
-title: "Atomic Non-Primitive Operations"
-description: "Learn about ARGV, KEYS, and Lua scripts atomicity in this tutorial on Valkey Lua scripting."
+title: "Custom Atomic Operations"
 ---
 
 import { Steps, LinkCard } from '@astrojs/starlight/components';
 
-One of the advantage of using Lua scipts is its atomicity. Valkey will guarantees this by blocking all activity until the script is finished.
-This makes it easy to implement custom atomic operations using Lua scripts.
-
-In this tutorial, you will build a simple inventory deduction system by executing Lua scripts server-side. 
-By the end of this guide, you will understand how to guarantee data consistency and optimize network performance 
-using Lua scripts and the GLIDE client.
+One of the advantage of using Lua scipts is its atomicity which guranteed scripts executions are all-or-nothing.
+This makes it a natural fit for implementing custom atomic operations.
 
 #### What You'll Learn
 
 This tutorial will cover:
-  * A realistic example of Lua scripting.
+  * How Lua scripts are used to create custom operations.
   * How to pass arguments using `KEYS` and `ARGV` input arguments.
   * Understanding Script Caching and how it reduces network bandwidth.
 
@@ -156,18 +151,20 @@ result = await client.invoke_script(
 Note that both `KEYS` and `ARGV` parameters must be string.
 
 ### Why Use `KEYS`?
-By explicitly passing in keys via `KEYS`, Valkey can route the script to the correct node containing the key.
-
-To ensure correct execution:
-- All keys are passed in the `keys=` parameter when invoking the script.
-- Scripts only access keys provided in `KEYS`.
-- Never use hardcoded key names or programatically-generated keys.
+Valkey uses declared `KEYS` to locate the correct node (in both standalone and cluster mode). To ensure execution safety:
+- Pass all accessed keys via the `keys=` argument.
+- Only interact with keys listed in `KEYS`.
+- Never hardcode or programmatically generate key names.
 
 ### Using `ARGV` and Script Caching
-`ARGV` allow you to create reusable scripts. The same script can be used with different input values which simplifies your codebase.
 
-GLIDE also automatically caches Lua scripts server-side. Each script is given a unique hash that identifies them in the cache.
-Using `ARGV` avoid creating "single-use" scripts, improving efficiency as scripts are only sent to the server once.
+GLIDE caches `Sciprt()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs. 
+Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
+
+:::caution[Script Hashing]
+Scripts hashes are based on the entire script content. This include spaces, line breaks, and all characters. 
+Always ensure you are loading the exact same scripts.
+:::
 
 ## Putting It All Together
 
