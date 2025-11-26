@@ -67,7 +67,7 @@ export default defineConfig({
               label: "Tutorials",
               collapsed: true,
               autogenerate: {
-                directory: "getting-started/tutorials",
+                directory: "tutorials",
               },
             },
             {
