@@ -1,29 +1,27 @@
 ---
 title: "Pub/Sub Basics"
 description: A reference page in my new Starlight docs site.
-next:
-  link: /tutorials/pubsub/pubsub-notifications
 sidebar:
   order: 1
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 
-:::caution[Work In Progress!]
-This documentation site is under construction and is not yet complete!
+Valkey implements the [Publish/Subscribe (Pub/Sub) messaging pattern](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), 
+enabling real-time decoupled communications between clients. This allows for greater scalability and a more dynamic network topology.
 
-For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) Github.
-:::
-
-In this tutorial, you will build a simple, real-time notification system using the Pub/Sub (Publish/Subscribe) feature in Valkey GLIDE.
+#### What You'll Learn
+In this tutorial, you will learn how to make basic Valkey Pub/Sub operations using GLIDE.
 
 By the end, you will:
 - Learn how to subscribe and publish messages to Valkey channels.
-- The different ways GLIDE can listen for messages.
+- The different ways GLIDE clients can listen for messages.
 
 ## Valkey Pub/Sub
 
-Valkey's Pub/Sub is a powerful messaging pattern that allows different parts of your application to communicate without being directly aware of each other. A **publisher** sends a message to a specific **channel** (like a radio station), and any **subscribers** tuned into that channel will receive the message instantly.
+Valkey's Pub/Sub is a powerful messaging pattern that allows different parts of your application to communicate without being directly aware of each other. 
+- **Publisher** send messages to a specific channel (like a radio station).
+- **Subscribers** tuned into that channel will receive the message instantly.
 
 This is perfect for chat applications, live data feeds, and event notifications.
 
@@ -130,9 +128,10 @@ Let's build a simpe Hellow World example that publish a message to a channel the
                     print("Publishing client closed.")
         ```
 
-        A best practice with Pub/Sub is to use a **dedicated client for your subscriptions**. 
-        A client in subscription mode is only focused on listening and cannot run other commands. 
-        GLIDE enforces this by having you define subscriptions when you create the client.
+        :::caution[Use Dedicated Subcriber Clients]
+        Separate clients for publishing and subscribing should be used.
+        A client in subscription mode is only focused on listening and cannot run other commands.
+        :::
 
     5. **Receive the Message Asynchronously**
 
