@@ -66,9 +66,19 @@ export default defineConfig({
             {
               label: "Tutorials",
               collapsed: true,
-              autogenerate: {
-                directory: "tutorials",
-              },
+              items: [
+                {
+                  slug: "tutorials/tls"
+                },
+                {
+                  label: "Lua Scripting",
+                  autogenerate: { directory: "tutorials/lua-scripting" },
+                },
+                {
+                  label: "Pub/Sub",
+                  autogenerate: { directory: "tutorials/pubsub" },
+                }
+              ]
             },
             {
               label: "Architecture",
