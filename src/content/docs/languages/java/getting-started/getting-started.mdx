@@ -8,8 +8,7 @@ sidebar:
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 import {javaGlideLatest} from '@data/versions.ts'
-
-
+import { Content as SupportedEngineVersions } from '../../../commons/supported-engine-versions.mdx';
 
 ## System Requirements
 
@@ -42,7 +41,7 @@ An example app (called glide.examples.ExamplesApp) is also available under [exam
 
 ## Supported Engine Versions
 
-Refer to the <a href={`/reference/compatibility/platform-support`}>platform support</a> section for details.
+<SupportedEngineVersions/>
 
 ## Prerequisites
 
