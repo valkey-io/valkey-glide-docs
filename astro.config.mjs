@@ -2,7 +2,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import mermaid from "astro-mermaid";
-import starlightLinksValidator from 'starlight-links-validator'
 
 function collapsed(isCollapsed = false, sidebarItems) {
   return sidebarItems.map((item) => {
@@ -51,7 +50,6 @@ export default defineConfig({
           href: "https://github.com/valkey-io/valkey-glide",
         },
       ],
-      plugins: [starlightLinksValidator()],
       sidebar: [
         {
           label: "Overview", 
