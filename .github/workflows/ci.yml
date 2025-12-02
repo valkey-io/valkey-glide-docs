@@ -21,3 +21,10 @@ jobs:
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
+
+      - name: Check Links
+        uses: lycheeverse/lychee-action@v2.7.0
+        with:
+          args: --root-dir ./dist ./dist
+          # Fail the pipeline if broken links are found
+          fail: true

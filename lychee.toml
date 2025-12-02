@@ -1,0 +1,20 @@
+# lychee.toml
+
+# Exclude specific files from being scanned
+exclude_path = [
+    "dist/404.html"
+]
+
+# Exclude specific URLs/links (RegEx)
+exclude = [
+    # GitHub edit links
+    'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
+
+    # API Documentation exclusions
+    '.*/languages/java/api',
+    '.*/languages/nodejs/api',
+    '.*/languages/python/api',
+
+    # Specific file link exclusion
+    './dist/404.html'
+]
