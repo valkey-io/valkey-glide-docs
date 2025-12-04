@@ -9,11 +9,6 @@ on:
 permissions:
   contents: read
 
-# Ensure that only one deployment runs at a time on branch.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   # --- Parallel Documentation Build Jobs ---
 
