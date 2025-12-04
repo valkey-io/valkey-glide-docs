@@ -12,7 +12,7 @@ exclude = [
 
     # API Documentation exclusions
     '.*/languages/java/api/.*',
-    '.*/languages/nodejs/ap/.*i',
+    '.*/languages/nodejs/api/.*',
     '.*/languages/python/api/.*',
 
     # Specific file link exclusion
