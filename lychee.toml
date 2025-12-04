@@ -11,9 +11,9 @@ exclude = [
     'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
 
     # API Documentation exclusions
-    '.*/languages/java/api',
-    '.*/languages/nodejs/api',
-    '.*/languages/python/api',
+    '.*/languages/java/api/.*',
+    '.*/languages/nodejs/ap/.*i',
+    '.*/languages/python/api/.*',
 
     # Specific file link exclusion
     './dist/404.html'
