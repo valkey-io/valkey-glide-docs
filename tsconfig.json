@@ -6,8 +6,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "baseUrl": ".",
     "paths": {
-      "@data/*": ["src/data/*"]
+      "@data/*": ["src/data/*"],
+      "@components/*": ["src/components/*"],
     }
   },
   "include": [".astro/types.d.ts", "**/*"],

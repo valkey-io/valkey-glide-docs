@@ -8,6 +8,8 @@ import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
 
+import ParamTabs from '@components/ParamTabs.astro';
+
 This guide will go over setting up a simple developement environment connected to a Valkey Docker instance.
 
 ## Understanding GLIDE Clients
@@ -41,7 +43,7 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
 
   4. Install Valkey GLIDE
 
-     <Tabs syncKey="progLangInExamples">
+     <ParamTabs syncKey="progLangInExamples" param="lang">
        <TabItem label="Python">
          ```bash
          # Install the latest version
@@ -62,7 +64,7 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
          ```
        </TabItem>
 
-       <TabItem label="Node.js">
+       <TabItem label="Node">
          ```bash
          # GLIDE includes TypeScript definitions out of the box.
          npm install @valkey/valkey-glide
@@ -78,7 +80,7 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
          go get github.com/valkey-io/valkey-glide/go
          ```
        </TabItem>
-     </Tabs>
+     </ParamTabs>
 
   5. Finally, conect to Valkey using GLIDE and verify your installation.
 
