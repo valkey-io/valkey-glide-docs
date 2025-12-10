@@ -86,7 +86,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     ```
   </TabItem>
 
-  <TabItem label="Node.js">
+  <TabItem label="Node">
     ```javascript
     const { GlideClient } = require('@valkey/valkey-glide');
 
@@ -189,7 +189,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     ```
   </TabItem>
 
-  <TabItem label="Node.js">
+  <TabItem label="Node">
     ```javascript
     // Set multiple keys at once
     await client.mset({
@@ -250,7 +250,7 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
     ```
   </TabItem>
 
-  <TabItem label="Node.js">
+  <TabItem label="Node">
     ```javascript
     const deletedCount = await client.del(['user:1001', 'user:1002', 'user:1003']);
     console.log(`✓ Deleted ${deletedCount} keys`);
