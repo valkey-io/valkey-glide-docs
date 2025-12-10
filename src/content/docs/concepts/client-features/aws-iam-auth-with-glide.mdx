@@ -37,12 +37,53 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
 <Tabs>
   <TabItem label="Python" syncKey="progLangInExamples">
     ```python
-      // TODO: add code snippet
+    addresses = [NodeAddress("endpoint.example.com", 6379)]
+
+    # Configure IAM authentication
+    # Automatically regenerates the token every 5 mins (default: 300 seconds)
+    iam_config = IamAuthConfig(
+        cluster_name="clustername",
+        service=ServiceType.ELASTICACHE,  # or ServiceType.MEMORYDB
+        region="us-east-1",
+        # refresh_interval_seconds=100,  # Optional, default is 300 seconds
+    )
+
+    credentials = ServerCredentials(username="username", iam_config=iam_config)
+
+    config = GlideClusterClientConfiguration(
+        addresses=addresses,
+        credentials=credentials,
+    )
+    # for async mode
+    client = await GlideClusterClient.create(config) 
+
+    # for sync mode  
+    client = GlideClusterClient.create_sync(config)
     ```
   </TabItem>
   <TabItem label="Java" syncKey="progLangInExamples">
   ```java
-    // TODO: add code snippet
+    List<NodeAddress> nodeList =
+                Collections.singletonList(
+                        NodeAddress.builder().host("endpoint.example.com").port(6379).build());
+
+    // Configure IAM authentication
+    // Automatically regenerates the token every 5 mins (default: 300 seconds)
+    AwsIamConfig iamConfig =
+            AwsIamConfig.builder()
+                    .clusterName("clustername")
+                    .service(ServiceType.ELASTICACHE) // or ServiceType.MEMORYDB
+                    .region("us-east-1")
+                    // .refreshIntervalSeconds(100) // Optional, default is 300 seconds
+                    .build();
+
+    GlideClusterClientConfiguration config =
+            GlideClusterClientConfiguration.builder()
+                    .addresses(nodeList)
+                    .credentials("username", iamConfig)
+                    .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
   ```
   </TabItem>
   <TabItem label="Node.js" syncKey="progLangInExamples">
@@ -67,8 +108,26 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
   </TabItem>
 
   <TabItem label="Go" syncKey="progLangInExamples">
-    ```java
-      // TODO: add code snippet
+    ```go
+  	// Configure IAM authentication
+  	// Automatically regenerates the token every 5 mins (default: 300 seconds)
+  	iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
+  	// Optional: Set custom refresh interval
+  	// iamConfig.WithRefreshIntervalSeconds(100)
+  
+  	credentials, err := config.NewServerCredentialsWithIam("username", iamConfig)
+  	if err != nil {
+  		return nil, fmt.Errorf("failed to create credentials: %w", err)
+  	}
+  
+  	clientConfig := config.GlideClusterClientConfiguration{
+  		Addresses: []config.NodeAddress{
+  			{Host: "endpoint.example.com", Port: 6379},
+  		},
+  		Credentials: credentials,
+  	}
+  
+  	client, err := api.NewGlideClusterClient(&clientConfig)
     ```
   </TabItem>
 </Tabs>
