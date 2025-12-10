@@ -1,8 +1,6 @@
 name: CI/CD
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -152,15 +150,15 @@ jobs:
 
   deploy:
     needs: build-site
-    # Only deploy when pushed to main (not on PRs)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Only deploy when manually triggered on main.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pages: write
       id-token: write
     concurrency:
-      group: pages
+      group: deploy
       cancel-in-progress: true
     environment:
       name: github-pages
