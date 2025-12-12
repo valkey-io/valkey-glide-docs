@@ -45,7 +45,7 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
         ServerCredentials,
         ServiceType,
     )
-
+    ...
     addresses = [NodeAddress("endpoint.example.com", 6379)]
 
     # Configure IAM authentication
@@ -68,10 +68,22 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
 
     # for sync mode  
     client = GlideClusterClient.create_sync(config)
+    ...
     ```
   </TabItem>
   <TabItem label="Java" syncKey="progLangInExamples">
   ```java
+
+    import java.util.Collections;
+    import java.util.List;
+
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AwsIamConfig;
+    import glide.api.models.configuration.AwsIamConfig.ServiceType;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    ...
+
     List<NodeAddress> nodeList =
                 Collections.singletonList(
                         NodeAddress.builder().host("endpoint.example.com").port(6379).build());
@@ -93,6 +105,7 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
                     .build();
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
+  ...
   ```
   </TabItem>
   <TabItem label="Node.js" syncKey="progLangInExamples">
@@ -118,6 +131,13 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
 
   <TabItem label="Go" syncKey="progLangInExamples">
     ```go
+    import (
+  
+    	"github.com/valkey-io/valkey-glide/go/glide/api"
+    	"github.com/valkey-io/valkey-glide/go/glide/config"
+    )
+    ...
+
   	// Configure IAM authentication
   	// Automatically regenerates the token every 5 mins (default: 300 seconds)
   	iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
@@ -137,6 +157,7 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
   	}
   
   	client, err := api.NewGlideClusterClient(&clientConfig)
+    ...
     ```
   </TabItem>
 </Tabs>
