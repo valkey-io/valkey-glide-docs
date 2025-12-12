@@ -37,6 +37,15 @@ GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (I
 <Tabs>
   <TabItem label="Python" syncKey="progLangInExamples">
     ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        IamAuthConfig,
+        NodeAddress,
+        ServerCredentials,
+        ServiceType,
+    )
+
     addresses = [NodeAddress("endpoint.example.com", 6379)]
 
     # Configure IAM authentication
