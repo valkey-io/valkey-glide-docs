@@ -90,7 +90,7 @@ export default defineConfig({
               autogenerate: { directory: "concepts/architecture" },
             },
             {
-              label: "Client Features",
+              label: "Core Features",
               collapsed: true,
               autogenerate: { directory: "concepts/client-features" },
             },
@@ -103,6 +103,7 @@ export default defineConfig({
             "how-to/installation",
             "how-to/monitoring/logging",
             "how-to/synchronous-client",
+            {"label": "Connection Management", slug: "how-to/connection-management"},
           ]
         },
         {
