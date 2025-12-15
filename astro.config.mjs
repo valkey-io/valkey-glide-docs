@@ -68,6 +68,19 @@ export default defineConfig({
               slug: "getting-started/basic-operations",
             },
             {
+              label: "Architecture",
+              items: [
+              "concepts/architecture/rust-core-design",
+              "core-features/async-execution",
+
+              ]
+            },
+            {
+              label: "Core Features",
+              collapsed: true,
+              autogenerate: { directory: "concepts/client-features" },
+            },
+            {
               label: "Tutorials",
               collapsed: true,
               items: [
@@ -83,16 +96,6 @@ export default defineConfig({
                   autogenerate: { directory: "tutorials/pubsub" },
                 }
               ]
-            },
-            {
-              label: "Architecture",
-              collapsed: true,
-              autogenerate: { directory: "concepts/architecture" },
-            },
-            {
-              label: "Core Features",
-              collapsed: true,
-              autogenerate: { directory: "concepts/client-features" },
             },
           ],
         },
