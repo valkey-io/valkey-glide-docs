@@ -1,0 +1,226 @@
+---
+title: Install GLIDE
+sidebar:
+  order: 1
+---
+
+import { Aside, Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import {javaGlideLatest} from '@data/versions.ts'
+
+export const mavenExample = 
+`
+<!-- with os-maven-plugin -->
+<build>
+    <extensions>
+        <extension>
+            <groupId>kr.motd.maven</groupId>
+            <artifactId>os-maven-plugin</artifactId>
+        </extension>
+    </extensions>
+</build>
+<dependencies>
+    <dependency>
+        <groupId>io.valkey</groupId>
+        <artifactId>valkey-glide</artifactId>
+        <classifier>\${os.detected.classifier}</classifier>
+        <version>${javaGlideLatest}</version>
+    </dependency>
+</dependencies>
+
+<!-- osx-x86_64 -->
+<dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <classifier>osx-x86_64</classifier>
+    <version>${javaGlideLatest}</version>
+</dependency>
+
+<!-- osx-aarch_64 -->
+<dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <classifier>osx-aarch_64</classifier>
+    <version>${javaGlideLatest}</version>
+</dependency>
+
+<!-- linux-aarch_64 -->
+<dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <classifier>linux-aarch_64</classifier>
+    <version>${javaGlideLatest}</version>
+</dependency>
+
+<!-- linux-x86_64 -->
+<dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <classifier>linux-x86_64</classifier>
+    <version>${javaGlideLatest}</version>
+</dependency>
+`
+
+
+This guides will go over how to install Valkey GLIDE for your specific system.
+
+## System Requirements
+
+The release of Valkey GLIDE was tested on the following platforms:
+
+### Linux
+
+* Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
+* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
+
+<details>
+<summary>`glibc` requirements</summary>
+Node.js requires `glibc` 2.17+. This should be the standard for GNU Linux based system.
+
+However, to check you can use:
+
+```
+ldd --version
+```
+</details>
+
+:::caution
+Currently Alpine Linux / MUSL is NOT supported.
+:::
+
+### MacOS
+
+* macOS 14.7 (Apple silicon/aarch\_64)
+* macOS 13.7 (x86\_64/amd64)
+
+
+:::caution[Windows Support]
+Windows is not yet supported.
+:::
+
+## Installing and Setting Up
+
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+    **Requirements:** Python 3.9 to 3.13.
+    
+    To get started, GLIDE Python is available on [pypi]().
+
+    ```bash
+    pip3 install valkey-glide
+    ```
+
+    For the synchronous Python client, use 
+
+    ```bash
+    pip3 install valkey-glide-sync
+    ```
+
+    :::note
+    Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency frameworks.
+    :::
+
+    </TabItem>
+
+    <TabItem label="Java">
+    **Requirements:** JDK 11+
+
+    To get started, add one of the following snippet into the build file for your tool. 
+
+    :::caution[Include Classifiers]
+    You must include the classifier for your OS. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) pluggin to 
+    detect the correct classifier for your OS. 
+    
+    Otherwise, the followings specifiers are supported:
+    ```
+    osx-x86_64
+    linux-aarch_64
+    linux-x86_64
+    linux_musl-aarch_64
+    linux_musl-x86_64
+    ```
+    :::
+
+    <Tabs syncKey="javaBuildTool">
+        <TabItem label="Gradle">
+            ```groovy
+            // with osdetector
+            plugins {
+                id "com.google.osdetector" version "1.7.3"
+            }
+            dependencies {
+                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+            }
+
+            // osx-aarch_64
+            dependencies {
+                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
+            }
+
+            // osx-x86_64
+            dependencies {
+                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
+            }
+
+            // linux-aarch_64
+            dependencies {
+                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
+            }
+
+            // linux-x86_64
+            dependencies {
+                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
+            }
+            ```
+        </TabItem>
+
+        <TabItem label="Maven">
+            <Code
+            lang="xml"
+            code={mavenExample}/>
+        </TabItem>
+
+        <TabItem label="SBT">
+            ```scala
+            // osx-aarch_64
+            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
+
+            // osx-x86_64
+            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-x86_64"
+
+            // linux-aarch_64
+            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-aarch_64"
+
+            // linux-x86_64
+            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
+            ```
+        </TabItem>
+    </Tabs>
+
+    </TabItem>
+
+    <TabItem label="Node">
+
+    **Requirements:** Node.js 16+
+
+    **For npm users on linux it is recommended to use npm >=11**. It support optional download base on libc. Yarn users should not be concerned.
+
+    :::note
+    The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which add a size to the package. The package is using the protobufjs/minimal version, hence, if size matter, bundlers should be able to strip the unused code. It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
+    :::
+
+    To get started, Valkey GLIDE Node.js is available on npm for install.
+
+    ```bash
+    npm install @valkey/valkey-glide
+    ```
+    </TabItem>
+
+    <TabItem label="Go">
+    **Requirements:** Go 1.22+
+
+    ```bash
+    # Install GLIDE
+    go get github.com/valkey-io/valkey-glide/go
+    ```
+    </TabItem>
+</Tabs>
