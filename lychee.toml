@@ -13,6 +13,15 @@ exclude = [
     # GitHub edit links
     'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
 
+    # The repo is private so it will cause error.
+    'https://github.com/valkey-io/valkey-glide-docs',
+
+    # When adding a new page, it would not be live when Lychee checks the links. 
+    # It will return error, blocking both PR and deployment workflows.
+    # We ignore the live URL to get around this. Also, any internal links should use absolute url which 
+    # are still checked by Lychee.
+    'https://glide.valkey.io/.*',
+
     # API Documentation exclusions
     '.*/languages/java/api',
     '.*/languages/nodejs/api',
