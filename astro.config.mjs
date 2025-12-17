@@ -309,6 +309,10 @@ export default defineConfig({
           collapsed: true,
           autogenerate: { directory: "reference" },
         },
+        {
+          label: "Feedback & Support",
+          slug: "feedback-and-support"
+        }
       ],
     }),
   ],
