@@ -8,7 +8,8 @@ import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
 
-This guide will go over setting up a simple developement environment connected to a Valkey Docker instance.
+Valkey GLIDE is the open-source client library for Valkey. Designed for performance and consistency between supported languages.
+This guide will show how to quickly install and setting up a simple development environment for Valkey GLIDE.
 
 ## Understanding GLIDE Clients
 
@@ -19,7 +20,7 @@ GLIDE provides two main client types:
 
 For this guide, we will use a standalone client to connect to a Valkey Docker instance.
 
-### Setting Up
+## Setting Up
 
 <Steps>
   1. Follow the instructions on the [Docker website](https://docs.docker.com/get-docker/) to install Docker for your operating system.
@@ -38,329 +39,322 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
      docker exec valkey-server valkey-cli ping
      # Expected output: PONG 
      ```
+</Steps>
 
-  4. Install Valkey GLIDE
+## System Requirements
+### Linux
+* Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
+* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
 
-     <Tabs syncKey="progLangInExamples">
-       <TabItem label="Python">
-         ```bash
-         # Install the latest version
-         pip3 install valkey-glide
-         ```
-       </TabItem>
+:::caution
+Note: Currently Alpine Linux / MUSL is NOT supported.
+:::
 
-       <TabItem label="Java">
-         ```xml
-         // Add to your `pom.xml`
-         <dependencies>
-             <dependency>
-                 <groupId>io.valkey</groupId>
-                 <artifactId>valkey-glide</artifactId>
-                 <version>2.0.1</version>
-             </dependency>
-         </dependencies>
-         ```
-       </TabItem>
+### MacOS
+* macOS 14.7 (Apple silicon/aarch\_64)
+* macOS 13.7 (x86\_64/amd64)
 
-       <TabItem label="Node.js">
-         ```bash
-         # GLIDE includes TypeScript definitions out of the box.
-         npm install @valkey/valkey-glide
-         ```
-       </TabItem>
+:::caution[Windows]
+Windows is not yet supported.
+:::
 
-       <TabItem label="Go">
-         ```bash
-         # Initialize a new Go module (if needed)
-         go mod init your-project-name
+## Install Valkey GLIDE
 
-         # Install GLIDE
-         go get github.com/valkey-io/valkey-glide/go
-         ```
-       </TabItem>
-     </Tabs>
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+        **Requirements:** Python 3.9 to 3.13.
 
-  5. Finally, conect to Valkey using GLIDE and verify your installation.
+        ```bash
+        # Install the latest version
+        pip3 install valkey-glide
+        ```
 
-     <Tabs syncKey="progLangInExamples">
-       <TabItem label="Python">
-         ```python
-          import asyncio
-          from glide import GlideClient, NodeAddress
+    </TabItem>
 
-          async def main():
-              # Create client configuration
-              client = GlideClient([NodeAddress("localhost", 6379)])
-              
-              try:
-                  # Test the connection
-                  response = await client.ping()
+    <TabItem label="Java">
 
-                  # Valkey respond with PONG
-                  print(f"Connected! Server responded: {response}")
-                  
-              except Exception as e:
-                  print(f"Connection failed: {e}")
-              
-              finally:
-                  # Always close the client
-                  await client.close()
+    **Requirements:** JDK 11+
 
-          # Run the async function
-          if __name__ == "__main__":
-              asyncio.run(main())
-         ```
-       </TabItem>
+    Add the following to your build tool. Make sure to sepcify your classifier for your OS.
+    <Tabs>
+        <TabItem label="Gradle">
+        ```groovy
+        plugins {
+            id "com.google.osdetector" version "1.7.3"
+        }
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+        }
+        ```
+        </TabItem>
 
-       <TabItem label="Java">
-         ```java
-            import glide.api.GlideClient;
-            import glide.api.models.configuration.GlideClientConfiguration;
-            import glide.api.models.configuration.NodeAddress;
+        <TabItem label="Maven">
+            ```xml
+            <!-- with os-maven-plugin -->
+            <build>
+                <extensions>
+                    <extension>
+                        <groupId>kr.motd.maven</groupId>
+                        <artifactId>os-maven-plugin</artifactId>
+                    </extension>
+                </extensions>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>io.valkey</groupId>
+                    <artifactId>valkey-glide</artifactId>
+                    <classifier>${os.detected.classifier}</classifier>
+                    <version>[2.0.0,)</version>
+                </dependency>
+            </dependencies>
+            ```
+        </TabItem>
 
-            public class ConnectionTest {
-                public static void main(String[] args) {
-                    // Create client configuration
-                    GlideClientConfiguration config = GlideClientConfiguration.builder()
-                        .address(NodeAddress.builder()
-                            .host("localhost")
-                            .port(6379)
-                            .build())
-                        .build();
-                    
-                    try (GlideClient client = GlideClient.createClient(config).get()) {
-                        // Test the connection
-                        String response = client.ping().get();
+        <TabItem label="Maven">
+        ```scala
+        // Specify the OS classifier for your system.
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "<your-classifier>"
+        ```
+        </TabItem>
+    </Tabs>
 
-                        // Valkey respond with PONG
-                        System.out.println("Connected! Server responded: " + response);
-                        
-                    } catch (Exception e) {
-                        System.err.println("Connection failed: " + e.getMessage());
-                    }
-                }
-            }
-         ```
-       </TabItem>
+    </TabItem>
 
-       <TabItem label="Node.js">
-         ```javascript
-            const { GlideClient } = require('@valkey/valkey-glide');
+    <TabItem label="Node.js">
+    **Requirements:** Node.js 16+
 
-            async function main() {
-                // Create client configuration
-                const client = GlideClient.createClient({
-                    addresses: [{ host: 'localhost', port: 6379 }]
-                });
+    ```bash
+    npm install @valkey/valkey-glide
+    ```
+    </TabItem>
+
+    <TabItem label="Go">
+    **Requirements:** Go 1.22+
+
+    ```bash
+    # Initialize a new Go module (if needed)
+    go mod init your-project-name
+
+    # Install GLIDE
+    go get github.com/valkey-io/valkey-glide/go
+    ```
+    </TabItem>
+</Tabs>
+
+:::tip[Installation Guides]
+For more detailed instructions, refer to our installation [guides](/how-to/installation).
+:::
+
+## A Simple Ping
+
+The following code snippet perform a simple "ping" command to our docker Valkey instance. This will tell us that 
+GLIDE was able to send and receive commands from Valkey.
+For testing against a live instance, update the `GlideClient` configurations.
+
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+        ```python
+        import asyncio
+        from glide import GlideClient, NodeAddress
+
+        async def main():
+            # Create client configuration
+            client = GlideClient([NodeAddress("localhost", 6379)])
+            
+            try:
+                # Test the connection
+                response = await client.ping()
+
+                # Valkey respond with PONG
+                print(f"Connected! Server responded: {response}")
                 
-                try {
+            except Exception as e:
+                print(f"Connection failed: {e}")
+            
+            finally:
+                # Always close the client
+                await client.close()
+
+        # Run the async function
+        if __name__ == "__main__":
+            asyncio.run(main())
+        ```
+    </TabItem>
+
+    <TabItem label="Java">
+        ```java
+        import glide.api.GlideClient;
+        import glide.api.models.configuration.GlideClientConfiguration;
+        import glide.api.models.configuration.NodeAddress;
+
+        public class ConnectionTest {
+            public static void main(String[] args) {
+                // Create client configuration
+                GlideClientConfiguration config = GlideClientConfiguration.builder()
+                    .address(NodeAddress.builder()
+                        .host("localhost")
+                        .port(6379)
+                        .build())
+                    .build();
+                
+                try (GlideClient client = GlideClient.createClient(config).get()) {
                     // Test the connection
-                    const response = await client.ping();
+                    String response = client.ping().get();
 
                     // Valkey respond with PONG
-                    console.log(`Connected! Server responded: ${response}`);
+                    System.out.println("Connected! Server responded: " + response);
                     
-                } catch (error) {
-                    console.error(`Connection failed: ${error.message}`);
-                } finally {
-                    // Always close the client
-                    client.close();
+                } catch (Exception e) {
+                    System.err.println("Connection failed: " + e.getMessage());
                 }
             }
+        }
+        ```
+    </TabItem>
 
-            // Run the function
-            main().catch(console.error);
-         ```
-       </TabItem>
+    <TabItem label="Node.js">
+        ```javascript
+        const { GlideClient } = require('@valkey/valkey-glide');
 
-       <TabItem label="Go">
-         ```go
-            package main
-
-            import (
-                "fmt"
-                "log"
-                
-                "github.com/valkey-io/valkey-glide/go/glide/api"
-            )
-
-            func main() {
-                // Create client configuration
-                config := &api.GlideClientConfiguration{
-                    Addresses: []api.NodeAddress{
-                        {Host: "localhost", Port: 6379},
-                    },
-                }
-                
-                client := api.NewGlideClient(config)
-                defer client.Close()
-                
+        async function main() {
+            // Create client configuration
+            const client = GlideClient.createClient({
+                addresses: [{ host: 'localhost', port: 6379 }]
+            });
+            
+            try {
                 // Test the connection
-                response, err := client.Ping()
-                if err != nil {
-                    log.Fatalf("Connection failed: %v", err)
-                }
-                
+                const response = await client.ping();
+
                 // Valkey respond with PONG
-                fmt.Printf("Connected! Server responded: %s\n", response)
+                console.log(`Connected! Server responded: ${response}`);
+                
+            } catch (error) {
+                console.error(`Connection failed: ${error.message}`);
+            } finally {
+                // Always close the client
+                client.close();
             }
-         ```
-       </TabItem>
-     </Tabs>
+        }
 
-     <Aside type="caution">
-       Always `close()` GLIDE clients to cleanup resources when the instance is no longer needed.
-     </Aside>
+        // Run the function
+        main().catch(console.error);
+        ```
+    </TabItem>
 
-  6. Running the above snippet should give you this respond.
-     ```bash
-     Connected! Server responded: PONG
-     ```
-</Steps>
+    <TabItem label="Go">
+        ```go
+        package main
+
+        import (
+            "fmt"
+            "log"
+            
+            "github.com/valkey-io/valkey-glide/go/glide/api"
+        )
+
+        func main() {
+            // Create client configuration
+            config := &api.GlideClientConfiguration{
+                Addresses: []api.NodeAddress{
+                    {Host: "localhost", Port: 6379},
+                },
+            }
+            
+            client := api.NewGlideClient(config)
+            defer client.Close()
+            
+            // Test the connection
+            response, err := client.Ping()
+            if err != nil {
+                log.Fatalf("Connection failed: %v", err)
+            }
+            
+            // Valkey respond with PONG
+            fmt.Printf("Connected! Server responded: %s\n", response)
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+Running the above snippet should give you this respond.
+```bash
+Connected! Server responded: PONG
+```
+
+:::caution
+Always `close()` GLIDE clients to cleanup resources when the instance is no longer needed.
+:::
 
 ## Connection Configuration
 
-GLIDE offers many configuration options. A typical configuration may look like following:
+GLIDE offers many configuration options to handle to Valkey through its configuration object. 
+These options, and other interfaces, stay consistent between languages.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     ```python
-    import asyncio
-    from glide import GlideClient, NodeAddress, GlideClientConfiguration
-
-    async def main():
-        # Setting up connection configuration
-        config = GlideClientConfiguration(
-            addresses=[NodeAddress("localhost", 6379)],
-            # Connection timeout (milliseconds)
-            request_timeout=5000,
-            # Connection pool size
-            connection_backoff_max_delay=1000,
-            # TLS configuration (if needed)
-            use_tls=False,
-            # Database selection (0-15 for Redis/Valkey)
-            database_id=0
-        )
-        
-        client = GlideClient(config)
-        
-        try:
-            # Test connection with custom message
-            response = await client.ping("Hello GLIDE!")
-            print(f"Server responded: {response}")
-            
-        finally:
-            await client.close()
-
-    if __name__ == "__main__":
-        asyncio.run(main())
+    # Setting up connection configuration
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        # Connection timeout (milliseconds)
+        request_timeout=5000,
+        # Connection pool size
+        connection_backoff_max_delay=1000,
+        # TLS configuration (if needed)
+        use_tls=False,
+        # Database selection (0-15 for Redis/Valkey)
+        database_id=0
+    )
     ```
   </TabItem>
 
   <TabItem label="Java">
     ```java
-    import glide.api.GlideClient;
-    import glide.api.models.configuration.GlideClientConfiguration;
-    import glide.api.models.configuration.NodeAddress;
-    import java.time.Duration;
-
-    public class AdvancedConnection {
-        public static void main(String[] args) {
-            // Setting up connection configuration
-            GlideClientConfiguration config = GlideClientConfiguration.builder()
-                .address(NodeAddress.builder()
-                    .host("localhost")
-                    .port(6379)
-                    .build())
-                // Connection timeout
-                .requestTimeout(Duration.ofSeconds(5))
-                // TLS configuration (if needed)
-                .useTls(false)
-                // Database selection
-                .databaseId(0)
-                .build();
-            
-            try (GlideClient client = GlideClient.createClient(config).get()) {
-                // Test connection with custom message
-                String response = client.ping("Hello GLIDE!").get();
-                System.out.println("Server responded: " + response);
-                
-            } catch (Exception e) {
-                System.err.println("Connection failed: " + e.getMessage());
-            }
-        }
-    }
+    // Setting up connection configuration
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("localhost")
+            .port(6379)
+            .build())
+        // Connection timeout
+        .requestTimeout(Duration.ofSeconds(5))
+        // TLS configuration (if needed)
+        .useTls(false)
+        // Database selection
+        .databaseId(0)
+        .build();
     ```
   </TabItem>
 
   <TabItem label="Node.js">
     ```javascript
-    const { GlideClient } = require('@valkey/valkey-glide');
-
-    async function main() {
-        // Setting up connection configuration
-        const configs = {
-            addresses: [{ host: 'localhost', port: 6379 }],
-            // Connection timeout (milliseconds)
-            requestTimeout: 5000,
-            // TLS configuration (if needed)
-            useTls: false,
-            // Database selection (0-15 for Redis/Valkey)
-            databaseId: 0
-        }
-
-        const client = GlideClient.createClient(configs);
-        
-        try {
-            // Test connection with custom message
-            const response = await client.ping('Hello GLIDE!');
-            console.log(`Server responded: ${response}`);
-            
-        } finally {
-            client.close();
-        }
+    // Setting up connection configuration
+    const configs = {
+        addresses: [{ host: 'localhost', port: 6379 }],
+        // Connection timeout (milliseconds)
+        requestTimeout: 5000,
+        // TLS configuration (if needed)
+        useTls: false,
+        // Database selection (0-15 for Redis/Valkey)
+        databaseId: 0
     }
-
-    main().catch(console.error);
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    package main
-
-    import (
-        "fmt"
-        "log"
-        "time"
-        
-        "github.com/valkey-io/valkey-glide/go/glide/api"
-    )
-
-    func main() {
-        // Setting up connection configuration
-        config := &api.GlideClientConfiguration{
-            Addresses: []api.NodeAddress{
-                {Host: "localhost", Port: 6379},
-            },
-            // Connection timeout
-            RequestTimeout: 5 * time.Second,
-            // TLS configuration (if needed)
-            UseTls: false,
-            // Database selection
-            DatabaseId: 0,
-        }
-        
-        client := api.NewGlideClient(config)
-        defer client.Close()
-        
-        // Test connection with custom message
-        response, err := client.PingWithMessage("Hello GLIDE!")
-        if err != nil {
-            log.Fatalf("Connection failed: %v", err)
-        }
-        
-        fmt.Printf("Server responded: %s\n", response)
+    // Setting up connection configuration
+    config := &api.GlideClientConfiguration{
+        Addresses: []api.NodeAddress{
+            {Host: "localhost", Port: 6379},
+        },
+        // Connection timeout
+        RequestTimeout: 5 * time.Second,
+        // TLS configuration (if needed)
+        UseTls: false,
+        // Database selection
+        DatabaseId: 0,
     }
     ```
   </TabItem>
@@ -372,4 +366,4 @@ For a full list of connection options, take a look at the <a href={`/reference/c
 
 ## Next Steps
 
-Congratulations, you are now connected to Valkey using GLIDE! To see how to make basic operations take a look at the our <a href={`/docs/getting-started/basic-operations`}> guide</a>.
+Congratulations, you are now connected to Valkey using GLIDE! To see how to make basic operations take a look at the our <a href={`/getting-started/basic-operations`}> guide</a>.
