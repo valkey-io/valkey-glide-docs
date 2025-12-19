@@ -84,11 +84,11 @@ For **cluster connections**, use [`GlideClusterClientConfiguration`](#glideclust
 </Tabs>
 
 ## Configuration Options
-The following tables list the available configuration `objects` and their options for GLIDE clients. 
+The following tables describe the available configuration `objects` and their options for GLIDE clients. 
 To configure the client for each languages, follow the patterns described [above](#configuration-patterns).
 
-:::note[Generic Types Information]
-The following data types are only for reference and aims to be generic between clients. For exact types, refers to the actual client's implementation. 
+:::note[Type Information]
+The following data types aims to be generic between languages. For exact types, refers to the actual client's implementation. 
 :::
 
 ### `GlideClientConfiguration` 
@@ -102,41 +102,39 @@ The following data types are only for reference and aims to be generic between c
 | credentials                                              | [ServerCredentials](#servercredentials)                     | Authentication object containing username and password.                                | null                |
 | database_id                                              | Integer                                                     | The logical database index to select (Standalone mode only).                           | 0                   |
 | client_name                                              | String                                                      | A custom identifier for the client connection (visible in CLIENT LIST).                | null                |
-| protocol                                                 | [Protocol (Enum)](#protocol)                                | The serialization protocol version (RESP2 or RESP3).                                   | RESP3               |
-| read_from                                                | [ReadFrom (Enum)](#readfrom)                                | Routing preference for read operations (e.g., PRIMARY, PREFER_REPLICA, AZ_AFFINITY).   | PRIMARY             |
+| protocol                                                 | [Protocol \(Enum\)](#protocol)                              | The serialization protocol version (RESP2 or RESP3).                                   | RESP3               |
+| read_from                                                | [ReadFrom \(Enum\)](#readfrom)                              | Routing preference for read operations (e.g., PRIMARY, PREFER_REPLICA, AZ_AFFINITY).   | PRIMARY             |
 | client_az                                                | String                                                      | The Availability Zone the client is running in (Required if read_from is AZ_AFFINITY). | null                |
 | request_timeout                                          | Integer                                                     | Maximum duration (in milliseconds) to wait for a request to complete.                  | Language Default    |
 | reconnect_strategy                                       | [ReconnectStrategy](#reconnectstrategy)                     | Logic for retrying connections (backoff factor, retries, etc.).                        | Exponential Backoff |
-| inflight_requests_limit                                  | Integer                                                     | Maximum number of concurrent requests allowed in the pipeline.                         | null                |
+| inflight_requests_limit                                  | Integer                                                     | Maximum number of concurrent requests allowed in the pipeline.                         | null (unlimited)    |
 | advanced_config                                          | [AdvancedClientConfiguration](#advancedclientconfiguration) | Advanced configuration settings (TLS, connection timeout, etc.).                       | null                |
 | pubsub_subscriptions                                     | [PubSubSubscriptions](#pubsubsubscriptions)                 | PubSub subscriptions to establish during connection.                                   | null                |
 | lazy_connect                                             | Boolean                                                     | Defer connection establishment until the first command is sent.                        | false               |
 | compression <Badge text="Python Only" variant="danger"/> | [CompressionConfiguration](#compressionconfiguration)       | Configuration for automatic compression of values.                                     | null                |
 
-
 ### `GlideClusterClientConfiguration` 
 
 <Badge text="Type: Object" variant="note"/>
 
-| Field Name              | Type                                                        | Description                                                                             | Default                 |
-| ----------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------- |
-| addresses               | List < [NodeAddress](#nodeaddress) >                        | A list of host and port pairs to connect to (can be partial for cluster discovery).     | Required                |
-| use_tls                 | Boolean                                                     | Enables SSL/TLS encryption for the connection.                                          | false                   |
-| credentials             | [ServerCredentials](#servercredentials)                     | Authentication object containing username and password.                                 | null                    |
-| database_id             | Integer                                                     | The logical database index to select (Requires Valkey 9.0+ with multi-DB cluster mode). | 0                       |
-| client_name             | String                                                      | A custom identifier for the client connection (visible in CLIENT LIST).                 | null                    |
-| protocol                | [Protocol (Enum)](#protocol)                                | The serialization protocol version (RESP2 or RESP3).                                    | RESP3                   |
-| read_from               | [ReadFrom (Enum)](#readfrom)                                | Routing preference for read operations (e.g., PRIMARY, PREFER_REPLICA, AZ_AFFINITY).    | PRIMARY                 |
-| client_az               | String                                                      | The Availability Zone the client is running in (Required if read_from is AZ_AFFINITY).  | null                    |
-| request_timeout         | Integer                                                     | Maximum duration (in milliseconds) to wait for a request to complete.                   | Language Default        |
-| reconnect_strategy      | [ReconnectStrategy](#reconnectstrategy)                     | Logic for retrying connections (backoff factor, retries, etc.).                         | Exponential Backoff     |
-| inflight_requests_limit | Integer                                                     | Maximum number of concurrent requests allowed in the pipeline.                          | null (Unlimited)        |
-| periodic_checks         | [PeriodicChecksStatus](#periodicchecksstatus)               | Configure periodic topology checks for cluster changes.                                 | ENABLED_DEFAULT_CONFIGS |
-| advanced_config         | [AdvancedClientConfiguration](#advancedclientconfiguration) | Advanced configuration settings (TLS, connection timeout, etc.).                        | null                    |
-| pubsub_subscriptions    | [PubSubSubscriptions](#pubsubsubscriptions)                 | PubSub subscriptions to establish during connection.                                    | null                    |
-| lazy_connect            | Boolean                                                     | Defer connection establishment until the first command is sent.                         | false                   |
-| compression             | [CompressionConfiguration](#compressionconfiguration)       | Configuration for automatic compression of values (Python only).                        | null                    |
-
+| Field Name                                               | Type                                                        | Description                                                                             | Default                 |
+| -------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------- |
+| addresses                                                | List < [NodeAddress](#nodeaddress) >                        | A list of host and port pairs to connect to (can be partial for cluster discovery).     | Required                |
+| use_tls                                                  | Boolean                                                     | Enables SSL/TLS encryption for the connection.                                          | false                   |
+| credentials                                              | [ServerCredentials](#servercredentials)                     | Authentication object containing username and password.                                 | null                    |
+| database_id                                              | Integer                                                     | The logical database index to select (Requires Valkey 9.0+ with multi-DB cluster mode). | 0                       |
+| client_name                                              | String                                                      | A custom identifier for the client connection (visible in CLIENT LIST).                 | null                    |
+| protocol                                                 | [Protocol \(Enum\)](#protocol)                              | The serialization protocol version (RESP2 or RESP3).                                    | RESP3                   |
+| read_from                                                | [ReadFrom \(Enum\)](#readfrom)                              | Routing preference for read operations (e.g., PRIMARY, PREFER_REPLICA, AZ_AFFINITY).    | PRIMARY                 |
+| client_az                                                | String                                                      | The Availability Zone the client is running in (Required if read_from is AZ_AFFINITY).  | null                    |
+| request_timeout                                          | Integer                                                     | Maximum duration (in milliseconds) to wait for a request to complete.                   | Language Default        |
+| reconnect_strategy                                       | [ReconnectStrategy](#reconnectstrategy)                     | Logic for retrying connections (backoff factor, retries, etc.).                         | Exponential Backoff     |
+| inflight_requests_limit                                  | Integer                                                     | Maximum number of concurrent requests allowed in the pipeline.                          | null (Unlimited)        |
+| periodic_checks*                                         | [PeriodicChecksStatus](#periodicchecksstatus)               | Configure periodic topology checks for cluster changes.                                 | ENABLED_DEFAULT_CONFIGS |
+| advanced_config                                          | [AdvancedClientConfiguration](#advancedclientconfiguration) | Advanced configuration settings (TLS, connection timeout, etc.).                        | null                    |
+| pubsub_subscriptions                                     | [PubSubSubscriptions](#pubsubsubscriptions)                 | PubSub subscriptions to establish during connection.                                    | null                    |
+| lazy_connect                                             | Boolean                                                     | Defer connection establishment until the first command is sent.                         | false                   |
+| compression <Badge text="Python Only" variant="danger"/> | [CompressionConfiguration](#compressionconfiguration)       | Configuration for automatic compression of values (Python only).                        | null                    |
 
 ### `ServerCredentials`
 <Badge text="Type: Object" variant="note"/>
@@ -165,11 +163,12 @@ The following data types are only for reference and aims to be generic between c
 ### `ReadFrom`
 <Badge text="Type: Enum" variant="caution"/>
 
-| Value          | Type | Description                                                                    |
-| -------------- | ---- | ------------------------------------------------------------------------------ |
-| PRIMARY        | Enum | Route read operations to the primary/master node only.                         |
-| PREFER_REPLICA | Enum | Route read operations to replica nodes when available, fallback to primary.    |
-| AZ_AFFINITY    | Enum | Route read operations to replicas in the same availability zone as the client. |
+| Value                            | Type | Description                                                                                                |
+| -------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------- |
+| PRIMARY                          | Enum | Route read operations to the primary/master node only.                                                     |
+| PREFER_REPLICA                   | Enum | Route read operations to replica nodes when available, fallback to primary.                                |
+| AZ_AFFINITY                      | Enum | Route read operations to replicas in the same availability zone as the client.                             |
+| AZ_AFFINITY_REPLICAS_AND_PRIMARY | Enum | Route read operations within the client's AZ in round-robin manner (replicas → primary → fallback to any). |
 
 ### `ReconnectStrategy`
 <Badge text="Type: Object" variant="note"/>
@@ -237,9 +236,17 @@ The following data types are only for reference and aims to be generic between c
 | root_pem_cacerts | Bytes   | Custom root certificate data for TLS connections in PEM format.                  | null    |
 
 ### `PeriodicChecksStatus`
-<Badge text="Type: Enum" variant="caution"/>
+<Badge text="Type: Enum | Object" variant="caution"/>
 
-| Value                    | Type | Description                                                    |
-|--------------------------|------|----------------------------------------------------------------|
-| ENABLED_DEFAULT_CONFIGS  | Enum | Enables periodic checks with default configurations.          |
-| DISABLED                 | Enum | Disables periodic topology checks.                            |
+| Value                        | Type   | Description                                                 |
+| ---------------------------- | ------ | ----------------------------------------------------------- |
+| ENABLED_DEFAULT_CONFIGS      | Enum   | Enables periodic checks with default configurations.        |
+| DISABLED                     | Enum   | Disables periodic topology checks.                          |
+| PeriodicChecksManualInterval | Object | Custom interval configuration with `duration_in_sec` field. |
+
+### `PeriodicChecksManualInterval`
+<Badge text="Type: Object" variant="note"/>
+
+| Field Name      | Type    | Description                                              | Default  |
+| --------------- | ------- | -------------------------------------------------------- | -------- |
+| duration_in_sec | Integer | Custom interval in seconds for periodic topology checks. | Required |
