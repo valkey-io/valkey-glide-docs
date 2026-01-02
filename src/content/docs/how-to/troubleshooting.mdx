@@ -5,95 +5,12 @@ title: Troubleshooting
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Many issues with GLIDE clients can be traced back to simple misconfigurations.
-This guide will go over how to troubleshoot and resolve these issues.
-Otherwise, feel free to reach out to [Valkey GLIDE community]() for help.
-
-## Checklist
-
-When troubleshooting, it's important to isolate the issue you're encountering. Here are some general instructions to help you troubleshoot effectively:
-
-### Enable Client Logging
-
-Errors and details from the Rust core will flow up to each client wrapper. 
-To start troubleshooting, you will need to enable to logger from within your application.
-
-TODO: Where are logs output to?
-
-**Node.js**
-
-<Tabs syncKey="progLangInExamples">
-    <TabItem label="Python">
-        ```python
-        from glide import Logger, Level
-
-        Logger.set_logger_config(Level.TRACE)
-        ```
-    </TabItem>
-    <TabItem label="Java">
-        ```java
-        import glide.api.Logger;
-
-        Logger.setLoggerConfig(Logger.Level.TRACE);
-        ```
-    </TabItem>
-    <TabItem label="Node">
-        ```typescript
-        import { Logger } from "@valkey/valkey-glide";
-        // Use 'trace' for deep debugging, 'info' for general issues
-        Logger.setLoggerConfig("trace");
-        ```
-    </TabItem>
-    <TabItem label="Go">
-        ```go
-        import (
-            "github.com/valkey-io/valkey-glide/go/glide"
-        )
-
-        glide.SetLoggerConfig(glide.LogLevelTrace)
-        ```
-    </TabItem>
-</Tabs>
-
-### Checking Basic Connectivity 
-You can use `valkey-cli` from your client machine to check for connections with Valkey. If `valkey-cli` fails, there's likely a connection issues with your environment.
-
-```bash
-# Standard TLS connection (ElastiCache/MemoryDB)
-valkey-cli -h <primary-endpoint> -p 6379 --tls
-
-# If using custom certificates (Mutual TLS)
-valkey-cli -h <host> -p 6379 --tls --cert <client.crt> --key <client.key> --cacert <ca.crt>
-
-```
-
-:::note[Use the same configuration]
-Make sure that `valkey-cli` is using the same connection configuration as you application. For more on `valkey-cli` options, see the [documentation](https://valkey.io/topics/cli/).
-:::
-
-### Test TLS Certificates
-
-If you receive `Certificate Verification Failed`, use OpenSSL to debug the handshake from your client machine.
-Assuming your certificate was set up correctly, this should succeed.
-```bash
-openssl s_client -connect <your-valkey-endpoint>:6379 -servername <your-valkey-endpoint>
-
-```
-
-### Lazy Connections
-
-GLIDE connects lazily on the first command. This can hide startup config errors until runtime.
-
-To force a connection check immediately after client creation, use `ping`.
-
-```javascript
-const client = await GlideClusterClient.createClient(config);
-await client.ping(); // Send a ping command to force the connection now.
-
-```
+This troubleshoot guide will go over how to resolve these common issues.
+If your issues persist, please feel free to reach out to [Valkey GLIDE community](https://join.slack.com/t/valkey-oss-developer/shared_invite/zt-3dc87ixyd-NeW4o5esNIDvD05bHyQeMQ) for help.
 
 ## Common Issues & Fixes
 
-### 1. TLS & Security
+### TLS & Security
 
 **Symptoms:** `Connection reset by peer`, `Certificate Verification Failed`, or indefinite hanging.
 
@@ -108,7 +25,7 @@ When this happens, one of the following could the issue:
 | **Hostname Mismatch** | The certificate CN does not match the connection string.                                                           |
 |                       | **Fix:** Regenerate certs or fix DNS. *For testing only*, use `insecure_skip_verify` to confirm this is the cause. |
 
-### 2. Connection Timeouts
+### Connection Timeouts
 
 **Symptoms:** `TimeoutError` on startup, failure to create `GlideClusterClient`.
 
@@ -129,29 +46,6 @@ const client = await GlideClusterClient.createClient({
 
 ```
 
-### 3. Cluster Topology & Reachability
+## Debugging
 
-**Symptoms:** Client connects but fails to execute commands; "Moved" errors; timeouts on specific nodes.
-
-This is often due to nodes being unreachable from the client machine.  If you are connecting from outside its VPC/Network, 
-the cluster might return internal IPs for the other nodes, which your client cannot reach.
-
-To fix this, run from within the VPN, or configure the cluster to advertise public/remapped IPs (if supported by your provider).
-
-### Alpine Linux (Docker)
-
-**Symptoms:** `ImportError`, `ClassDefNotFound`, or "Shared library not found".
-
-This is caused by GLIDE relying on `glibc` while Alpine Linux uses `musl`.
-
-**Unfortunately, Alpine Linux is currently not supported.**
-
-## Summary Checklist
-
-| Configuration Area | Key Setting to Check | Common Value/Fix                                                |
-| ------------------ | -------------------- | --------------------------------------------------------------- |
-| **Connectivity**   | CLI Check            | Run `valkey-cli --tls` from the same host first.                |
-| **Security**       | `useTLS`             | **Must** be explicitly set to `true` for cloud/encrypted Redis. |
-| **Network**        | `connectionTimeout`  | Increase to `5000` (ms) if on VPN or slow link.                 |
-| **Debugging**      | `Logger`             | Set to `trace` to see internal Rust driver errors.              |
-| **Docker**         | Base Image           | Use `glibc` images (Debian/Ubuntu) to avoid Alpine/Musl pain.   |
+When encountering issues, it is important to understand the source of the issue.
