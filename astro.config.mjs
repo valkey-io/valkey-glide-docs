@@ -305,6 +305,10 @@ export default defineConfig({
           ],
         },
         {
+          label: "Troubleshooting",
+          slug: "how-to/troubleshooting",
+        },
+        {
           label: "Reference",
           collapsed: true,
           autogenerate: { directory: "reference" },
@@ -313,10 +317,6 @@ export default defineConfig({
           label: "Feedback & Support",
           slug: "feedback-and-support"
         },
-        {
-          label: "Troubleshooting",
-          slug: "how-to/troubleshooting",
-        }
       ],
     }),
   ],
