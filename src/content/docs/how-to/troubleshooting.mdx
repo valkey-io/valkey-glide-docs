@@ -8,6 +8,42 @@ Many issues with GLIDE clients can be traced back to simple misconfigurations.
 This troubleshoot guide will go over how to resolve these common issues.
 If your issues persist, please feel free to reach out to [Valkey GLIDE community](https://join.slack.com/t/valkey-oss-developer/shared_invite/zt-3dc87ixyd-NeW4o5esNIDvD05bHyQeMQ) for help.
 
+## Enable Client Logging
+To enable logging, you will need to set the logger from within your application.
+
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+        ```python
+        from glide import Logger, Level
+
+        Logger.set_logger_config(Level.TRACE)
+        ```
+    </TabItem>
+    <TabItem label="Java">
+        ```java
+        import glide.api.Logger;
+
+        Logger.setLoggerConfig(Logger.Level.TRACE);
+        ```
+    </TabItem>
+    <TabItem label="Node">
+        ```typescript
+        import { Logger } from "@valkey/valkey-glide";
+
+        Logger.setLoggerConfig("trace");
+        ```
+    </TabItem>
+    <TabItem label="Go">
+        ```go
+        import (
+            "github.com/valkey-io/valkey-glide/go/glide"
+        )
+
+        glide.SetLoggerConfig(glide.LogLevelTrace)
+        ```
+    </TabItem>
+</Tabs>
+
 ## Common Issues & Fixes
 
 ### TLS & Security
@@ -16,14 +52,12 @@ If your issues persist, please feel free to reach out to [Valkey GLIDE community
 
 When this happens, one of the following could the issue:
 
-| Issue                 | Fix                                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Missing TLS Flag**  | You must explicitly enable TLS. Passing `rediss://` is often not enough.                                           |
-|                       | **Fix:** Set `useTLS: true` (Node/Python) or `.useTLS(true)` (Java).                                               |
-| **Empty Cert Inputs** | **Python only:** Passing an empty bytes object for `root_pem_cacerts` causes initialization crashes.           |
-|                       | **Fix:** Ensure the variable contains valid PEM data or is omitted entirely if not used.                           |
-| **Hostname Mismatch** | The certificate CN does not match the connection string.                                                           |
-|                       | **Fix:** Regenerate certs or fix DNS. *For testing only*, use `insecure_skip_verify` to confirm this is the cause. |
+| Issue                 | Fix                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Missing TLS Flag**  | You must explicitly enable TLS. Passing `rediss://` is often not enough.                             |
+|                       | **Fix:** Set `useTLS: true` (Node/Python) or `.useTLS(true)` (Java).                                 |
+| **Empty Cert Inputs** | **Python only:** Passing an empty bytes object for `root_pem_cacerts` causes initialization crashes. |
+|                       | **Fix:** Ensure the variable contains valid PEM data or is omitted entirely if not used.             |
 
 ### Connection Timeouts
 
@@ -46,6 +80,3 @@ const client = await GlideClusterClient.createClient({
 
 ```
 
-## Debugging
-
-When encountering issues, it is important to understand the source of the issue.
