@@ -306,7 +306,7 @@ export default defineConfig({
         },
         {
           label: "Troubleshooting",
-          slug: "how-to/troubleshooting",
+          slug: "troubleshooting",
         },
         {
           label: "Reference",
