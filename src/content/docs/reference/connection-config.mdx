@@ -1,0 +1,86 @@
+---
+title: "Connection Options"
+---
+
+import { Tabs, TabItem, Badge } from '@astrojs/starlight/components'
+
+Valkey GLIDE maintains consistent and intuitive configuration across all supported languages. 
+This guides will go over how connection configurations are handled across clients and listing the available options.
+
+## Configuration Options
+
+GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface 
+between clients while staying within the idiomatic norms of each specific programming language.
+
+The following are the configuration references for each Glide clients:
+
+| Language | Standalone Mode                                                                                      | Cluster Mode                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Java     | [Reference](/languages/java/api/glide/api/models/configuration/GlideClientConfiguration.html)        | [Reference](/languages/java/api/glide/api/models/configuration/GlideClusterClientConfiguration.html)         |
+| Node.js  | [Reference](/languages/nodejs/api/types/GlideClient.GlideClientConfiguration.html)                   | [Reference](/languages/nodejs/api/types/GlideClusterClient.GlideClusterClientConfiguration.html)             |
+| Python   | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration) | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration)  |
+| Go       | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#ClientConfiguration)   | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClusterClientConfiguration) |
+
+### Example
+
+<Tabs>
+    <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        use_tls=False,
+        request_timeout=1000,
+        client_name="python_app"
+    )
+    ```
+    </TabItem>
+
+    <TabItem label="Node">
+
+    ```typescript
+    import { GlideClientOptions } from "@valkey/valkey-glide";
+
+    const config: GlideClientOptions = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        useTLS: false,
+        requestTimeout: 1000,
+        clientName: "node_app"
+    };
+    ```
+    </TabItem>
+
+    <TabItem label="Java">
+
+    ```java
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .useTLS(false)
+        .requestTimeout(1000)
+        .clientName("java_app")
+        .build();
+    ```
+    </TabItem>
+
+    <TabItem label="Go">
+
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/config"
+
+    conf := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6380}).
+        WithUseTLS(false).
+        WithRequestTimeout(1000).
+        WithClientName("go_app")
+    ```
+    </TabItem>
+</Tabs>
+
+## Configuration Options
+The following tables describe the available configuration `objects` and their options for GLIDE clients. 
+To configure the client for each languages, follow the patterns described [above](#configuration-patterns).
+
