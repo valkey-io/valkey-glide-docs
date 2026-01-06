@@ -59,8 +59,14 @@ export default defineConfig({
         {
           label: "Learn",
           items: [
-            "getting-started/quickstart",
-            "getting-started/basic-operations",
+            {
+              label: "Quick Start",
+              slug: "getting-started/quickstart",
+            },
+            {
+              label: "Basic Operations",
+              slug: "getting-started/basic-operations",
+            },
             {
               label: "Tutorials",
               collapsed: true,
