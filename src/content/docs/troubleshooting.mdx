@@ -1,0 +1,87 @@
+---
+title: Troubleshooting
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide will go over common Valkey GLIDE issues.
+If your issues persist, please feel free to reach out to [Valkey GLIDE community](https://join.slack.com/t/valkey-oss-developer/shared_invite/zt-3dc87ixyd-NeW4o5esNIDvD05bHyQeMQ) for help.
+
+## Enable Client Logging
+
+To help diagnosing issues, you will need to enable client logging to DEBUG mode. 
+
+In many situations, clients surfaces errors as generic `timeout` errors as it tries to reconnect. 
+Enabling DEBUG logs may provide more context on the issue.
+
+To enable logging, you will need to set the logger from within your application.
+
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+        ```python
+        from glide import Logger, Level
+
+        Logger.set_logger_config(Level.DEBUG)
+        ```
+    </TabItem>
+    <TabItem label="Java">
+        ```java
+        import glide.api.Logger;
+
+        Logger.setLoggerConfig(Logger.Level.DEBUG);
+        ```
+    </TabItem>
+    <TabItem label="Node">
+        ```typescript
+        import { Logger } from "@valkey/valkey-glide";
+
+        Logger.setLoggerConfig("debug");
+        ```
+    </TabItem>
+    <TabItem label="Go">
+        ```go
+        import (
+            "github.com/valkey-io/valkey-glide/go/glide"
+        )
+
+        glide.SetLoggerConfig(glide.LogLevelDebug)
+        ```
+    </TabItem>
+</Tabs>
+
+## `Timeout` errors
+
+This section troubleshoot `timeout` errors. 
+
+### Single Node Failover
+
+During a single node failover, the entire cluster becomes unavailable. Debug logs may shows `CLUSTER_DOWN` errors.
+
+This maybe happen if you cluster only have 2 shards which often is the set up during testing. 
+
+In a cluster with only 2 shards, losing 1 shard means 50% of hash slots are unavailable. 
+This forces the cluster into a `CLUSTER_DOWN` state to preserve data integrity. 
+GLIDE reports this as `timeouts` because it keeps retrying against a cluster that refuses to serve requests.
+
+**Fix:** Use a minimum of 3 shards (preferably 4+) for production. With 3 shards, losing one affects only ~33% of data, allowing the remaining nodes to stay online.
+
+### Failed to create `GlideClusterClient`
+
+Received `TimeoutError` on startup and failed to create `GlideClusterClient`.
+
+This happen when default connection timeouts (often ~250ms) are too aggressive for VPNs, cross-region links, or high-latency networks.
+To fix this, you must increase the **connection timeout** which is separate from the **request timeout**.
+
+```javascript
+// Node.js Example
+const client = await GlideClusterClient.createClient({
+    addresses: [...],
+    advancedConfiguration: {
+        // Give the handshake at least 1-5 seconds
+        connectionTimeout: 5000 
+    },
+    // This is to request timeout, NOT connection timeout
+    requestTimeout: 2000, 
+});
+
+```

@@ -59,8 +59,14 @@ export default defineConfig({
         {
           label: "Learn",
           items: [
-            "getting-started/quickstart",
-            "getting-started/basic-operations",
+            {
+              label: "Quick Start",
+              slug: "getting-started/quickstart",
+            },
+            {
+              label: "Basic Operations",
+              slug: "getting-started/basic-operations",
+            },
             {
               label: "Tutorials",
               collapsed: true,
@@ -305,6 +311,10 @@ export default defineConfig({
           ],
         },
         {
+          label: "Troubleshooting",
+          slug: "troubleshooting",
+        },
+        {
           label: "Reference",
           collapsed: true,
           autogenerate: { directory: "reference" },
@@ -312,7 +322,7 @@ export default defineConfig({
         {
           label: "Feedback & Support",
           slug: "feedback-and-support"
-        }
+        },
       ],
     }),
   ],
