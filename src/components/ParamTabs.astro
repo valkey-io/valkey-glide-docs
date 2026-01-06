@@ -6,15 +6,13 @@
  * 
  * Example:
  * 
- *   <ParamTabs param="lang">
+ *   <ParamTabs param="lang" syncKey="key">
  *     <TabItem label="Node">Node content</TabItem>
  *     <TabItem label="Java">Java content</TabItem>
  *   </ParamTabs>
  * 
  *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
- *  
- * This works by selecting the selecting the starlight tab programmatically based on the URL parameter value. 
- * Thus the selection will also affect other Tabs that are synced via `syncKey`.
+ *  Tabs with the same `syncKey` will also sync to the "Node" tab.
  */
 import { Tabs } from '@astrojs/starlight/components';
 
