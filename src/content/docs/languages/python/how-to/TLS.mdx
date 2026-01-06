@@ -69,7 +69,7 @@ from glide import (
 tls_config = TlsAdvancedConfiguration(use_insecure_tls=True)
 
 advanced_config = AdvancedGlideClusterClientConfiguration(
-    tls_advanced_configuration=tls_config
+    tls_config=tls_config
 )
 
 addresses = [NodeAddress(host="address.example.com", port=6379)]
@@ -110,7 +110,7 @@ with open("/path/to/ca-cert.pem", "rb") as f:
 tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert)
 
 advanced_config = AdvancedGlideClusterClientConfiguration(
-    tls_advanced_configuration=tls_config
+    tls_config=tls_config
 )
 
 addresses = [NodeAddress(host="address.example.com", port=6379)]
@@ -142,7 +142,7 @@ MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
 tls_config = TlsAdvancedConfiguration(root_pem_cacerts=cert_data)
 
 advanced_config = AdvancedGlideClientConfiguration(
-    tls_advanced_configuration=tls_config
+    tls_config=tls_config
 )
 
 addresses = [NodeAddress(host="primary.example.com", port=6379)]
@@ -180,7 +180,7 @@ combined_certs = cert1 + cert2 + cert3
 tls_config = TlsAdvancedConfiguration(root_pem_cacerts=combined_certs)
 
 advanced_config = AdvancedGlideClusterClientConfiguration(
-    tls_advanced_configuration=tls_config
+    tls_config=tls_config
 )
 
 addresses = [NodeAddress(host="address.example.com", port=6379)]
@@ -213,7 +213,7 @@ tls_config = TlsAdvancedConfiguration(
 )
 
 advanced_config = AdvancedGlideClientConfiguration(
-    tls_advanced_configuration=tls_config
+    tls_config=tls_config
 )
 
 addresses = [NodeAddress(host="primary.example.com", port=6379)]

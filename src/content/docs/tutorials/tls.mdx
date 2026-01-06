@@ -147,7 +147,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
 
         ```python
         advanced_config = AdvancedGlideClientConfiguration(
-            tls_advanced_configuration=tls_config
+            tls_config=tls_config
         )
         ```
 
@@ -202,7 +202,7 @@ async def main_with_custom_cert():
 
     # 3. Create advanced client configuration
     advanced_config = AdvancedGlideClientConfiguration(
-        tls_advanced_configuration=tls_config
+        tls_config=tls_config
     )
 
     # 4. Create main client configuration
