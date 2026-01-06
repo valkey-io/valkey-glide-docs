@@ -8,6 +8,8 @@ import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
 
+import ParamTabs from '@components/ParamTabs.astro';
+
 Valkey GLIDE is the open-source client library for Valkey. Designed for performance and consistency between supported languages.
 This guide will show how to quickly install and setting up a simple development environment for Valkey GLIDE.
 
@@ -60,7 +62,7 @@ Windows is not yet supported.
 
 ## Install Valkey GLIDE
 
-<Tabs syncKey="progLangInExamples">
+<ParamTabs param="lang" syncKey="progLangInExamples">
     <TabItem label="Python">
         **Requirements:** Python 3.9 to 3.13.
 
@@ -120,8 +122,8 @@ Windows is not yet supported.
 
     </TabItem>
 
-    <TabItem label="Node.js">
-    **Requirements:** Node.js 16+
+    <TabItem label="Node">
+    **Requirements:** Node 16+
 
     ```bash
     npm install @valkey/valkey-glide
@@ -139,7 +141,7 @@ Windows is not yet supported.
     go get github.com/valkey-io/valkey-glide/go
     ```
     </TabItem>
-</Tabs>
+</ParamTabs>
 
 :::tip[Installation Guides]
 For more detailed instructions, refer to our installation [guides](/how-to/installation).
@@ -212,7 +214,7 @@ For testing against a live instance, update the `GlideClient` configurations.
         ```
     </TabItem>
 
-    <TabItem label="Node.js">
+    <TabItem label="Node">
         ```javascript
         const { GlideClient } = require('@valkey/valkey-glide');
 

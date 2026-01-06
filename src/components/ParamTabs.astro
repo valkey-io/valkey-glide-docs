@@ -11,7 +11,10 @@
  *     <TabItem label="Java">Java content</TabItem>
  *   </ParamTabs>
  * 
- *  The "Node" labeled tab can be selected using `https://glide.valkey.io/page?lang=node`.
+ *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
+ *  
+ * This works by selecting the selecting the starlight tab programmatically based on the URL parameter value. 
+ * Thus the selection will also affect other Tabs that are synced via `syncKey`.
  */
 import { Tabs } from '@astrojs/starlight/components';
 
