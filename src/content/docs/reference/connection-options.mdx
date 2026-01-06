@@ -14,12 +14,12 @@ between clients while staying within the idiomatic norms of each specific progra
 
 The following are the configuration references for each Glide clients:
 
-| Language | Standalone Mode                                                                                      | Cluster Mode                                                                                                 |
-| -------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Java     | [Reference](/languages/java/api/glide/api/models/configuration/GlideClientConfiguration.html)        | [Reference](/languages/java/api/glide/api/models/configuration/GlideClusterClientConfiguration.html)         |
-| Node.js  | [Reference](/languages/nodejs/api/types/GlideClient.GlideClientConfiguration.html)                   | [Reference](/languages/nodejs/api/types/GlideClusterClient.GlideClusterClientConfiguration.html)             |
-| Python   | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration) | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration)  |
-| Go       | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#ClientConfiguration)   | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClusterClientConfiguration) |
+| Language | Standalone Mode                                                                                       | Cluster Mode                                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Java     | [Reference](/languages/java/api/glide/api/models/configuration/GlideClientConfiguration.html)         | [Reference](/languages/java/api/glide/api/models/configuration/GlideClusterClientConfiguration.html)         |
+| Node.js  | [Reference](/languages/nodejs/api/types/GlideClient.GlideClientConfiguration.html)                    | [Reference](/languages/nodejs/api/types/GlideClusterClient.GlideClusterClientConfiguration.html)             |
+| Python   | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration)  | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration)  |
+| Go       | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClientConfiguration) | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClusterClientConfiguration) |
 
 ### Example
 
@@ -79,8 +79,3 @@ The following are the configuration references for each Glide clients:
     ```
     </TabItem>
 </Tabs>
-
-## Configuration Options
-The following tables describe the available configuration `objects` and their options for GLIDE clients. 
-To configure the client for each languages, follow the patterns described [above](#configuration-patterns).
-
