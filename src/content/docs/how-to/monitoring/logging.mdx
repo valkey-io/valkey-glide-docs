@@ -119,7 +119,7 @@ The following examples show how to configure the logger in GLIDE clients.
   </TabItem>
 </Tabs>
 
-### Log Outputs
+## Log Files
 
 By default, logs are output to `stdout`. However, you can configure the logger to write logs to a file by specifying a file name in the configuration methods shown in the examples above.
 
@@ -129,7 +129,7 @@ If the file name is a relative path `./client_logs`, the logs will be written in
 
 To prevent large files, log files are rotated hourly.
 
-### Cleanup Log Outputs
+## Cleanup Outputs
 
 Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes. 
 To disable these color codes, you can use set the environment variable `NO_COLOR=1` before starting the logger. 
