@@ -102,11 +102,11 @@ export default defineConfig({
           items: [
             {
               label: "Installation",
-              autogenerate: { directory: "how-to/installation" },
+               slug: "how-to/installation",
             },
             {
               label: "Logging",
-              autogenerate: { directory: "how-to/monitoring/logging" },
+              slug: "how-to/monitoring/logging",
             },
           ]
         },
