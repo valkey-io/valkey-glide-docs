@@ -1,12 +1,12 @@
 # Valkey GLIDE Documentation
 
-The home of documentation for Valkey GLIDE.
+This repository host the source for the Valkey GLIDE documentation [site](https://glide.valkey.io).
 
 ## Technology
 
 The site is built with [Starlight](https://starlight.astro.build/), an Astro framework for building static documentation sites.
 
-The framework provides out-of-the-box features for building documentations like components, site search, navigations, and integrations with MDX files. It also leverages Astro's features like island architecture to build dynamic components.
+The framework provides out-of-the-box features for building documentations like components, site search, navigation, and integrations with MDX files. It also leverages Astro's features like island architecture to build dynamic components.
 
 ## Getting Started
 
@@ -45,14 +45,16 @@ pnpm build:check-links
 
 In general, page contents are located under `src/content/docs`.
 
-- For simple content changes, update the appropriate `.mdx` files in the folder structure.
+- For simple content update, change the appropriate `.mdx` files in the folder structure.
 - To create a new page, add a new `.mdx` file under `src/content/docs`.
-- To change the navigation bar, udpate `astro.config.mjs`.
+- To change the navigation sidebar, update `astro.config.mjs`.
 
-Note that all `.mdx` files requires a header.
+Note that all `.mdx` files requires a frontmatter.
 
 ```
 ---
 title: Your page title.
 ---
+
+Your contents follows ...
 ```
