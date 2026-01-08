@@ -8,12 +8,12 @@ This guide will go over how the GLIDE clients logger works and how to configure 
 
 ## How Logging Works
 
-Valkey GLIDE clients are built upon a shared, high-performance Rust Core that utilizes a singleton logger exposed via the Foreign Function Interface (FFI). 
+Valkey GLIDE clients are built upon a shared, high-performance [Rust Core](/concepts/architecture/rust-core-design) that utilizes a singleton logger exposed via the Foreign Function Interface (FFI). 
 This architecture allows client wrappers to configure the logger and push their own messages directly into the core, 
 ensuring that all logs remain synchronized and preserve the order of events.
 
 Currently, GLIDE does not support direct integration with third-party logging libraries. While there are interests in adding this capability, 
-it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE github.
+it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [github](https://github.com/valkey-io/valkey-glide).
 
 The logger is currently only available for Python, Node, and Java clients.
 
