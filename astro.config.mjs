@@ -100,14 +100,9 @@ export default defineConfig({
           label: "How-To Guides",
           collapsed: true,
           items: [
-            {
-              label: "Installation",
-               slug: "how-to/installation",
-            },
-            {
-              label: "Logging",
-              slug: "how-to/monitoring/logging",
-            },
+            "how-to/installation",
+            "how-to/monitoring/logging",
+            "how-to/synchronous-client",
           ]
         },
         {
