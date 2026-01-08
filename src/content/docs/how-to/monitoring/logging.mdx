@@ -1,0 +1,135 @@
+---
+title: Logging
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide will go over how the GLIDE clients logger works and how to configure it.
+
+## How Logging Works
+
+Valkey GLIDE clients are built upon a shared, high-performance Rust Core that utilizes a singleton logger exposed via the Foreign Function Interface (FFI). 
+This architecture allows client wrappers to configure the logger and push their own messages directly into the core, 
+ensuring that all logs remain synchronized and preserve the order of events.
+
+Currently, GLIDE does not support direct integration with third-party logging libraries. While there are interests in adding this capability, 
+it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE github.
+
+The logger is currently only available for Python, Node, and Java clients.
+
+## Logging
+
+The following examples show how to configure the logger in GLIDE clients. 
+
+<Tabs syncKey="">
+  <TabItem label="Python">  
+    ```python
+    import asyncio
+    from glide import GlideClientConfiguration, NodeAddress, GlideClient, Logger, LogLevel
+
+    async def test_cluster_client():
+        # Configure the log level and the log file name
+        Logger.set_logger_config(level = LogLevel.DEBUG, file_name="./glide_logs")
+
+        # Logging example
+        Logger.log(log_level=LogLevel.INFO, log_identifier= "LoggingExample", message = "Hello World!")
+
+        # Standalone client configuration
+        addresses = [NodeAddress("localhost", 6379)]
+        config = GlideClientConfiguration(addresses)
+        client = await GlideClient.create(config)
+        await client.ping()
+
+    asyncio.run(test_cluster_client())
+    ```
+
+    Refer to the API [reference]() for the full logger interface.
+
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, Logger } from "@valkey/valkey-glide";
+
+    // Configure the log level and the output file name.
+    Logger.setLoggerConfig("debug", "./glide_logs");
+
+    // Logging example
+    const message = "Hello World!";
+    const identifier = "LoggingExample";
+    Logger.log("info", identifier, message);
+
+    // Standalone client configuration
+    const addresses = [{ host: "localhost", port: 6379 }];
+    const client = await GlideClient.createClient({
+      addresses: addresses,
+    });
+
+    await client.ping();
+
+    ```
+
+    Refer to the API [reference]() for the full logger interface.
+
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    package com.example;
+
+    import java.util.concurrent.CompletableFuture;
+    import java.util.concurrent.ExecutionException;
+
+    import glide.api.GlideClient;
+    import glide.api.logging.Logger;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    public class ValkeyPingExample {
+
+        public static void main(String[] args) {
+            
+            // Configure the log level and the output file name.
+            String logFile = "./glide_logs";
+            Logger.setLoggerConfig(Logger.Level.DEBUG, logFile);
+
+            // Logging example
+            String identifier = "LoggingExample";
+            Logger.log(Logger.Level.INFO, identifier, "Hello World!");
+
+            String host = "localhost";
+            Integer port = 6379;
+            GlideClientConfiguration config =
+                GlideClientConfiguration.builder()
+                        .address(NodeAddress.builder().host(host).port(port).build())
+                        .build();
+            
+            // Create a standalone client
+            try (GlideClient client = GlideClient.createClient(config).get()) {
+                CompletableFuture<String> result = client.ping();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    ```
+
+    Refer to the API [reference]() for the full logger interface.
+
+  </TabItem>
+</Tabs>
+
+### Log Outputs
+
+By default, logs are output to `stdout`. However, you can configure the logger to write logs to a file by specifying a file name in the configuration methods shown in the examples above.
+
+If the file name is an absolute path `/example/logs/client_logs`, the logs will be written to the file `/example/logs/client_logs.<timestamp>`.
+
+If the file name is a relative path `./client_logs`, the logs will be written inside the foler `glide-logs`. For example, `./glide-logs/client_logs.<timestamp>`.
+
+To prevent large files, log files are rotated hourly.
+
+### Cleanup Log Outputs
+
+Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes. 
+To disable these color codes, you can use set the environment variable `NO_COLOR=1` before starting the logger. 

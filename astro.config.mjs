@@ -96,11 +96,20 @@ export default defineConfig({
             },
           ],
         },
-        // {
-        //   label: "How-To Guides",
-        //   collapsed: true,
-        //   autogenerate: { directory: "how-to" },
-        // },
+        {
+          label: "How-To Guides",
+          collapsed: true,
+          items: [
+            {
+              label: "Installation",
+              autogenerate: { directory: "how-to/installation" },
+            },
+            {
+              label: "Logging",
+              autogenerate: { directory: "how-to/monitoring/logging" },
+            },
+          ]
+        },
         {
           label: "Languages",
           items: collapsed(true, [
