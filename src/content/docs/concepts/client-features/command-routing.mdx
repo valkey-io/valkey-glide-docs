@@ -1,0 +1,38 @@
+---
+title: Command Routing
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Valkey GLIDE can determine and route commands efficiently to nodes in a Valkey (or Redis) cluster. This section will go over how command routing works in Valkey GLIDE.
+
+## How GLIDE Routes commands
+
+As a Valkey cluster topology can change over time, new nodes can be added or removed and the primary node owning a specific slot may change. 
+To handle this, GLIDE clients are topology aware. It maintains a map of the cluster state and routes commands to the primary node.
+When topology changes (e.g., due to scaling operations or failovers), GLIDE clients update their internal cluster map to ensure commands are always routed correctly.
+
+For example, in a cluster Valkey setup, data are sharded across multiple nodes. A command like `client.set("user:100", "active")` will be routed only 
+to the primary node containing the slot for the key `user:100`. 
+
+## Read Strategy
+
+By default, GLIDE routes all read commands to the primary nodes. While this guarantees strong consistency it can lead to higher load especially if 
+there are many write operations on the primary node.
+To optimize read performance and distribute the load, GLIDE clients support different read strategies that allow reads to be directed to replica nodes.
+
+
+| Strategy                      | Description                                                                                                                                                                                                             |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Primary` (Default)           | Always read from primary, in order to get the freshest data.                                                                                                                                                            |
+| `PreferReplica`               | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                            |
+| `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                      |
+| `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
+
+## Multi-Slot Commands
+
+In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. 
+When these commands receive keys that map to multiple slots, they are called multi-slot commands. 
+GLIDE supports efficient handling of these commands routing them across the cluster.
+
+For more on multi-slot commands, see this [section](/concepts/client-features/multi-slot-command-handling).
