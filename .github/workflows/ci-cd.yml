@@ -204,14 +204,14 @@ jobs:
             <!-- site-preview-comment -->
             ## Site Preview
 
-            Download the preview artifact [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            Download the site preview [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
 
-            Requires Python 3 to start a hosting server.
+            It uses [Python](https://www.python.org/) 3.x to start the hosting server.
 
             **To preview locally:**
             ```bash
-            unzip site-preview.zip
-            ./serve.sh
+            unzip site-preview.zip -d ./preview
+            ./preview/serve.sh
             ```
             Then visit http://localhost:8080
 
