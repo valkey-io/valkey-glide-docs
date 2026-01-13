@@ -47,12 +47,26 @@ jobs:
       - name: Checkout Main Repository
         uses: actions/checkout@v4
 
+      - name: Get Latest Valkey GLIDE Release Tag
+        id: get-latest-tag
+        run: |
+          # Fetch all tags from the repository
+          git clone --filter=blob:none --no-checkout https://github.com/valkey-io/valkey-glide.git temp-repo
+          cd temp-repo
+          git fetch --tags
+          
+          # Get the latest release tag that starts with v2.x.x, excluding -rc or other suffixes.
+          LATEST_TAG=$(git tag -l "v2.*.*" | grep -v -E '(rc|alpha|beta)' | sort -V | tail -n1)
+          
+          echo "Latest release tag: $LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
       - name: Checkout Valkey Glide Source
         uses: actions/checkout@v4
         with:
           repository: valkey-io/valkey-glide
           path: doc-gen/valkey-glide
-          ref: main
+          ref: ${{ steps.get-latest-tag.outputs.tag }}
 
       - name: Install Dependencies
         run: ./doc-gen/install-deps.sh
