@@ -4,7 +4,7 @@ title: Connection Management
 
 import { Aside } from '@astrojs/starlight/components';
 
-GLIDE's API is [asynchronous](/core-features/async-execution) and uses a multiplex connection to interact with Valkey.
+GLIDE's API is [asynchronous](/client-features/async-execution) and uses a multiplex connection to interact with Valkey.
 This means <u>all requests are sent through a single connection</u> as the Rust core takes advantage of Valkey's pipelining capabilities to improve performance.
 
 :::tip
