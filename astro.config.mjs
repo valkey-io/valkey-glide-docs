@@ -105,7 +105,7 @@ export default defineConfig({
           items: [
             "how-to/installation",
             "how-to/monitoring/logging",
-            "how-to/synchronous-client",
+            "how-to/synchronous-connection",
             {"label": "Connection Management", slug: "how-to/connection-management"},
           ]
         },
