@@ -16,13 +16,13 @@ To open a new connection, a new GLIDE client object should be created, as each G
 
 You should open a new client for the following use cases:
 
-### Blocking Commands
+## Blocking Commands
 
 Blocking commands, such as [BLPOP](https://valkey.io/commands/blpop/), block the connection until a condition is met (e.g., the list is not empty for BLPOP).
 Using a blocking command will prevent all subsequent commands from executing until the block is lifted.
 Therefore, opening a new client for each blocking command is required to avoid undesired blocking of other commands.
 
-### WATCH/UNWATCH Commands
+## WATCH/UNWATCH Commands
 
 Commands like WATCH, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
 When these commands are executed, they can lead to interactions between threads sharing the same client, since each client utilizes a single multiplexed connection per cluster node.
@@ -30,7 +30,7 @@ Consequently, threads will share the same connection, and any modifications to i
 For example, executing WATCH on one thread will cause other threads to watch the same keys, and executing MULTI/EXEC on one thread will UNWATCH the keys for other threads as well.
 To prevent any issues and ensure the isolation of transactions and watched keys, it is required to create separate clients for these commands.
 
-### Reading and Writing Large Values
+## Reading and Writing Large Values
 
 Valkey has a fairness mechanism to ensure minimal impact on other clients when handling large values.
 With a multiplex connection, requests are processed sequentially.

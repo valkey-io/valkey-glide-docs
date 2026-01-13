@@ -27,7 +27,7 @@ graph TD
     style D fill:#e8f5e8
 ```
 
-### Application Layer
+## Application Layer
 
 This is where your application code interacts with Valkey GLIDE. The application layer is responsible for:
 
@@ -38,7 +38,7 @@ This is where your application code interacts with Valkey GLIDE. The application
 
 Applications can interact with Valkey GLIDE in both synchronous and asynchronous modes, depending on the language and configuration.
 
-### Language Binding Layer
+## Language Binding Layer
 
 The language binding layer provide idiomatic interfaces for each supported programming language.
 For example, The Python client offers pythonic APIs with support for async/await, context managers, and type hints
@@ -51,7 +51,7 @@ In general, each language binding is responsible for:
 * **API Design:** Providing language-appropriate patterns and idioms.
 * **Documentation:** Generating language-specific documentation and examples.
 
-### FFI Boundary Layer
+## FFI Boundary Layer
 
 **The Foreign Function Interface (FFI)** is a conceptual Rust boundary that serves as the critical bridge between language-specific clients and the Rust core. In general, it handles:
 
@@ -64,7 +64,7 @@ In general, each language binding is responsible for:
   The FFI layer is implemented using language-specific FFI mechanisms, e.g. Py03 for Python or JNI (Java Native Interface) for Java.
 </Aside>
 
-### The Rust Core
+## The Rust Core
 
 The heart of Valkey GLIDE is implemented in Rust and is in charge of:
 

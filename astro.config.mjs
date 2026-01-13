@@ -71,8 +71,7 @@ export default defineConfig({
               label: "Architecture",
               items: [
               "concepts/architecture/rust-core-design",
-              "core-features/async-execution",
-
+              "concepts/architecture/async-execution",
               ]
             },
             {
