@@ -132,7 +132,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -178,8 +177,16 @@ jobs:
           path: dist
           retention-days: 7
 
+  # --- PR Preview Comment ---
+
+  comment-preview:
+    needs: build-site
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
       - name: Find existing preview comment
-        if: github.event_name == 'pull_request'
         uses: peter-evans/find-comment@v3
         id: find-comment
         with:
@@ -188,7 +195,6 @@ jobs:
           body-includes: '<!-- site-preview-comment -->'
 
       - name: Create or update preview comment
-        if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
@@ -198,7 +204,9 @@ jobs:
             <!-- site-preview-comment -->
             ## Site Preview
 
-            Download the preview artifact from [this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            Download the preview artifact [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+            Requires Python 3 to start a hosting server.
 
             **To preview locally:**
             ```bash
