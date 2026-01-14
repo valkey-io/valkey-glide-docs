@@ -1,0 +1,20 @@
+---
+import Default from '@astrojs/starlight/components/SkipLink.astro';
+---
+
+<!-- 
+This component simply add Google Tag Manager to before the SkipLink
+component. SkipLink is always rendered first in the body before the pageframe.
+It is a simple <a> element so overriding is safe.
+-->
+<noscript slot="before-content">
+  <iframe 
+    src="https://www.googletagmanager.com/ns.html?id=GTM-5SQ3G3KB"
+    height="0" 
+    width="0" 
+    style="display:none;visibility:hidden">
+  </iframe>
+</noscript>
+<Default {...Astro.props}>
+  <slot />
+</Default>

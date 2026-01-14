@@ -24,35 +24,20 @@ function collapsed(isCollapsed = false, sidebarItems) {
   });
 }
 
-const googleAnalyticsId = '<YOUR-GOOGLE-ID>'
 const isDev = process.argv.includes('dev');
-const googleAnalyticsHeaders = isDev ? [] : [
-        {
-          tag: 'script',
-          attrs: {
-            src: `https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`,
-          },
-        },
-        {
-          tag: 'script',
-          content: `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          
-          // Do this to remain compliant with GDPR.
-          // We do not need to show a cookie consent banner.
-          gtag("consent", "default", {
-              ad_storage: "denied",
-              ad_user_data: "denied",
-              ad_personalization: "denied",
-              analytics_storage: "denied",
-          });
-
-          gtag('config', '${googleAnalyticsId}');
-          `,
-        },
+const googleTagManagerHeader = isDev ? [] : [
+  {
+    tag: /** @type {const} */ ('script'),
+    content: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-5SQ3G3KB');`,
+  },
 ];
+const googleTagManagerBody = isDev ? {} : {
+  SkipLink: './src/components/SkipLinkWithGTM.astro',
+}
 
 export default defineConfig({
   site: "https://glide.valkey.io",
@@ -63,7 +48,8 @@ export default defineConfig({
     }),
     starlight({
       title: "Valkey Glide",
-      head: [...googleAnalyticsHeaders],
+      head: [...googleTagManagerHeader],
+      components: {...googleTagManagerBody},
       logo: {
         light: "./src/assets/valkey-glide-logo-with-name-light.svg",
         dark: "./src/assets/valkey-glide-logo-with-name-dark.svg",
