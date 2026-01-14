@@ -1,0 +1,27 @@
+---
+title: Cluster Awareness
+---
+
+Valkey GLIDE was designed to handle the complexities of Valkey (and Redis) clusters automatically. 
+It abstracts away slot management, node discovery, and failover logic so your application interacts with the cluster as if it were a single endpoint.
+
+For information on Valkey Cluster, see this [page](https://valkey.io/topics/cluster-tutorial/).
+
+## Topology Aware
+
+Requiring only one initial node within a cluster, GLIDE can use it to discover out the full topology and hash slot ownership.
+This allows GLIDE to calculates the destination of every command before sending it, ensuring they go directly to the correct 
+node rather than bouncing around the cluster.
+If the cluster topology changes, either due to scaling or failover, GLIDE will automatically update its internal mapping.
+
+### Hash Slot
+
+Valkey has a total of 16,384 fixed slots from which it splits across nodes in a cluster. Each key are then assigned to a slot for storage. 
+GLIDE's mapping of the cluster allows it to send them to the appropriate node.
+
+## Multi-Key Commands Handling
+
+Valkey (and Redis) clusters support commands that operate on multiple keys which maybe spread across different hash slot.
+GLIDE cluster awareness allows it to efficiently handles these commands, ensuring correct executions across the cluster.
+
+To learn more about multi-key commands, see this [section](/concepts/client-features/multi-slot-command-handling/).
