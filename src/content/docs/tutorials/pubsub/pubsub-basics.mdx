@@ -20,7 +20,7 @@ By the end, you will:
 ## Valkey Pub/Sub
 
 Valkey's Pub/Sub is a powerful messaging pattern that allows different parts of your application to communicate without being directly aware of each other. 
-- **Publisher** send messages to a specific channel (like a radio station).
+- **Publishers** send messages to a specific channel (like a radio station).
 - **Subscribers** tuned into that channel will receive the message instantly.
 
 This is perfect for chat applications, live data feeds, and event notifications.
@@ -43,7 +43,7 @@ Before you begin, you'll need a few things:
 
 ## Hello World
 
-Let's build a simpe Hellow World example that publish a message to a channel then listen for the message.
+Let's build a simple Hello World example that publishes a message to a channel then listens for the message.
 
 <Steps> 
     1. **Create `helloworld.py`**
@@ -128,7 +128,7 @@ Let's build a simpe Hellow World example that publish a message to a channel the
                     print("Publishing client closed.")
         ```
 
-        :::caution[Use Dedicated Subcriber Clients]
+        :::caution[Use Dedicated Subscriber Clients]
         Separate clients for publishing and subscribing should be used.
         A client in subscription mode is only focused on listening and cannot run other commands.
         :::

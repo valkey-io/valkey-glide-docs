@@ -5,8 +5,8 @@ description: A reference page in my new Starlight docs site.
 
 import { Aside } from '@astrojs/starlight/components';
 
-The Valkey GLIDE clients provide a user friendly interface to interact with Valkey's PubSub system. It handles 
-all PubSub related commands and connection, even managing topology changes, allowing subscriber to remain connected
+The Valkey GLIDE clients provide a user friendly interface to interact with Valkey's PubSub system. They handle
+all PubSub related commands and connections, even managing topology changes, allowing subscribers to remain connected
 regardless of connectivity issues.
 
 #### What You'll Learn
@@ -32,7 +32,7 @@ You'll need the following:
 ## The Notification App
 
 The example will have two scripts, a `listener.py` that listens for messages from `producer.py`. 
-Place them in the same folder as the `docker-copmose.yml`.
+Place them in the same folder as the `docker-compose.yml`.
 
 :::tip[Use Dedicated Clients]
 It is a best practice to use **dedicated instances for your subscriptions**. 
@@ -40,7 +40,7 @@ Your application will have one client for listening (the subscriber) and another
 :::
 
 ### The Listener
-`listener.py` will listen for messages from the Valkey instance using Pub/Sub until interupted.
+`listener.py` will listen for messages from the Valkey instance using Pub/Sub until interrupted.
 
 It connects to Valkey and subscribes to the messaging channel. 
 It uses a callback function to handle the message, printing the message's content.
@@ -198,7 +198,7 @@ Enter messages to publish. Type 'exit' to quit.
 Message: > 
 ```
 
-Once started, you should see that the listener have recieved a message "Hello World!"
+Once started, you should see that the listener has received a message "Hello World!"
 
 ```diff lang="bash"
 Starting listener client...
@@ -223,7 +223,7 @@ Received message: 'b'Valkey Glide Python'' from channel: 'b'notifications''
 ```
 
 Next, try to have multiple listeners/producers started. 
-You'll see that new listeners and producers can freely connect to Valkey to send and recieve messages from the channel.
+You'll see that new listeners and producers can freely connect to Valkey to send and receive messages from the channel.
 
 Listener and producers have no knowledge of each other and instead communicate through Valkey. 
 This decoupling allows for greater scalability and a more dynamic network topology.

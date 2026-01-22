@@ -61,7 +61,7 @@ export const mavenExample =
 `
 
 
-This guides will go over how to install Valkey GLIDE for your specific system.
+This guide will go over how to install Valkey GLIDE for your specific system.
 
 ## System Requirements
 
@@ -74,7 +74,7 @@ The release of Valkey GLIDE was tested on the following platforms:
 
 <details>
 <summary>`glibc` requirements</summary>
-Node.js requires `glibc` 2.17+. This should be the standard for GNU Linux based system.
+Node.js requires `glibc` 2.17+. This should be the standard for GNU Linux based systems.
 
 However, to check you can use:
 
@@ -127,10 +127,10 @@ Windows is not yet supported.
     To get started, add one of the following snippet into the build file for your tool. 
 
     :::caution[Include Classifiers]
-    You must include the classifier for your OS. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) pluggin to 
+    You must include the classifier for your OS. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) plugin to
     detect the correct classifier for your OS. 
     
-    Otherwise, the followings specifiers are supported:
+    Otherwise, the following specifiers are supported:
     ```
     osx-x86_64
     linux-aarch_64
@@ -202,10 +202,10 @@ Windows is not yet supported.
 
     **Requirements:** Node.js 16+
 
-    **For npm users on linux it is recommended to use npm >=11**. It support optional download base on libc. Yarn users should not be concerned.
+    **For npm users on Linux it is recommended to use npm >=11**. It supports optional downloads based on libc. Yarn users should not be concerned.
 
     :::note
-    The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which add a size to the package. The package is using the protobufjs/minimal version, hence, if size matter, bundlers should be able to strip the unused code. It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
+    The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which adds size to the package. The package is using the protobufjs/minimal version, hence, if size matters, bundlers should be able to strip the unused code. It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
     :::
 
     To get started, Valkey GLIDE Node.js is available on npm for install.

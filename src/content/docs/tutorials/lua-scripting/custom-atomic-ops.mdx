@@ -4,7 +4,7 @@ title: "Custom Atomic Operations"
 
 import { Steps, LinkCard } from '@astrojs/starlight/components';
 
-One of the advantage of using Lua scipts is its atomicity which guranteed scripts executions are all-or-nothing.
+One of the advantages of using Lua scripts is its atomicity which guarantees script executions are all-or-nothing.
 This makes it a natural fit for implementing custom atomic operations.
 
 #### What You'll Learn
@@ -38,8 +38,8 @@ pip install valkey-glide
 Imagine you are launching a limited-edition sneaker with only 100 pairs available. The moment the product page goes live, 
 you expect hundreds if not thousands of customers clicking “BUY” simultaneously.
 
-How do you ensure no more than 100 pairs are purchased correctly? This is a classic race condition where multiple clients 
-tries to read the same object to then modify it.
+How do you ensure no more than 100 pairs are purchased correctly? This is a classic race condition where multiple clients
+try to read the same object to then modify it.
 
 ## Using Valkey Commands
 
@@ -85,14 +85,14 @@ FUNCTION purchase_item(item_key, quantity_requested):
 ```
 
 The pattern above is called optimistic locking. While it ensures consistency between your clients, it is not efficient 
-in high contention situations; Many clients are trying to buy the same item. Any client that fails to modify `item_key` successfully must retry until they they do.
+in high contention situations; Many clients are trying to buy the same item. Any client that fails to modify `item_key` successfully must retry until they do.
 With a lot of clients this can generate a “retry storm”, putting additional load on the Valkey server and increasing latency.
 
 ## Using Lua Scripts
 
 A better alternative is to use Lua scripting. Lua scripts are executed as a single atomic operation, allowing you to implement custom atomic action safely and efficiently.
 
-The following Lua script implement our "purchase" logic. It checks for `current_stock >= requested_quantity`:
+The following Lua script implements our "purchase" logic. It checks for `current_stock >= requested_quantity`:
 * If yes, it deducts the stock.
 * If no, it fails.
 
@@ -113,11 +113,11 @@ else
 end
 ```
 
-When executed, this script is guranteed to be all-or-nothing.
+When executed, this script is guaranteed to be all-or-nothing.
 
 The script interacts with Valkey using [`server.call()`](https://valkey.io/topics/lua-api/#server.call) which executes
 Valkey commands with arguments. On error, [`server.call()`](https://valkey.io/topics/lua-api/#server.call) 
-will raise it to the user, stoping script immediately. 
+will raise it to the user, stopping the script immediately. 
 To handle errors, use [`server.pcall()`](https://valkey.io/topics/lua-api/#server.pcall).
 
 Keys and inputs are passed into `KEYS` and `ARGV` parameters in our scripts which we will cover in the next section.
@@ -133,7 +133,7 @@ For more on the available methods for use in Lua scripts, see the documentation 
 
 ## Handling Inputs with KEYS and ARGV
 
-Valkey provides `KEYS` and `ARGV` to handles input parameters, each with their own specifc purpose:
+Valkey provides `KEYS` and `ARGV` to handle input parameters, each with their own specific purpose:
 * `KEY` is used to pass in keys values in Valkey (ex: `product:123`).
 * `ARGV` is used for general input parameters. 
 
@@ -148,7 +148,7 @@ result = await client.invoke_script(
 )
 ```
 
-Note that both `KEYS` and `ARGV` parameters must be string.
+Note that both `KEYS` and `ARGV` parameters must be strings.
 
 ### Why Use `KEYS`?
 Valkey uses declared `KEYS` to locate the correct node (in both standalone and cluster mode). To ensure execution safety:
@@ -158,17 +158,17 @@ Valkey uses declared `KEYS` to locate the correct node (in both standalone and c
 
 ### Using `ARGV` and Script Caching
 
-GLIDE caches `Sciprt()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs. 
+GLIDE caches `Script()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs. 
 Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
 
 :::caution[Script Hashing]
-Scripts hashes are based on the entire script content. This include spaces, line breaks, and all characters. 
+Script hashes are based on the entire script content. This includes spaces, line breaks, and all characters. 
 Always ensure you are loading the exact same scripts.
 :::
 
 ## Putting It All Together
 
-The following is an an example implementation for a client that handles inventory deduction atomically using Lua scripting.
+The following is an example implementation for a client that handles inventory deduction atomically using Lua scripting.
 It will:
 1. Seed the database with 100 items.
 2. Execute the Lua script to attempt a purchase of 3 items.

@@ -10,7 +10,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM)** authentication when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
 <Aside type="caution">
-  For GLIDE versions below 2.2, see the [section](#iam-authentication-using-aws-sdk) for on how to configure IAM authentication using the AWS SDK.
+  For GLIDE versions below 2.2, see the [section](#iam-authentication-using-aws-sdk) on how to configure IAM authentication using the AWS SDK.
 </Aside>
 
 ## How It Works
@@ -177,7 +177,7 @@ See how to generate the token and GLIDE user examples:
 ### Best Practices for Refreshing IAM Tokens and Re-authentication
 
 GLIDE supports dynamic updates to the password in the connection configuration at runtime (see <a href={`/concepts/client-features/dynamic-authentication`}>Dynamic Password Management</a> for more details).
-This capability is required when perfoming IAM authentication with AWS SDK because:
+This capability is required when performing IAM authentication with AWS SDK because:
 
 * IAM tokens are only valid for 15 minutes.
 * Connections authenticated with IAM must be re-authenticated every 12 hours using the AUTH or HELLO command with a fresh IAM token. Otherwise, the connection will be terminated.
@@ -188,5 +188,5 @@ To efficiently manage this, GLIDE provides the ability to update short-lived tok
   * Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
   * Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
 
-  This will ensures seamless token management and connection stability when using IAM authentication with GLIDE.
+  This will ensure seamless token management and connection stability when using IAM authentication with GLIDE.
 </Aside>

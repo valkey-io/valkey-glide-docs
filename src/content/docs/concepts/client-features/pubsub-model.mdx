@@ -19,7 +19,7 @@ Subscribing in GLIDE differs from the canonical RESP3 protocol. To restore subsc
 * **Standalone mode:** The subscriptions are applied to a random node, either a primary or one of the replicas.
 * **Cluster mode:** For both Sharded and Non-sharded subscriptions, the Sharded semantics are used; the subscription is applied to the node holding the slot for the subscription's channel/pattern.
 
-<Aside title="Best Pratice" type="tip">
+<Aside title="Best Practice" type="tip">
   Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. That is, the client with subscriptions should not be the same client that issues commands. In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
 </Aside>
 
@@ -75,7 +75,7 @@ client.close()
                 .build())
             .build());
     try (var regularClient = GlideClient.createClient(config).get()) {
-        // Do some work/wait - the callbacks will be dispatched on incomming messages
+        // Do some work/wait - the callbacks will be dispatched on incoming messages
     } // unsubscribe happens here
     ```
   </TabItem>
@@ -177,7 +177,7 @@ client.close()
 
   <TabItem label="Node">
     ```typescript
-    TODO: Add Exmaple
+    TODO: Add Example
     ```
   </TabItem>
 

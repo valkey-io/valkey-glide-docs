@@ -4,30 +4,30 @@ title: Asynchronous Execution
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-To enable high performance and scalability, Valkey GLIDE uses connection multiplexing in its Rust core. This makes it async by nature 
-with each client wrapper implementing the asynchronous patterns of their language. This provide a consistent interface across languages 
+To enable high performance and scalability, Valkey GLIDE uses connection multiplexing in its Rust core. This makes it async by nature
+with each client wrapper implementing the asynchronous patterns of their language. This provides a consistent interface across languages 
 while taking advantage of Rust's performance. 
 
 ## Rust Core Multiplexing
 
-In connection multiplexing, all requests are sent through a single connections as opposed to using a connection pool. 
+In connection multiplexing, all requests are sent through a single connection as opposed to using a connection pool. 
 As a result, each GLIDE client instance only maintains a single connection per node. 
 
 When combined with Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities, it allows the Rust Core to 
 send off requests without waiting for responses using a single multiplex connection.
-This design allow GLIDE clients to deliver high asynchronous performance with only a single connection.
+This design allows GLIDE clients to deliver high asynchronous performance with only a single connection.
 
 :::tip[Using a Single Client]
 Using a single client instance (a single connection) is the best way to ensure high performance. 
 However, in some scenarios, opening connections for separate tasks can be more beneficial.
 
-To learn more, see our guides on [managing connection](/how-to/connection-management/).
+To learn more, see our guides on [managing connections](/how-to/connection-management/).
 :::
 
 ## Asynchronous Patterns
 
-One of GLIDE's goal is to provide a consistent and friendly interface.
-To achieve this, each of GLIDE's client support the native asynchronous executions model.
+One of GLIDE's goals is to provide a consistent and friendly interface.
+To achieve this, each of GLIDE's clients supports the native asynchronous execution model.
 
 <Tabs>
     <TabItem label="Python">
@@ -37,12 +37,12 @@ To achieve this, each of GLIDE's client support the native asynchronous executio
         ```
 
         :::note
-        GLIDE Python provide a separate synchronous API with the `valkey-glide-sync` [client](/how-to/synchronous-connection).
+        GLIDE Python provides a separate synchronous API with the `valkey-glide-sync` [client](/how-to/synchronous-connection).
         :::
     </TabItem>
     <TabItem label="Node">
         ```typescript
-        // Support Javascript Promisses syntax
+        // Support Javascript Promises syntax
         const status = await client.set("user:101", "active");
         ```
     </TabItem>

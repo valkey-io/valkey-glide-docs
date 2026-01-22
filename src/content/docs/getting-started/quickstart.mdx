@@ -11,7 +11,7 @@ import { Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
 import ParamTabs from '@components/ParamTabs.astro';
 
 Valkey GLIDE is the open-source client library for Valkey. Designed for performance and consistency between supported languages.
-This guide will show how to quickly install and setting up a simple development environment for Valkey GLIDE.
+This guide will show how to quickly install and set up a simple development environment for Valkey GLIDE.
 
 ## Understanding GLIDE Clients
 
@@ -77,7 +77,7 @@ Windows is not yet supported.
 
     **Requirements:** JDK 11+
 
-    Add the following to your build tool. Make sure to sepcify your classifier for your OS.
+    Add the following to your build tool. Make sure to specify your classifier for your OS.
     <Tabs>
         <TabItem label="Gradle">
         ```groovy
@@ -149,7 +149,7 @@ For more detailed instructions, refer to our installation [guides](/how-to/insta
 
 ## A Simple Ping
 
-The following code snippet perform a simple "ping" command to our docker Valkey instance. This will tell us that 
+The following code snippet performs a simple "ping" command to our docker Valkey instance. This will tell us that 
 GLIDE was able to send and receive commands from Valkey.
 For testing against a live instance, update the `GlideClient` configurations.
 
@@ -167,7 +167,7 @@ For testing against a live instance, update the `GlideClient` configurations.
                 # Test the connection
                 response = await client.ping()
 
-                # Valkey respond with PONG
+                # Valkey responds with PONG
                 print(f"Connected! Server responded: {response}")
                 
             except Exception as e:
@@ -203,7 +203,7 @@ For testing against a live instance, update the `GlideClient` configurations.
                     // Test the connection
                     String response = client.ping().get();
 
-                    // Valkey respond with PONG
+                    // Valkey responds with PONG
                     System.out.println("Connected! Server responded: " + response);
                     
                 } catch (Exception e) {
@@ -228,7 +228,7 @@ For testing against a live instance, update the `GlideClient` configurations.
                 // Test the connection
                 const response = await client.ping();
 
-                // Valkey respond with PONG
+                // Valkey responds with PONG
                 console.log(`Connected! Server responded: ${response}`);
                 
             } catch (error) {
@@ -272,14 +272,14 @@ For testing against a live instance, update the `GlideClient` configurations.
                 log.Fatalf("Connection failed: %v", err)
             }
             
-            // Valkey respond with PONG
+            // Valkey responds with PONG
             fmt.Printf("Connected! Server responded: %s\n", response)
         }
         ```
     </TabItem>
 </Tabs>
 
-Running the above snippet should give you this respond.
+Running the above snippet should give you this response.
 ```bash
 Connected! Server responded: PONG
 ```
@@ -290,7 +290,7 @@ Always `close()` GLIDE clients to cleanup resources when the instance is no long
 
 ## Connection Configuration
 
-GLIDE offers many configuration options to handle to Valkey through its configuration `objects`. 
+GLIDE offers many configuration options to connect to Valkey through its configuration `objects`. 
 These options, and other interfaces, stay consistent between languages.
 
 <Tabs syncKey="progLangInExamples">

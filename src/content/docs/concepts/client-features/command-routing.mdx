@@ -9,7 +9,7 @@ Valkey GLIDE can determine and route commands efficiently to nodes in a Valkey (
 ## How GLIDE Routes commands
 
 As a Valkey cluster topology can change over time, new nodes can be added or removed and the primary node owning a specific slot may change. 
-To handle this, GLIDE clients are topology aware. It maintains a map of the cluster state and routes commands to the primary node.
+To handle this, GLIDE clients are topology aware. They maintain a map of the cluster state and route commands to the primary node.
 When topology changes (e.g., due to scaling operations or failovers), GLIDE clients update their internal cluster map to ensure commands are always routed correctly.
 
 For example, in a cluster Valkey setup, data are sharded across multiple nodes. A command like `client.set("user:100", "active")` will be routed only 

@@ -12,8 +12,8 @@ Valkey GLIDE clients are built upon a shared, high-performance [Rust Core](/conc
 This architecture allows client wrappers to configure the logger and push their own messages directly into the core, 
 ensuring that all logs remain synchronized and preserve the order of events.
 
-Currently, GLIDE does not support direct integration with third-party logging libraries. While there are interests in adding this capability, 
-it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [github](https://github.com/valkey-io/valkey-glide).
+Currently, GLIDE does not support direct integration with third-party logging libraries. While there is interest in adding this capability, 
+it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [GitHub](https://github.com/valkey-io/valkey-glide).
 
 The logger is currently only available for Python, Node, and Java clients.
 
@@ -125,11 +125,11 @@ By default, logs are output to `stdout`. However, you can configure the logger t
 
 If the file name is an absolute path `/example/logs/client_logs`, the logs will be written to the file `/example/logs/client_logs.<timestamp>`.
 
-If the file name is a relative path `./client_logs`, the logs will be written inside the foler `glide-logs`. For example, `./glide-logs/client_logs.<timestamp>`.
+If the file name is a relative path `./client_logs`, the logs will be written inside the folder `glide-logs`. For example, `./glide-logs/client_logs.<timestamp>`.
 
 To prevent large files, log files are rotated hourly.
 
 ## Cleanup Outputs
 
 Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes. 
-To disable these color codes, you can use set the environment variable `NO_COLOR=1` before starting the logger. 
+To disable these color codes, you can set the environment variable `NO_COLOR=1` before starting the logger. 

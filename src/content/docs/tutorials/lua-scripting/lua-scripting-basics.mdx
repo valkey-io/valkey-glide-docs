@@ -10,14 +10,14 @@ import { Steps, LinkCard } from '@astrojs/starlight/components';
 Valkey supports server-side scripting using [Lua](http://lua.org/about.html), a lightweight, embeddable programming language. 
 Lua scripts let you execute custom logic inside the Valkey server, providing atomicity and efficiency for tasks that would normally require multiple round trips or complex client-side coordination.
 
-Traditionally, Lua scripting can be achieved through the various Valkey commmands like `EVAL` and `EVALSHA`. 
-GLIDE provides a convinient interface through the `Script()` class and various methods to execute and manage Lua scripts.
+Traditionally, Lua scripting can be achieved through the various Valkey commands like `EVAL` and `EVALSHA`. 
+GLIDE provides a convenient interface through the `Script()` class and various methods to execute and manage Lua scripts.
 
 #### What You'll Learn
 
 This tutorial will cover:
   * A brief overview of Lua Scripting in Valkey.   
-  * Creaing a "Hello World" example with GLIDE.
+  * Creating a "Hello World" example with GLIDE.
   * How return types are handled.
 
 ## Why Use Lua Scripts?
@@ -30,7 +30,7 @@ Lua scripting has two primary benefits:
 You'll learn more about how to use Lua script to enable safe atomic operations in the 
 <a href="/tutorials/lua-scripting/custom-atomic-ops/">next</a> tutorial.
 
-For more on Lua scripting in Valkey, see the [documentations](https://valkey.io/topics/eval-intro/).
+For more on Lua scripting in Valkey, see the [documentation](https://valkey.io/topics/eval-intro/).
 
 ## Prerequisites
 
@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
 ## What's Next
 
-Congratulations! You have learned how to execute an arbitrary Lua scripts in Valkey using GLIDE.
+Congratulations! You have learned how to execute arbitrary Lua scripts in Valkey using GLIDE.
 In the next tutorial, you'll learn how to leverage Lua scripting to implement custom atomic 
 operations for complex data manipulations.
 

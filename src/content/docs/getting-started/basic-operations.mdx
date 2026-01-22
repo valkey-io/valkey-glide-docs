@@ -18,12 +18,12 @@ Now that you have a working connection, let's explore the fundamental operations
 ## Understanding Client Commands
 
 To communicate with Valkey, GLIDE clients provide methods for users to send commands to Valkey.
-Under the hood, all clients share a common same Rust core to communicate with Valkey. This
+Under the hood, all clients share the same Rust core to communicate with Valkey. This
 makes their behavior consistent between the different languages while still supporting language
 specific features.
 
 <Aside>
-  To find more infomation on the Rust core that power GLIDE clients, see <a href={`/concepts/architecture/rust-core-design/`}>here</a>.
+  To find more information on the Rust core that powers GLIDE clients, see <a href={`/concepts/architecture/rust-core-design/`}>here</a>.
 </Aside>
 
 ## Updating Keys
@@ -156,7 +156,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
 
 ## Making Multiple Atomic Operations
 
-Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which is used to set/get keys and values atomically.
+Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which are used to set/get keys and values atomically.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
@@ -273,7 +273,7 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 
 ## What's Next
 
-Now that you've understand the basics, take a look at some other topics on Valkey GLIDE:
+Now that you understand the basics, take a look at some other topics on Valkey GLIDE:
 
 <LinkCard title="GLIDE's Rust Core" href={`/concepts/architecture/rust-core-design`} description="Learn more about the underlying engine that connects GLIDE drivers." />
 

@@ -9,9 +9,9 @@ If your issues persist, please feel free to reach out to [Valkey GLIDE community
 
 ## Enable Client Logging
 
-To help diagnosing issues, you will need to enable client logging to DEBUG mode. 
+To help diagnose issues, you will need to enable client logging to DEBUG mode. 
 
-In many situations, clients surfaces errors as generic `timeout` errors as it tries to reconnect. 
+In many situations, clients surface errors as generic `timeout` errors as they try to reconnect. 
 Enabling DEBUG logs may provide more context on the issue.
 
 To enable logging, you will need to set the logger from within your application.
@@ -55,13 +55,13 @@ For more details on setting up logging, refer to the [Logging Guide](/how-to/mon
 
 ## `Timeout` errors
 
-This section troubleshoot `timeout` errors. 
+This section troubleshoots `timeout` errors. 
 
 ### Single Node Failover
 
-During a single node failover, the entire cluster becomes unavailable. Debug logs may shows `CLUSTER_DOWN` errors.
+During a single node failover, the entire cluster becomes unavailable. Debug logs may show `CLUSTER_DOWN` errors.
 
-This maybe happen if you cluster only have 2 shards which often is the set up during testing. 
+This may happen if your cluster only has 2 shards, which is often the setup during testing. 
 
 In a cluster with only 2 shards, losing 1 shard means 50% of hash slots are unavailable. 
 This forces the cluster into a `CLUSTER_DOWN` state to preserve data integrity. 
@@ -73,7 +73,7 @@ GLIDE reports this as `timeouts` because it keeps retrying against a cluster tha
 
 Received `TimeoutError` on startup and failed to create `GlideClusterClient`.
 
-This happen when default connection timeouts (often ~250ms) are too aggressive for VPNs, cross-region links, or high-latency networks.
+This happens when default connection timeouts (often ~250ms) are too aggressive for VPNs, cross-region links, or high-latency networks.
 To fix this, you must increase the **connection timeout** which is separate from the **request timeout**.
 
 ```javascript
@@ -84,7 +84,7 @@ const client = await GlideClusterClient.createClient({
         // Give the handshake at least 1-5 seconds
         connectionTimeout: 5000 
     },
-    // This is to request timeout, NOT connection timeout
+    // This is the request timeout, NOT connection timeout
     requestTimeout: 2000, 
 });
 
