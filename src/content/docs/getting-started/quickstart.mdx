@@ -138,7 +138,8 @@ Windows is not yet supported.
     go mod init your-project-name
 
     # Install GLIDE
-    go get github.com/valkey-io/valkey-glide/go
+    go get github.com/valkey-io/valkey-glide/go/v2
+    go mod tidy
     ```
     </TabItem>
 </ParamTabs>
@@ -248,33 +249,37 @@ For testing against a live instance, update the `GlideClient` configurations.
         ```go
         package main
 
-        import (
-            "fmt"
-            "log"
-            
-            "github.com/valkey-io/valkey-glide/go/glide/api"
-        )
+import (
+	"context"
+	"fmt"
+	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/valkey-io/valkey-glide/go/v2/config"
+)
 
-        func main() {
-            // Create client configuration
-            config := &api.GlideClientConfiguration{
-                Addresses: []api.NodeAddress{
-                    {Host: "localhost", Port: 6379},
-                },
-            }
-            
-            client := api.NewGlideClient(config)
-            defer client.Close()
-            
-            // Test the connection
-            response, err := client.Ping()
-            if err != nil {
-                log.Fatalf("Connection failed: %v", err)
-            }
-            
-            // Valkey responds with PONG
-            fmt.Printf("Connected! Server responded: %s\n", response)
-        }
+func main() {
+
+	host := "localhost"
+	port := 6379
+
+	config := config.NewClientConfiguration().
+		WithAddress(&config.NodeAddress{Host: host, Port: port})
+
+	client, err := glide.NewClient(config)
+	if err != nil {
+		fmt.Println("There was an error: ", err)
+		return
+	}
+
+	res, err := client.Ping(context.Background())
+	if err != nil {
+		fmt.Println("There was an error: ", err)
+		return
+	}
+	// Valkey responds with PONG
+	fmt.Printf("Connected! Server responded: %s\n", res)
+	client.Close()
+}
+
         ```
     </TabItem>
 </Tabs>
@@ -347,24 +352,25 @@ These options, and other interfaces, stay consistent between languages.
   <TabItem label="Go">
     ```go
     // Setting up connection configuration
-    config := &api.GlideClientConfiguration{
-        Addresses: []api.NodeAddress{
-            {Host: "localhost", Port: 6379},
-        },
-        // Connection timeout
-        RequestTimeout: 5 * time.Second,
-        // TLS configuration (if needed)
-        UseTls: false,
-        // Database selection
-        DatabaseId: 0,
-    }
+
+    host := "localhost"
+	port := 6379
+
+	config := config.NewClientConfiguration().
+		WithAddress(&config.NodeAddress{Host: host, Port: port}).
+		WithRequestTimeout(5 * time.Second).
+		WithUseTLS(false).
+		WithDatabaseId(0)
+
+	client, err := glide.NewClient(config)
+	if err != nil {
+		fmt.Println("There was an error: ", err)
+		return
+	}
     ```
   </TabItem>
 </Tabs>
 
-:::tip
-For a full list of connection options, take a look at the connection options [guides](/how-to/connection-config).
-:::
 
 ## Next Steps
 
