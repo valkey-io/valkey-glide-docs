@@ -126,6 +126,7 @@ export default defineConfig({
             "how-to/client-initialization",
             "how-to/monitoring/logging",
             "how-to/synchronous-connection",
+            "how-to/read-strategy",
             {"label": "Connection Management", slug: "how-to/connection-management"},
             {
               label: "Security",
@@ -133,7 +134,7 @@ export default defineConfig({
                 "how-to/security/authentication",
                 "how-to/security/iam-integration",
               ]
-            }
+            },
           ]
         },
         {
