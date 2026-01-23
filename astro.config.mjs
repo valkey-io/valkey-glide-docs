@@ -123,6 +123,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             "how-to/installation",
+            "how-to/client-initialization",
             "how-to/monitoring/logging",
             "how-to/synchronous-connection",
             {"label": "Connection Management", slug: "how-to/connection-management"},
