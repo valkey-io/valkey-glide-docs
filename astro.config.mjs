@@ -126,6 +126,13 @@ export default defineConfig({
             "how-to/monitoring/logging",
             "how-to/synchronous-connection",
             {"label": "Connection Management", slug: "how-to/connection-management"},
+            {
+              label: "Security",
+              items: [
+                "how-to/security/authentication",
+                "how-to/security/iam-integration",
+              ]
+            }
           ]
         },
         {
