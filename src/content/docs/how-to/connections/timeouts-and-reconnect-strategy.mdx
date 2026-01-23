@@ -1,0 +1,86 @@
+---
+title: Timeouts and Reconnect Strategy
+description: Guide for configuring timeout settings and reconnection strategies in Valkey GLIDE.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the client configuration parameters.
+
+## Configuration Settings
+
+| Configuration Setting | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **Default Value**   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Request Timeout       | This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed. | 250 milliseconds    |
+| Reconnect Strategy    | The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures.                                                                                                                                                                                                                                                                                                                                                  | Exponential backoff |
+
+## Setting Request Timeout for Long-Running Commands
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    NodeAddress
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+client_config = GlideClusterClientConfiguration(addresses, request_timeout=500)
+
+client = await GlideClusterClient.create(client_config)
+```
+  </TabItem>
+
+  <TabItem label="Java">
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("address.example.com")
+        .port(6379).build())
+    .requestTimeout(500)
+    .build();
+
+GlideClusterClient client = GlideClusterClient.createClient(config).get();
+```
+  </TabItem>
+
+  <TabItem label="Node">
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    requestTimeout: 500
+});
+```
+  </TabItem>
+
+  <TabItem label="Go">
+```go
+import (
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithTimeout() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithRequestTimeout(500)
+
+    client, err := glide.NewClusterClient(myConfig)
+}
+```
+  </TabItem>
+</Tabs>

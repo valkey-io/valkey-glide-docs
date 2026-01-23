@@ -126,15 +126,22 @@ export default defineConfig({
             "how-to/client-initialization",
             "how-to/monitoring/logging",
             "how-to/synchronous-connection",
-            "how-to/read-strategy",
             {"label": "Connection Management", slug: "how-to/connection-management"},
             {
               label: "Security",
               items: [
                 "how-to/security/authentication",
                 "how-to/security/iam-integration",
+                "how-to/security/tls"
               ]
             },
+            {
+              label: "Connections",
+              items: [
+                "how-to/connections/read-strategy",
+                "how-to/connections/timeouts-and-reconnect-strategy"
+              ]
+            }
           ]
         },
         {
