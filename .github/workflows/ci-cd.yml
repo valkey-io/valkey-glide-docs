@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
+
 permissions:
   contents: read
 
@@ -20,10 +22,10 @@ jobs:
         git clone --filter=blob:none --no-checkout https://github.com/valkey-io/valkey-glide.git temp-repo
         cd temp-repo
         git fetch --tags
-        
+
         # Get the latest release tag that starts with v2.x.x, excluding -rc or other suffixes.
         LATEST_TAG=$(git tag -l "v2.*.*" | grep -v -E '(rc|alpha|beta)' | sort -V | tail -n1)
-        
+
         echo "Latest release tag: $LATEST_TAG"
         echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
@@ -34,7 +36,7 @@ jobs:
     steps:
       - name: Checkout Valkey Glide Docs
         uses: actions/checkout@v4
-      
+
       - name: Checkout Valkey Glide Source
         uses: actions/checkout@v4
         with:
@@ -176,63 +178,3 @@ jobs:
           name: site-preview
           path: dist
           retention-days: 7
-
-  # --- PR Preview Comment ---
-
-  comment-preview:
-    needs: build-site
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Find existing preview comment
-        uses: peter-evans/find-comment@v3
-        id: find-comment
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '<!-- site-preview-comment -->'
-
-      - name: Create or update preview comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          edit-mode: replace
-          body: |
-            <!-- site-preview-comment -->
-            ## Site Preview
-
-            Download the site preview [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-
-            It uses [Python](https://www.python.org/) 3.x to start the hosting server.
-
-            **To preview locally:**
-            ```bash
-            unzip site-preview.zip -d ./preview
-            ./preview/serve.sh
-            ```
-            Then visit http://localhost:8080
-
-  # --- Deployment ---
-
-  deploy:
-    needs: build-site
-    # Only deploy when manually triggered on main.
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: deploy
-      cancel-in-progress: true
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
