@@ -1,0 +1,55 @@
+name: Preview Comment
+
+on:
+  workflow_run:
+    workflows: ["CI/CD"]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+  actions: read # Needed to download artifacts
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Download PR Number
+        uses: actions/download-artifact@v4
+        with:
+          name: pr_number
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read PR Number
+        id: pr
+        run: echo "num=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
+
+      - name: Find existing preview comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ steps.pr.outputs.num }}
+          comment-author: 'github-actions[bot]'
+          body-includes: ''
+
+      - name: Create or update preview comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ steps.pr.outputs.num }}
+          edit-mode: replace
+          body: |
+            ## Site Preview
+
+            Download the site preview [here](${{ github.event.workflow_run.html_url }}).
+
+            It uses [Python](https://www.python.org/) 3.x to start the hosting server.
+
+            **To preview locally:**
+            ```bash
+            unzip site-preview.zip -d ./preview
+            ./preview/serve.sh
+            ```
+            Then visit http://localhost:8080

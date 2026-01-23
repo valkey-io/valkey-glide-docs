@@ -10,6 +10,19 @@ permissions:
   contents: read
 
 jobs:
+  save-pr-number:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Save PR Number
+        run: echo ${{ github.event.number }} > pr_number.txt
+      - name: Upload PR Number
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr_number
+          path: pr_number.txt
+          retention-days: 1
+
   get-release-tag:
     runs-on: ubuntu-latest
     outputs:
