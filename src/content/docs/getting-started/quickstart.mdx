@@ -248,38 +248,35 @@ For testing against a live instance, update the `GlideClient` configurations.
     <TabItem label="Go">
         ```go
         package main
+        import (
+            "context"
+            "fmt"
+            glide "github.com/valkey-io/valkey-glide/go/v2"
+            "github.com/valkey-io/valkey-glide/go/v2/config"
+        )
 
-import (
-	"context"
-	"fmt"
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-)
+        func main() {
+            host := "localhost"
+            port := 6379
 
-func main() {
+            config := config.NewClientConfiguration().
+                WithAddress(&config.NodeAddress{Host: host, Port: port})
 
-	host := "localhost"
-	port := 6379
+            client, err := glide.NewClient(config)
+            if err != nil {
+                fmt.Println("There was an error: ", err)
+                return
+            }
 
-	config := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: host, Port: port})
-
-	client, err := glide.NewClient(config)
-	if err != nil {
-		fmt.Println("There was an error: ", err)
-		return
-	}
-
-	res, err := client.Ping(context.Background())
-	if err != nil {
-		fmt.Println("There was an error: ", err)
-		return
-	}
-	// Valkey responds with PONG
-	fmt.Printf("Connected! Server responded: %s\n", res)
-	client.Close()
-}
-
+            res, err := client.Ping(context.Background())
+            if err != nil {
+                fmt.Println("There was an error: ", err)
+                return
+            }
+            // Valkey responds with PONG
+            fmt.Printf("Connected! Server responded: %s\n", res)
+            client.Close()
+        }
         ```
     </TabItem>
 </Tabs>
@@ -352,24 +349,27 @@ These options, and other interfaces, stay consistent between languages.
   <TabItem label="Go">
     ```go
     // Setting up connection configuration
-
     host := "localhost"
-	port := 6379
+    port := 6379
 
-	config := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: host, Port: port}).
-		WithRequestTimeout(5 * time.Second).
-		WithUseTLS(false).
-		WithDatabaseId(0)
+    config := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: host, Port: port}).
+        WithRequestTimeout(5 * time.Second).
+        WithUseTLS(false).
+        WithDatabaseId(0)
 
-	client, err := glide.NewClient(config)
-	if err != nil {
-		fmt.Println("There was an error: ", err)
-		return
-	}
+    client, err := glide.NewClient(config)
+    if err != nil {
+        fmt.Println("There was an error: ", err)
+        return
+    }
     ```
   </TabItem>
 </Tabs>
+
+:::tip
+For a full list of connection options, take a look at the connection options [guides](/reference/connection-options).
+:::
 
 
 ## Next Steps

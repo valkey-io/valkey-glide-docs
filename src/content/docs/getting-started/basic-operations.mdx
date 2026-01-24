@@ -116,43 +116,39 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
   <TabItem label="Go">
     ```go
     package main
+    import (
+        "context"
+        "fmt"
+        "log"
 
-import (
-	"context"
-	"fmt"
-	"log"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-)
+    func main() {
+        config := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-func main() {
-	config := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+        client, err := glide.NewClient(config)
+        if err != nil {
+            log.Fatalf("NewClient failed: %v", err)
+        }
+        defer client.Close()
 
-	client, err := glide.NewClient(config)
-	if err != nil {
-		log.Fatalf("NewClient failed: %v", err)
-	}
-	defer client.Close()
+        // Set a key-value pair
+        _, err = client.Set(context.Background(), "user:1000", "john_doe")
+        if err != nil {
+            log.Fatalf("Set failed: %v", err)
+        }
+        fmt.Println("✓ Key set successfully")
 
-	// Set a key-value pair
-
-	_, err = client.Set(context.Background(), "user:1000", "john_doe")
-	if err != nil {
-		log.Fatalf("Set failed: %v", err)
-	}
-	fmt.Println("✓ Key set successfully")
-
-	// Get the value
-	value, err := client.Get(context.Background(), "user:1000")
-	if err != nil {
-		log.Fatalf("Get failed: %v", err)
-	}
-	fmt.Printf("✓ Retrieved value: %v\n", value)
-
-}
-
+        // Get the value
+        value, err := client.Get(context.Background(), "user:1000")
+        if err != nil {
+            log.Fatalf("Get failed: %v", err)
+        }
+        fmt.Printf("✓ Retrieved value: %v\n", value)
+    }
     ```
   </TabItem>
 </Tabs>
@@ -211,26 +207,24 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
   <TabItem label="Go">
     ```go
     // Set multiple keys at once
+    keyValues := map[string]string{
+        "user:1001": "alice",
+        "user:1002": "bob",
+        "user:1003": "charlie",
+    }
+    _, err = client.MSet(context.Background(), keyValues)
+    if err != nil {
+        log.Fatalf("MSet failed: %v", err)
+    }
+    fmt.Println("✓ Multiple keys set")
 
-	keyValues := map[string]string{
-		"user:1001": "alice",
-		"user:1002": "bob",
-		"user:1003": "charlie",
-	}
-	_, err = client.MSet(context.Background(), keyValues)
-	if err != nil {
-		log.Fatalf("MSet failed: %v", err)
-	}
-	fmt.Println("✓ Multiple keys set")
-
-	// Get multiple keys at once
-	keys := []string{"user:1001", "user:1002", "user:1003"}
-	values, err := client.MGet(context.Background(), keys)
-	if err != nil {
-		log.Fatalf("MGet failed: %v", err)
-	}
-	fmt.Printf("✓ Retrieved values: %v\n", values)
-
+    // Get multiple keys at once
+    keys := []string{"user:1001", "user:1002", "user:1003"}
+    values, err := client.MGet(context.Background(), keys)
+    if err != nil {
+        log.Fatalf("MGet failed: %v", err)
+    }
+    fmt.Printf("✓ Retrieved values: %v\n", values)
     ```
   </TabItem>
 </Tabs>
@@ -264,13 +258,12 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 
   <TabItem label="Go">
     ```go
-  keys := []string{"user:1001", "user:1002", "user:1003"}
-	deletedCount, err := client.Del(context.Background(), keys)
-	if err != nil {
-		log.Fatalf("Del failed: %v", err)
-	}
-
-	fmt.Printf("✓ Deleted %d keys\n", deletedCount)
+    keys := []string{"user:1001", "user:1002", "user:1003"}
+    deletedCount, err := client.Del(context.Background(), keys)
+    if err != nil {
+        log.Fatalf("Del failed: %v", err)
+    }
+    fmt.Printf("✓ Deleted %d keys\n", deletedCount)
     ```
   </TabItem>
 </Tabs>
