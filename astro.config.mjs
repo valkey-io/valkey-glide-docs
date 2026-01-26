@@ -124,7 +124,6 @@ export default defineConfig({
           items: [
             "how-to/installation",
             "how-to/client-initialization",
-            "how-to/monitoring/logging",
             "how-to/synchronous-connection",
             {"label": "Connection Management", slug: "how-to/connection-management"},
             {
@@ -140,6 +139,19 @@ export default defineConfig({
               items: [
                 "how-to/connections/read-strategy",
                 "how-to/connections/timeouts-and-reconnect-strategy"
+              ]
+            },
+            {
+              label: "Querying Data",
+              items: [
+                "how-to/operations/batch-transaction-and-pipelining"
+              ]
+            },
+            {
+              label: "Monitoring",
+              items: [
+                "how-to/monitoring/logging",
+                "how-to/monitoring/open-telemetry"
               ]
             }
           ]
