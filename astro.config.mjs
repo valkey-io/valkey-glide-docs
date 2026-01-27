@@ -124,8 +124,9 @@ export default defineConfig({
           items: [
             "how-to/installation",
             "how-to/client-initialization",
+            "how-to/connection-management",
+            "how-to/operations/batch-transaction-and-pipelining",
             "how-to/synchronous-connection",
-            {"label": "Connection Management", slug: "how-to/connection-management"},
             {
               label: "Security",
               items: [
@@ -141,12 +142,6 @@ export default defineConfig({
               items: [
                 "how-to/connections/read-strategy",
                 "how-to/connections/timeouts-and-reconnect-strategy"
-              ]
-            },
-            {
-              label: "Querying Data",
-              items: [
-                "how-to/operations/batch-transaction-and-pipelining"
               ]
             },
             {

@@ -11,7 +11,7 @@ It's important to note that TLS support in Valkey GLIDE relies on [rustls](https
 
 ## Enabling TLS Connections
 
-Enabling TLS is as simple as setting use_tls=True in your configuration. The client will use your system's default certificate trust store to verify the server.
+Enabling TLS is as simple as setting `use_tls=True` in your configuration. The client will use your system's default certificate trust store to verify the server.
 
 ### Cluster Mode
 
@@ -163,9 +163,10 @@ func ConnectStandaloneWithTLS() {
 
 ## Advanced TLS Configurations
 
+The `TlsAdvancedConfiguration` object provides advanced TLS settings for both standalone and cluster clients.
+
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-The `TlsAdvancedConfiguration` class provides advanced TLS settings for both standalone and cluster clients.
 
 ### Insecure TLS Mode
 
