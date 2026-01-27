@@ -133,8 +133,20 @@ export default defineConfig({
                 "how-to/security/authentication",
                 "how-to/security/dynamic-authentication",
                 "how-to/security/tls",
-                "how-to/security/iam-integration",
                 "how-to/security/access-control",
+              {
+                  label: "AWS Integrations",
+                  items: [
+                    {
+                      label: "IAM Authentication with GLIDE",
+                      slug: "how-to/security/iam-integration"
+                    },
+                    {
+                      label: "IAM Authentication using AWS SDK",
+                      slug: "how-to/security/iam-integration-using-aws-sdk"
+                    },
+                  ]
+                },
               ]
             },
             {

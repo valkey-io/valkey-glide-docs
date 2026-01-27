@@ -238,11 +238,4 @@ func ConnectStandalone() {
 GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface 
 between clients while staying within the idiomatic norms of each specific programming language.
 
-The following are the configuration references for each Glide clients:
-
-| Language    | Standalone Mode                                                                                                     | Cluster Mode                                                                                                                      |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Java**    | [GlideClientConfiguration](/languages/java/api/glide/api/models/configuration/GlideClientConfiguration.html)        | [GlideClusterClientConfiguration](/languages/java/api/glide/api/models/configuration/GlideClusterClientConfiguration.html)        |
-| **Node.js** | [GlideClientConfiguration](/languages/nodejs/api/types/GlideClient.GlideClientConfiguration.html)                   | [GlideClusterClientConfiguration](/languages/nodejs/api/types/GlideClusterClient.GlideClusterClientConfiguration.html)            |
-| **Python**  | [GlideClientConfiguration](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration) | [GlideClusterClientConfiguration](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration) |
-| **Go**      | [ClientConfiguration](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#ClientConfiguration)        | [ClusterClientConfiguration](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#ClusterClientConfiguration)        |
+Refer to our [Connection Options](/reference/connection-options) page for more on the available options for each client.
