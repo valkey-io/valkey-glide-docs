@@ -1,14 +1,31 @@
 ---
-title: Access Control
-draft: true
-sidebar:
-  badge:
-    text: Placeholder
-    variant: note
+title: ACL Permissions Requirements
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+Valkey/Redis-OSS supports authentication mechanisms, enabling secure connections through passwords. Proper authentication is crucial for restricting access to authorized clients and safeguarding your data.
 
+* **Password Authentication**: Clients authenticate using a predefined password.
+* **Access Control Lists (ACLs)**: Offers granular user permissions with individual passwords.
 
+:::tip[ACLs Overview]
+  ACLs provide extensive control over permissions. For detailed insights, please visit the [Valkey ACL documentation](https://valkey.io/topics/acl/).
+:::
 
-This is a placeholder for `access-control.md`.
+## Connection Startup Commands
+
+Valkey GLIDE's [connection](https://github.com/valkey-io/valkey-glide/blob/d3c7513026d0abf05d5d1951b05dba8a550e9b85/glide-core/redis-rs/redis/src/aio/mod.rs#L143) setup process automatically executes several Valkey commands that require specific ACL permissions.
+
+| Commands                | Requirements              | Descriptions                                              |
+| ----------------------- | ------------------------- | --------------------------------------------------------- |
+| `HELLO`                 | Basic auth permissions    | RESP3 protocol negotiation                                |
+| `AUTH`                  | Valid username/password   | If credentials provided                                   |
+| `CLIENT SETINFO`        | `+client\|setinfo`        | Sends client metadata                                     |
+| `CLIENT SETNAME`        | `+client\|setname`        | Connection identification, if client name set             |
+| `INFO`                  | `+info`                   | Availability zone discovery, if AZ-aware replicas enabled |
+| `SELECT`                | `+select` or `+@keyspace` | Database selection, if db != 0                            |
+| `PubSub Resubscription` | `+@pubsub`                | RESP3 and existing subscriptions                          |
+
+:::caution
+  Missing any of the required permissions above when the associated feature used will result in a connection error.
+:::
+

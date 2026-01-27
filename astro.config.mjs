@@ -130,8 +130,10 @@ export default defineConfig({
               label: "Security",
               items: [
                 "how-to/security/authentication",
+                "how-to/security/dynamic-authentication",
+                "how-to/security/tls",
                 "how-to/security/iam-integration",
-                "how-to/security/tls"
+                "how-to/security/access-control",
               ]
             },
             {

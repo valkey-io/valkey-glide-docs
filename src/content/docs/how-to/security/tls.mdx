@@ -161,7 +161,7 @@ func ConnectStandaloneWithTLS() {
   </TabItem>
 </Tabs>
 
-## TLS Advanced Configuration
+## Advanced TLS Configurations
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
@@ -171,9 +171,11 @@ The `TlsAdvancedConfiguration` class provides advanced TLS settings for both sta
 
 Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
 
-**⚠️ Warning**: This setting is typically used in development or testing environments. **It is strongly discouraged in production**, as it introduces security risks such as man-in-the-middle attacks.
+:::caution
+Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
+:::
 
-#### Example - Connecting with Insecure TLS Mode
+#### Example
 
 ```python
 from glide import (
