@@ -95,6 +95,12 @@ export default defineConfig({
               ]
             },
             {
+              label: "Commands API",
+              items: [
+                "commands/valkey-string"
+              ]
+            },
+            {
               label: "Core Features",
               collapsed: true,
               autogenerate: { directory: "concepts/client-features" },

@@ -1,0 +1,150 @@
+---
+title: Valkey String
+description: Handle binary data and UTF-8 strings in Valkey commands.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey strings store sequences of bytes, which may include text, serialized objects, or binary arrays. GLIDE clients provide language-specific ways to handle both UTF-8 encoded strings and binary data when passing arguments to commands or receiving responses.
+
+## String API
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    Python uses `TEncodable` as a union type that accepts either:
+
+    1. `str`: for UTF-8 encoded strings
+    2. `bytes`: for binary data
+
+    #### Type Definition
+
+    ```python
+    TEncodable = Union[str, bytes]
+    ```
+
+    #### Usage
+
+    Commands accept both `str` and `bytes` arguments. When passing strings, they are automatically encoded to UTF-8. When you need binary data, pass `bytes` directly.
+
+    ```python
+    # Using strings (automatically encoded)
+    await client.set("key", "value")
+    result = await client.get("key")  # Returns bytes: b'value'
+
+    # Using bytes directly
+    await client.set(b"key", b"binary_value")
+    result = await client.get(b"key")  # Returns bytes: b'binary_value'
+
+    # Converting between str and bytes
+    key = "my_key"
+    await client.set(key.encode(), b"value")  # str to bytes with .encode()
+    result = await client.get(key.encode())
+    decoded = result.decode()  # bytes to str with .decode()
+    ```
+
+    #### Return Values
+
+    Most commands return `bytes` by default. Use `.decode()` to convert to `str` when needed.
+  </TabItem>
+  <TabItem label="Java">
+    Valkey strings can be passed and received in two ways:
+
+    1. `String`: for common case UTF-8 converted strings
+    2. `GlideString`: to pass `byte[]` data using a container object
+
+    #### API Rules
+
+    * Command signatures either take and return `String`'s or `GlideString`'s, but not both.
+    * `String`'s are returned if the commands are passed in `String`'s. e.g `CompletableFuture<String[]> mget(String[] keys)`
+    * `GlideString`'s are returned if the commands are passed in `GlideString`'s. e.g `CompletableFuture<GlideString[]> mget(GlideString[] keys)`
+
+    Arguments for commands that require a `String` can also be substituted with `GlideString` in order to pass in or return a binary value.
+
+    #### Usage
+
+    * `gs()` is a static constructor that can be called with a `byte[]` or `String` argument to convert to `GlideString`. For example:
+
+    ```java
+    byte[] byteKey = Base64.getDecoder().decode("byteKey");
+    client.set(gs(byteKey), gs("GlideString value")).get();
+    ```
+
+    * A `GlideString byte[]` object can be converted to UTF-8 `String` by calling `.getString()` on the `GlideString` object. For example:
+
+    ```java
+    client.get(gs(byteKey)).get();              // "GlideString value" as a GlideString
+    client.get(gs(byteKey)).get().getString();  // "GlideString value" as a String
+    ```
+  </TabItem>
+  <TabItem label="Node">
+    `GlideString` is a type that maps to Valkey strings and represents either:
+
+    1. `string`: as a UTF-8 encoded string
+    2. `Buffer`: as a `byte[]`
+
+    #### Usage
+
+    Commands accept both `string` and `Buffer` arguments:
+
+    ```ts
+    import {GlideClient} from "@valkey/valkey-glide";
+
+    // Using strings (UTF-8)
+    await client.set("key", "value");
+    const result = await client.get("key");  // Returns GlideString (string | Buffer)
+
+    // Using Buffer for binary data
+    const binaryKey = Buffer.from([0x01, 0x02, 0x03, 0xFE]);
+    const binaryValue = Buffer.from([0xDE, 0xAD, 0xBE, 0xEF]);
+    
+    await client.set(binaryKey, binaryValue);
+    const value = await client.get(binaryKey);  // Returns Buffer
+
+    // Converting between string and Buffer
+    const buffer = Buffer.from("text", "utf-8");
+    const text = buffer.toString("utf-8");
+    ```
+
+    #### Return Types
+
+    * Commands use `string` instead of `GlideString` as the return type if they contain a simple string value (simple strings in Valkey are always UTF-8 encoded strings). For example, `type` command returns one of pre-defined strings, or `set` command which returns `"OK"`.
+    * Commands use `Buffer` as the return type when they always contain binary data. For example, `dump` and `functionDump` commands.
+    * Most commands use `GlideString` as the common return type.
+  </TabItem>
+  <TabItem label="Go">
+    Go uses native `string` type for all Valkey string operations. Go strings can contain arbitrary bytes, including binary data.
+
+    #### Usage
+
+    Commands accept `string` arguments and return `string` values. To work with binary data, convert between `[]byte` and `string`:
+
+    ```go
+    import (
+        "context"
+        "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    // Using regular strings
+    result, err := client.Set(context.Background(), "key", "value")
+    value, err := client.Get(context.Background(), "key")
+
+    // Using binary data - convert []byte to string
+    binaryKey := string([]byte{0x01, 0x02, 0x03, 0xFE})
+    binaryValue := string([]byte{0xDE, 0xAD, 0xBE, 0xEF})
+    
+    result, err := client.Set(context.Background(), binaryKey, binaryValue)
+    
+    // Get returns string, convert back to []byte if needed
+    value, err := client.Get(context.Background(), binaryKey)
+    if !value.IsNil() {
+        binaryData := []byte(value.Value())
+    }
+    ```
+
+    #### Type Conversion
+
+    * `string([]byte{...})` - Convert `[]byte` to `string`
+    * `[]byte(stringVar)` - Convert `string` to `[]byte`
+
+    Go strings are immutable sequences of bytes and can safely represent binary data.
+  </TabItem>
+</Tabs>
