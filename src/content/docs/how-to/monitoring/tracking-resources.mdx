@@ -1,0 +1,82 @@
+---
+title: Tracking resources
+description: Track active connections and clients using GLIDE statistics API.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+
+GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statistics with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
+
+* `total_connections` contains the number of active connections across **all** clients
+* `total_clients` contains the number of active clients (regardless of its type)
+
+:::caution[Not Generally Available]
+This is only supported by the Java, Node.js, and Python GLIDE client.
+:::
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        NodeAddress,
+        GlideClusterClientConfiguration,
+        GlideClusterClient
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(addresses, request_timeout=500)
+
+    client = await GlideClusterClient.create(client_config)
+
+    # Retrieve statistics
+    stats = await client.get_statistics()
+
+    # Example: Accessing and printing statistics
+    print(f"Total Connections: {stats['total_connections']}")
+    print(f"Total Clients: {stats['total_clients']}")
+    ```
+  </TabItem>
+    <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClusterClient config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("address.example.com")
+            .port(6379).build())
+        .requestTimeout(500)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    HashMap<String, String> stats = client.getStatistics();
+    // do something with the `stats`
+    ```
+  </TabItem>
+  <TabItem label="Node">
+    ```ts
+    import {GlideClusterClient} from "@valkey/valkey-glide";
+
+    const addresses = [
+        {
+            host: "address.example.com",
+            port: 6379
+        }
+    ];
+
+    const client = await GlideClusterClient.createClient({
+        addresses: addresses,
+        requestTimeout: 500
+    });
+
+    // Retrieve statistics
+    const stats = await client.getStatistics();
+
+    // Example: Accessing and printing statistics
+    console.log(`Total Connections: ${stats.total_connections}`);
+    console.log(`Total Clients: ${stats.total_clients}`);
+    ```
+  </TabItem>
+</Tabs>

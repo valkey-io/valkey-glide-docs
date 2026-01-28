@@ -160,7 +160,8 @@ export default defineConfig({
               label: "Monitoring",
               items: [
                 "how-to/monitoring/logging",
-                "how-to/monitoring/open-telemetry"
+                "how-to/monitoring/open-telemetry",
+                "how-to/monitoring/tracking-resources",
               ]
             }
           ]
