@@ -10,19 +10,6 @@ permissions:
   contents: read
 
 jobs:
-  save-pr-number:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Save PR Number
-        run: echo ${{ github.event.number }} > pr_number.txt
-      - name: Upload PR Number
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr_number
-          path: pr_number.txt
-          retention-days: 1
-
   get-release-tag:
     runs-on: ubuntu-latest
     outputs:
@@ -181,13 +168,3 @@ jobs:
           args: ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist
           # Fail the pipeline if broken links are found
           fail: true
-
-      - name: Copy preview server script
-        run: cp scripts/serve.sh dist/
-
-      - name: Upload preview artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-preview
-          path: dist
-          retention-days: 7
