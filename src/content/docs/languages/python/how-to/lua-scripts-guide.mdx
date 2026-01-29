@@ -207,6 +207,28 @@ result = await client.invoke_script(
 )
 ```
 
+### Working with Functions
+
+```python
+# lua code that updates a key and returns its new value
+lua_code = """#!lua name=page_visits
+server.register_function('update_visits', function(visits)
+    server.call('INCR', visits[1])
+    return server.call('GET', visits[1])
+end)
+"""
+
+# loading the function to valkey
+await client.function_load(lua_code, replace=True)
+
+await client.set("page:home:visits", "0")
+
+# calling the previously loaded function
+result = await client.fcall("update_visits", keys=["page:home:visits"])
+
+print(result)  # b'1'
+```
+
 ## Script Management
 
 ### Script Hashing and Caching
