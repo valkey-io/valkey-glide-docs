@@ -1,5 +1,5 @@
 ---
-title: Valkey String
+title: Working with Strings and Binary Data
 description: Handle binary data and UTF-8 strings in Valkey commands.
 ---
 
@@ -111,7 +111,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     * Most commands use `GlideString` as the common return type.
 
     #### Decoder
-    
+
     While Node.js defaults to string responses, you have full control over the return data type. 
     You can use the `DecoderOption` property to toggle between string and byte formats for individual commands. 
 
