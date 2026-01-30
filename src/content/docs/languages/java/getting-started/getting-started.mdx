@@ -74,6 +74,7 @@ osx-aarch_64
 osx-x86_64
 linux-aarch_64
 linux-x86_64
+windows-x86_64
 ```
 
 <Tabs syncKey="javaBuildTool">
@@ -83,27 +84,8 @@ linux-x86_64
       * Must include a `classifier` to specify your platform.
     </Aside>
 
+    Example with osdector:
     ```groovy
-    // osx-aarch_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
-    }
-
-    // osx-x86_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
-    }
-
-    // linux-aarch_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
-    }
-
-    // linux-x86_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
-    }
-
     // with osdetector
     plugins {
         id "com.google.osdetector" version "1.7.3"
@@ -112,6 +94,47 @@ linux-x86_64
         implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
     }
     ```
+
+    Example with osx-aarch_64:
+    ```groovy
+    // osx-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
+    }
+    ```
+
+    Example with osx-x86_64:
+    ```groovy
+    // osx-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
+    }
+    ```
+
+    Example with linux-aarch_64:
+    ```groovy
+    // linux-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
+    }
+    ```
+
+    Example with linux-x86_64:
+    ```groovy
+    // linux-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
+    }
+    ```
+
+    Example with windows-x86_64:
+    ```groovy
+    // windows-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'windows-x86_64'
+    }
+    ```
+
   </TabItem>
 
   {/* export const mycode = {` */}
@@ -156,6 +179,14 @@ linux-x86_64
       <version>${javaGlideLatest}</version>
   </dependency>
 
+  <!-- windows-x86_64 -->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>windows-x86_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
   <!-- with os-maven-plugin -->
 
   <build>
@@ -195,6 +226,9 @@ linux-x86_64
 
     // linux-x86_64
     libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
+
+    // windows-x86_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "windows-x86_64"
     ```
   </TabItem>
 </Tabs>

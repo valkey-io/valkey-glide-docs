@@ -34,28 +34,54 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
   <TabItem label="Gradle">
     <Aside>must include a `classifier` to specify your platform.</Aside>
 
+    Example with osdector:
     ```groovy
-    // osx-aarch_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
-    }
-
-    // linux-aarch_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
-    }
-
-    // linux-x86_64
-    dependencies {
-        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
-    }
-
     // with osdetector
     plugins {
         id "com.google.osdetector" version "1.7.3"
     }
     dependencies {
         implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+    }
+    ```
+
+    Example with osx-aarch_64:
+    ```groovy
+    // osx-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
+    }
+    ```
+
+    Example with osx-x86_64:
+    ```groovy
+    // osx-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
+    }
+    ```
+
+    Example with linux-aarch_64:
+    ```groovy
+    // linux-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
+    }
+    ```
+
+    Example with linux-x86_64:
+    ```groovy
+    // linux-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
+    }
+    ```
+
+    Example with windows-x86_64:
+    ```groovy
+    // windows-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'windows-x86_64'
     }
     ```
   </TabItem>
