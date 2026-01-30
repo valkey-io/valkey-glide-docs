@@ -1,0 +1,293 @@
+---
+title: Server-Side Scripting in GLIDE
+description: Understanding how GLIDE handles Lua scripting, caching, and atomicity.
+---
+
+Server-side scripting allows you to execute custom logic directly on the Valkey server using Lua, a lightweight embeddable programming language. This enables atomic operations and reduces network round-trips for complex tasks.
+
+## Why Use Lua Scripts?
+
+Lua scripting provides two primary benefits:
+
+**Atomicity**: The entire script executes as a single, atomic operation. Valkey guarantees no other command or script will run during your script's execution. This is essential for complex "read-modify-write" patterns where you need to fetch data, perform logic, and write back without interruption.
+
+**Performance**: Executing logic on the server reduces network latency. Instead of multiple round-trips (e.g., `GET` a value, modify it, `SET` the new value), you send a single script that performs all operations server-side.
+
+## The Script Lifecycle
+
+### Script Class and SHA1 Hashing
+
+When you create a `Script` object in GLIDE, the Lua code is hashed using SHA1:
+
+```python
+script = Script("return 'Hello'")
+hash_value = script.get_hash()
+print(f"Script hash: {hash_value}")  # SHA1 hash of the script
+```
+
+Scripts with identical code produce identical hashes, enabling efficient caching and reuse:
+
+```python
+script1 = Script("return 'Hello'")
+script2 = Script("return 'Hello'")
+assert script1.get_hash() == script2.get_hash()  # Same hash
+```
+
+:::caution[Script hashing is content-sensitive]
+Script hashes are based on the entire script content, including spaces, line breaks, and all characters. Ensure you load the exact same script to benefit from caching.
+:::
+
+### EVALSHA vs EVAL Optimization
+
+GLIDE automatically optimizes script execution:
+
+1. **First execution**: The script is sent to the server using `EVAL`, which loads and executes it
+2. **Subsequent executions**: GLIDE uses `EVALSHA` with the script's hash, avoiding retransmission of the script code
+3. **Cache miss handling**: If the server doesn't have the script cached (e.g., after restart), GLIDE falls back to `EVAL`
+
+This optimization happens transparently—you always use `invoke_script()`, and GLIDE handles the details.
+
+### Script Caching on the Server
+
+Scripts remain cached on the Valkey server until:
+
+- The server restarts
+- Memory pressure triggers eviction
+- You explicitly flush the cache with `script_flush()`
+
+You can check if scripts exist in the server cache:
+
+```python
+exists = await client.script_exists([script.get_hash()])
+print(exists)  # [True] if cached, [False] otherwise
+```
+
+## Concurrency and Atomicity
+
+### Single-Threaded Execution
+
+Valkey executes scripts atomically in a single-threaded manner. While a script runs:
+
+- No other commands can execute
+- The script has exclusive access to the data
+- All operations within the script are guaranteed to complete without interruption
+
+:::note[Scripts block the server]
+Because scripts block all other operations, long-running scripts can impact server performance and responsiveness. Keep scripts short and focused on atomic operations that require consistency. Valkey ensures atomicity by blocking all actions on a node until the Lua script finishes.
+:::
+
+### Optimistic Locking vs Lua Scripts
+
+Traditional optimistic locking using `WATCH`/`MULTI`/`EXEC` can lead to retry storms in high-contention scenarios:
+
+```
+WATCH item_key
+current_stock = GET item_key
+if current_stock >= quantity:
+    MULTI
+    DECRBY item_key quantity
+    result = EXEC  # Fails if item_key was modified
+    if result is NULL:
+        retry  # Retry storm under high contention
+```
+
+Lua scripts provide a better alternative by executing atomically without retries:
+
+```lua
+local current_stock = tonumber(server.call('GET', KEYS[1]) or 0)
+if current_stock >= quantity_requested then
+    server.call('DECRBY', KEYS[1], quantity_requested)
+    return 1
+else
+    return 0
+end
+```
+
+### Script Termination with script_kill
+
+The `script_kill` command can terminate a running script, but with important limitations:
+
+**Read-only scripts**: Can be killed at any time
+
+```python
+# This script only reads data - can be killed
+killable_script = Script("""
+    local start = server.call('TIME')[1]
+    while server.call('TIME')[1] - start < 10 do
+        server.call('GET', 'some_key')  -- Read-only
+    end
+    return 'Done'
+""")
+```
+
+**Scripts with writes**: Cannot be killed once they perform any write operation
+
+```python
+# This script writes data - cannot be killed after the SET
+unkillable_script = Script("""
+    server.call('SET', 'temp', 'value')  -- Write operation
+    local start = server.call('TIME')[1]
+    while server.call('TIME')[1] - start < 10 do
+        -- Long operation after write
+    end
+    return 'Done'
+""")
+```
+
+This design prevents data corruption—once a script modifies data, it must complete to maintain consistency.
+
+## Handling Inputs with KEYS and ARGV
+
+Valkey provides `KEYS` and `ARGV` to handle input parameters, each with a specific purpose:
+
+- **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
+- **ARGV**: Used for general input parameters
+
+```python
+product_key = "product:shoe:stock"
+buy_quantity = "3" 
+
+result = await client.invoke_script(
+    purchase_script, 
+    keys=[product_key],   # Maps to KEYS[1] in Lua
+    args=[buy_quantity]   # Maps to ARGV[1] in Lua
+)
+```
+
+Both `KEYS` and `ARGV` parameters must be strings.
+
+### Why Use KEYS and ARGV?
+
+**KEYS for routing**: Valkey uses declared `KEYS` to locate the correct node in both standalone and cluster mode. To ensure execution safety:
+
+- Pass all accessed keys via the `keys=` argument
+- Only interact with keys listed in `KEYS`
+- Never hardcode or programmatically generate key names inside scripts
+
+**ARGV for caching**: GLIDE caches `Script()` objects server-side using content hashes to reduce overhead. Always use `ARGV` for variable inputs. Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
+
+```python
+# Bad: Creates a new hash for each quantity
+bad_script = Script(f"return server.call('DECRBY', KEYS[1], 3)")
+
+# Good: Reuses the same cached script
+good_script = Script("return server.call('DECRBY', KEYS[1], ARGV[1])")
+await client.invoke_script(good_script, keys=["stock"], args=["3"])
+```
+
+### Return Value Handling
+
+GLIDE automatically converts Lua return types to Python types:
+
+- Lua strings → Python bytes (`b'...'`)
+- Lua numbers → Python int
+- Lua tables → Python lists
+- Lua nil → Python None
+
+```python
+# Script returns different types
+script = Script("return {1, 2, 3, 'hello'}")
+result = await client.invoke_script(script)
+print(result)  # [1, 2, 3, b'hello']
+```
+
+## Cluster Mode and Routing
+
+### Data Locality and Sharding
+
+In cluster mode, Valkey distributes data across multiple nodes using hash slots. Each key is mapped to one of 16,384 slots based on its hash:
+
+```
+slot = CRC16(key) mod 16384
+```
+
+Scripts must respect this sharding model because they execute on a single node.
+
+### The CROSSSLOT Error
+
+When a script accesses multiple keys, all keys must belong to the same hash slot. If they don't, the server rejects the request immediately with a `CROSSSLOT` error:
+
+```python
+# These keys likely map to different slots
+script = Script("""
+    server.call('SET', KEYS[1], ARGV[1])
+    server.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+""")
+
+# This will fail with CROSSSLOT error
+await cluster_client.invoke_script(
+    script,
+    keys=["key1", "key2"],  # Different slots
+    args=["value1", "value2"]
+)
+```
+
+The error occurs **before** script execution—the server validates key locality first.
+
+### Hash Tags for Multi-Key Scripts
+
+Hash tags allow you to control which part of a key determines its slot assignment. The portion between `{` and `}` is used for hashing:
+
+```python
+# Both keys hash to the same slot because of {1000}
+keys = ["user:{1000}:name", "user:{1000}:email"]
+```
+
+How it works:
+
+- `user:{1000}:name` → hash of `1000` determines the slot
+- `user:{1000}:email` → hash of `1000` determines the slot
+- Both keys map to the same slot and can be used together in scripts
+
+Without hash tags:
+
+- `user:1000:name` → hash of entire string
+- `user:1000:email` → hash of entire string
+- Different hashes → likely different slots → CROSSSLOT error
+
+### Explicit Routing
+
+GLIDE allows explicit control over script routing in cluster mode:
+
+```python
+from glide import SlotKeyRoute, SlotType, AllPrimaries
+
+# Route to the node holding a specific key's slot
+route = SlotKeyRoute(SlotType.PRIMARY, "user:1000")
+await cluster_client.invoke_script_route(script, route=route)
+
+# Route to all primary nodes (for scripts without keys)
+route = AllPrimaries()
+await cluster_client.invoke_script_route(script, route=route)
+```
+
+This is useful for:
+
+- Scripts that don't access keys (e.g., server configuration)
+- Broadcasting operations to all nodes
+- Explicit control over execution location
+
+## Error Handling in Scripts
+
+### server.call vs server.pcall
+
+Scripts interact with Valkey using two methods:
+
+**`server.call()`**: Raises errors to the user, stopping the script immediately on error
+
+```lua
+local result = server.call('INCR', 'not_a_number')  -- Stops on error
+```
+
+**`server.pcall()`**: Returns errors as values, allowing error handling within the script
+
+```lua
+local result = server.pcall('INCR', 'not_a_number')
+if type(result) == 'table' and result.err then
+    -- Handle error
+    return 0
+end
+```
+
+Use `server.call()` for operations that should fail fast, and `server.pcall()` when you need custom error handling logic.

@@ -1,0 +1,56 @@
+---
+title: Execute Custom Server-side Scripts
+description: A guide on sending custom Lua scripts to Valkey using GLIDE.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Run atomic logic on the server using Lua scripts with Valkey GLIDE.
+
+## Prerequisites
+
+- Running Valkey server (standalone or cluster)
+- GLIDE Python client installed (`pip install valkey-glide`)
+- Python 3.9 to 3.13
+- Client setup complete:
+
+```python
+from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+client = await GlideClient.create(config)
+```
+
+## Execute a Custom Script
+
+<Steps>
+
+1. **Define the script**
+
+   Create a `Script` object with your Lua code:
+
+   ```python
+   script = Script("return server.call('SET', KEYS[1], ARGV[1])")
+   ```
+
+2. **Prepare arguments**
+
+   :::caution[Arguments must be strings]
+   All keys and arguments passed to scripts must be strings, not integers or other types.
+   :::
+
+   ```python
+   keys = ["user:1000:name"]
+   args = ["John Doe"]
+   ```
+
+3. **Execute using `invoke_script`**
+
+   ```python
+   result = await client.invoke_script(script, keys=keys, args=args)
+   print(result)  # b'OK'
+   ```
+
+</Steps>
+
+For practical examples, see the [custom scripts examples](/reference/custom-scripts-examples/) reference page.
