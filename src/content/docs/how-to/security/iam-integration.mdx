@@ -32,8 +32,8 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **refreshIntervalSeconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 ## Examples
-<Tabs>
-  <TabItem label="Python" syncKey="progLangInExamples">
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -69,7 +69,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     ...
     ```
   </TabItem>
-  <TabItem label="Java" syncKey="progLangInExamples">
+  <TabItem label="Java">
   ```java
 
     import java.util.Collections;
@@ -106,7 +106,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
   ...
   ```
   </TabItem>
-  <TabItem label="Node" syncKey="progLangInExamples">
+  <TabItem label="Node">
     ```ts
     // Automatically regenerates the token every 5 mins
     const client = await GlideClusterClient.createClient({
