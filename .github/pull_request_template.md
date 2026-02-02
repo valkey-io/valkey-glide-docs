@@ -42,7 +42,6 @@ Before submitting the PR make sure the following are checked:
 - [ ] Commit message has a detailed description of what changed and why.
 - [ ] All commits are signed off with `--signoff` flag.
 - [ ] `pnpm build` runs successfully.
-- [ ] `pnpm format` has been applied.
 - [ ] Links have been checked for validity.
 - [ ] Destination branch is correct - main or release
 - [ ] Create merge commit if merging release branch into main, squash otherwise.
