@@ -142,6 +142,23 @@ Windows is not yet supported.
     go mod tidy
     ```
     </TabItem>
+
+    <TabItem label="Php">
+    **Requirements:** PHP 8.2 and 8.3
+
+    ```bash
+        pie install valkey-io/valkey-glide-php
+
+        # Install via Composer:
+        composer require valkey-io/valkey-glide-php
+
+        # Install from PECL:
+        pecl install https://github.com/valkey-io/valkey-glide-php/releases/download/v<version>/valkey_glide-<version>.tgz
+
+        # After installation, enable the extension:
+        extension=valkey_glide
+    ```
+    </TabItem>
 </ParamTabs>
 
 :::tip[Installation Guides]
