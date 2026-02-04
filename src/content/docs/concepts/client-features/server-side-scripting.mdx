@@ -1,0 +1,234 @@
+---
+title: Server-Side Scripting
+description: Understanding how GLIDE handles Lua scripting, caching, and atomicity.
+---
+
+GLIDE provide an interface for Valkey scripting allowing you to execute custom logic directly on the server. 
+This page will explain how GLIDE handles Valkey scripting and its features. 
+For more detail on just Valkey scripting, visit the [documentation](https://valkey.io/topics/eval-intro/).
+
+:::tip[Valkey Functions]
+As of version 7.0, Valkey Functions offer an alternative approach to extends the server with additional programmed logic. 
+Learn more about [Valkey Functions](/concepts/valkey-functions/).
+:::
+
+## Key Benefits
+- **Automatic Caching:** Scripts are cached server-side using SHA1 hashes, improving performance and reducing overhead
+- **Cluster Support:** Scripts work seamlessly in both standalone and cluster modes
+- **Management:** Built-in support for script routing and lifecycle management
+- **Atomicity:** Scripts execute atomically server-side, ensuring data consistency
+
+## Scripting Basics
+
+Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua.org/) scripts and handles their execution efficiently. 
+
+```python
+from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+# Create a client
+config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+client = await GlideClient.create(config)
+
+# Create a simple script
+script = Script("return 'Hello, Valkey!'")
+
+# Execute the script
+result = await client.invoke_script(script)
+print(result)  # b'Hello, Valkey!'
+```
+
+## Handling Inputs with KEYS and ARGV
+
+Valkey provides `KEYS` and `ARGV` to handle input parameters, each with a specific purpose:
+
+- **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
+- **ARGV**: Used for general input parameters
+
+```python
+product_key = "product:shoe:stock"
+buy_quantity = "3" 
+
+result = await client.invoke_script(
+    purchase_script, 
+    keys=[product_key],   # Maps to KEYS[1] in Lua
+    args=[buy_quantity]   # Maps to ARGV[1] in Lua
+)
+```
+
+#### Why Use KEYS 
+
+Scripts are executed physically on each node, otherwise an error is thrown. 
+GLIDE manages this by routing scripts to the correct nodes based on the `KEYS` provided.
+To ensure execution safety:
+- Pass all accessed keys via the `KEYS` argument
+- Only interact with keys listed in `KEYS`
+
+:::caution
+In the case that a script is accessing a hard coded key not in `KEYS`, the script may fail if that key is not on the node.
+:::
+
+#### Why Use ARGV
+Always use `ARGV` for variable inputs. Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
+
+```python
+# Bad: Creates a new hash for each quantity
+bad_script = Script(f"return server.call('DECRBY', KEYS[1], 3)")
+
+# Good: Reuses the same cached script
+good_script = Script("return server.call('DECRBY', KEYS[1], ARGV[1])")
+await client.invoke_script(good_script, keys=["stock"], args=["3"])
+```
+
+:::tip[Handling Large Data]
+GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
+:::
+
+## Script Lifecycle
+
+When you create a `Script` object in GLIDE, it is hashed using SHA1.
+GLIDE then automatically caches scripts with each `invoke_script()` call. 
+
+```python
+script = Script("return 'Hello'")
+hash_value = script.get_hash()
+print(f"Script hash: {hash_value}")  # SHA1 hash of the script
+```
+
+Scripts with identical code produce identical hashes, enabling efficient caching and reuse:
+
+```python
+script1 = Script("return 'Hello'")
+script2 = Script("return 'Hello'")
+assert script1.get_hash() == script2.get_hash()  # Same hash
+```
+
+:::caution[Script hashing is content-sensitive]
+Script hashes are based on the entire script content, including spaces, line breaks, and all characters. 
+Ensure you load the exact same script to benefit from caching.
+:::
+
+Scripts remain cached on the Valkey server until:
+- The server restarts
+- Memory pressure triggers eviction
+- You explicitly flush the cache with `script_flush()`
+All of which are handled automatically by GLIDE.
+
+:::tip[Ephemeral Scripts]
+Valkey scripts are not guaranteed to be persisted. It is the responsibility of the client to manage the scripts used.
+:::
+
+To learn more about script lifecycle, see Valkey's [documentation](https://valkey.io/topics/eval-intro/#script-cache).
+
+### Script Termination with script_kill
+
+A script can be safely killed if it has only performed read-only operations. 
+However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
+This prevents data corruption as once a script modifies data, it must complete to maintain consistency.
+
+```lua
+-- Read-only script
+local start = server.call('TIME')[1]
+while server.call('TIME')[1] - start < 10 do
+    server.call('GET', 'some_key')  -- Read-only
+end
+return 'Done'
+```
+
+```lua
+-- This script writes data - cannot be killed after the SET
+server.call('SET', 'temp', 'value')  -- Write operation
+local start = server.call('TIME')[1]
+while server.call('TIME')[1] - start < 10 do
+    -- Long operation after write
+end
+return 'Done'
+```
+
+## Single-Threaded Execution
+
+Valkey executes scripts atomically in a single-threaded manner. While a script runs:
+
+- No other commands can execute
+- The script has exclusive access to the data
+- All operations within the script are guaranteed to complete without interruption
+
+:::tip
+Because scripts block all other operations, long-running scripts can impact server performance and responsiveness. 
+Keep scripts short and focused on atomic operations that require consistency. 
+:::
+
+## Scripting in Cluster Mode
+
+In cluster mode, Valkey distributes data across multiple nodes using hash slots. 
+Each key is mapped to one of 16,384 slots based on its hash:
+
+```
+slot = CRC16(key) mod 16384
+```
+
+GLIDE automatically route scripts to the appropriate nodes.
+When executing a script in cluster mode, all `KEYS` must belong to the same shard.
+
+```python
+# This works the same in cluster mode
+script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+result = await cluster_client.invoke_script(
+    script,
+    keys=["user:1000"],  # Routed based on key hash
+    args=["John"]
+)
+```
+
+### Explicit Routing
+
+GLIDE provide options for explicit control over script routing in cluster mode.
+
+```python
+from glide import SlotKeyRoute, SlotType, AllPrimaries
+
+# Route to the node holding a specific key's slot
+route = SlotKeyRoute(SlotType.PRIMARY, "user:1000")
+
+# Route to all primary nodes
+route = AllPrimaries() 
+
+await cluster_client.invoke_script_route(script, route=route)
+```
+
+### Multi-Slot Scripts
+
+In cluster mode, scripts that access multiple keys must ensure __all keys belong to the same slot__.
+Adding a hash tag `{}` in the key allow you to specify the specific slot.
+
+```python
+# Both keys hash to the same slot because of {1000}
+keys = ["user:{1000}:name", "user:{1000}:email"]
+```
+
+To lean more about hash tags, see the [documentation](https://valkey.io/topics/cluster-spec/).
+
+## Batch Operations and Transactions
+
+Currently, `invoke_script` is not supported in batch operations (pipelines/transactions). 
+To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use the `EVAL` command with `custom_command`.
+
+```python
+# Script with keys and arguments
+batch = Batch(is_atomic=True)
+batch.custom_command([
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",           # Number of keys
+    "script-key",  # Key
+    "script-value" # Argument
+])
+batch.get("script-key")
+
+results = await client.exec(batch, raise_on_error=False)
+print(f"EVAL result: {results[0]}")  # b'OK'
+print(f"GET result: {results[1]}")   # b'script-value'
+```
+
+## What's Next
+* To learn how execute custom scripts in practice, check out the [guides](/how-to/execute-custom-scripts/) on Valkey scripting.
+* See our reference [page](/reference/) for more examples of custom scripts in GLIDE.

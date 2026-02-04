@@ -1,56 +1,149 @@
 ---
-title: Execute Custom Server-side Scripts
+title: Execute Custom Scripts
 description: A guide on sending custom Lua scripts to Valkey using GLIDE.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 
-Run atomic logic on the server using Lua scripts with Valkey GLIDE.
+Valkey scripting allows you to execute Lua code directly on the Valkey server.
+This guide will go over executing custom Lua scripts with GLIDE.
+
 
 ## Prerequisites
 
 - Running Valkey server (standalone or cluster)
-- GLIDE Python client installed (`pip install valkey-glide`)
-- Python 3.9 to 3.13
-- Client setup complete:
-
-```python
-from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
-
-config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
-client = await GlideClient.create(config)
-```
+- GLIDE [installed](/how-to/installation).
 
 ## Execute a Custom Script
 
+The following steps shows how to run a simple a custom Lua script using GLIDE.
+
 <Steps>
 
-1. **Define the script**
-
-   Create a `Script` object with your Lua code:
+1. Define the lua script
 
    ```python
-   script = Script("return server.call('SET', KEYS[1], ARGV[1])")
+   lua = """
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   """
    ```
 
-2. **Prepare arguments**
-
-   :::caution[Arguments must be strings]
-   All keys and arguments passed to scripts must be strings, not integers or other types.
-   :::
+2. Create a `Script` object with the Lua code
 
    ```python
-   keys = ["user:1000:name"]
+   script = Script(lua)
+   ```
+
+3. Execute script with keys and arguments
+
+   ```python
+   keys = ["username"]
    args = ["John Doe"]
-   ```
-
-3. **Execute using `invoke_script`**
-
-   ```python
    result = await client.invoke_script(script, keys=keys, args=args)
-   print(result)  # b'OK'
+   print(result) # b'username: John Doe'
    ```
-
 </Steps>
 
-For practical examples, see the [custom scripts examples](/reference/custom-scripts-examples/) reference page.
+:::tip[Learn More]
+See our [documentations](/concepts/client-features/server-side-scripting) on scripting with GLIDE.
+:::
+
+<details>
+<summary>Full Example</summary>
+```python
+import asyncio
+from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+async def main():
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+
+    lua = """
+    server.call('SET', KEYS[1], ARGV[1])
+    return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+    """
+
+    script = Script(lua)
+
+    keys = ["username"]
+    args = ["John Doe"]
+    result = await client.invoke_script(script, keys=keys, args=args)
+    print(result)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</details>
+
+## Working with Valkey Functions
+
+Valkey Functions is an alternative for persistent server-side Lua code.
+The following example shows a simple example of loading and executing a Valkey Function using GLIDE.
+
+<Steps>
+
+1. Define the lua script.
+
+   ```python
+   lua_code = """#!lua name=example_module
+   server.register_function('set_then_get', function(key, value)
+      server.call('SET', key, value)
+      return server.call('GET', key)
+   end)
+   """
+   ```
+
+2. Load the function to Valkey.
+
+   ```python
+   await client.function_load(lua_code, replace=True)
+   ```
+
+3. Call the function.
+
+   ```python
+   await client.set("page:home:visits", "0")
+   result = await client.fcall("set_then_get", keys=["page:home:visits"], args=["1"])
+   print(result)  # b'1'
+   ```
+</Steps>
+
+:::tip[Learn More]
+See our [documentations](/concepts/client-features/valkey-functions/) on Valkey Functions.
+:::
+
+<details>
+<summary>Full Example</summary>
+```python
+import asyncio
+from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+async def main():
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+
+    # lua code that updates a key and returns its new value
+    lua_code = """#!lua name=page_visits
+    server.register_function('update_visits', function(visits)
+        server.call('INCR', visits[1])
+        return server.call('GET', visits[1])
+    end)
+    """
+
+    # loading the function to valkey
+    await client.function_load(lua_code, replace=True)
+
+    await client.set("page:home:visits", "0")
+    # calling the previously loaded function
+    result = await client.fcall("update_visits", keys=["page:home:visits"])
+    print(result)  # b'1'
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+</details>
+
+## What's Next
+For more practical examples, see the [reference](/reference/custom-scripts-examples/) page.

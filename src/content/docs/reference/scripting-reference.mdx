@@ -1,0 +1,277 @@
+---
+title: Valkey Scripting Reference
+description: Reference guide for working with custom Lua scripting in Valkey GLIDE.
+---
+This page contains code references for working with custom Lua scripts in Valkey GLIDE.
+
+## Migration from Direct EVAL
+
+GLIDE's `Script` interface offers several advantages over using direct `EVAL` commands via `custom_command`.
+1. **Automatic Caching**: Scripts are cached automatically
+2. **Better Error Handling**: More specific error types
+3. **Cluster Support**: Automatic routing in cluster mode
+4. **Type Safety**: Better integration with GLIDE's type system
+5. **Performance**: Optimized execution path
+
+The following shows how to covert your `EVAL` command to GLIDE's `Script` interface.
+
+### Before (Direct EVAL)
+```python
+# Old approach with custom commands (not recommended)
+result = await client.custom_command([
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",
+    "mykey",
+    "myvalue"
+])
+```
+
+### After (Script Class)
+```python
+# New approach with Script class (recommended)
+script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+result = await client.invoke_script(
+    script,
+    keys=["mykey"],
+    args=["myvalue"]
+)
+```
+
+## Common Script Patterns
+
+The following are common script patterns used by clients.
+
+### Rate Limiting
+```python
+rate_limit_script = Script("""
+    local key = KEYS[1]
+    local limit = tonumber(ARGV[1])
+    local window = tonumber(ARGV[2])
+
+    local current = redis.call('GET', key)
+    if current == false then
+        redis.call('SET', key, 1)
+        redis.call('EXPIRE', key, window)
+        return {1, limit}
+    end
+
+    current = tonumber(current)
+    if current < limit then
+        local new_val = redis.call('INCR', key)
+        local ttl = redis.call('TTL', key)
+        return {new_val, limit}
+    else
+        local ttl = redis.call('TTL', key)
+        return {current, limit, ttl}
+    end
+""")
+
+# Usage
+result = await client.invoke_script(
+    rate_limit_script,
+    keys=["rate_limit:user:123"],
+    args=["10", "60"]  # 10 requests per 60 seconds
+)
+```
+
+### Distributed Lock
+```python
+acquire_lock_script = Script("""
+    if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
+        return 1
+    else
+        return 0
+    end
+""")
+
+release_lock_script = Script("""
+    if redis.call('GET', KEYS[1]) == ARGV[1] then
+        return redis.call('DEL', KEYS[1])
+    else
+        return 0
+    end
+""")
+
+# Acquire lock
+lock_acquired = await client.invoke_script(
+    acquire_lock_script,
+    keys=["lock:resource:123"],
+    args=["unique_token", "30"]  # 30 second expiration
+)
+
+if lock_acquired:
+    try:
+        # Do work while holding lock
+        pass
+    finally:
+        # Release lock
+        await client.invoke_script(
+            release_lock_script,
+            keys=["lock:resource:123"],
+            args=["unique_token"]
+        )
+```
+
+### Conditional Update
+```python
+conditional_update_script = Script("""
+    local current = redis.call('GET', KEYS[1])
+    if current == ARGV[1] then
+        redis.call('SET', KEYS[1], ARGV[2])
+        return 1
+    else
+        return 0
+    end
+""")
+
+# Update only if current value matches expected
+updated = await client.invoke_script(
+    conditional_update_script,
+    keys=["user:123:status"],
+    args=["pending", "active"]  # Change from "pending" to "active"
+)
+```
+## Error Handling Patterns
+
+### Common Script Errors
+
+```python
+import asyncio
+from glide import RequestError
+
+# Handle script execution errors
+script = Script("return redis.call('INCR', 'not_a_number')")
+
+try:
+    result = await client.invoke_script(script)
+except RequestError as e:
+    if "WRONGTYPE" in str(e) or "not an integer" in str(e):
+        print("Type error in script")
+    elif "syntax error" in str(e).lower():
+        print("Lua syntax error in script")
+    elif "unknown command" in str(e).lower():
+        print("Invalid Redis command in script")
+    else:
+        print(f"Script error: {e}")
+```
+
+### Script Timeout Handling
+
+```python
+# Configure client timeout for long-running scripts
+config = GlideClientConfiguration(
+    addresses=[NodeAddress("localhost", 6379)],
+    request_timeout=30000  # 30 seconds for long scripts (default is usually 5000ms)
+)
+client = await GlideClient.create(config)
+
+# Handle long-running scripts
+long_script = Script("""
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+""")
+
+try:
+    result = await client.invoke_script(long_script)
+    print(f"Script completed: {result.decode('utf-8')}")
+except RequestError as e:
+    if "timeout" in str(e).lower():
+        print("Client timeout - script may still be running on server!")
+        print("Consider increasing request_timeout in client configuration")
+    elif "Script killed" in str(e):
+        print("Script was killed by server (only possible for read-only scripts)")
+    else:
+        print(f"Script error: {e}")
+
+# Important: Client timeout != Script termination
+# - Client stops waiting for response
+# - Script continues running on server
+# - Use SCRIPT KILL to stop read-only scripts if needed
+```
+
+### Cluster-Specific Errors
+
+```python
+# Handle cluster routing errors
+try:
+    result = await cluster_client.invoke_script(
+        script,
+        keys=["key1", "key2"]  # Might be in different slots
+    )
+except RequestError as e:
+    if "CROSSSLOT" in str(e):
+        print("Keys are in different slots")
+        # Use hash tags or route explicitly
+```
+
+## Best Practices
+### 1. Use Scripts for Atomic Non-primitive Operations
+
+```python
+# Good: Conditional update with multiple data structures
+conditional_update = Script("""
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+""")
+
+result = await client.invoke_script(
+    conditional_update,
+    keys=["user:score", "user:history"],
+    args=["100", "50", "86400"]  # new score, threshold, expire in 1 day
+)
+```
+
+### 2. Handle Nil Values Properly
+
+```python
+# Good: Proper nil handling
+safe_script = Script("""
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+""")
+```
+
+### 3. Use Appropriate Data Types
+
+```python
+# Good: Return appropriate types
+typed_script = Script("""
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+""")
+```
+
+### 4. Consider Cluster Constraints
+
+```python
+# Good: Use hash tags for related keys
+cluster_script = Script("""
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+""")
+
+# Execute with hash tags
+await cluster_client.invoke_script(
+    cluster_script,
+    keys=["user:{123}:name", "user:{123}:email"],
+    args=["John", "john@example.com"]
+)
+```
