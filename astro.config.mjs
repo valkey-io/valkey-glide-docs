@@ -166,204 +166,204 @@ export default defineConfig({
             }
           ]
         },
-        // {
-        //   label: "Languages",
-        //   items: collapsed(true, [
-        //     {
-        //       label: "Python",
-        //       items: [
-        //         "languages/python",
-        //         {
-        //           label: "Getting Started",
-        //           autogenerate: {
-        //             directory: "languages/python/getting-started",
-        //           },
-        //         },
-        //         // {
-        //         //   label: "Concepts",
-        //         //   autogenerate: { directory: "languages/python/concepts" },
-        //         // },
-        //         {
-        //           label: "How-to",
-        //           autogenerate: { directory: "languages/python/how-to" },
-        //         },
-        //         {
-        //           label: "Valkey Commands",
-        //           autogenerate: {
-        //             directory: "languages/python/valkey-commands",
-        //           },
-        //         },
-        //         {
-        //           label: "Migration",
-        //           items: [
-        //             {
-        //               label: "From redis-py",
-        //               autogenerate: {
-        //                 directory: "languages/python/migration/redis-py",
-        //               },
-        //             },
-        //           ],
-        //         },
-        //         {
-        //           label: "Contributing",
-        //           autogenerate: { directory: "languages/python/developer" },
-        //         },
-        //         {
-        //           label: "API Reference",
-        //           link: "languages/python/api",
-        //           attrs: { style: "font-style: italic", target: "_blank" },
-        //         },
-        //       ],
-        //     },
-        //     {
-        //       label: "Java",
-        //       items: [
-        //         "languages/java",
-        //         {
-        //           label: "Getting Started",
-        //           autogenerate: {
-        //             directory: "languages/java/getting-started",
-        //           },
-        //         },
-        //         // {
-        //         //   label: "Concepts",
-        //         //   autogenerate: { directory: "languages/java/concepts" },
-        //         // },
-        //         {
-        //           label: "How-to",
-        //           autogenerate: { directory: "languages/java/how-to" },
-        //         },
-        //         {
-        //           label: "Valkey Commands",
-        //           autogenerate: { directory: "languages/java/valkey-commands" },
-        //         },
-        //         {
-        //           label: "Migration",
-        //           items: [
-        //             "languages/java/migration",
-        //             {
-        //               label: "From Jedis",
-        //               autogenerate: {
-        //                 directory: "languages/java/migration/jedis",
-        //               },
-        //             },
-        //             {
-        //               label: "From Lettuce",
-        //               autogenerate: {
-        //                 directory: "languages/java/migration/lettuce",
-        //               },
-        //             },
-        //             {
-        //               label: "From Redisson",
-        //               autogenerate: {
-        //                 directory: "languages/java/migration/redisson",
-        //               },
-        //             },
-        //           ],
-        //         },
-        //         {
-        //           label: "Contributing",
-        //           autogenerate: { directory: "languages/java/developer" },
-        //         },
-        //         {
-        //           label: "API Reference",
-        //           link: "languages/java/api",
-        //           attrs: { style: "font-style: italic", target: "_blank" },
-        //         },
-        //       ],
-        //     },
-        //     {
-        //       label: "Node.js",
-        //       items: [
-        //         "languages/nodejs",
-        //         {
-        //           label: "Getting Started",
-        //           autogenerate: {
-        //             directory: "languages/nodejs/getting-started",
-        //           },
-        //         },
-        //         // {
-        //         //   label: "Concepts",
-        //         //   autogenerate: { directory: "languages/nodejs/concepts" },
-        //         // },
-        //         {
-        //           label: "How-to",
-        //           autogenerate: { directory: "languages/nodejs/how-to" },
-        //         },
-        //         {
-        //           label: "Valkey Commands",
-        //           autogenerate: {
-        //             directory: "languages/nodejs/valkey-commands",
-        //           },
-        //         },
-        //         {
-        //           label: "Migration",
-        //           items: [
-        //             {
-        //               label: "From ioredis",
-        //               autogenerate: {
-        //                 directory: "languages/nodejs/migration/ioredis",
-        //               },
-        //             },
-        //           ],
-        //         },
-        //         {
-        //           label: "Contributing",
-        //           autogenerate: { directory: "languages/nodejs/developer" },
-        //         },
-        //         {
-        //           label: "API Reference",
-        //           link: "languages/nodejs/api",
-        //           attrs: { style: "font-style: italic", target: "_blank" },
-        //         },
-        //       ],
-        //     },
-        //     {
-        //       label: "Go",
-        //       items: [
-        //         "languages/go",
-        //         {
-        //           label: "Getting Started",
-        //           autogenerate: {
-        //             directory: "languages/go/getting-started",
-        //           },
-        //         },
-        //         // {
-        //         //   label: "Concepts",
-        //         //   autogenerate: { directory: "languages/go/concepts" },
-        //         // },
-        //         {
-        //           label: "How-to",
-        //           autogenerate: { directory: "languages/go/how-to" },
-        //         },
-        //         {
-        //           label: "Valkey Commands",
-        //           autogenerate: { directory: "languages/go/valkey-commands" },
-        //         },
-        //         {
-        //           label: "Migration",
-        //           items: [
-        //             {
-        //               label: "From go-redis",
-        //               autogenerate: {
-        //                 directory: "languages/go/migration/go-redis",
-        //               },
-        //             },
-        //           ],
-        //         },
-        //         {
-        //           label: "Contributing",
-        //           autogenerate: { directory: "languages/go/developer" },
-        //         },
-        //         {
-        //           label: "API Reference",
-        //           link: "https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2",
-        //           attrs: { style: "font-style: italic", target: "_blank" },
-        //         },
-        //       ],
-        //     },
-        //   ]),
-        // },
+        {
+          label: "Languages",
+          items: collapsed(true, [
+            {
+              label: "Python",
+              items: [
+                "languages/python",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/python/getting-started",
+                  },
+                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/python/concepts" },
+                // },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/python/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: {
+                    directory: "languages/python/valkey-commands",
+                  },
+                },
+                {
+                  label: "Migration",
+                  items: [
+                    {
+                      label: "From redis-py",
+                      autogenerate: {
+                        directory: "languages/python/migration/redis-py",
+                      },
+                    },
+                  ],
+                },
+                {
+                  label: "Contributing",
+                  autogenerate: { directory: "languages/python/developer" },
+                },
+                {
+                  label: "API Reference",
+                  link: "languages/python/api",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+              ],
+            },
+            {
+              label: "Java",
+              items: [
+                "languages/java",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/java/getting-started",
+                  },
+                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/java/concepts" },
+                // },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/java/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/java/valkey-commands" },
+                },
+                {
+                  label: "Migration",
+                  items: [
+                    "languages/java/migration",
+                    {
+                      label: "From Jedis",
+                      autogenerate: {
+                        directory: "languages/java/migration/jedis",
+                      },
+                    },
+                    {
+                      label: "From Lettuce",
+                      autogenerate: {
+                        directory: "languages/java/migration/lettuce",
+                      },
+                    },
+                    {
+                      label: "From Redisson",
+                      autogenerate: {
+                        directory: "languages/java/migration/redisson",
+                      },
+                    },
+                  ],
+                },
+                {
+                  label: "Contributing",
+                  autogenerate: { directory: "languages/java/developer" },
+                },
+                {
+                  label: "API Reference",
+                  link: "languages/java/api",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+              ],
+            },
+            {
+              label: "Node.js",
+              items: [
+                "languages/nodejs",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/nodejs/getting-started",
+                  },
+                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/nodejs/concepts" },
+                // },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/nodejs/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: {
+                    directory: "languages/nodejs/valkey-commands",
+                  },
+                },
+                {
+                  label: "Migration",
+                  items: [
+                    {
+                      label: "From ioredis",
+                      autogenerate: {
+                        directory: "languages/nodejs/migration/ioredis",
+                      },
+                    },
+                  ],
+                },
+                {
+                  label: "Contributing",
+                  autogenerate: { directory: "languages/nodejs/developer" },
+                },
+                {
+                  label: "API Reference",
+                  link: "languages/nodejs/api",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+              ],
+            },
+            {
+              label: "Go",
+              items: [
+                "languages/go",
+                {
+                  label: "Getting Started",
+                  autogenerate: {
+                    directory: "languages/go/getting-started",
+                  },
+                },
+                // {
+                //   label: "Concepts",
+                //   autogenerate: { directory: "languages/go/concepts" },
+                // },
+                {
+                  label: "How-to",
+                  autogenerate: { directory: "languages/go/how-to" },
+                },
+                {
+                  label: "Valkey Commands",
+                  autogenerate: { directory: "languages/go/valkey-commands" },
+                },
+                {
+                  label: "Migration",
+                  items: [
+                    {
+                      label: "From go-redis",
+                      autogenerate: {
+                        directory: "languages/go/migration/go-redis",
+                      },
+                    },
+                  ],
+                },
+                {
+                  label: "Contributing",
+                  autogenerate: { directory: "languages/go/developer" },
+                },
+                {
+                  label: "API Reference",
+                  link: "https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+              ],
+            },
+          ]),
+        },
         {
           label: "Migration",
           collapsed: true,
