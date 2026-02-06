@@ -19,122 +19,39 @@ This guide will go over executing custom Lua scripts with GLIDE.
 
 The following steps shows how to run a simple a custom Lua script using GLIDE.
 
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
 <Steps>
 
 1. Define the lua script
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    lua = """
    server.call('SET', KEYS[1], ARGV[1])
    return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
    """
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   String lua = """
-   server.call('SET', KEYS[1], ARGV[1])
-   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
-   """;
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   const lua = `
-   server.call('SET', KEYS[1], ARGV[1])
-   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
-   `;
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   lua := `
-   server.call('SET', KEYS[1], ARGV[1])
-   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
-   `
-   ```
-   </TabItem>
-   </Tabs>
 
 2. Create a `Script` object with the Lua code
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    script = Script(lua)
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   Script script = new Script(lua, false);
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   const script = new Script(lua);
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   script := options.NewScript(lua)
-   ```
-   </TabItem>
-   </Tabs>
 
 3. Execute script with keys and arguments
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    keys = ["username"]
    args = ["John Doe"]
    result = await client.invoke_script(script, keys=keys, args=args)
    print(result) # b'username: John Doe'
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   String[] keys = {"username"};
-   String[] args = {"John Doe"};
-   Object result = client.invokeScript(script, 
-       ScriptOptions.builder().key(keys[0]).arg(args[0]).build()).get();
-   System.out.println(result); // username: John Doe
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   const keys = ["username"];
-   const args = ["John Doe"];
-   const result = await client.invokeScript(script, {keys, args});
-   console.log(result); // username: John Doe
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   scriptOptions := options.NewScriptOptions().
-       WithKeys([]string{"username"}).
-       WithArgs([]string{"John Doe"})
-   result, err := client.InvokeScriptWithOptions(ctx, *script, *scriptOptions)
-   if err != nil {
-       // handle error
-   }
-   fmt.Println(result) // username: John Doe
-   ```
-   </TabItem>
-   </Tabs>
-</Steps>
 
-:::tip[Learn More]
-See our [documentations](/concepts/client-features/server-side-scripting) on scripting with GLIDE.
-:::
+</Steps>
 
 <details>
 <summary>Full Example</summary>
 
-<Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
 ```python
 import asyncio
 from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
@@ -158,8 +75,42 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+</details>
 </TabItem>
 <TabItem label="Java">
+<Steps>
+
+1. Define the lua script
+
+   ```java
+   String lua = """
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   """;
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```java
+   Script script = new Script(lua, false);
+   ```
+
+3. Execute script with keys and arguments
+
+   ```java
+   String[] keys = {"username"};
+   String[] args = {"John Doe"};
+   Object result = client.invokeScript(script, 
+       ScriptOptions.builder().key(keys[0]).arg(args[0]).build()).get();
+   System.out.println(result); // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```java
 import glide.api.GlideClient;
 import glide.api.models.configuration.GlideClientConfiguration;
@@ -196,8 +147,41 @@ public class Example {
     }
 }
 ```
+
+</details>
 </TabItem>
 <TabItem label="Node">
+<Steps>
+
+1. Define the lua script
+
+   ```typescript
+   const lua = `
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   `;
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```typescript
+   const script = new Script(lua);
+   ```
+
+3. Execute script with keys and arguments
+
+   ```typescript
+   const keys = ["username"];
+   const args = ["John Doe"];
+   const result = await client.invokeScript(script, {keys, args});
+   console.log(result); // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```typescript
 import {GlideClient, Script} from "@valkey/valkey-glide";
 
@@ -223,8 +207,45 @@ async function main() {
 
 main();
 ```
+
+</details>
 </TabItem>
 <TabItem label="Go">
+<Steps>
+
+1. Define the lua script
+
+   ```go
+   lua := `
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   `
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```go
+   script := options.NewScript(lua)
+   ```
+
+3. Execute script with keys and arguments
+
+   ```go
+   scriptOptions := options.NewScriptOptions().
+       WithKeys([]string{"username"}).
+       WithArgs([]string{"John Doe"})
+   result, err := client.InvokeScriptWithOptions(ctx, *script, *scriptOptions)
+   if err != nil {
+       // handle error
+   }
+   fmt.Println(result) // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```go
 package main
 
@@ -264,21 +285,26 @@ func main() {
     fmt.Println(result)
 }
 ```
+
+</details>
 </TabItem>
 </Tabs>
-</details>
+
+:::tip[Learn More]
+See our [documentations](/concepts/client-features/server-side-scripting) on scripting with GLIDE.
+:::
 
 ## Working with Valkey Functions
 
 Valkey Functions is an alternative for persistent server-side Lua code.
 The following example shows a simple example of loading and executing a Valkey Function using GLIDE.
 
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
 <Steps>
 
 1. Define the lua script.
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    lua_code = """#!lua name=example_module
    server.register_function('set_then_get', function(key, value)
@@ -287,120 +313,26 @@ The following example shows a simple example of loading and executing a Valkey F
    end)
    """
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   String luaCode = """
-   #!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   """;
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   const luaCode = `#!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   `;
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   luaCode := `#!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   `
-   ```
-   </TabItem>
-   </Tabs>
 
 2. Load the function to Valkey.
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    await client.function_load(lua_code, replace=True)
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   client.functionLoad(luaCode, true).get();
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   await client.functionLoad(luaCode, {replace: true});
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   _, err := client.FunctionLoad(ctx, luaCode, true)
-   if err != nil {
-       // handle error
-   }
-   ```
-   </TabItem>
-   </Tabs>
 
 3. Call the function.
 
-   <Tabs syncKey="progLangInExamples">
-   <TabItem label="Python">
    ```python
    await client.set("page:home:visits", "0")
    result = await client.fcall("set_then_get", keys=["page:home:visits"], args=["1"])
    print(result)  # b'1'
    ```
-   </TabItem>
-   <TabItem label="Java">
-   ```java
-   client.set("page:home:visits", "0").get();
-   Object result = client.fcall("set_then_get", 
-       new String[]{"page:home:visits"}, new String[]{"1"}).get();
-   System.out.println(result);  // 1
-   ```
-   </TabItem>
-   <TabItem label="Node">
-   ```typescript
-   await client.set("page:home:visits", "0");
-   const result = await client.fcall("set_then_get", 
-       ["page:home:visits"], ["1"]);
-   console.log(result);  // 1
-   ```
-   </TabItem>
-   <TabItem label="Go">
-   ```go
-   _, err = client.Set(ctx, "page:home:visits", "0")
-   if err != nil {
-       // handle error
-   }
-   result, err := client.FCallWithKeysAndArgs(ctx, "set_then_get", 
-       []string{"page:home:visits"}, []string{"1"})
-   if err != nil {
-       // handle error
-   }
-   fmt.Println(result)  // 1
-   ```
-   </TabItem>
-   </Tabs>
-</Steps>
 
-:::tip[Learn More]
-See our [documentations](/concepts/client-features/valkey-functions/) on Valkey Functions.
-:::
+</Steps>
 
 <details>
 <summary>Full Example</summary>
 
-<Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
 ```python
 import asyncio
 from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
@@ -429,8 +361,44 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 ```
+
+</details>
 </TabItem>
 <TabItem label="Java">
+<Steps>
+
+1. Define the lua script.
+
+   ```java
+   String luaCode = """
+   #!lua name=example_module
+   server.register_function('set_then_get', function(key, value)
+      server.call('SET', key, value)
+      return server.call('GET', key)
+   end)
+   """;
+   ```
+
+2. Load the function to Valkey.
+
+   ```java
+   client.functionLoad(luaCode, true).get();
+   ```
+
+3. Call the function.
+
+   ```java
+   client.set("page:home:visits", "0").get();
+   Object result = client.fcall("set_then_get", 
+       new String[]{"page:home:visits"}, new String[]{"1"}).get();
+   System.out.println(result);  // 1
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```java
 import glide.api.GlideClient;
 import glide.api.models.configuration.GlideClientConfiguration;
@@ -469,8 +437,43 @@ public class Example {
     }
 }
 ```
+
+</details>
 </TabItem>
 <TabItem label="Node">
+<Steps>
+
+1. Define the lua script.
+
+   ```typescript
+   const luaCode = `#!lua name=example_module
+   server.register_function('set_then_get', function(key, value)
+      server.call('SET', key, value)
+      return server.call('GET', key)
+   end)
+   `;
+   ```
+
+2. Load the function to Valkey.
+
+   ```typescript
+   await client.functionLoad(luaCode, {replace: true});
+   ```
+
+3. Call the function.
+
+   ```typescript
+   await client.set("page:home:visits", "0");
+   const result = await client.fcall("set_then_get", 
+       ["page:home:visits"], ["1"]);
+   console.log(result);  // 1
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";
 
@@ -500,8 +503,52 @@ async function main() {
 
 main();
 ```
+
+</details>
 </TabItem>
 <TabItem label="Go">
+<Steps>
+
+1. Define the lua script.
+
+   ```go
+   luaCode := `#!lua name=example_module
+   server.register_function('set_then_get', function(key, value)
+      server.call('SET', key, value)
+      return server.call('GET', key)
+   end)
+   `
+   ```
+
+2. Load the function to Valkey.
+
+   ```go
+   _, err := client.FunctionLoad(ctx, luaCode, true)
+   if err != nil {
+       // handle error
+   }
+   ```
+
+3. Call the function.
+
+   ```go
+   _, err = client.Set(ctx, "page:home:visits", "0")
+   if err != nil {
+       // handle error
+   }
+   result, err := client.FCallWithKeysAndArgs(ctx, "set_then_get", 
+       []string{"page:home:visits"}, []string{"1"})
+   if err != nil {
+       // handle error
+   }
+   fmt.Println(result)  // 1
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
 ```go
 package main
 
@@ -551,9 +598,14 @@ func main() {
     fmt.Println(result)  // 1
 }
 ```
+
+</details>
 </TabItem>
 </Tabs>
-</details>
+
+:::tip[Learn More]
+See our [documentations](/concepts/client-features/valkey-functions/) on Valkey Functions.
+:::
 
 ## What's Next
 For more practical examples, see the [reference](/reference/custom-scripts-examples/) page.
