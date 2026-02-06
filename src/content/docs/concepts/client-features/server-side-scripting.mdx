@@ -5,22 +5,28 @@ description: Understanding how GLIDE handles Lua scripting, caching, and atomici
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-GLIDE provide an interface for Valkey scripting allowing you to execute custom logic directly on the server.
-This page will explain how GLIDE handles Valkey scripting and its features.
+Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute 
+custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
 
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
 
 :::tip[Valkey Functions]
 As of version 7.0, Valkey Functions offer an alternative approach to extends the server with additional programmed logic.
-Learn more about [Valkey Functions](/concepts/valkey-functions/).
+Learn more about [Valkey Functions](/concepts/client-features/valkey-functions/).
+:::
+
+:::caution[Php Not Supported]
+The GLIDE Php client does not yet support this interface.
+To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
 :::
 
 ## Key Benefits
 
+GLIDE script provide the following advantages:
+
 * **Automatic Caching:** Scripts are cached server-side using SHA1 hashes, improving performance and reducing overhead
 * **Cluster Support:** Scripts work seamlessly in both standalone and cluster modes
 * **Management:** Built-in support for script routing and lifecycle management
-* **Atomicity:** Scripts execute atomically server-side, ensuring data consistency
 
 ## Scripting Basics
 
