@@ -128,6 +128,7 @@ export default defineConfig({
             "how-to/operations/batch-transaction-and-pipelining",
             "how-to/synchronous-connection",
             "how-to/execute-custom-scripts",
+            "how-to/load-and-execute-functions",
             {
               label: "Security",
               items: [

@@ -11,8 +11,10 @@ custom logic directly on the server. This page will explain how GLIDE handles Va
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
 
 :::tip[Valkey Functions]
-As of version 7.0, Valkey Functions offer an alternative approach to extends the server with additional programmed logic.
-Learn more about [Valkey Functions](/concepts/client-features/valkey-functions/).
+GLIDE also support Valkey Functions, an alternative approach scripting.
+See our [guide](/how-to/execute-custom-scripts-and-functions/) on how to use Valkey Functions with GLIDE.
+
+To learn more about Valkey Functions, see the Valkey [documentations](https://valkey.io/topics/functions-intro/).
 :::
 
 :::caution[Php Not Supported]
@@ -350,7 +352,7 @@ To learn more about script lifecycle, see Valkey's [documentation](https://valke
 
 A script can be safely killed if it has only performed read-only operations.
 However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
-This prevents data corruption as once a script modifies data, it must complete to maintain consistency.
+This prevents data corruption as once a script modifies data it must complete to ensure consistency.
 
 ```lua title="read-only.lua"
 -- Read-only script
@@ -633,7 +635,7 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
 
 ## What's Next 
 
-To learn how execute custom scripts in practice, check out the [guides](/how-to/execute-custom-scripts/) on Valkey scripting.
+To learn how execute custom scripts in practice, check out the [guide](/how-to/execute-custom-scripts) on Valkey scripting.
 
 See our reference [page](/reference/scripting-reference) for more examples of custom scripts in GLIDE.
 
