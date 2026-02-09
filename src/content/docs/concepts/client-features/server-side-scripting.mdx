@@ -346,7 +346,7 @@ Valkey scripts are not guaranteed to be persisted. It is the responsibility of t
 
 To learn more about script lifecycle, see Valkey's [documentation](https://valkey.io/topics/eval-intro/#script-cache).
 
-### Script Termination with script_kill
+### Stop Running Script 
 
 A script can be safely killed if it has only performed read-only operations.
 However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
@@ -631,10 +631,10 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
   </TabItem>
 </Tabs>
 
-## What's Next
+## What's Next 
 
 To learn how execute custom scripts in practice, check out the [guides](/how-to/execute-custom-scripts/) on Valkey scripting.
 
-See our reference [page](/reference/) for more examples of custom scripts in GLIDE.
+See our reference [page](/reference/scripting-reference) for more examples of custom scripts in GLIDE.
 
 You can learn more about Valkey scripting in the Valkey [documentation](https://valkey.io/topics/eval-intro/).
