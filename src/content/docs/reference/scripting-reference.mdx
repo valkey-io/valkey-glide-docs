@@ -7,6 +7,11 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This page contains code references for working with custom Lua scripts in Valkey GLIDE.
 
+:::caution[Php Not Supported]
+The GLIDE Php client does not yet support the `Script` interface.
+To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
+:::
+
 ## Migration from Direct EVAL
 
 GLIDE's `Script` interface offers several advantages over using direct `EVAL` commands via `custom_command`.
