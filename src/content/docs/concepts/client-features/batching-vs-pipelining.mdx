@@ -65,6 +65,16 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
     res, err := client.Exec(context, transaction);
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Create atomic batch (transaction) using MULTI/EXEC
+    // Default mode is ValkeyGlide::MULTI
+    $results = $client->multi()
+        ->set('key1', 'value1')
+        ->exec();
+    ```
+  </TabItem>
 </Tabs>
 
 ## Non-Atomic Batch (Pipeline)
@@ -118,6 +128,15 @@ Both modes leverage the same classes— `Batch` for standalone mode and `Cluster
         .Set("key1", "value1");
 
     res, err := client.Exec(context, transaction);
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Create non-atomic batch (pipeline)
+    $results = $client->multi(ValkeyGlide::PIPELINE)
+        ->set('key1', 'value1')
+        ->exec();
     ```
   </TabItem>
 </Tabs>
