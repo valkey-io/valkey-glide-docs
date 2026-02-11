@@ -206,6 +206,33 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     asyncio.run(main())
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Create ValkeyGlide client with credentials
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        credentials: [
+            'username' => 'your-username',
+            'password' => 'your-password-or-token'
+        ],
+        request_timeout: 5000,
+        client_name: 'my-client'
+    );
+
+    // Update password dynamically
+    $client->updateConnectionPassword('your-new-password');
+    
+    // To perform immediate re-authentication, set the second parameter to true
+    $client->updateConnectionPassword('your-new-password', true);
+    
+    // Clear the password from the connection configuration
+    $client->clearConnectionPassword(); // Note: This will remove the password
+    
+    $client->close();
+    ```
+  </TabItem>
 </Tabs>
 
 ### Optional Username
@@ -234,6 +261,14 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
     credentials = ServerCredentials(
         password='your-password-or-token'
     )
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $credentials = [
+        'password' => 'your-password-or-token'
+    ];
     ```
   </TabItem>
 </Tabs>
