@@ -88,7 +88,7 @@ export default defineConfig({
               slug: "getting-started/basic-operations",
             },
             {
-              label: "Architecture",
+              label: "Concepts",
               items: [
               "concepts/architecture/rust-core-design",
               "concepts/architecture/async-execution",
@@ -133,6 +133,8 @@ export default defineConfig({
             "how-to/connection-management",
             "how-to/operations/batch-transaction-and-pipelining",
             "how-to/synchronous-connection",
+            "how-to/execute-custom-scripts",
+            "how-to/load-and-execute-functions",
             {
               label: "Security",
               items: [

@@ -1,0 +1,295 @@
+---
+title: Execute Custom Scripts
+description: A guide on sending custom Lua scripts to Valkey using GLIDE.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+Valkey scripting allows you to execute Lua code directly on the Valkey server.
+This guide will go over executing custom Lua scripts with GLIDE.
+
+
+## Prerequisites
+
+- Running Valkey server (standalone or cluster)
+- GLIDE [installed](/how-to/installation).
+
+## Execute a Custom Script
+
+The following steps shows how to run a simple a custom Lua script using GLIDE.
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+<Steps>
+
+1. Define the lua script
+
+   ```python
+   lua = """
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   """
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```python
+   script = Script(lua)
+   ```
+
+3. Execute script with keys and arguments
+
+   ```python
+   keys = ["username"]
+   args = ["John Doe"]
+   result = await client.invoke_script(script, keys=keys, args=args)
+   print(result) # b'username: John Doe'
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
+```python
+import asyncio
+from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+async def main():
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+
+    lua = """
+    server.call('SET', KEYS[1], ARGV[1])
+    return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+    """
+
+    script = Script(lua)
+
+    keys = ["username"]
+    args = ["John Doe"]
+    result = await client.invoke_script(script, keys=keys, args=args)
+    print(result)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+</details>
+</TabItem>
+<TabItem label="Java">
+<Steps>
+
+1. Define the lua script
+
+   ```java
+   String lua = """
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   """;
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```java
+   Script script = new Script(lua, false);
+   ```
+
+3. Execute script with keys and arguments
+
+   ```java
+   String[] keys = {"username"};
+   String[] args = {"John Doe"};
+   Object result = client.invokeScript(script, 
+       ScriptOptions.builder().key(keys[0]).arg(args[0]).build()).get();
+   System.out.println(result); // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder()
+                .host("localhost")
+                .port(6379)
+                .build())
+            .build();
+
+        try (GlideClient client = GlideClient.createClient(config).get()) {
+            String lua = """
+            server.call('SET', KEYS[1], ARGV[1])
+            return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+            """;
+
+            Script script = new Script(lua, false);
+
+            Object result = client.invokeScript(script,
+                ScriptOptions.builder()
+                    .key("username")
+                    .arg("John Doe")
+                    .build()).get();
+            System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+</details>
+</TabItem>
+<TabItem label="Node">
+<Steps>
+
+1. Define the lua script
+
+   ```typescript
+   const lua = `
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   `;
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```typescript
+   const script = new Script(lua);
+   ```
+
+3. Execute script with keys and arguments
+
+   ```typescript
+   const keys = ["username"];
+   const args = ["John Doe"];
+   const result = await client.invokeScript(script, {keys, args});
+   console.log(result); // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
+```typescript
+import {GlideClient, Script} from "@valkey/valkey-glide";
+
+async function main() {
+    const client = await GlideClient.createClient({
+        addresses: [{host: "localhost", port: 6379}]
+    });
+
+    const lua = `
+    server.call('SET', KEYS[1], ARGV[1])
+    return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+    `;
+
+    const script = new Script(lua);
+
+    const keys = ["username"];
+    const args = ["John Doe"];
+    const result = await client.invokeScript(script, {keys, args});
+    console.log(result);
+
+    client.close();
+}
+
+main();
+```
+
+</details>
+</TabItem>
+<TabItem label="Go">
+<Steps>
+
+1. Define the lua script
+
+   ```go
+   lua := `
+   server.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+   `
+   ```
+
+2. Create a `Script` object with the Lua code
+
+   ```go
+   script := options.NewScript(lua)
+   ```
+
+3. Execute script with keys and arguments
+
+   ```go
+   scriptOptions := options.NewScriptOptions().
+       WithKeys([]string{"username"}).
+       WithArgs([]string{"John Doe"})
+   result, err := client.InvokeScriptWithOptions(ctx, *script, *scriptOptions)
+   if err != nil {
+       // handle error
+   }
+   fmt.Println(result) // username: John Doe
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+)
+
+func main() {
+    ctx := context.Background()
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+    client, err := glide.NewClient(myConfig)
+    if err != nil {
+        panic(err)
+    }
+    defer client.Close()
+
+    lua := `
+    server.call('SET', KEYS[1], ARGV[1])
+    return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+    `
+
+    script := options.NewScript(lua)
+
+    scriptOptions := options.NewScriptOptions().
+        WithKeys([]string{"username"}).
+        WithArgs([]string{"John Doe"})
+    result, err := client.InvokeScriptWithOptions(ctx, *script, *scriptOptions)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(result)
+}
+```
+
+</details>
+</TabItem>
+</Tabs>
+
+## What's Next
+
+See our [documentations](/concepts/client-features/valkey-scripting) for more on how GLIDE support scripting.
