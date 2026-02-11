@@ -66,4 +66,13 @@ To achieve this, each of GLIDE's clients supports the native asynchronous execut
         The GLIDE Go client is thread safe and compatible with goroutines.
         :::
     </TabItem>
+    <TabItem label="Php">
+        ```php
+        // Synchronous blocking API
+        $client->set('user:101', 'active');
+        ```
+        :::note[Synchronous API]
+        The GLIDE PHP client uses a synchronous blocking API, similar to PHPRedis. While operations block until completion, the underlying Rust core still uses connection multiplexing for efficient communication with Valkey.
+        :::
+    </TabItem>
 </Tabs>
