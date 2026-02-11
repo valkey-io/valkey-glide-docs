@@ -12,6 +12,10 @@ The design of the PubSub support in GLIDE aims to unify various nuances into a c
 
 Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues. Conceptually, the PubSub functionality can be divided into four actions: Subscribing, Publishing, Receiving, and Unsubscribing.
 
+<Aside type="note">
+  **PHP PubSub Model**: PHP GLIDE uses a different PubSub model based on the PHPRedis API. Instead of immutable subscription configuration during client creation, PHP uses traditional method calls like `subscribe()`, `psubscribe()`, `publish()`, and `unsubscribe()` with callback functions.
+</Aside>
+
 ## Subscribing
 
 Subscribing in GLIDE differs from the canonical RESP3 protocol. To restore subscription state after a topology change or server disconnect, the subscription configuration is immutable and provided during client creation. Thus, while it is possible to use subscription commands such as `SUBSCRIBE`/`PSUBSCRIBE`/`SSUBSCRIBE` via the custom commands interface, using them alongside this model might lead to unpredictable behavior. The subscription configuration is applied to the servers using the following logic:
@@ -151,6 +155,38 @@ client.close()
 
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Note: subscribe() is BLOCKING in PHP - it enters a message loop
+    // Use separate processes/threads for subscriber and publisher
+    
+    // Subscriber process:
+    $listeningClient = new ValkeyGlide();
+    $listeningClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    // This call BLOCKS and enters message loop
+    $listeningClient->subscribe(['ch1', 'ch2'], function($client, $channel, $message) {
+        echo "Received $message on channel $channel\n";
+        
+        // To exit the loop, call unsubscribe
+        if ($message === 'exit') {
+            $client->unsubscribe(['ch1', 'ch2']);
+        }
+    });
+
+    // Code here only runs after unsubscribe
+    $listeningClient->close();
+    ```
+
+    ```php
+    // Publisher process (separate):
+    $publishingClient = new ValkeyGlide();
+    $publishingClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    $publishingClient->publish('ch1', 'Test message');
+    $publishingClient->close();
+    ```
+  </TabItem>
 </Tabs>
 
 ### Configuration without callback
@@ -266,6 +302,39 @@ client.close()
     // The main application can continue running...
     // When it's time to stop, just call cancel() or close the client
 
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Note: PHP GLIDE uses callback-based PubSub only
+    // subscribe() is BLOCKING - it enters a message loop
+    // Use separate processes/threads for subscriber and publisher
+    
+    // Subscriber process:
+    $listeningClient = new ValkeyGlide();
+    $listeningClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    // This call BLOCKS and enters message loop
+    $listeningClient->subscribe(['ch1', 'ch2'], function($client, $channel, $message) {
+        echo "Received $message on channel $channel\n";
+        
+        // To exit the loop, call unsubscribe
+        if ($message === 'exit') {
+            $client->unsubscribe(['ch1', 'ch2']);
+        }
+    });
+
+    // Code here only runs after unsubscribe
+    $listeningClient->close();
+    ```
+
+    ```php
+    // Publisher process (separate):
+    $publishingClient = new ValkeyGlide();
+    $publishingClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    $publishingClient->publish('ch1', 'Test message');
+    $publishingClient->close();
     ```
   </TabItem>
 </Tabs>
