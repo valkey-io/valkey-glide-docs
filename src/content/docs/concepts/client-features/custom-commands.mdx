@@ -7,6 +7,10 @@ import { Aside } from '@astrojs/starlight/components';
 
 The `custom_command` function is designed to execute a single command without checking inputs. It serves as a flexible tool for scenarios where the standard client API does not provide a suitable interface for a specific command.
 
+<Aside type="note">
+  In PHP, this method is called `rawcommand()` instead of `custom_command`.
+</Aside>
+
 #### Usage Notes:
 
 * **Single-Response Commands Only**: This function is intended for use with commands that return a single response. Commands that do not return a response (such as SUBSCRIBE), those that potentially return multiple responses (such as XREAD), or those that alter the client's behavior (such as entering pub/sub mode on RESP2 connections) should not be executed using this function.
