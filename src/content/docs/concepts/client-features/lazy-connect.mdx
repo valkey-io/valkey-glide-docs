@@ -19,7 +19,7 @@ When lazy connect is enabled, the client initialization process completes withou
 ## Important Considerations
 
 - **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
-- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior
+- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior (PHP uses `advanced_config['connection_timeout']`)
 - **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
 
 ## Usage Examples
@@ -143,6 +143,34 @@ When lazy connect is enabled, the client initialization process completes withou
 
     // No connection established yet - this will trigger the connection
     result, err := standaloneClient.Ping()
+    ```
+  </TabItem>
+
+  <TabItem syncKey="progLangInExamples" label="Php">
+    ```php
+    // Standalone client with lazy connect
+    $standaloneClient = new ValkeyGlide();
+    $standaloneClient->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        lazy_connect: true,
+        request_timeout: 5000
+    );
+
+    // Cluster client with lazy connect
+    $clusterClient = new ValkeyGlideCluster(
+        addresses: [
+            ['host' => 'localhost', 'port' => 7000],
+            ['host' => 'localhost', 'port' => 7001]
+        ],
+        lazy_connect: true,
+        request_timeout: 5000
+    );
+
+    // No connection established yet - this will trigger the connection
+    $result = $standaloneClient->ping();
+    
+    $standaloneClient->close();
+    $clusterClient->close();
     ```
   </TabItem>
 </Tabs>
