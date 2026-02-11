@@ -191,13 +191,17 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
   </TabItem>
 
   <TabItem label="Php">
-    PHP uses native `string` type for all Valkey string operations. PHP strings are binary-safe and can contain arbitrary bytes, including null bytes and non-UTF-8 data.
+    PHP uses native `string` type for all Valkey string operations. PHP strings are binary-safe and can contain arbitrary bytes.
 
     #### Usage
 
     Commands accept `string` arguments and return `string` or `mixed` values:
 
     ```php
+    // Create client
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
     // Using regular strings
     $client->set('key', 'value');
     $result = $client->get('key');  // Returns string: 'value'
@@ -208,17 +212,12 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     
     $client->set($binaryKey, $binaryValue);
     $result = $client->get($binaryKey);  // Returns binary string
-
-    // Working with hex encoding for binary data
-    $hexValue = bin2hex($binaryValue);  // Convert to hex string
-    $binaryData = hex2bin($hexValue);   // Convert back to binary
     ```
 
-    #### Binary Safety
+    #### Type Handling
 
-    * PHP strings are binary-safe by default and can store any byte sequence
+    * PHP strings are binary-safe and can store any byte sequence
     * No special type or conversion needed for binary data
-    * Use `bin2hex()` and `hex2bin()` for hex encoding/decoding
-    * Use `base64_encode()` and `base64_decode()` for base64 encoding/decoding
+    * Commands return `string` for string values, `mixed` for commands that may return different types
   </TabItem>
 </Tabs>
