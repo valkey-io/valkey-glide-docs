@@ -1,0 +1,1141 @@
+---
+title: Valkey Scripting Reference
+description: Reference guide for working with custom Lua scripting in Valkey GLIDE.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page contains code references for working with custom Lua scripts in Valkey GLIDE.
+
+:::caution[Php Not Supported]
+The GLIDE Php client does not yet support the `Script` interface.
+To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
+:::
+
+## Migration from Direct EVAL
+
+GLIDE's `Script` interface offers several advantages over using direct `EVAL` commands via `custom_command`.
+1. **Automatic Caching**: Scripts are cached automatically
+2. **Better Error Handling**: More specific error types
+3. **Cluster Support**: Automatic routing in cluster mode
+4. **Type Safety**: Better integration with GLIDE's type system
+5. **Performance**: Optimized execution path
+
+The following shows how to covert your `EVAL` command to GLIDE's `Script` interface.
+
+### Before (Direct EVAL)
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+# Old approach with custom commands (not recommended)
+result = await client.custom_command([
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",
+    "mykey",
+    "myvalue"
+])
+```
+</TabItem>
+<TabItem label="Java">
+```java
+// Old approach with custom commands (not recommended)
+Object result = client.customCommand(new String[]{
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",
+    "mykey",
+    "myvalue"
+}).get();
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+// Old approach with custom commands (not recommended)
+const result = await client.customCommand([
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",
+    "mykey",
+    "myvalue"
+]);
+```
+</TabItem>
+<TabItem label="Go">
+```go
+// Old approach with custom commands (not recommended)
+result, err := client.CustomCommand(context.Background(), []string{
+    "EVAL",
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    "1",
+    "mykey",
+    "myvalue",
+})
+```
+</TabItem>
+</Tabs>
+
+### After (Script Class)
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+# New approach with Script class (recommended)
+from glide import Script
+
+script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+result = await client.invoke_script(
+    script,
+    keys=["mykey"],
+    args=["myvalue"]
+)
+```
+</TabItem>
+<TabItem label="Java">
+```java
+// New approach with Script class (recommended)
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+try (Script script = new Script("return redis.call('SET', KEYS[1], ARGV[1])", false)) {
+    Object result = client.invokeScript(
+        script,
+        ScriptOptions.builder()
+            .key("mykey")
+            .arg("myvalue")
+            .build()
+    ).get();
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+// New approach with Script class (recommended)
+import {Script} from "@valkey/valkey-glide";
+
+const script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
+const result = await client.invokeScript(script, {
+    keys: ["mykey"],
+    args: ["myvalue"]
+});
+script.release();
+```
+</TabItem>
+<TabItem label="Go">
+```go
+// New approach with Script class (recommended)
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+script := options.NewScript("return redis.call('SET', KEYS[1], ARGV[1])")
+result, err := client.InvokeScriptWithOptions(
+    context.Background(),
+    *script,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"mykey"}).
+        Args([]string{"myvalue"}).
+        Build(),
+)
+```
+</TabItem>
+</Tabs>
+
+## Common Script Patterns
+
+The following are common Lua script patterns used by clients.
+
+### Rate Limiting
+
+```lua title="rate_limit.lua"
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+
+local current = redis.call('GET', key)
+if current == false then
+    redis.call('SET', key, 1)
+    redis.call('EXPIRE', key, window)
+    return {1, limit}
+end
+
+current = tonumber(current)
+if current < limit then
+    local new_val = redis.call('INCR', key)
+    local ttl = redis.call('TTL', key)
+    return {new_val, limit}
+else
+    local ttl = redis.call('TTL', key)
+    return {current, limit, ttl}
+end
+```
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+rate_limit_script = Script(rate_limit)
+
+# Usage
+result = await client.invoke_script(
+    rate_limit_script,
+    keys=["rate_limit:user:123"],
+    args=["10", "60"]  # 10 requests per 60 seconds
+)
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+try (Script rateLimitScript = new Script(rateLimit, false)) {
+    // Usage
+    Object result = client.invokeScript(
+        rateLimitScript,
+        ScriptOptions.builder()
+            .key("rate_limit:user:123")
+            .arg("10")
+            .arg("60")  // 10 requests per 60 seconds
+            .build()
+    ).get();
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+const rateLimitScript = new Script(rateLimit);
+
+// Usage
+const result = await client.invokeScript(rateLimitScript, {
+    keys: ["rate_limit:user:123"],
+    args: ["10", "60"]  // 10 requests per 60 seconds
+});
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+rateLimitScript := options.NewScript(rateLimit)
+
+// Usage
+result, err := client.InvokeScriptWithOptions(
+    context.Background(),
+    *rateLimitScript,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"rate_limit:user:123"}).
+        Args([]string{"10", "60"}).  // 10 requests per 60 seconds
+        Build(),
+)
+```
+</TabItem>
+</Tabs>
+
+### Distributed Lock
+
+```lua title="acquire_lock.lua"
+if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
+    return 1
+else
+    return 0
+end
+```
+
+```lua title="release_lock.lua"
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+    return redis.call('DEL', KEYS[1])
+else
+    return 0
+end
+```
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+acquire_lock_script = Script(acquire_lock)
+release_lock_script = Script(release_lock)
+
+# Acquire lock
+lock_acquired = await client.invoke_script(
+    acquire_lock_script,
+    keys=["lock:resource:123"],
+    args=["unique_token", "30"]  # 30 second expiration
+)
+
+if lock_acquired:
+    try:
+        # Do work while holding lock
+        pass
+    finally:
+        # Release lock
+        await client.invoke_script(
+            release_lock_script,
+            keys=["lock:resource:123"],
+            args=["unique_token"]
+        )
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+try (Script acquireLockScript = new Script(acquireLock, false);
+     Script releaseLockScript = new Script(releaseLock, false)) {
+    
+    // Acquire lock
+    Object lockAcquired = client.invokeScript(
+        acquireLockScript,
+        ScriptOptions.builder()
+            .key("lock:resource:123")
+            .arg("unique_token")
+            .arg("30")  // 30 second expiration
+            .build()
+    ).get();
+
+    if ((Long) lockAcquired == 1) {
+        try {
+            // Do work while holding lock
+        } finally {
+            // Release lock
+            client.invokeScript(
+                releaseLockScript,
+                ScriptOptions.builder()
+                    .key("lock:resource:123")
+                    .arg("unique_token")
+                    .build()
+            ).get();
+        }
+    }
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+const acquireLockScript = new Script(acquireLock);
+const releaseLockScript = new Script(releaseLock);
+
+// Acquire lock
+const lockAcquired = await client.invokeScript(acquireLockScript, {
+    keys: ["lock:resource:123"],
+    args: ["unique_token", "30"]  // 30 second expiration
+});
+
+if (lockAcquired) {
+    try {
+        // Do work while holding lock
+    } finally {
+        // Release lock
+        await client.invokeScript(releaseLockScript, {
+            keys: ["lock:resource:123"],
+            args: ["unique_token"]
+        });
+    }
+}
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+acquireLockScript := options.NewScript(acquireLock)
+releaseLockScript := options.NewScript(releaseLock)
+
+// Acquire lock
+lockAcquired, err := client.InvokeScriptWithOptions(
+    context.Background(),
+    *acquireLockScript,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"lock:resource:123"}).
+        Args([]string{"unique_token", "30"}).  // 30 second expiration
+        Build(),
+)
+
+if err == nil && lockAcquired.(int64) == 1 {
+    defer func() {
+        // Release lock
+        client.InvokeScriptWithOptions(
+            context.Background(),
+            *releaseLockScript,
+            *options.NewScriptOptionsBuilder().
+                Keys([]string{"lock:resource:123"}).
+                Args([]string{"unique_token"}).
+                Build(),
+        )
+    }()
+    // Do work while holding lock
+}
+```
+</TabItem>
+</Tabs>
+
+### Conditional Update
+
+```lua title="conditional_update.lua"
+    local current = redis.call('GET', KEYS[1])
+    if current == ARGV[1] then
+        redis.call('SET', KEYS[1], ARGV[2])
+        return 1
+    else
+        return 0
+    end
+```
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+conditional_update_script = Script(conditional_update)
+
+# Update only if current value matches expected
+updated = await client.invoke_script(
+    conditional_update_script,
+    keys=["user:123:status"],
+    args=["pending", "active"]  # Change from "pending" to "active"
+)
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+try (Script conditionalUpdateScript = new Script(conditionalUpdate, false)) {
+    // Update only if current value matches expected
+    Object updated = client.invokeScript(
+        conditionalUpdateScript,
+        ScriptOptions.builder()
+            .key("user:123:status")
+            .arg("pending")
+            .arg("active")  // Change from "pending" to "active"
+            .build()
+    ).get();
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+const conditionalUpdateScript = new Script(conditionalUpdate);
+
+// Update only if current value matches expected
+const updated = await client.invokeScript(conditionalUpdateScript, {
+    keys: ["user:123:status"],
+    args: ["pending", "active"]  // Change from "pending" to "active"
+});
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+conditionalUpdateScript := options.NewScript(conditionalUpdate)
+
+// Update only if current value matches expected
+updated, err := client.InvokeScriptWithOptions(
+    context.Background(),
+    *conditionalUpdateScript,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"user:123:status"}).
+        Args([]string{"pending", "active"}).  // Change from "pending" to "active"
+        Build(),
+)
+```
+</TabItem>
+</Tabs>
+## Error Handling Patterns
+
+### Common Script Errors
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script, RequestError
+
+# Handle script execution errors
+script = Script("return redis.call('INCR', 'not_a_number')")
+
+try:
+    result = await client.invoke_script(script)
+except RequestError as e:
+    if "WRONGTYPE" in str(e) or "not an integer" in str(e):
+        print("Type error in script")
+    elif "syntax error" in str(e).lower():
+        print("Lua syntax error in script")
+    elif "unknown command" in str(e).lower():
+        print("Invalid Redis command in script")
+    else:
+        print(f"Script error: {e}")
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.exceptions.RequestException;
+
+// Handle script execution errors
+try (Script script = new Script("return redis.call('INCR', 'not_a_number')", false)) {
+    try {
+        Object result = client.invokeScript(script).get();
+    } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof RequestException) {
+            String message = cause.getMessage();
+            if (message.contains("WRONGTYPE") || message.contains("not an integer")) {
+                System.out.println("Type error in script");
+            } else if (message.toLowerCase().contains("syntax error")) {
+                System.out.println("Lua syntax error in script");
+            } else if (message.toLowerCase().contains("unknown command")) {
+                System.out.println("Invalid Redis command in script");
+            } else {
+                System.out.println("Script error: " + message);
+            }
+        }
+    }
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script, RequestError} from "@valkey/valkey-glide";
+
+// Handle script execution errors
+const script = new Script("return redis.call('INCR', 'not_a_number')");
+
+try {
+    const result = await client.invokeScript(script);
+} catch (e) {
+    if (e instanceof RequestError) {
+        const message = e.message;
+        if (message.includes("WRONGTYPE") || message.includes("not an integer")) {
+            console.log("Type error in script");
+        } else if (message.toLowerCase().includes("syntax error")) {
+            console.log("Lua syntax error in script");
+        } else if (message.toLowerCase().includes("unknown command")) {
+            console.log("Invalid Redis command in script");
+        } else {
+            console.log(`Script error: ${message}`);
+        }
+    }
+}
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import (
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+    "strings"
+)
+
+// Handle script execution errors
+script := options.NewScript("return redis.call('INCR', 'not_a_number')")
+
+result, err := client.InvokeScript(context.Background(), *script)
+if err != nil {
+    errMsg := err.Error()
+    if strings.Contains(errMsg, "WRONGTYPE") || strings.Contains(errMsg, "not an integer") {
+        fmt.Println("Type error in script")
+    } else if strings.Contains(strings.ToLower(errMsg), "syntax error") {
+        fmt.Println("Lua syntax error in script")
+    } else if strings.Contains(strings.ToLower(errMsg), "unknown command") {
+        fmt.Println("Invalid Redis command in script")
+    } else {
+        fmt.Printf("Script error: %v\n", err)
+    }
+}
+```
+</TabItem>
+</Tabs>
+
+### Script Timeout Handling
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import GlideClient, GlideClientConfiguration, NodeAddress, Script, RequestError
+
+# Configure client timeout for long-running scripts
+config = GlideClientConfiguration(
+    addresses=[NodeAddress("localhost", 6379)],
+    request_timeout=30000  # 30 seconds for long scripts (default is usually 5000ms)
+)
+client = await GlideClient.create(config)
+
+# Handle long-running scripts
+long_script = Script("""
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+""")
+
+try:
+    result = await client.invoke_script(long_script)
+    print(f"Script completed: {result.decode('utf-8')}")
+except RequestError as e:
+    if "timeout" in str(e).lower():
+        print("Client timeout - script may still be running on server!")
+        print("Consider increasing request_timeout in client configuration")
+    elif "Script killed" in str(e):
+        print("Script was killed by server (only possible for read-only scripts)")
+    else:
+        print(f"Script error: {e}")
+
+# Important: Client timeout != Script termination
+# - Client stops waiting for response
+# - Script continues running on server
+# - Use SCRIPT KILL to stop read-only scripts if needed
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.GlideClient;
+import glide.api.models.configuration.GlideClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+import glide.api.models.Script;
+import glide.api.models.exceptions.RequestException;
+
+// Configure client timeout for long-running scripts
+GlideClientConfiguration config = GlideClientConfiguration.builder()
+    .address(NodeAddress.builder().host("localhost").port(6379).build())
+    .requestTimeout(30000)  // 30 seconds for long scripts (default is usually 5000ms)
+    .build();
+
+GlideClient client = GlideClient.createClient(config).get();
+
+// Handle long-running scripts
+try (Script longScript = new Script("""
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+    """, false)) {
+    
+    try {
+        Object result = client.invokeScript(longScript).get();
+        System.out.println("Script completed: " + result);
+    } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof RequestException) {
+            String message = cause.getMessage();
+            if (message.toLowerCase().contains("timeout")) {
+                System.out.println("Client timeout - script may still be running on server!");
+                System.out.println("Consider increasing request_timeout in client configuration");
+            } else if (message.contains("Script killed")) {
+                System.out.println("Script was killed by server (only possible for read-only scripts)");
+            } else {
+                System.out.println("Script error: " + message);
+            }
+        }
+    }
+}
+
+// Important: Client timeout != Script termination
+// - Client stops waiting for response
+// - Script continues running on server
+// - Use SCRIPT KILL to stop read-only scripts if needed
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {GlideClient, GlideClientConfiguration, Script, RequestError} from "@valkey/valkey-glide";
+
+// Configure client timeout for long-running scripts
+const config: GlideClientConfiguration = {
+    addresses: [{host: "localhost", port: 6379}],
+    requestTimeout: 30000  // 30 seconds for long scripts (default is usually 5000ms)
+};
+
+const client = await GlideClient.createClient(config);
+
+// Handle long-running scripts
+const longScript = new Script(`
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+`);
+
+try {
+    const result = await client.invokeScript(longScript);
+    console.log(`Script completed: ${result}`);
+} catch (e) {
+    if (e instanceof RequestError) {
+        const message = e.message;
+        if (message.toLowerCase().includes("timeout")) {
+            console.log("Client timeout - script may still be running on server!");
+            console.log("Consider increasing request_timeout in client configuration");
+        } else if (message.includes("Script killed")) {
+            console.log("Script was killed by server (only possible for read-only scripts)");
+        } else {
+            console.log(`Script error: ${message}`);
+        }
+    }
+}
+
+// Important: Client timeout != Script termination
+// - Client stops waiting for response
+// - Script continues running on server
+// - Use SCRIPT KILL to stop read-only scripts if needed
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import (
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+)
+
+// Configure client timeout for long-running scripts
+myConfig := config.NewClientConfiguration().
+    WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+    WithRequestTimeout(30000)  // 30 seconds for long scripts (default is usually 5000ms)
+
+client, err := glide.NewClient(myConfig)
+
+// Handle long-running scripts
+longScript := options.NewScript(`
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+`)
+
+result, err := client.InvokeScript(context.Background(), *longScript)
+if err != nil {
+    errMsg := err.Error()
+    if strings.Contains(strings.ToLower(errMsg), "timeout") {
+        fmt.Println("Client timeout - script may still be running on server!")
+        fmt.Println("Consider increasing request_timeout in client configuration")
+    } else if strings.Contains(errMsg, "Script killed") {
+        fmt.Println("Script was killed by server (only possible for read-only scripts)")
+    } else {
+        fmt.Printf("Script error: %v\n", err)
+    }
+} else {
+    fmt.Printf("Script completed: %v\n", result)
+}
+
+// Important: Client timeout != Script termination
+// - Client stops waiting for response
+// - Script continues running on server
+// - Use SCRIPT KILL to stop read-only scripts if needed
+```
+</TabItem>
+</Tabs>
+
+### Cluster-Specific Errors
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import RequestError
+
+# Handle cluster routing errors
+try:
+    result = await cluster_client.invoke_script(
+        script,
+        keys=["key1", "key2"]  # Might be in different slots
+    )
+except RequestError as e:
+    if "CROSSSLOT" in str(e):
+        print("Keys are in different slots")
+        # Use hash tags or route explicitly
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.exceptions.RequestException;
+
+// Handle cluster routing errors
+try {
+    Object result = clusterClient.invokeScript(
+        script,
+        ScriptOptions.builder()
+            .key("key1")
+            .key("key2")  // Might be in different slots
+            .build()
+    ).get();
+} catch (ExecutionException e) {
+    Throwable cause = e.getCause();
+    if (cause instanceof RequestException && cause.getMessage().contains("CROSSSLOT")) {
+        System.out.println("Keys are in different slots");
+        // Use hash tags or route explicitly
+    }
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {RequestError} from "@valkey/valkey-glide";
+
+// Handle cluster routing errors
+try {
+    const result = await clusterClient.invokeScript(script, {
+        keys: ["key1", "key2"]  // Might be in different slots
+    });
+} catch (e) {
+    if (e instanceof RequestError && e.message.includes("CROSSSLOT")) {
+        console.log("Keys are in different slots");
+        // Use hash tags or route explicitly
+    }
+}
+```
+</TabItem>
+<TabItem label="Go">
+```go
+// Handle cluster routing errors
+result, err := clusterClient.InvokeScriptWithOptions(
+    context.Background(),
+    *script,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"key1", "key2"}).  // Might be in different slots
+        Build(),
+)
+if err != nil && strings.Contains(err.Error(), "CROSSSLOT") {
+    fmt.Println("Keys are in different slots")
+    // Use hash tags or route explicitly
+}
+```
+</TabItem>
+</Tabs>
+
+## Best Practices
+### 1. Use Scripts for Atomic Non-primitive Operations
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+# Good: Conditional update with multiple data structures
+conditional_update = Script("""
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+""")
+
+result = await client.invoke_script(
+    conditional_update,
+    keys=["user:score", "user:history"],
+    args=["100", "50", "86400"]  # new score, threshold, expire in 1 day
+)
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+// Good: Conditional update with multiple data structures
+try (Script conditionalUpdate = new Script("""
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+    """, false)) {
+    
+    Object result = client.invokeScript(
+        conditionalUpdate,
+        ScriptOptions.builder()
+            .key("user:score")
+            .key("user:history")
+            .arg("100")
+            .arg("50")
+            .arg("86400")  // new score, threshold, expire in 1 day
+            .build()
+    ).get();
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+// Good: Conditional update with multiple data structures
+const conditionalUpdate = new Script(`
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+`);
+
+const result = await client.invokeScript(conditionalUpdate, {
+    keys: ["user:score", "user:history"],
+    args: ["100", "50", "86400"]  // new score, threshold, expire in 1 day
+});
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+// Good: Conditional update with multiple data structures
+conditionalUpdate := options.NewScript(`
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+`)
+
+result, err := client.InvokeScriptWithOptions(
+    context.Background(),
+    *conditionalUpdate,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"user:score", "user:history"}).
+        Args([]string{"100", "50", "86400"}).  // new score, threshold, expire in 1 day
+        Build(),
+)
+```
+</TabItem>
+</Tabs>
+
+### 2. Handle Nil Values Properly
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+# Good: Proper nil handling
+safe_script = Script("""
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+""")
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+
+// Good: Proper nil handling
+try (Script safeScript = new Script("""
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+    """, false)) {
+    // Use script
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+// Good: Proper nil handling
+const safeScript = new Script(`
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+`);
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+// Good: Proper nil handling
+safeScript := options.NewScript(`
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+`)
+```
+</TabItem>
+</Tabs>
+
+### 3. Use Appropriate Data Types
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+# Good: Return appropriate types
+typed_script = Script("""
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+""")
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+
+// Good: Return appropriate types
+try (Script typedScript = new Script("""
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+    """, false)) {
+    // Use script
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+// Good: Return appropriate types
+const typedScript = new Script(`
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+`);
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+// Good: Return appropriate types
+typedScript := options.NewScript(`
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+`)
+```
+</TabItem>
+</Tabs>
+
+### 4. Consider Cluster Constraints
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+```python
+from glide import Script
+
+# Good: Use hash tags for related keys
+cluster_script = Script("""
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+""")
+
+# Execute with hash tags
+await cluster_client.invoke_script(
+    cluster_script,
+    keys=["user:{123}:name", "user:{123}:email"],
+    args=["John", "john@example.com"]
+)
+```
+</TabItem>
+<TabItem label="Java">
+```java
+import glide.api.models.Script;
+import glide.api.models.commands.ScriptOptions;
+
+// Good: Use hash tags for related keys
+try (Script clusterScript = new Script("""
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+    """, false)) {
+    
+    // Execute with hash tags
+    clusterClient.invokeScript(
+        clusterScript,
+        ScriptOptions.builder()
+            .key("user:{123}:name")
+            .key("user:{123}:email")
+            .arg("John")
+            .arg("john@example.com")
+            .build()
+    ).get();
+}
+```
+</TabItem>
+<TabItem label="Node">
+```typescript
+import {Script} from "@valkey/valkey-glide";
+
+// Good: Use hash tags for related keys
+const clusterScript = new Script(`
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+`);
+
+// Execute with hash tags
+await clusterClient.invokeScript(clusterScript, {
+    keys: ["user:{123}:name", "user:{123}:email"],
+    args: ["John", "john@example.com"]
+});
+```
+</TabItem>
+<TabItem label="Go">
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+// Good: Use hash tags for related keys
+clusterScript := options.NewScript(`
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+`)
+
+// Execute with hash tags
+clusterClient.InvokeScriptWithOptions(
+    context.Background(),
+    *clusterScript,
+    *options.NewScriptOptionsBuilder().
+        Keys([]string{"user:{123}:name", "user:{123}:email"}).
+        Args([]string{"John", "john@example.com"}).
+        Build(),
+)
+```
+</TabItem>
+</Tabs>

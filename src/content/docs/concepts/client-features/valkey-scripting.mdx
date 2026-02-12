@@ -1,0 +1,642 @@
+---
+title: Valkey Scripting
+description: Understanding how GLIDE handles Lua scripting, caching, and atomicity.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute 
+custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
+
+For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
+
+:::tip[Valkey Functions]
+GLIDE also support Valkey Functions, an alternative approach scripting.
+See our [guide](/how-to/execute-custom-scripts-and-functions/) on how to use Valkey Functions with GLIDE.
+
+To learn more about Valkey Functions, see the Valkey [documentations](https://valkey.io/topics/functions-intro/).
+:::
+
+:::caution[Php Not Supported]
+The GLIDE Php client does not yet support this interface.
+To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
+:::
+
+## Key Benefits
+
+GLIDE script provide the following advantages:
+
+* **Automatic Caching:** Scripts are cached server-side using SHA1 hashes, improving performance and reducing overhead
+* **Cluster Support:** Scripts work seamlessly in both standalone and cluster modes
+* **Management:** Built-in support for script routing and lifecycle management
+
+## Scripting Basics
+
+Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua.org/) scripts and handles their execution efficiently.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+    # Create a client
+    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+
+    # Create a simple script
+    script = Script("return 'Hello, Valkey!'")
+
+    # Execute the script
+    result = await client.invoke_script(script)
+    print(result)  # b'Hello, Valkey!'
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.Script;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    // Create a client
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
+
+    // Create a simple script
+    Script script = new Script("return 'Hello, Valkey!'", false);
+    CompletableFuture<Object> result = client.invokeScript(script);
+    System.out.println(result.get());  // Hello, Valkey!
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {GlideClient, Script} from "@valkey/valkey-glide";
+
+    // Create a client
+    const client = await GlideClient.createClient({
+        addresses: [{host: "localhost", port: 6379}]
+    });
+
+    // Create a simple script
+    const script = new Script("return 'Hello, Valkey!'");
+
+    // Execute the script
+    const result = await client.invokeScript(script);
+    console.log(result);  // 'Hello, Valkey!'
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        "github.com/valkey-io/valkey-glide/go/v2/options"
+    )
+
+    // Create a client
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    client, err := glide.NewClient(myConfig)
+
+    // Create a simple script
+    script := options.NewScript("return 'Hello, Valkey!'")
+
+    // Execute the script
+    result, err := client.InvokeScript(context.Background(), *script)
+    fmt.Println(result)  // Hello, Valkey!
+    ```
+  </TabItem>
+</Tabs>
+
+## Handling Inputs with KEYS and ARGV
+
+Valkey provides `KEYS` and `ARGV` to handle input parameters:
+* **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
+* **ARGV**: Used for general input parameters
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    product_key = "product:shoe:stock"
+    buy_quantity = "3" 
+
+    result = await client.invoke_script(
+        purchase_script, 
+        keys=[product_key],   # Maps to KEYS[1] in Lua
+        args=[buy_quantity]   # Maps to ARGV[1] in Lua
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.commands.ScriptOptions;
+
+    String productKey = "product:shoe:stock";
+    String buyQuantity = "3";
+
+    CompletableFuture<Object> result = client.invokeScript(
+        purchaseScript,
+        ScriptOptions.builder()
+            .key(productKey)   // Maps to KEYS[1] in Lua
+            .arg(buyQuantity)  // Maps to ARGV[1] in Lua
+            .build()
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const productKey = "product:shoe:stock";
+    const buyQuantity = "3";
+
+    const result = await client.invokeScript(purchaseScript, {
+        keys: [productKey],   // Maps to KEYS[1] in Lua
+        args: [buyQuantity]   // Maps to ARGV[1] in Lua
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+    productKey := "product:shoe:stock"
+    buyQuantity := "3"
+
+    scriptOptions := options.NewScriptOptions().
+        WithKeys([]string{productKey}).   // Maps to KEYS[1] in Lua
+        WithArgs([]string{buyQuantity})   // Maps to ARGV[1] in Lua
+
+    result, err := client.InvokeScriptWithOptions(
+        context.Background(),
+        *purchaseScript,
+        *scriptOptions,
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+#### Why Use KEYS and ARGV
+
+Scripts are executed physically on a node and thus it is important for the node to contain the keys being accessed.
+
+GLIDE handle this by send the script to the correct node based on the `KEYS` provided.
+If no `KEYS` are provided, GLIDE will route the script to a random node for execution.
+Thus, hardcoding the keys will most likely lead to errors.
+
+For proper execution, make sure to:
+* Pass all accessed keys via the `KEYS` argument
+* Only interact with keys listed in `KEYS`
+* `KEYS` must belong to the same slot (use [hashtags](https://valkey.io/topics/cluster-spec/#hash-tags) like `user:{100}:name` if needed)
+
+Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of scripts. 
+Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing 
+values directly into the script would create unique scripts each time, preventing effective caching.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Bad: Creates a new hash for each quantity
+    bad_script = Script(f"return server.call('DECRBY', {product_key}, {buy_quantity})")
+
+    # Good: Reuses the same cached script
+    good_script = Script("return server.call('DECRBY', KEYS[1], ARGV[1])")
+    await client.invoke_script(good_script, keys=[product_key], args=[buy_quantity])
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Bad: Creates a new hash for each quantity
+    Script badScript = new Script("return redis.call('DECRBY', " + productKey + ", " + buyQuantity + ")", false);
+
+    // Good: Reuses the same cached script
+    Script goodScript = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])", false);
+    CompletableFuture<Object> result = client.invokeScript(
+        goodScript,
+        ScriptOptions.builder().key(productKey).arg(buyQuantity).build()
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Bad: Creates a new hash for each quantity
+    const badScript = new Script(`return redis.call('DECRBY', ${productKey}, ${buyQuantity})`);
+
+    // Good: Reuses the same cached script
+    const goodScript = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])");
+    await client.invokeScript(goodScript, {keys: [productKey], args: [buyQuantity]});
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Bad: Creates a new hash for each quantity
+    badScript := options.NewScript(fmt.Sprintf("return redis.call('DECRBY', %s, %s)", productKey, buyQuantity))
+
+    // Good: Reuses the same cached script
+    goodScript := options.NewScript("return redis.call('DECRBY', KEYS[1], ARGV[1])")
+    scriptOptions := options.NewScriptOptions().
+        WithKeys([]string{productKey}).
+        WithArgs([]string{buyQuantity})
+    result, err := client.InvokeScriptWithOptions(context.Background(), *goodScript, *scriptOptions)
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip[Large Data]
+GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
+:::
+
+## Script Lifecycle
+
+When you create a `Script` object in GLIDE, it is hashed using SHA1.
+GLIDE then automatically caches scripts with each `invoke_script()` call.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    script = Script("return 'Hello'")
+    hash_value = script.get_hash()
+    print(f"Script hash: {hash_value}")  # SHA1 hash of the script
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    Script script = new Script("return 'Hello'", false);
+    String hashValue = script.getHash();
+    System.out.println("Script hash: " + hashValue);  // SHA1 hash of the script
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const script = new Script("return 'Hello'");
+    const hashValue = script.getHash();
+    console.log(`Script hash: ${hashValue}`);  // SHA1 hash of the script
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    script := options.NewScript("return 'Hello'")
+    hashValue := script.GetHash()
+    fmt.Printf("Script hash: %sn", hashValue)  // SHA1 hash of the script
+    ```
+  </TabItem>
+</Tabs>
+
+Scripts with identical code produce identical hashes, enabling efficient caching and reuse.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    script1 = Script("return 'Hello'")
+    script2 = Script("return 'Hello'")
+    assert script1.get_hash() == script2.get_hash()  # Same hash
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    Script script1 = new Script("return 'Hello'", false);
+    Script script2 = new Script("return 'Hello'", false);
+    assert script1.getHash().equals(script2.getHash());  // Same hash
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const script1 = new Script("return 'Hello'");
+    const script2 = new Script("return 'Hello'");
+    console.assert(script1.getHash() === script2.getHash());  // Same hash
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    script1 := options.NewScript("return 'Hello'")
+    script2 := options.NewScript("return 'Hello'")
+    // script1.GetHash() == script2.GetHash()  // Same hash
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution[Script hashing is content-sensitive]
+Script hashes are based on the entire script content, including spaces, line breaks, and all characters.
+Ensure you load the exact same script to benefit from caching.
+:::
+
+Scripts remain cached on the Valkey server until:
+
+* The server restarts
+* Memory pressure triggers eviction
+* You explicitly flush the cache with `script_flush()`
+  All of which are handled automatically by GLIDE.
+
+:::tip[Ephemeral Scripts]
+Valkey scripts are not guaranteed to be persisted. It is the responsibility of the client to manage the scripts used.
+:::
+
+To learn more about script lifecycle, see Valkey's [documentation](https://valkey.io/topics/eval-intro/#script-cache).
+
+### Stop Running Script 
+
+A script can be safely killed if it has only performed read-only operations.
+However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
+This prevents data corruption as once a script modifies data it must complete to ensure consistency.
+
+```lua title="read-only.lua"
+-- Read-only script
+local start = server.call('TIME')[1]
+while server.call('TIME')[1] - start < 10 do
+    server.call('GET', 'some_key')  -- Read-only
+end
+return 'Done'
+```
+
+```lua title="with-write.lua"
+-- This script writes data - cannot be killed after the SET
+server.call('SET', 'temp', 'value')  -- Write operation
+local start = server.call('TIME')[1]
+while server.call('TIME')[1] - start < 10 do
+    -- Long operation after write
+end
+return 'Done'
+```
+
+## Single-Threaded Execution
+
+Valkey executes scripts atomically in a single-threaded manner. While a script runs:
+
+* No other commands can execute
+* The script has exclusive access to the data
+* All operations within the script are guaranteed to complete without interruption
+
+:::tip
+Because scripts block all other operations, long-running scripts can impact server performance and responsiveness.
+Keep scripts short and focused on atomic operations that require consistency.
+:::
+
+## Scripting in Cluster Mode
+
+In cluster mode, Valkey distributes data across multiple nodes using hash slots.
+Each key is mapped to one of 16,384 slots based on its hash:
+
+```
+slot = CRC16(key) mod 16384
+```
+
+GLIDE automatically route scripts to the appropriate nodes.
+When executing a script in cluster mode, all `KEYS` must belong to the same shard.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # This works the same in cluster mode
+    script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
+    result = await cluster_client.invoke_script(
+        script,
+        keys=["user:1000"],  # Routed based on key hash
+        args=["John"]
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // This works the same in cluster mode
+    Script script = new Script("return redis.call('SET', KEYS[1], ARGV[1])", false);
+    CompletableFuture<Object> result = clusterClient.invokeScript(
+        script,
+        ScriptOptions.builder()
+            .key("user:1000")  // Routed based on key hash
+            .arg("John")
+            .build()
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // This works the same in cluster mode
+    const script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
+    const result = await clusterClient.invokeScript(script, {
+        keys: ["user:1000"],  // Routed based on key hash
+        args: ["John"]
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // This works the same in cluster mode
+    script := options.NewScript("return redis.call('SET', KEYS[1], ARGV[1])")
+    scriptOptions := options.NewScriptOptions().
+        WithKeys([]string{"user:1000"}).  // Routed based on key hash
+        WithArgs([]string{"John"})
+
+    result, err := clusterClient.InvokeScriptWithOptions(
+        context.Background(),
+        *script,
+        *scriptOptions,
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+### Explicit Routing
+
+GLIDE provide options for explicit control over script routing in cluster mode.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import SlotKeyRoute, SlotType, AllPrimaries
+
+    # Route to the node holding a specific key's slot
+    route = SlotKeyRoute(SlotType.PRIMARY, "user:1000")
+
+    # Route to all primary nodes
+    route = AllPrimaries() 
+
+    await cluster_client.invoke_script_route(script, route=route)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import static glide.api.models.configuration.RequestRoutingConfiguration.Route.ALL_PRIMARIES;
+    import glide.api.models.configuration.RequestRoutingConfiguration.SlotKeyRoute;
+    import glide.api.models.configuration.RequestRoutingConfiguration.SlotType;
+
+    // Route to the node holding a specific key's slot
+    SlotKeyRoute route = new SlotKeyRoute("user:1000", SlotType.PRIMARY);
+
+    // Route to all primary nodes
+    CompletableFuture<Object> result = clusterClient.invokeScript(script, ALL_PRIMARIES);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {Routes, SlotType} from "@valkey/valkey-glide";
+
+    // Route to the node holding a specific key's slot
+    const route = {type: "routeByAddress", host: "user:1000", slotType: SlotType.Primary};
+
+    // Route to all primary nodes
+    await clusterClient.invokeScriptWithRoute(script, {route: "allPrimaries"});
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+    // Route to the node holding a specific key's slot
+    route := options.NewSlotKeyRoute("user:1000", options.Primary)
+
+    // Route to all primary nodes
+    route := options.AllPrimaries()
+
+    clusterClient.InvokeScriptWithRoute(context.Background(), *script, route)
+    ```
+  </TabItem>
+</Tabs>
+
+### Multi-Slot Scripts
+
+In cluster mode, scripts that access multiple keys must ensure **all keys belong to the same slot**.
+Adding a hash tag `{}` in the key allow you to specify the specific slot.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Both keys hash to the same slot because of {1000}
+    keys = ["user:{1000}:name", "user:{1000}:email"]
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Both keys hash to the same slot because of {1000}
+    String[] keys = {"user:{1000}:name", "user:{1000}:email"};
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Both keys hash to the same slot because of {1000}
+    const keys = ["user:{1000}:name", "user:{1000}:email"];
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Both keys hash to the same slot because of {1000}
+    keys := []string{"user:{1000}:name", "user:{1000}:email"}
+    ```
+  </TabItem>
+</Tabs>
+
+To lean more about hash tags, see the [documentation](https://valkey.io/topics/cluster-spec/#hash-tags).
+
+## Batch Operations and Transactions
+
+Currently, `invoke_script` is not supported in batch operations (pipelines/transactions).
+To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use the `EVAL` command with `custom_command`.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Script with keys and arguments
+    batch = Batch(is_atomic=True)
+    batch.custom_command([
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",           # Number of keys
+        "script-key",  # Key
+        "script-value" # Argument
+    ])
+    batch.get("script-key")
+
+    results = await client.exec(batch, raise_on_error=False)
+    print(f"EVAL result: {results[0]}")  # b'OK'
+    print(f"GET result: {results[1]}")   # b'script-value'
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Script with keys and arguments
+    Transaction transaction = new Transaction();
+    transaction.customCommand(new String[]{
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",           // Number of keys
+        "script-key",  // Key
+        "script-value" // Argument
+    });
+    transaction.get("script-key");
+
+    CompletableFuture<Object[]> results = client.exec(transaction);
+    System.out.println("EVAL result: " + results.get()[0]);  // OK
+    System.out.println("GET result: " + results.get()[1]);   // script-value
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Script with keys and arguments
+    const transaction = new Transaction();
+    transaction.customCommand([
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",           // Number of keys
+        "script-key",  // Key
+        "script-value" // Argument
+    ]);
+    transaction.get("script-key");
+
+    const results = await client.exec(transaction);
+    console.log(`EVAL result: ${results[0]}`);  // OK
+    console.log(`GET result: ${results[1]}`);   // script-value
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Script with keys and arguments
+    transaction := options.NewTransaction()
+    transaction.CustomCommand([]string{
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",           // Number of keys
+        "script-key",  // Key
+        "script-value", // Argument
+    })
+    transaction.Get("script-key")
+
+    results, err := client.Exec(context.Background(), transaction)
+    fmt.Printf("EVAL result: %vn", results[0])  // OK
+    fmt.Printf("GET result: %vn", results[1])   // script-value
+    ```
+  </TabItem>
+</Tabs>
+
+## What's Next 
+
+To learn how execute custom scripts in practice, check out the [guide](/how-to/execute-custom-scripts) on Valkey scripting.
+
+See our reference [page](/reference/scripting-reference) for more examples of custom scripts in GLIDE.
+
+You can learn more about Valkey scripting in the Valkey [documentation](https://valkey.io/topics/eval-intro/).
