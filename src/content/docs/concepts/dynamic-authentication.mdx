@@ -1,0 +1,60 @@
+---
+title: Dynamic Password Management
+description: Learn about how GLIDE can manage your credentials.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE introduces the ability to dynamically update the connection-configured password at runtime.
+This enhancement facilitates seamless password rotations, ensuring uninterrupted access and improved security for your applications.
+
+## Authentication Context
+
+Valkey/Redis-OSS supports authentication mechanisms, enabling secure connections through passwords. Proper authentication is crucial for restricting access to authorized clients and safeguarding your data.
+
+* **Password Authentication**: Clients authenticate using a predefined password.
+* **Access Control Lists (ACLs)**: Offers granular user permissions with individual passwords. For more information, refer to the [Valkey ACL documentation](https://valkey.io/topics/acl/).
+
+## ACL Permissions Requirements
+
+Valkey GLIDE's [connection](https://github.com/valkey-io/valkey-glide/blob/d3c7513026d0abf05d5d1951b05dba8a550e9b85/glide-core/redis-rs/redis/src/aio/mod.rs#L143) setup process automatically executes several Valkey commands that require specific ACL permissions.
+
+### Commands Executed During Connection Setup:
+
+* HELLO (RESP3 protocol negotiation) - Basic auth permissions
+* AUTH (if credentials provided) - Valid username/password
+* CLIENT SETINFO (library metadata) - `+client|setinfo`
+* CLIENT SETNAME (connection identification, if client name set) - `+client|setname`
+* INFO (availability zone discovery, if AZ-aware replicas enabled) - `+info`
+* SELECT (database selection, if db != 0) - `+select` or `+@keyspace`
+* PubSub Resubscription (RESP3 and existing subscriptions) - `+@pubsub`
+
+:::note
+Missing any of the required permissions above when the associated feature is used will result in a connection error.
+:::
+
+:::note
+ACLs provide extensive control over permissions. For detailed insights, please visit the [Valkey ACL documentation](https://valkey.io/topics/acl/).
+:::
+
+## Integration with AWS and GCP Services
+
+GLIDE's dynamic password update feature supports integration with cloud services like Amazon ElastiCache, MemoryDB, and Google Cloud Memorystore.
+
+* **Amazon ElastiCache**: Supports password-based and IAM authentication. AWS recommends regular password rotations.
+
+  > *"Regularly rotating passwords is a best practice to minimize security risks."* - [AWS ElastiCache Authentication](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html)
+
+* **Amazon MemoryDB**: Uses IAM authentication with short-lived tokens that need regular renewal.
+
+  > *"IAM authentication tokens have a limited lifetime and must be refreshed regularly to maintain secure connections."* - [AWS MemoryDB Authentication](https://docs.aws.amazon.com/memorydb/latest/devguide/auth-iam.html)
+
+* **Google Cloud Memorystore**: Offers IAM authentication with ephemeral tokens requiring periodic renewal.
+
+  > *"Google Cloud Memorystore's IAM authentication requires periodic renewal of tokens to maintain secure connections."* - [GCP Memorystore IAM Authentication](https://cloud.google.com/memorystore/docs/cluster/about-iam-auth?hl=en)
+
+In all these scenarios, frequently updating passwords or tokens is essential to maintain secure connections and handle failovers effectively.
+
+## Next Steps
+
+To see how to enable dynamic password, see our [guide](/how-to/security/dynamic-authentication).

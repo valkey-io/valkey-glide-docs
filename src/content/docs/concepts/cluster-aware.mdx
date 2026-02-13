@@ -1,26 +1,36 @@
 ---
-title: Command Routing
+title: Cluster Awareness
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+Valkey GLIDE was designed to handle the complexities of Valkey (and Redis) clusters automatically. 
+It abstracts away slot management, node discovery, and failover logic so your application interacts with the cluster as if it were a single endpoint.
 
-Valkey GLIDE can determine and route commands efficiently to nodes in a Valkey (or Redis) cluster. This section will go over how command routing works in Valkey GLIDE.
+For information on Valkey Cluster, see this [page](https://valkey.io/topics/cluster-tutorial/).
 
-## How GLIDE Routes commands
+## Topology Aware
 
-As a Valkey cluster topology can change over time, new nodes can be added or removed and the primary node owning a specific slot may change. 
-To handle this, GLIDE clients are topology aware. They maintain a map of the cluster state and route commands to the primary node.
-When topology changes (e.g., due to scaling operations or failovers), GLIDE clients update their internal cluster map to ensure commands are always routed correctly.
+Requiring only one initial node within a cluster, GLIDE can use it to discover out the full topology and hash slot ownership.
+This allows GLIDE to calculates the destination of every command before sending it, ensuring they go directly to the correct 
+node rather than bouncing around the cluster.
+If the cluster topology changes, either due to scaling or failover, GLIDE will automatically update its internal mapping.
 
-For example, in a cluster Valkey setup, data are sharded across multiple nodes. A command like `client.set("user:100", "active")` will be routed only 
-to the primary node containing the slot for the key `user:100`. 
+### Hash Slot
 
-## Read Strategy
+Valkey has a total of 16,384 fixed slots from which it splits across nodes in a cluster. Each key are then assigned to a slot for storage. 
+GLIDE's mapping of the cluster allows it to send them to the appropriate node.
+
+## Multi-Key Commands Handling
+
+Valkey (and Redis) clusters support commands that operate on multiple keys which maybe spread across different hash slot.
+GLIDE cluster awareness allows it to efficiently handles these commands, ensuring correct executions across the cluster.
+
+To learn more about multi-key commands, see this [section](/concepts/multi-slot-command-handling/).
+
+## Read Strategy - AZ Affinity Routing
 
 By default, GLIDE routes all read commands to the primary nodes. While this guarantees strong consistency it can lead to higher load especially if 
 there are many write operations on the primary node.
 To optimize read performance and distribute the load, GLIDE clients support different read strategies that allow reads to be directed to replica nodes.
-
 
 | Strategy                      | Description                                                                                                                                                                                                             |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -29,10 +39,6 @@ To optimize read performance and distribute the load, GLIDE clients support diff
 | `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                      |
 | `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
 
-## Multi-Slot Commands
+To learn more about AZ Affinity routing, see our blog [post](https://valkey.io/blog/az-affinity-strategy/).
 
-In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots. 
-When these commands receive keys that map to multiple slots, they are called multi-slot commands. 
-GLIDE supports efficient handling of these commands routing them across the cluster.
-
-For more on multi-slot commands, see this [section](/concepts/client-features/multi-slot-command-handling).
+See how to configure read strategy in our [guide](/how-to/connections/read-strategy/).

@@ -1,0 +1,71 @@
+---
+title: Send Custom Commands
+description: See how to send arbitrary Valkey commands using GLIDE clients
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE allows for the execution of a single command without checking inputs. 
+It serves as a flexible tool for scenarios where the standard client API does not provide a suitable interface for a specific command.
+
+## Usage Notes
+
+**Single-Response Commands Only**: This function is intended for use with commands that return a single response. Commands that do not return a response (such as SUBSCRIBE), those that potentially return multiple responses (such as XREAD), or those that alter the client's behavior (such as entering pub/sub mode on RESP2 connections) should not be executed using this function.
+
+**Key-Based Command Limitation**: Key-based commands should not be used with multi-node routing. Ensure that key-based commands are routed to a single node to maintain consistency and avoid unexpected behavior.
+
+:::tip[Commands List]
+For a full list of commands, visit Valkey's [documentations](https://valkey.io/commands/).
+:::
+
+## Example
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Execute a Valkey command
+    result = await client.custom_command(["PING"])
+    print(result)  # "PONG"
+
+    # Execute a command with arguments
+    result = await client.custom_command(["SET", "mykey", "myvalue"])
+    print(result)  # "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Execute a Valkey command
+    const result = await client.customCommand(["PING"]);
+    console.log(result);  // "PONG"
+
+    // Execute a command with arguments
+    const result = await client.customCommand(["SET", "mykey", "myvalue"]);
+    console.log(result);  // "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Execute a Valkey command
+    CompletableFuture<Object> result = client.customCommand(new String[]{"PING"});
+    System.out.println(result);  // CompletableFuture with "PONG"
+
+    // Execute a command with arguments
+    CompletableFuture<Object> result = client.customCommand(new String[]{"SET", "mykey", "myvalue"});
+    System.out.println(result);  // CompletableFuture with "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Execute a Valkey command
+    result, err := client.CustomCommand([]string{"PING"})
+    fmt.Println(result)  // "PONG"
+
+    // Execute a command with arguments
+    result, err = client.CustomCommand([]string{"SET", "mykey", "myvalue"})
+    fmt.Println(result)  // "OK"
+    ```
+  </TabItem>
+</Tabs>

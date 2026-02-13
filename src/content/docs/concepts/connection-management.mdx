@@ -1,14 +1,12 @@
 ---
-title: Connection Management
+title: Using Multiple Connections
 description: Understand GLIDE's asynchronous API, multiplexed connections, and when to create multiple clients for optimal performance.
 ---
-
-import { Aside } from '@astrojs/starlight/components';
 
 GLIDE's API is [asynchronous](/concepts/architecture/async-execution) and uses a multiplex connection to interact with Valkey.
 This means <u>all requests are sent through a single connection</u> as the Rust core takes advantage of Valkey's pipelining capabilities to improve performance.
 
-:::tip
+:::note
 **Pipelining** is a technique that enhances performance by issuing multiple commands at once without waiting for individual responses.
 :::
 
@@ -25,10 +23,12 @@ Therefore, opening a new client for each blocking command is required to avoid u
 
 ## WATCH/UNWATCH Commands
 
-Commands like WATCH, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
+Commands like `WATCH`, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
+
 When these commands are executed, they can lead to interactions between threads sharing the same client, since each client utilizes a single multiplexed connection per cluster node.
 Consequently, threads will share the same connection, and any modifications to its state will impact how subsequent commands are processed.
-For example, executing WATCH on one thread will cause other threads to watch the same keys, and executing MULTI/EXEC on one thread will UNWATCH the keys for other threads as well.
+
+For example, executing `WATCH` on one thread will cause other threads to watch the same keys, and executing `MULTI`/`EXEC` on one thread will `UNWATCH` the keys for other threads as well.
 To prevent any issues and ensure the isolation of transactions and watched keys, it is required to create separate clients for these commands.
 
 ## Reading and Writing Large Values
@@ -37,3 +37,11 @@ Valkey has a fairness mechanism to ensure minimal impact on other clients when h
 With a multiplex connection, requests are processed sequentially.
 Thus, large requests can delay the processing of subsequent smaller requests.
 When dealing with large values or transactions, it is advisable to use a separate client to prevent delays for other requests.
+
+## PubSub Clients
+
+Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. 
+That is, the client with subscriptions should not be the same client that issues commands. 
+In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
+
+For more on GLIDE PubSub model, see our [section](/concepts/pubsub-model).

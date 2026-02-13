@@ -1,48 +1,11 @@
 ---
-title: OpenTelemetry
-description: Guide for integrating OpenTelemetry observability with Valkey GLIDE.
+title: Configure OpenTelemetry
+description: A guide on integrating OpenTelemetry observability with Valkey GLIDE.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Observability is consistently one of the top feature requests by customers. Valkey GLIDE 2.0 introduces support for [OpenTelemetry (OTel)](https://opentelemetry.io/), enabling developers to gain deep insights into client-side performance and behavior in distributed systems.
-
-OTel is an open source, vendor-neutral framework that provides APIs, SDKs, and tools for generating, collecting, and exporting telemetry data—such as traces, metrics, and logs. It supports multiple programming languages and integrates with various observability backends like Prometheus, Jaeger, and AWS CloudWatch.
-
-## How It Works
-
-GLIDE's OpenTelemetry integration is designed to be both powerful and easy to adopt. Once an OTel collector endpoint is configured, GLIDE begins emitting default metrics and traces automatically—no additional code changes are required. This simplifies the path to observability best practices and minimizes disruption to existing workflows.
-
-## Metrics Overview
-
-GLIDE emits several built-in metrics out of the box. These metrics can be used to build dashboards, configure alerts, and monitor performance trends:
-
-* **Timeouts**: Number of requests that exceeded their timeout duration.
-* **Retries**: Count of operations retried due to transient errors or topology changes.
-* **Moved Errors**: Number of MOVED responses received, indicating key reallocation in the cluster.
-
-These metrics are emitted to your configured OpenTelemetry collector and can be viewed in any supported backend (Prometheus, CloudWatch, etc.).
-
-## Tracing Integration
-
-GLIDE creates a **trace span for each Valkey command**, giving detailed visibility into client-side performance. Each trace captures:
-
-* The **entire command lifecycle**: from creation to completion or failure.
-* A nested **`send_command` span**, measuring communication time with the Valkey server.
-* A **status tag** indicating success or error for each span, helping you identify failure patterns.
-
-This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
-
-:::note
-Some advanced commands are not yet included in tracing instrumentation:
-
-* The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
-* Lua scripting commands (EVAL, EVALSHA)
-
-Support for these commands will be added in a future version as we continue to expand tracing coverage.
-:::
-
-Even with these exceptions, GLIDE 2.0 provides comprehensive insights across the vast majority of standard operations, making it easy to adopt observability best practices with minimal effort.
+Valkey GLIDE 2.0 introduces support for [OpenTelemetry (OTel)](https://opentelemetry.io/), enabling developers to gain deep insights into client-side performance and behavior in distributed systems.
 
 ## Getting Started
 

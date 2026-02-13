@@ -89,21 +89,8 @@ export default defineConfig({
             },
             {
               label: "Concepts",
-              items: [
-              "concepts/architecture/rust-core-design",
-              "concepts/architecture/async-execution",
-              ]
-            },
-            {
-              label: "Commands API",
-              items: [
-                "commands/valkey-string"
-              ]
-            },
-            {
-              label: "Core Features",
               collapsed: true,
-              autogenerate: { directory: "concepts/client-features" },
+              autogenerate: { directory: "concepts" },
             },
             {
               label: "Tutorials",
@@ -125,52 +112,34 @@ export default defineConfig({
           ],
         },
         {
-          label: "How-To Guides",
+          label: "How-To",
           collapsed: true,
           items: [
             "how-to/installation",
             "how-to/client-initialization",
-            "how-to/connection-management",
-            "how-to/operations/batch-transaction-and-pipelining",
-            "how-to/synchronous-connection",
-            "how-to/execute-custom-scripts",
-            "how-to/load-and-execute-functions",
-            {
+                        {
               label: "Security",
-              items: [
-                "how-to/security/authentication",
-                "how-to/security/dynamic-authentication",
-                "how-to/security/tls",
-                "how-to/security/access-control",
-              {
-                  label: "AWS Integrations",
-                  items: [
-                    {
-                      label: "IAM Authentication with GLIDE",
-                      slug: "how-to/security/iam-integration"
-                    },
-                    {
-                      label: "IAM Authentication using AWS SDK",
-                      slug: "how-to/security/iam-integration-using-aws-sdk"
-                    },
-                  ]
-                },
-              ]
+              collapsed: true, 
+              autogenerate: { directory: "how-to/security/" }
             },
             {
               label: "Connections",
-              items: [
-                "how-to/connections/read-strategy",
-                "how-to/connections/timeouts-and-reconnect-strategy"
-              ]
+              collapsed: true,
+              autogenerate: { directory: "how-to/connections/" }
             },
+            "how-to/operations/batch-transaction-and-pipelining",
+            "how-to/synchronous-connection",
+            "how-to/send-custom-commands",
+            "how-to/send-batch-commands",
+            "how-to/scan-cluster",
+            "how-to/working-with-valkey-strings",
+            "how-to/publish-and-subscribe-messages",
+            "how-to/execute-custom-scripts",
+            "how-to/load-and-execute-functions",
             {
               label: "Monitoring",
-              items: [
-                "how-to/monitoring/logging",
-                "how-to/monitoring/open-telemetry",
-                "how-to/monitoring/tracking-resources",
-              ]
+              collapsed: true,
+              autogenerate: { directory: "how-to/monitoring/" }
             }
           ]
         },
@@ -189,7 +158,7 @@ export default defineConfig({
                 },
                 // {
                 //   label: "Concepts",
-                //   autogenerate: { directory: "languages/python/concepts" },
+                //                 autogenerate: { directory: "languages/python/concepts" },
                 // },
                 {
                   label: "How-to",
@@ -377,10 +346,6 @@ export default defineConfig({
           collapsed: true,
           items: [
             "migration",
-            //  {
-            //   label: "Planning",
-            //   autogenerate: {directory: "migration/planning"}
-            //  }
           ],
         },
         {

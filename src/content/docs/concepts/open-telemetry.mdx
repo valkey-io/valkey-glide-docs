@@ -1,0 +1,60 @@
+---
+title: OpenTelemetry Support
+description: Learn how GLIDE clients integrates with OpenTelemetry
+---
+
+GLIDE 2.0 introduces native support for OpenTelemetry (OTel), providing powerful observability capabilities directly from the client layer.
+
+With simple configuration, GLIDE can automatically emit both **distributed traces** and **metrics**, giving full visibility into client-side behavior, retries, failures, and latency. This enables teams to diagnose performance issues, monitor system health, and analyze trends without requiring additional instrumentation.
+
+OpenTelemetry support is available across all GLIDE 2.0 language clients and can be enabled via the `OpenTelemetryConfig` object.
+
+## How It Works
+
+GLIDE's OpenTelemetry integration is designed to be both powerful and easy to adopt. Once an OTel collector endpoint is configured, GLIDE begins emitting default metrics and traces automatically—no additional code changes are required. This simplifies the path to observability best practices and minimizes disruption to existing workflows.
+
+## Metrics Overview
+
+GLIDE emits several built-in metrics out of the box. These metrics can be used to build dashboards, configure alerts, and monitor performance trends:
+
+* **Timeouts**: Number of requests that exceeded their timeout duration.
+* **Retries**: Count of operations retried due to transient errors or topology changes.
+* **Moved Errors**: Number of MOVED responses received, indicating key reallocation in the cluster.
+
+These metrics are emitted to your configured OpenTelemetry collector and can be viewed in any supported backend (Prometheus, CloudWatch, etc.).
+
+:::note
+Additional metrics will be added in future releases to expand observability coverage.
+:::
+
+## Tracing Integration
+
+GLIDE creates a **trace span for each Valkey command**, giving detailed visibility into client-side performance. Each trace captures:
+
+* The **entire command lifecycle**: from creation to completion or failure.
+* A nested **`send_command` span**, measuring communication time with the Valkey server.
+* A **status tag** indicating success or error for each span, helping you identify failure patterns.
+
+This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
+
+:::note
+Some advanced commands are not yet included in tracing instrumentation:
+
+* The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
+* Lua scripting commands (EVAL, EVALSHA)
+
+Support for these commands will be added in a future version as we continue to expand tracing coverage.
+:::
+
+## Configurable Sampling (Tracing only)
+
+Sampling controls how many requests are instrumented with traces. This allows balancing observability depth with system overhead. Higher sampling rates offer richer data but may impact client performance. In production environments, low sampling rates (1-5%) are typically recommended for efficient statistical insight.
+
+## Vendor-neutral Integration
+
+GLIDE's implementation is fully compatible with any OpenTelemetry-compliant backend (e.g., Prometheus, Jaeger, AWS CloudWatch, etc.), 
+giving flexibility in how telemetry data is processed, stored, and visualized.
+
+## Next Steps
+
+To learn how to configure OpenTelemetry, see our [guide](/how-to/monitoring/open-telemetry/).
