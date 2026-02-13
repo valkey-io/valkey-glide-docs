@@ -19,7 +19,7 @@ When lazy connect is enabled, the client initialization process completes withou
 ## Important Considerations
 
 - **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
-- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior (PHP uses `advanced_config['connection_timeout']`)
+- **Connection Timeout**: During the initial connection establishment, the connection timeout setting (not request timeout) governs the timeout behaviour.
 - **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
 
 ## Usage Examples
