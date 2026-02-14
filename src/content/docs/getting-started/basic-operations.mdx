@@ -151,6 +151,27 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     }
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Create ValkeyGlide client
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    
+    try {
+        // Set a key-value pair
+        $client->set('user:1000', 'john_doe');
+        echo "✓ Key set successfully\n";
+        
+        // Get the value
+        $value = $client->get('user:1000');
+        echo "✓ Retrieved value: {$value}\n";
+        
+    } finally {
+        $client->close();
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ## Making Multiple Atomic Operations
@@ -227,6 +248,22 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     fmt.Printf("✓ Retrieved values: %v\n", values)
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Set multiple keys at once
+    $client->mset([
+        'user:1001' => 'alice',
+        'user:1002' => 'bob',
+        'user:1003' => 'charlie'
+    ]);
+    echo "✓ Multiple keys set\n";
+
+    // Get multiple keys at once
+    $values = $client->mget(['user:1001', 'user:1002', 'user:1003']);
+    echo "✓ Retrieved values: " . implode(', ', $values) . "\n";
+    ```
+  </TabItem>
 </Tabs>
 
 ## Removing Keys
@@ -264,6 +301,13 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
         log.Fatalf("Del failed: %v", err)
     }
     fmt.Printf("✓ Deleted %d keys\n", deletedCount)
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $deletedCount = $client->del(['user:1001', 'user:1002', 'user:1003']);
+    echo "✓ Deleted {$deletedCount} keys\n";
     ```
   </TabItem>
 </Tabs>

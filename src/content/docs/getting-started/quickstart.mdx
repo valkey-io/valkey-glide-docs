@@ -147,16 +147,16 @@ Windows support is currently available only for Valkey-GLIDE Java
     **Requirements:** PHP 8.2 and 8.3
 
     ```bash
-        pie install valkey-io/valkey-glide-php
+    pie install valkey-io/valkey-glide-php
 
-        # Install via Composer:
-        composer require valkey-io/valkey-glide-php
+    # Install via Composer:
+    composer require valkey-io/valkey-glide-php
 
-        # Install from PECL:
-        pecl install https://github.com/valkey-io/valkey-glide-php/releases/download/v<version>/valkey_glide-<version>.tgz
+    # Install from PECL:
+    pecl install https://github.com/valkey-io/valkey-glide-php/releases/download/v<version>/valkey_glide-<version>.tgz
 
-        # After installation, enable the extension:
-        extension=valkey_glide
+    # After installation, enable the extension:
+    extension=valkey_glide
     ```
     </TabItem>
 </ParamTabs>
@@ -296,6 +296,32 @@ For testing against a live instance, update the `GlideClient` configurations.
         }
         ```
     </TabItem>
+
+    <TabItem label="Php">
+        ```php
+        // Create ValkeyGlide client
+        $client = new ValkeyGlide();
+        
+        try {
+            // Connect to Valkey server
+            $client->connect(
+                addresses: [['host' => 'localhost', 'port' => 6379]]
+            );
+            
+            // Test the connection
+            $response = $client->ping();
+            
+            // Valkey responds with PONG
+            echo "Connected! Server responded: {$response}\n";
+            
+        } catch (ValkeyGlideException $e) {
+            echo "Connection failed: {$e->getMessage()}\n";
+        } finally {
+            // Always close the client
+            $client->close();
+        }
+        ```
+    </TabItem>
 </Tabs>
 
 Running the above snippet should give you this response.
@@ -380,6 +406,35 @@ These options, and other interfaces, stay consistent between languages.
         fmt.Println("There was an error: ", err)
         return
     }
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Setting up connection configuration
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        // Connection timeout (milliseconds)
+        request_timeout: 5000,
+        // TLS configuration (if needed)
+        use_tls: false,
+        // Database selection (0-15 for Redis/Valkey)
+        database_id: 0,
+        // Client name for identification
+        client_name: 'my-app-client',
+        // Reconnection strategy
+        reconnect_strategy: [
+            'num_of_retries' => 3,
+            'factor' => 2.0,
+            'exponent_base' => 2
+        ],
+        // Advanced configuration
+        advanced_config: [
+            'connection_timeout' => 5000,
+            'socket_timeout' => 3000
+        ]
+    );
     ```
   </TabItem>
 </Tabs>

@@ -11,7 +11,6 @@ sidebar:
 
 ## Before (PHPRedis)
 ```php
-<?php
 $redis = new Redis();
 $redis->connect('127.0.0.1', 6379);
 $redis->auth('mypassword');
@@ -32,7 +31,6 @@ try {
 
 ## After (Valkey GLIDE PHP)
 ```php
-<?php
 use ValkeyGlide\ValkeyGlide;
 
 $client = new ValkeyGlide(

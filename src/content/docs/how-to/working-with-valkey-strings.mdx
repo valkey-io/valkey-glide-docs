@@ -189,4 +189,35 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
 
     Go strings are immutable sequences of bytes and can safely represent binary data.
   </TabItem>
+
+  <TabItem label="Php">
+    PHP uses native `string` type for all Valkey string operations. PHP strings are binary-safe and can contain arbitrary bytes.
+
+    #### Usage
+
+    Commands accept `string` arguments and return `string` or `mixed` values:
+
+    ```php
+    // Create client
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    // Using regular strings
+    $client->set('key', 'value');
+    $result = $client->get('key');  // Returns string: 'value'
+
+    // Using binary data - PHP strings are binary-safe
+    $binaryKey = "\x01\x02\x03\xFE";
+    $binaryValue = "\xDE\xAD\xBE\xEF";
+    
+    $client->set($binaryKey, $binaryValue);
+    $result = $client->get($binaryKey);  // Returns binary string
+    ```
+
+    #### Type Handling
+
+    * PHP strings are binary-safe and can store any byte sequence
+    * No special type or conversion needed for binary data
+    * Commands return `string` for string values, `mixed` for commands that may return different types
+  </TabItem>
 </Tabs>
