@@ -131,7 +131,7 @@ export default defineConfig({
             "how-to/installation",
             "how-to/client-initialization",
             "how-to/connection-management",
-            "how-to/operations/batch-transaction-and-pipelining",
+            "how-to/send-batch-commands",
             "how-to/synchronous-connection",
             "how-to/execute-custom-scripts",
             "how-to/load-and-execute-functions",
