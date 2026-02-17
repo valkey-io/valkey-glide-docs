@@ -76,6 +76,27 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $cursor = new ClusterScanCursor();
+    $allKeys = [];
+    
+    while (true) {
+        $keys = $client->scan($cursor);
+        if ($keys) {
+            $allKeys = array_merge($allKeys, $keys);
+        }
+        
+        // Create new cursor with updated cursor ID
+        $cursor = new ClusterScanCursor($cursor->getNextCursor());
+        
+        if ($cursor->isFinished()) {
+            break;
+        }
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ## Scan Using Patterns
@@ -159,6 +180,29 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
+    
+    $cursor = new ClusterScanCursor();
+    $matchingKeys = [];
+    
+    while (true) {
+        $keys = $client->scan($cursor, '*key*');
+        if ($keys) {
+            $matchingKeys = array_merge($matchingKeys, $keys);
+        }
+        
+        $cursor = new ClusterScanCursor($cursor->getNextCursor());
+        
+        if ($cursor->isFinished()) {
+            break;
+        }
+    }
+    // Returns matching keys such as ['my_key1', 'my_key2', 'not_my_key']
+    ```
+  </TabItem>
 </Tabs>
 
 ## Scan With The Count Option
@@ -232,6 +276,16 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         cursor = result.Cursor
     }
     // Returns around `count` amount of keys per iteration
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
+    
+    $cursor = new ClusterScanCursor();
+    $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
+    // Returns around `count` amount of keys: ['my_key1']
     ```
   </TabItem>
 </Tabs>
@@ -318,6 +372,30 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         cursor = result.Cursor
     }
     // Output: ["key1", "key2", "key3"]
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
+    $client->sadd('this_is_a_set', 'value4');
+    
+    $cursor = new ClusterScanCursor();
+    $allKeys = [];
+    
+    while (true) {
+        $keys = $client->scan($cursor, null, 0, 'string');
+        if ($keys) {
+            $allKeys = array_merge($allKeys, $keys);
+        }
+        
+        $cursor = new ClusterScanCursor($cursor->getNextCursor());
+        
+        if ($cursor->isFinished()) {
+            break;
+        }
+    }
+    // Output: ['key1', 'key2', 'key3']
     ```
   </TabItem>
 </Tabs>
