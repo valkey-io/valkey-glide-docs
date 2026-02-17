@@ -136,6 +136,7 @@ export default defineConfig({
             "how-to/synchronous-connection",
             "how-to/execute-custom-scripts",
             "how-to/load-and-execute-functions",
+            "how-to/scan-cluster",
             {
               label: "Security",
               items: [

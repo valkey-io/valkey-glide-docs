@@ -1,0 +1,44 @@
+---
+title: Cluster Scan
+description: Learn more about how GLIDE Cluster Scan API enhances Valkey Scan command
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Cluster Scan feature enhances the `SCAN` command for optimal use in a Cluster environment. While it mirrors the functionality of the `SCAN` command, it incorporates additional logic to seamlessly scan the entire cluster, providing the same experience as a standalone scan. This removes the need for users to implement their own logic to handle the complexities of a cluster setup, such as slot migration, failovers, and cluster rebalancing. The `SCAN` command guarantees that a full iteration retrieves all elements present in the collection from start to finish.
+
+Cluster Scan achieves this through a `ScanState` object that tracks scanned slots and iterates over each cluster node. It validates the node's scan and marks the slots owned by the node as scanned. This ensures that even if a slot moves between nodes, it will be scanned.
+
+The `ScanState` is not held as a static or global object. Instead, a `ClusterScanCursor` object, which wraps a **reference counter (RC)** to the `ScanState`, is returned to the user. This approach avoids extra memory copying between layers, and the `ScanState` is immediately dropped when the user drops the `ClusterScanCursor`.
+
+## Creating a ClusterScanCursor
+
+To start iterating, create a `ClusterScanCursor`:
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    cursor = ClusterScanCursor()
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+    ```
+  </TabItem>
+</Tabs>
+
+Each cursor returned by an iteration is an RC to a new state object. Using the same cursor object will handle the same scan iteration again. A new cursor object should be used for each iteration to continue the scan.
+
+### Optional Parameters
+
+The `SCAN` command accepts three optional parameters:
+
+* `MATCH`: Iterates over keys that match the provided pattern.
+* `COUNT`: Specifies the number of keys to return in a single iteration. The actual number may vary, serving as a hint to the server on the number of steps to perform in each iteration. The default value is 10.
+* `TYPE`: Filters the keys by a specific type.
+
+## Next Steps
+
+See our [guide](/how-to/scan-cluster) on how to scan a cluster for values.
