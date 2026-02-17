@@ -25,7 +25,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   </TabItem>
 
   <TabItem label="Java">
-
     ```java
     String key = "key:test_cluster_scan_simple" + UUID.randomUUID();
     Map<String, String> expectedData = new LinkedHashMap<>();
@@ -49,23 +48,31 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-  <TabItem label="Php">
-    ```php
-    $cursor = new ClusterScanCursor();
-    $allKeys = [];
-    
-    while (true) {
-        $keys = $client->scan($cursor);
-        if ($keys) {
-            $allKeys = array_merge($allKeys, $keys);
+  <TabItem label="Node">
+    ```typescript
+    let cursor = new ClusterScanCursor();
+    const allKeys: string[] = [];
+    let keys: string[] = [];
+
+    while (!cursor.isFinished()) {
+        [cursor, keys] = await client.scan(cursor);
+        allKeys.push(...keys);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    cursor := models.NewClusterScanCursor()
+    allKeys := []string{}
+
+    for !cursor.IsFinished() {
+        result, err := client.Scan(context.Background(), cursor)
+        if err != nil {
+            break
         }
-        
-        // Create new cursor with updated cursor ID
-        $cursor = new ClusterScanCursor($cursor->getNextCursor());
-        
-        if ($cursor->isFinished()) {
-            break;
-        }
+        allKeys = append(allKeys, result.Keys...)
+        cursor = result.Cursor
     }
     ```
   </TabItem>
@@ -74,7 +81,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 ## Scan Using Patterns
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
-      ```py
+    ```py
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, match=b"*key*")
@@ -82,8 +89,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-    <TabItem label="Java">
-
+  <TabItem label="Java">
     ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
@@ -109,26 +115,48 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-  <TabItem label="Php">
-    ```php
-    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-    
-    $cursor = new ClusterScanCursor();
-    $matchingKeys = [];
-    
-    while (true) {
-        $keys = $client->scan($cursor, '*key*');
-        if ($keys) {
-            $matchingKeys = array_merge($matchingKeys, $keys);
-        }
-        
-        $cursor = new ClusterScanCursor($cursor->getNextCursor());
-        
-        if ($cursor->isFinished()) {
-            break;
-        }
+  <TabItem label="Node">
+    ```typescript
+    await client.mset([
+        { key: "my_key1", value: "value1" },
+        { key: "my_key2", value: "value2" },
+        { key: "not_my_key", value: "value3" },
+        { key: "something_else", value: "value4" }
+    ]);
+    let cursor = new ClusterScanCursor();
+    const matchedKeys: string[] = [];
+
+    while (!cursor.isFinished()) {
+        [cursor, keys] = await client.scan(cursor, { match: "*key*" });
+        matchedKeys.push(...keys);
     }
-    // Returns matching keys such as ['my_key1', 'my_key2', 'not_my_key']
+    // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    keysToSet := map[string]string{
+        "my_key1":       "value1",
+        "my_key2":       "value2",
+        "not_my_key":    "value3",
+        "something_else": "value4",
+    }
+    client.MSet(context.Background(), keysToSet)
+
+    cursor := models.NewClusterScanCursor()
+    opts := options.NewClusterScanOptions().SetMatch("*key*")
+    matchedKeys := []string{}
+
+    for !cursor.IsFinished() {
+        result, err := client.ScanWithOptions(context.Background(), cursor, *opts)
+        if err != nil {
+            break
+        }
+        matchedKeys = append(matchedKeys, result.Keys...)
+        cursor = result.Cursor
+    }
+    // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
   </TabItem>
 </Tabs>
@@ -136,7 +164,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 ## Scan With The Count Option
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-      ```py
+    ```py
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, count=1)
@@ -144,8 +172,8 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-    <TabItem label="Java">
-        ```java
+  <TabItem label="Java">
+    ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     while (!cursor.isFinished()) {
@@ -162,13 +190,48 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-  <TabItem label="Php">
-    ```php
-    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-    
-    $cursor = new ClusterScanCursor();
-    $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
-    // Returns around `count` amount of keys: ['my_key1']
+  <TabItem label="Node">
+    ```typescript
+    await client.mset([
+        { key: "my_key1", value: "value1" },
+        { key: "my_key2", value: "value2" },
+        { key: "not_my_key", value: "value3" },
+        { key: "something_else", value: "value4" }
+    ]);
+    let cursor = new ClusterScanCursor();
+    const allKeys: string[] = [];
+
+    while (!cursor.isFinished()) {
+        [cursor, keys] = await client.scan(cursor, { count: 10 });
+        allKeys.push(...keys);
+    }
+    // Returns around `count` amount of keys per iteration
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    keysToSet := map[string]string{
+        "my_key1":       "value1",
+        "my_key2":       "value2",
+        "not_my_key":    "value3",
+        "something_else": "value4",
+    }
+    client.MSet(context.Background(), keysToSet)
+
+    cursor := models.NewClusterScanCursor()
+    opts := options.NewClusterScanOptions().SetCount(10)
+    allKeys := []string{}
+
+    for !cursor.IsFinished() {
+        result, err := client.ScanWithOptions(context.Background(), cursor, *opts)
+        if err != nil {
+            break
+        }
+        allKeys = append(allKeys, result.Keys...)
+        cursor = result.Cursor
+    }
+    // Returns around `count` amount of keys per iteration
     ```
   </TabItem>
 </Tabs>
@@ -176,7 +239,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 ## Scan For a Specific Data Type.
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
-      ```py
+    ```py
     await client.mset({b'key1': b'value1', b'key2': b'value2', b'key3': b'value3'})
     await client.sadd(b"this_is_a_set", [b"value4"])
     cursor = ClusterScanCursor()
@@ -188,27 +251,73 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-  <TabItem label="Php">
-    ```php
-    $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
-    $client->sadd('this_is_a_set', 'value4');
-    
-    $cursor = new ClusterScanCursor();
-    $allKeys = [];
-    
-    while (true) {
-        $keys = $client->scan($cursor, null, 0, 'string');
-        if ($keys) {
-            $allKeys = array_merge($allKeys, $keys);
-        }
-        
-        $cursor = new ClusterScanCursor($cursor->getNextCursor());
-        
-        if ($cursor->isFinished()) {
-            break;
-        }
+  <TabItem label="Java">
+    ```java
+    Set<String> result = new LinkedHashSet<>();
+    ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
+    while (!cursor.isFinished()) {
+        final Object[] response =
+                        clusterClient
+                                .scan(
+                                        cursor,
+                                        ScanOptions.builder()
+                                                .type(ScanOptions.ObjectType.STRING)
+                                                .build())
+                                .get();
+        cursor.releaseCursorHandle();
+
+         cursor = (ClusterScanCursor) response[0];
+         final Object[] data = (Object[]) response[1];
+         for (Object datum : data) {
+               result.add(datum.toString());
+          }
     }
-    // Output: ['key1', 'key2', 'key3']
+    cursor.releaseCursorHandle();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    await client.mset([
+        { key: "key1", value: "value1" },
+        { key: "key2", value: "value2" },
+        { key: "key3", value: "value3" }
+    ]);
+    await client.sadd("thisIsASet", ["value4"]);
+    let cursor = new ClusterScanCursor();
+    const stringKeys: string[] = [];
+
+    while (!cursor.isFinished()) {
+        [cursor, keys] = await client.scan(cursor, { type: ObjectType.STRING });
+        stringKeys.push(...keys);
+    }
+    // Output: ["key1", "key2", "key3"]
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    keysToSet := map[string]string{
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3",
+    }
+    client.MSet(context.Background(), keysToSet)
+    client.SAdd(context.Background(), "thisIsASet", []string{"value4"})
+
+    cursor := models.NewClusterScanCursor()
+    opts := options.NewClusterScanOptions().SetType(constants.ObjectTypeString)
+    stringKeys := []string{}
+
+    for !cursor.IsFinished() {
+        result, err := client.ScanWithOptions(context.Background(), cursor, *opts)
+        if err != nil {
+            break
+        }
+        stringKeys = append(stringKeys, result.Keys...)
+        cursor = result.Cursor
+    }
+    // Output: ["key1", "key2", "key3"]
     ```
   </TabItem>
 </Tabs>

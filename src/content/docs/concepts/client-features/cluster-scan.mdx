@@ -27,6 +27,18 @@ To start iterating, create a `ClusterScanCursor`:
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
     ```
   </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    let cursor = new ClusterScanCursor();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    cursor := models.NewClusterScanCursor()
+    ```
+  </TabItem>
 </Tabs>
 
 Each cursor returned by an iteration is an RC to a new state object. Using the same cursor object will handle the same scan iteration again. A new cursor object should be used for each iteration to continue the scan.
