@@ -1,0 +1,605 @@
+---
+title: Migrating From PHPRedis
+description: A guide for migrating from PHPRedis to Valkey GLIDE PHP.
+sidebar:
+  order: 1
+
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide helps you migrate from PHPRedis to Valkey GLIDE PHP, highlighting key differences and providing code examples for common use cases.
+
+Valkey GLIDE PHP is a high-performance client for Valkey and Redis that provides:
+
+- **Better performance** through Rust-based core with C extension bindings
+- **Connection pooling** with automatic connection management
+- **Type safety** with comprehensive PHP type hints
+- **Cluster support** with automatic failover and resharding
+- **Cross-platform compatibility** (Linux, macOS)
+- **PHPRedis compatibility** through helper methods to create aliases for classes
+
+## Installation
+
+```bash
+# Using pie
+pie install valkey-io/valkey-glide-php
+
+# Or via Composer
+composer require valkey-io/valkey-glide-php
+
+# Or from PECL
+pecl install https://github.com/valkey-io/valkey-glide-php/releases/download/v<version>/valkey_glide-<version>.tgz
+```
+
+After installation, enable the extension in your `php.ini`:
+
+```ini
+extension=valkey_glide
+```
+
+## PHPRedis Compatibility Layer
+
+For seamless migration, Valkey GLIDE PHP provides a helper method that creates alias class names to match PHPRedis:
+
+```php
+// Register PHPRedis compatibility aliases
+ValkeyGlide::registerPHPRedisAliases();
+
+// Now you can use Redis instead of ValkeyGlide
+$client = new Redis();
+$client->connect('127.0.0.1', 6379);
+
+// Exceptions are also aliased
+try {
+    $client->set('key', 'value');
+} catch (RedisException $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+**Aliases provided:**
+- `Redis` → `ValkeyGlide`
+- `RedisCluster` → `ValkeyGlideCluster`
+- `RedisException` → `ValkeyGlideException`
+
+**Requirements:** PHP 8.3 or higher (required for `class_alias()` support with internal classes)
+
+## Connection Methods
+
+Valkey GLIDE PHP supports flexible connection patterns for compatibility with PHPRedis.
+
+### Standalone Connection
+
+**Two-Step Connection (construct then connect)**:
+
+<Tabs>
+  <TabItem label="ValkeyGlide-style">
+    ```php
+    // With named parameters
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+        credentials: ['password' => 'password'],
+        database_id: 1
+    );
+    ```
+  </TabItem>
+  <TabItem label="PHPRedis-style">
+    ```php
+    // PHPRedis-style parameters also supported
+    $client = new ValkeyGlide();
+    $client->connect(
+        host: '127.0.0.1',
+        port: 6379,
+        timeout: 2.5
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+### Cluster Connection
+
+**One-Step Connection (constructor)**:
+
+<Tabs>
+  <TabItem label="ValkeyGlide-style">
+    ```php
+    // With named parameters
+    $cluster = new ValkeyGlideCluster(
+        addresses: [
+            ['host' => '127.0.0.1', 'port' => 7000],
+            ['host' => '127.0.0.1', 'port' => 7001]
+        ],
+        read_from: ValkeyGlide::READ_FROM_PREFER_REPLICA,
+        database_id: 1  // Requires Valkey 9.0+ with cluster-databases > 1
+    );
+    ```
+  </TabItem>
+  <TabItem label="PHPRedis-style">
+    ```php
+    // RedisCluster-style also supported
+    $cluster = new ValkeyGlideCluster(
+        name: null,  // Not used, for compatibility
+        seeds: [
+            ['host' => '127.0.0.1', 'port' => 7000],
+            ['host' => '127.0.0.1', 'port' => 7001]
+        ],
+        timeout: 2.5
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution
+You cannot mix PHPRedis-style and ValkeyGlide-style parameters in the same call. Choose one style and use it consistently.
+:::
+
+### PHPRedis Compatibility
+
+```php
+// Register PHPRedis compatibility aliases
+ValkeyGlide::registerPHPRedisAliases();
+
+// Standalone - two-step
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+$redis->auth('password');
+$redis->select(1);
+
+// Cluster - one-step
+$cluster = new RedisCluster(
+    name: null,
+    seeds: [
+        ['host' => '127.0.0.1', 'port' => 7000],
+        ['host' => '127.0.0.1', 'port' => 7001]
+    ]
+);
+```
+
+## Common Operations
+
+### String Operations
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis->set('key', 'value');
+    $value = $redis->get('key');
+    $redis->setex('key', 3600, 'value'); // TTL in seconds
+    $redis->mset(['key1' => 'val1', 'key2' => 'val2']);
+    $values = $redis->mget(['key1', 'key2']);
+    ```
+  </TabItem>
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client->set('key', 'value');
+    $value = $client->get('key');
+    $client->setex('key', 3600, 'value');
+    $client->mset(['key1' => 'val1', 'key2' => 'val2']);
+    $values = $client->mget(['key1', 'key2']);
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip
+Commands are identical - just replace `$redis` with `$client` (or use the alias method to keep `$redis`).
+:::
+
+### Hash Operations
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis->hset('hash', 'field', 'value');
+    $value = $redis->hget('hash', 'field');
+    $redis->hmset('hash', ['field1' => 'val1', 'field2' => 'val2']);
+    $values = $redis->hmget('hash', ['field1', 'field2']);
+    $all = $redis->hgetall('hash');
+    ```
+  </TabItem>
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client->hset('hash', 'field', 'value');
+    $value = $client->hget('hash', 'field');
+    $client->hmset('hash', ['field1' => 'val1', 'field2' => 'val2']);
+    $values = $client->hmget('hash', ['field1', 'field2']);
+    $all = $client->hgetall('hash');
+    ```
+  </TabItem>
+</Tabs>
+
+### List Operations
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis->lpush('list', 'value');
+    $redis->rpush('list', 'value');
+    $value = $redis->lpop('list');
+    $value = $redis->rpop('list');
+    $length = $redis->llen('list');
+    $range = $redis->lrange('list', 0, -1);
+    ```
+  </TabItem>
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client->lpush('list', ['value']);
+    $client->rpush('list', ['value']);
+    $value = $client->lpop('list');
+    $value = $client->rpop('list');
+    $length = $client->llen('list');
+    $range = $client->lrange('list', 0, -1);
+    ```
+  </TabItem>
+</Tabs>
+
+:::note
+Push operations accept arrays in Valkey GLIDE.
+:::
+
+### Set Operations
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis->sadd('set', 'member');
+    $redis->srem('set', 'member');
+    $members = $redis->smembers('set');
+    $exists = $redis->sismember('set', 'member');
+    $count = $redis->scard('set');
+    ```
+  </TabItem>
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client->sadd('set', ['member']);
+    $client->srem('set', ['member']);
+    $members = $client->smembers('set');
+    $exists = $client->sismember('set', 'member');
+    $count = $client->scard('set');
+    ```
+  </TabItem>
+</Tabs>
+
+:::note
+Set operations accept arrays in Valkey GLIDE.
+:::
+
+## Key Differences
+
+### 1. Connection Pattern
+
+**Standalone**: Supports both one-step (constructor) and two-step (constructor + connect) patterns  
+**Cluster**: Supports one-step connection via constructor
+
+```php
+// Standalone - Two-step (ValkeyGlide-style)
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => '127.0.0.1', 'port' => 6379]]
+);
+
+// Standalone - Two-step (PHPRedis-style)
+$client = new ValkeyGlide();
+$client->connect(host: '127.0.0.1', port: 6379);
+
+// Cluster - One-step (ValkeyGlide-style)
+$cluster = new ValkeyGlideCluster(
+    addresses: [
+        ['host' => '127.0.0.1', 'port' => 7000],
+        ['host' => '127.0.0.1', 'port' => 7001]
+    ]
+);
+
+// Cluster - One-step (PHPRedis-style)
+$cluster = new ValkeyGlideCluster(
+    name: null,
+    seeds: [
+        ['host' => '127.0.0.1', 'port' => 7000],
+        ['host' => '127.0.0.1', 'port' => 7001]
+    ]
+);
+```
+
+:::caution
+Cannot mix PHPRedis-style and ValkeyGlide-style parameters.
+:::
+
+### 2. Method Signatures
+
+- **PHPRedis**: Variadic arguments for multi-value operations
+- **Valkey GLIDE**: Array parameters for consistency
+
+```php
+// PHPRedis - variadic
+$redis->sadd('set', 'val1', 'val2', 'val3');
+
+// Valkey GLIDE - array
+$client->sadd('set', ['val1', 'val2', 'val3']);
+
+// Both support variadic for some commands
+$client->del('key1', 'key2', 'key3');
+```
+
+### 3. Return Types
+
+- **PHPRedis**: Mixed return types, sometimes inconsistent
+- **Valkey GLIDE**: Consistent, typed return values
+
+```php
+// PHPRedis - returns int|false
+$result = $redis->set('key', 'value');
+
+// Valkey GLIDE - returns string "OK" or throws exception
+$result = $client->set('key', 'value');
+```
+
+### 4. Error Handling
+
+- **PHPRedis**: Returns `false` on error, throws exceptions in constructors
+- **Valkey GLIDE**: Same pattern - returns `false` on method errors, throws exceptions in constructors
+
+```php
+// Both throw exceptions on connection errors
+try {
+    $client = new ValkeyGlide();
+    $client->connect('invalid-host', 6379);
+} catch (ValkeyGlideException $e) {
+    // Handle connection error
+}
+
+// Both return false for missing keys
+if ($client->get('nonexistent') === false) {
+    // Key doesn't exist
+}
+```
+
+### 5. Configuration
+
+Configuration is done through the `connect()` method:
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_JSON);
+    $redis->setOption(Redis::OPT_PREFIX, 'myapp:');
+    ```
+  </TabItem>
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client->connect(
+        addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+        request_timeout: 5000,
+        client_name: 'myapp'
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+## Advanced Features
+
+### Pub/Sub
+
+```php
+// Subscribe to channels
+$client->subscribe(['channel1', 'channel2'], function($message) {
+    echo "Received: {$message['message']} on {$message['channel']}\n";
+});
+
+// Publish messages
+$client->publish('channel1', 'Hello World');
+
+// Pattern subscription
+$client->psubscribe(['news.*'], function($message) {
+    echo "Pattern match: {$message['message']}\n";
+});
+```
+
+### Transactions
+
+```php
+// Execute commands in a transaction
+$client->multi();
+$client->set('key1', 'value1');
+$client->set('key2', 'value2');
+$client->incr('counter');
+$results = $client->exec();
+
+// With WATCH for optimistic locking
+$client->watch('balance');
+$balance = $client->get('balance');
+if ($balance >= 100) {
+    $client->multi();
+    $client->decrby('balance', 100);
+    $client->exec();
+}
+```
+
+### TLS/SSL Support
+
+```php
+// With TLS
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'localhost', 'port' => 6379]],
+    use_tls: true,
+    advanced_config: ['tls_config' => ['root_certs' => $root_certs_data]]
+);
+
+// With stream context
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'localhost', 'port' => 6379]],
+    context: stream_context_create(['ssl' => ['cafile' => 'ca-cert.pem']])
+);
+```
+
+### IAM Authentication (AWS ElastiCache)
+
+```php
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'my-cluster.xxxxx.use1.cache.amazonaws.com', 'port' => 6379]],
+    use_tls: true,  // REQUIRED for IAM
+    credentials: [
+        'username' => 'my-iam-user',
+        'iamConfig' => [
+            ValkeyGlide::IAM_CONFIG_CLUSTER_NAME => 'my-cluster',
+            ValkeyGlide::IAM_CONFIG_REGION => 'us-east-1',
+            ValkeyGlide::IAM_CONFIG_SERVICE => ValkeyGlide::IAM_SERVICE_ELASTICACHE,
+            ValkeyGlide::IAM_CONFIG_REFRESH_INTERVAL => 300
+        ]
+    ]
+);
+```
+
+### Cluster-Aware Multi-Key Operations
+
+Valkey GLIDE automatically handles multi-key operations across cluster slots:
+
+```php
+// Works seamlessly across cluster shards
+$client->mget(['key1', 'key2', 'key3']);
+$client->mset(['key1' => 'val1', 'key2' => 'val2']);
+$client->del(['key1', 'key2', 'key3']);
+```
+
+### Cluster Scan
+
+Unified key iteration across cluster shards:
+
+```php
+$cursor = $client->scan(0);
+while ($cursor->hasNext()) {
+    $keys = $cursor->getKeys();
+    foreach ($keys as $key) {
+        echo "Key: $key\n";
+    }
+    $cursor = $client->scan($cursor->getCursor());
+}
+```
+
+## Supported Features
+
+Valkey GLIDE PHP supports all major Redis/Valkey features including:
+
+- **Data Structures**: Strings, Hashes, Lists, Sets, Sorted Sets, Streams, Bitmaps, HyperLogLog, Geospatial
+- **Pub/Sub**: Channel subscriptions, pattern subscriptions, publish
+- **Transactions**: MULTI/EXEC, WATCH for optimistic locking
+- **Scripting**: Lua scripts via EVAL, EVALSHA, SCRIPT commands
+- **Cluster Operations**: Cluster-aware MGET/MSET/DEL, cluster scan
+- **Connection**: TLS/SSL, IAM authentication, connection pooling
+- **Server Commands**: INFO, CONFIG, CLIENT commands
+
+## Migration Checklist
+
+- [ ] Update installation method to use PIE, Composer, or PECL
+- [ ] Optional: Call `ValkeyGlide::registerPHPRedisAliases()` for drop-in compatibility (PHP 8.3+)
+- [ ] Update connection code to use two-step pattern (construct then connect)
+- [ ] Update array parameters for push/set operations (lpush, rpush, sadd, srem)
+- [ ] Add exception handling around connection operations
+- [ ] Update return type expectations for consistency
+- [ ] Test cluster operations if using cluster mode
+- [ ] Update configuration to use `connect()` method parameters
+- [ ] Verify TLS/SSL configuration if using encrypted connections
+- [ ] Test IAM authentication if using AWS ElastiCache
+- [ ] Performance test to validate improvements
+
+## Performance Benefits
+
+Valkey GLIDE PHP typically provides:
+
+- **Faster** command execution through Rust-based core
+- **Lower memory usage** due to efficient C extension implementation
+- **Reduced latency** through optimized protocol handling
+- **Cluster-aware operations** without manual key grouping
+
+## Compatibility Notes
+
+- **PHP Version**: Requires PHP 8.2+ (PHP 8.3+ for `ValkeyGlide::registerPHPRedisAliases()` method)
+- **Redis/Valkey**: Compatible with Redis 6.2, 7.0, 7.2 and Valkey 7.2, 8.0, 8.1
+- **Extensions**: No conflicts with other Redis extensions
+- **Platforms**: Linux (Ubuntu 20+), macOS 14.7+ (Alpine/MUSL not supported)
+
+## Getting Help
+
+- **Documentation**: [Valkey GLIDE PHP Docs](https://github.com/valkey-io/valkey-glide-php)
+- **Issues**: [GitHub Issues](https://github.com/valkey-io/valkey-glide-php/issues)
+- **Community**: [Valkey Slack](https://join.slack.com/t/valkey-oss-developer/shared_invite/zt-2nxs51chx-EB9hu9Qdch3GMfRcztTSkQ)
+
+## Example: Complete Migration
+
+### Before (PHPRedis)
+
+```php
+<?php
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+$redis->auth('mypassword');
+$redis->select(2);
+
+try {
+    $redis->set('user:1', json_encode(['name' => 'John', 'age' => 30]));
+    $userData = json_decode($redis->get('user:1'), true);
+
+    $redis->hset('user:1:profile', 'email', 'john@example.com');
+    $email = $redis->hget('user:1:profile', 'email');
+
+    echo "User: {$userData['name']}, Email: $email\n";
+} catch (RedisException $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+### After (Valkey GLIDE PHP - With Alias)
+
+```php
+<?php
+// Load PHPRedis compatibility aliases
+ValkeyGlide::registerPHPRedisAliases();
+
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+$redis->auth('mypassword');
+$redis->select(2);
+
+try {
+    $redis->set('user:1', json_encode(['name' => 'John', 'age' => 30]));
+    $userData = json_decode($redis->get('user:1'), true);
+
+    $redis->hset('user:1:profile', 'email', 'john@example.com');
+    $email = $redis->hget('user:1:profile', 'email');
+
+    echo "User: {$userData['name']}, Email: $email\n";
+} catch (RedisException $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+**Migration effort:** Add one line (`ValkeyGlide::registerPHPRedisAliases()`) - that's it!
+
+### After (Valkey GLIDE PHP - Native)
+
+```php
+<?php
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+    credentials: ['password' => 'mypassword'],
+    database_id: 2
+);
+
+try {
+    $client->set('user:1', json_encode(['name' => 'John', 'age' => 30]));
+    $userData = json_decode($client->get('user:1'), true);
+
+    $client->hset('user:1:profile', 'email', 'john@example.com');
+    $email = $client->hget('user:1:profile', 'email');
+
+    echo "User: {$userData['name']}, Email: $email\n";
+} catch (ValkeyGlideException $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+The migration provides the benefits of Valkey GLIDE while maintaining familiar Redis command patterns. Use the `ValkeyGlide::registerPHPRedisAliases()` method for minimal code changes.
