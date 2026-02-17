@@ -156,7 +156,7 @@ To fix this, increase the **connection timeout** which is separate from the **re
             request_timeout: 5000,  // Request timeout in milliseconds
             advanced_config: [
                 'connection_timeout' => 10000,  // Connection timeout in milliseconds
-                'socket_timeout' => 5000
+                'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
             ]
         );
         ```
