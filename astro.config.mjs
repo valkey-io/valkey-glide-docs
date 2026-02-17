@@ -378,8 +378,9 @@ export default defineConfig({
         },
         {
           label: "Migration",
+          collapsed: true,
           items: collapsed(true, [
-            "migration",
+            "migration/overview",
             {
               label: "Java",
               collapsed: true,
