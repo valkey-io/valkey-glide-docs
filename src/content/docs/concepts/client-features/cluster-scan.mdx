@@ -39,6 +39,12 @@ To start iterating, create a `ClusterScanCursor`:
     cursor := models.NewClusterScanCursor()
     ```
   </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    $cursor = new ClusterScanCursor();
+    ```
+  </TabItem>
 </Tabs>
 
 Each cursor returned by an iteration is an RC to a new state object. Using the same cursor object will handle the same scan iteration again. A new cursor object should be used for each iteration to continue the scan.
