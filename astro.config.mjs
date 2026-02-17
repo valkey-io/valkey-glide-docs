@@ -162,6 +162,8 @@ export default defineConfig({
             {
               label: "Connections",
               items: [
+                "how-to/connections/configure-lazy-connection",
+                "how-to/connections/limit-inflight-requests",
                 "how-to/connections/read-strategy",
                 "how-to/connections/timeouts-and-reconnect-strategy"
               ]

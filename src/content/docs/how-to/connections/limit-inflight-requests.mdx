@@ -1,0 +1,67 @@
+---
+title: Limit Inflight Requests
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+To ensure system stability and prevent out-of-memory (OOM) errors, Valkey GLIDE limits the maximum number of concurrent (inflight) requests sent through each connection of a GLIDE client.
+
+## Configuration
+
+Inflight requests limit can be configured through the general client configurations.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Limit to 1000 inflight requests per connection
+    cluster_config = GlideClusterClientConfiguration(
+        inflight_requests_limit=1000,
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Limit to 1000 inflight requests per connection
+    GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+        .inflightRequestsLimit(1000)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Limit to 1000 inflight requests per connection
+    const clusterConfig: GlideClusterClientConfiguration = {
+        inflightRequestsLimit: 1000,
+    };
+    ```
+  </TabItem>
+
+  <TabItem label="Go"> 
+    :::note
+    This feature is not yet available in GLIDE Go.
+    :::
+  </TabItem>
+
+</Tabs>
+
+
+
+## Why Limit Inflight Requests
+Excessive inflight requests can lead to queuing within the GLIDE infrastructure, increasing memory usage and potentially causing OOM issues.
+By capping inflight requests per connection, this feature reduces the risk of excessive queuing and helps maintain reliable system performance.
+The default inflight request limit is 1000 per connection, though this value can be configured in all GLIDE wrappers to suit application needs.
+
+The limit is designed based on Little’s Law, ensuring that the system can operate efficiently at peak throughput while allowing a buffer for bursts.
+
+* **Maximum request rate:** 50,000 requests/second.
+* **Average response time:** 1 millisecond.
+
+Using Little’s Law:
+
+* **Inflight requests** = (Request rate) × (Response time)
+* **Inflight requests** = 50,000 requests/second × (1 ms/1000 ms) = 50 requests
+
+A default value of 1000 allows for sufficient headroom above this calculated baseline, ensuring performance during short bursts of activity.
+When the inflight request limit is exceeded, excess requests are immediately rejected, and errors are returned to the client.
