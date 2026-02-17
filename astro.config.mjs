@@ -378,19 +378,124 @@ export default defineConfig({
         },
         {
           label: "Migration",
-          collapsed: true,
-          items: [
+          items: collapsed(true, [
             "migration",
+            {
+              label: "Java",
+              collapsed: true,
+              items: [
+                "migration/java",
+                {
+                  label: "From Jedis",
+                  items: [
+                    "migration/java/jedis",
+                    {
+                      label: "Jedis Compatibility Layer",
+
+                      items: [
+                        "migration/java/jedis/jedis-compatibility-layer",
+                        "migration/java/jedis/jedis-compatibility-layer/instructions",
+                        "migration/java/jedis/jedis-compatibility-layer/supported-features",
+                        "migration/java/jedis/jedis-compatibility-layer/configurations-mapping",
+                        "migration/java/jedis/jedis-compatibility-layer/getting-help",
+                      ]
+                    },
+                    {
+                      label: "Manual Migrations",
+                      items: [
+                        "migration/java/jedis/manual-migrations",
+                        "migration/java/jedis/manual-migrations/installation",
+                        "migration/java/jedis/manual-migrations/connection-setup",
+                        "migration/java/jedis/manual-migrations/command-comparison-jedis-glide",
+                        "migration/java/jedis/manual-migrations/command-comparison-chart",
+                      ]
+                    }
+                  ]
+                },
+                {
+                  label: "From Lettuce",
+                  items: [
+                    "migration/java/lettuce",
+                    "migration/java/lettuce/installation",
+                    "migration/java/lettuce/connection-setup",
+                    "migration/java/lettuce/command-comparison-lettuce-glide",
+                    "migration/java/lettuce/command-comparison-chart",
+                  ]
+                },
+                {
+                  label: "From Redisson",
+                  items: [
+                    "migration/java/redisson",
+                    "migration/java/redisson/installation",
+                    "migration/java/redisson/connection-setup",
+                    "migration/java/redisson/key-differences-summary",
+                    "migration/java/redisson/command-comparison-redisson-glide",
+                    "migration/java/redisson/command-comparison-chart",
+                  ]
+                }
+              ]
+            },
+            {
+              label: "Node.js",
+              items: [
+                "migration/nodejs",
+                {
+                  label: "From ioredis",
+                  items: [
+                    "migration/nodejs/ioredis",
+                    "migration/nodejs/ioredis/installation",
+                    "migration/nodejs/ioredis/connection-setup",
+                    "migration/nodejs/ioredis/command-comparison-ioredis-glide",
+                    "migration/nodejs/ioredis/command-comparison-chart",
+                  ]
+                },
+              ]
+            },
+            {
+              label: "Go",
+              items: [
+                "migration/go",
+                {
+                  label: "From go-redis",
+                  items: [
+                    "migration/go/go-redis",
+                    "migration/go/go-redis/installation",
+                    "migration/go/go-redis/connection-setup",
+                    "migration/go/go-redis/connection-management",
+                    "migration/go/go-redis/error-handling",
+                    "migration/go/go-redis/command-comparison-go-redis-glide",
+                    "migration/go/go-redis/command-comparison-chart",
+                  ]
+                },
+              ]
+            },
+            {
+              label: "Python",
+              items: [
+                "migration/python",
+                {
+                  label: "From redis-py",
+                  items: [
+                    "migration/python/redis-py",
+                    "migration/python/redis-py/command-comparison-redis-py-glide",
+                    "migration/python/redis-py/command-comparison-chart",
+                  ]
+                },
+              ]
+            },
             {
               label: "PHP",
               items: [
+                "migration/php",
                 {
                   label: "From PHPRedis",
-                  slug: "migration/php/phpredis"
+                  items: [
+                    "migration/php/phpredis",
+                  ]
                 }
               ]
             }
-          ],
+          ]),
         },
         {
           label: "Troubleshooting",

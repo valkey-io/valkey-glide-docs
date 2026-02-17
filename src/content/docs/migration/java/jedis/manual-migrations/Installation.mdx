@@ -1,0 +1,161 @@
+---
+title: Installation
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 2
+---
+
+import { Aside, TabItem, Tabs, Code } from '@astrojs/starlight/components';
+import { javaGlideLatest } from '@data/versions';
+
+
+
+## Quick Installation
+
+Add the following dependency to your `pom.xml` file:
+
+<Code
+  lang="xml"
+  code={`
+  <dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <version>${javaGlideLatest}</version>
+  </dependency>
+  `}
+/>
+
+## Full Installations
+
+To use Valkey GLIDE, you must include a classifier to specify your platform architecture.\
+This section includes setup instructions for Gradle, Maven, and SBT, with or without OS detection tools.
+
+<Tabs>
+  <TabItem label="Gradle">
+    <Aside>must include a `classifier` to specify your platform.</Aside>
+
+    Example with osdector:
+    ```groovy
+    // with osdetector
+    plugins {
+        id "com.google.osdetector" version "1.7.3"
+    }
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+    }
+    ```
+
+    Example with osx-aarch_64:
+    ```groovy
+    // osx-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
+    }
+    ```
+
+    Example with osx-x86_64:
+    ```groovy
+    // osx-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
+    }
+    ```
+
+    Example with linux-aarch_64:
+    ```groovy
+    // linux-aarch_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
+    }
+    ```
+
+    Example with linux-x86_64:
+    ```groovy
+    // linux-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
+    }
+    ```
+
+    Example with windows-x86_64:
+    ```groovy
+    // windows-x86_64
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'windows-x86_64'
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Maven">
+    <Aside>
+      Must include a `classifier`.
+    </Aside>
+
+    <Aside>
+      Please use this dependency block, or both the dependency and the extension blocks if you're using `os-maven-plugin`, and add it to the `pom.xml` file.
+    </Aside>
+
+    <Code
+      lang="xml"
+      code={`
+  <!--osx-aarch_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>osx-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!--linux-aarch_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-aarch_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!--linux-x86_64-->
+  <dependency>
+      <groupId>io.valkey</groupId>
+      <artifactId>valkey-glide</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <version>${javaGlideLatest}</version>
+  </dependency>
+
+  <!--with os-maven-plugin-->
+  <build>
+      <extensions>
+          <extension>
+              <groupId>kr.motd.maven</groupId>
+              <artifactId>os-maven-plugin</artifactId>
+          </extension>
+      </extensions>
+  </build>
+  <dependencies>
+      <dependency>
+          <groupId>io.valkey</groupId>
+          <artifactId>valkey-glide</artifactId>
+          <classifier>\${os.detected.classifier}</classifier>
+          <version>${javaGlideLatest}</version>
+      </dependency>
+  </dependencies>`}/>
+
+  </TabItem>
+
+  <TabItem label="SBT">
+    <Aside>
+      must include a `classifier`. Please use this dependency block and add it to the build.sbt file.
+    </Aside>
+
+    ```scala
+    // osx-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
+
+    // linux-aarch_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-aarch_64"
+
+    // linux-x86_64
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
+    ```
+  </TabItem>
+</Tabs>

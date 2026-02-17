@@ -1,0 +1,44 @@
+---
+title: Configuration Mapping
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 4
+
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+
+
+The following Jedis configuration parameters are:
+
+- **Successfully Mapped**: user, password, clientName, ssl, redisProtocol, connectionTimeoutMillis, socketTimeoutMillis, database.
+
+- **Partially Mapped**: sslSocketFactory, sslParameters, hostnameVerifier.
+
+- **Not Mapped**: blockingSocketTimeoutMillis.
+
+### Parameters Mappings
+- `user` → `ServerCredentials.username`
+- `password` → `ServerCredentials.password`
+- `clientName` → `BaseClientConfiguration.clientName`
+- `ssl` → `BaseClientConfiguration.useTLS`
+- `redisProtocol` → `BaseClientConfiguration.protocol`
+- `connectionTimeoutMillis` → `AdvancedBaseClientConfiguration.connectionTimeout`
+- `socketTimeoutMillis` → `BaseClientConfiguration.requestTimeout`
+- `database` → Handled via SELECT command after connection
+
+### Partially Mapped Parameters
+- `sslSocketFactory` → Requires SSL/TLS migration to system certificate store
+- `sslParameters` → Limited mapping; custom protocols/ciphers not supported
+- `hostnameVerifier` → Standard verification works; custom verifiers require `useInsecureTLS`
+
+### Unsupported Parameters
+- `blockingSocketTimeoutMillis` → No equivalent (GLIDE uses async I/O model)
+
+### Key Migration Insights
+
+1. **GLIDE Architecture Shift**: From application-managed SSL to system-managed SSL with secure defaults
+2. **Certificate Management**: Custom keystores/truststores require migration to system certificate store
+3. **Protocol Selection**: GLIDE auto-selects TLS 1.2+ and secure cipher suites
+4. **Client Authentication**: Client certificates not supported; use username/password authentication
