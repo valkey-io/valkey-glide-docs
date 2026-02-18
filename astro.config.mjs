@@ -137,6 +137,7 @@ export default defineConfig({
             "how-to/execute-custom-scripts",
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
+            "how-to/modules-api",
             {
               label: "Security",
               items: [
