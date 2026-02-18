@@ -208,7 +208,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 ## Scan With The Count Option
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    ```py
+    ```python
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, count=1)
