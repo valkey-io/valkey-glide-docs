@@ -37,7 +37,16 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
 
   <TabItem label="Node">
     ```typescript
-    TODO: Add Example
+    // Publishing is done with a separate client
+    const publishConfig = {
+        addresses: [{ host: "localhost", port: 6379 }],
+    };
+    const publishingClient = await GlideClient.createClient(publishConfig);
+
+    // publish message on ch1 channel
+    await publishingClient.publish("Test message", "ch1");
+
+    publishingClient.close();
     ```
   </TabItem>
 
@@ -113,7 +122,28 @@ Glide clients can register a callback method to handle subscriptions in the clie
 
   <TabItem label="Node">
     ```typescript
-    TODO: Add Example
+    const callback = (msg: PubSubMsg, context: any) => {
+        console.log(`Received ${msg.message}, context ${context}`);
+    };
+
+    const listeningConfig = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        // subscriptions are configured here
+        pubsubSubscriptions: {
+            channelsAndPatterns: {
+                [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),    // Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
+                [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),       // Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
+            },
+            callback: callback,
+            context: context,
+        },
+    };
+
+    const listeningClient = await GlideClient.createClient(listeningConfig);
+
+    // Do some work/wait - the callback will receive messages
+
+    listeningClient.close();    // unsubscribe happens here
     ```
   </TabItem>
 
@@ -221,7 +251,26 @@ Alternatively, GLIDE clients also provide options to use the client's native asy
 
   <TabItem label="Node">
     ```typescript
-    TODO: Add Example
+    const listeningConfig = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        // subscriptions are configured here
+        pubsubSubscriptions: {
+            channelsAndPatterns: {
+                [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),    // Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
+                [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),       // Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
+            },
+        },    // no callback is configured
+    };
+
+    const listeningClient = await GlideClient.createClient(listeningConfig);
+
+    // waits for message to arrive
+    const message = await listeningClient.getPubSubMessage();
+
+    // returns null if no message is available
+    const message2 = listeningClient.tryGetPubSubMessage();
+
+    listeningClient.close();    // unsubscribe happens here
     ```
   </TabItem>
 
