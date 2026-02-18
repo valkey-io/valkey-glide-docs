@@ -47,6 +47,13 @@ To enable logging, you will need to set the logger from within your application.
         glide.SetLoggerConfig(glide.LogLevelDebug)
         ```
     </TabItem>
+    <TabItem label="PHP">
+        ```php
+        use Glide\Logger;
+
+        Logger::setLoggerConfig(Logger::LEVEL_DEBUG);
+        ```
+    </TabItem>
 </Tabs>
 
 :::tip
@@ -69,23 +76,117 @@ GLIDE reports this as `timeouts` because it keeps retrying against a cluster tha
 
 **Fix:** Use a minimum of 3 shards (preferably 4+) for production. With 3 shards, losing one affects only ~33% of data, allowing the remaining nodes to stay online.
 
-### Failed to create `GlideClusterClient`
+### Connection Timeout on Client Creation
 
-Received `TimeoutError` on startup and failed to create `GlideClusterClient`.
+Received timeout error on startup and failed to create client.
 
 This happens when default connection timeouts (often ~250ms) are too aggressive for VPNs, cross-region links, or high-latency networks.
-To fix this, you must increase the **connection timeout** which is separate from the **request timeout**.
+To fix this, increase the **connection timeout** which is separate from the **request timeout**.
 
-```javascript
-// Node.js Example
-const client = await GlideClusterClient.createClient({
-    addresses: [...],
-    advancedConfiguration: {
-        // Give the handshake at least 1-5 seconds
-        connectionTimeout: 5000 
-    },
-    // This is the request timeout, NOT connection timeout
-    requestTimeout: 2000, 
-});
+<Tabs syncKey="progLangInExamples">
+    <TabItem label="Python">
+        ```python
+        from glide import (
+            GlideClusterClientConfiguration,
+            AdvancedGlideClusterClientConfiguration,
+            NodeAddress
+        )
 
+        config = GlideClusterClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)],
+            request_timeout=5000,  # Request timeout in milliseconds
+            advanced_configuration=AdvancedGlideClusterClientConfiguration(
+                connection_timeout=10000  # Connection timeout in milliseconds
+            )
+        )
+        client = await GlideClusterClient.create(config)
+        ```
+    </TabItem>
+    <TabItem label="Java">
+        ```java
+        import glide.api.models.configuration.*;
+
+        GlideClusterClientConfiguration config = 
+            GlideClusterClientConfiguration.builder()
+                .address(NodeAddress.builder().host("localhost").port(6379).build())
+                .requestTimeout(5000)  // Request timeout in milliseconds
+                .advancedConfiguration(
+                    AdvancedGlideClusterClientConfiguration.builder()
+                        .connectionTimeout(10000)  // Connection timeout in milliseconds
+                        .build()
+                )
+                .build();
+        GlideClusterClient client = GlideClusterClient.createClient(config).get();
+        ```
+    </TabItem>
+    <TabItem label="Node">
+        ```javascript
+        const client = await GlideClusterClient.createClient({
+            addresses: [{ host: "localhost", port: 6379 }],
+            requestTimeout: 5000,  // Request timeout in milliseconds
+            advancedConfiguration: {
+                connectionTimeout: 10000  // Connection timeout in milliseconds
+            }
+        });
+        ```
+    </TabItem>
+    <TabItem label="Go">
+        ```go
+        import (
+            "github.com/valkey-io/valkey-glide/go/glide/config"
+            "time"
+        )
+
+        cfg := config.NewGlideClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+            WithRequestTimeout(5 * time.Second)
+
+        advCfg := config.NewAdvancedGlideClusterClientConfiguration().
+            WithConnectionTimeout(10 * time.Second)
+
+        cfg.WithAdvancedConfiguration(advCfg)
+        client, err := glide.NewGlideClusterClient(cfg)
+        ```
+    </TabItem>
+    <TabItem label="PHP">
+        ```php
+        $client = new ValkeyGlide();
+        $client->connect(
+            addresses: [['host' => 'localhost', 'port' => 6379]],
+            request_timeout: 5000,  // Request timeout in milliseconds
+            advanced_config: [
+                'connection_timeout' => 10000,  // Connection timeout in milliseconds
+                'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
+            ]
+        );
+        ```
+    </TabItem>
+</Tabs>
+
+## Extension Not Loaded (PHP)
+
+If you receive an error that the `valkey_glide` extension is not loaded, verify the extension is properly installed and enabled.
+
+**Check if extension is loaded:**
+
+```php
+if (!extension_loaded('valkey_glide')) {
+    echo "Valkey GLIDE extension is not loaded!\n";
+    exit(1);
+}
 ```
+
+**Verify installation:**
+
+```bash
+php -m | grep valkey_glide
+php -r "if (extension_loaded('valkey_glide')) echo 'SUCCESS'; else echo 'ERROR';"
+```
+
+**Fix:** Ensure the extension is added to your `php.ini`:
+
+```ini
+extension=valkey_glide
+```
+
+Find your `php.ini` location with `php --ini` and restart your PHP service after making changes.
