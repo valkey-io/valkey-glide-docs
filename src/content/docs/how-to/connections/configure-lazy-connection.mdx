@@ -1,31 +1,17 @@
 ---
-title: Lazy Connect
+title: Configure Lazy Connection
 ---
 
-import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
-
-
+import { TabItem, Tabs } from '@astrojs/starlight/components';
 
 GLIDE supports **lazy connection mode**, which defers the establishment of physical connections to Valkey servers until the first command is executed. This feature reduces startup latency and enables client creation in environments where the server may not be immediately available.
 
-## How Lazy Connect Works
+## Configuring
 
-When lazy connect is enabled, the client initialization process completes without establishing actual network connections to the Valkey servers. Instead, connections are created on-demand when the first command is sent. This approach offers several advantages:
+Lazy connection can be configured through the client configuration object.
 
-- **Reduced Startup Time**: Client creation is faster since no network operations are performed during initialization
-- **Disconnected Environment Support**: Clients can be created even when Valkey servers are temporarily unavailable
-- **Resource Efficiency**: Network resources are only allocated when actually needed
-
-## Important Considerations
-
-- **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
-- **Connection Timeout**: During the initial connection establishment, the connection timeout setting (not request timeout) governs the timeout behaviour.
-- **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
-
-## Usage Examples
-
-<Tabs>
-  <TabItem syncKey="progLangInExamples" label="Node">
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Node">
     ```typescript
     import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -51,7 +37,7 @@ When lazy connect is enabled, the client initialization process completes withou
     ```
   </TabItem>
 
-  <TabItem vsyncKey="progLangInExamples" label="Python">
+  <TabItem label="Python">
     ```python
     from glide import GlideClient, GlideClusterClient, NodeAddress
 
@@ -79,7 +65,7 @@ When lazy connect is enabled, the client initialization process completes withou
     ```
   </TabItem>
 
-  <TabItem syncKey="progLangInExamples" label="Java">
+  <TabItem label="Java">
     ```java
     import glide.api.GlideClient;
     import glide.api.GlideClusterClient;
@@ -111,7 +97,7 @@ When lazy connect is enabled, the client initialization process completes withou
     ```
   </TabItem>
 
-  <TabItem syncKey="progLangInExamples" label="Go">
+  <TabItem label="Go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/glide/api"
@@ -174,6 +160,22 @@ When lazy connect is enabled, the client initialization process completes withou
     ```
   </TabItem>
 </Tabs>
+
+## How It Works
+
+When lazy connect is enabled, the client initialization process completes without establishing actual network connections to the Valkey servers. 
+Instead, connections are created on-demand when the first command is sent. This approach offers several advantages:
+
+- **Reduced Startup Time**: Client creation is faster since no network operations are performed during initialization
+- **Disconnected Environment Support**: Clients can be created even when Valkey servers are temporarily unavailable
+- **Resource Efficiency**: Network resources are only allocated when actually needed
+
+## Important Considerations
+
+- **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
+- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior
+- **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
+
 
 ## Best Practices
 

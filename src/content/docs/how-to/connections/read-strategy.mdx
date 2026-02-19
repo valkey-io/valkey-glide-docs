@@ -1,5 +1,5 @@
 ---
-title: Read Strategy
+title: Specify a Read Strategy
 description: Guide for configuring read strategies to route read commands to primary or replica nodes.
 ---
 
@@ -38,73 +38,73 @@ await client.set("key1", "val1")
 # get will read from one of the replicas
 await client.get("key1")
 ```
-  </TabItem>
+</TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.NodeAddress;
+  ```java
+  import glide.api.GlideClusterClient;
+  import glide.api.models.configuration.GlideClusterClientConfiguration;
+  import glide.api.models.configuration.NodeAddress;
 
-GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
-    .address(NodeAddress.builder()
-        .host("address.example.com")
-        .port(6379)
-        .build())
-    .readFrom(ReadFrom.PREFER_REPLICA)
-    .build();
-GlideClusterClient client = GlideClusterClient.createClient(config).get();
+  GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+      .address(NodeAddress.builder()
+          .host("address.example.com")
+          .port(6379)
+          .build())
+      .readFrom(ReadFrom.PREFER_REPLICA)
+      .build();
+  GlideClusterClient client = GlideClusterClient.createClient(config).get();
 
-client.set("key1", "val1").get();
+  client.set("key1", "val1").get();
 
-// get will read from one of the replicas
-client.get("key1").get();
-```
+  // get will read from one of the replicas
+  client.get("key1").get();
+  ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {GlideClusterClient} from "@valkey/valkey-glide";
+  ```typescript
+  import {GlideClusterClient} from "@valkey/valkey-glide";
 
-const addresses = [
-    {
-        host: "address.example.com",
-        port: 6379
-    }
-];
+  const addresses = [
+      {
+          host: "address.example.com",
+          port: 6379
+      }
+  ];
 
-const client = await GlideClusterClient.createClient({
-    addresses: addresses,
-    readFrom: "preferReplica"
-});
-await client.set("key1", "val1");
-// get will read from one of the replicas
-await client.get("key1");
-```
+  const client = await GlideClusterClient.createClient({
+      addresses: addresses,
+      readFrom: "preferReplica"
+  });
+  await client.set("key1", "val1");
+  // get will read from one of the replicas
+  await client.get("key1");
+  ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-    "context"
+  ```go
+  import (
+      "context"
 
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
+      glide "github.com/valkey-io/valkey-glide/go/v2"
+      "github.com/valkey-io/valkey-glide/go/v2/config"
+  )
 
-func ConnectClusterWithReadStrategyPreferReplica() {
-    myConfig := config.NewClusterClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
-        WithReadFrom(config.PreferReplica)
+  func ConnectClusterWithReadStrategyPreferReplica() {
+      myConfig := config.NewClusterClientConfiguration().
+          WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+          WithReadFrom(config.PreferReplica)
 
-    client, _ := glide.NewClusterClient(myConfig)
+      client, _ := glide.NewClusterClient(myConfig)
 
-    client.Set(context.Background(), "key1", "val1")
+      client.Set(context.Background(), "key1", "val1")
 
-    // Get will read from one of the replicas
-    client.Get(context.Background(),"key1")
-}
-```
+      // Get will read from one of the replicas
+      client.Get(context.Background(),"key1")
+  }
+  ```
   </TabItem>
 </Tabs>
 
