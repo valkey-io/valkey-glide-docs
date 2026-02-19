@@ -89,6 +89,7 @@ export default defineConfig({
             },
             {
               label: "Concepts",
+              collapsed: true,
               items: [
               "concepts/architecture/rust-core-design",
               "concepts/architecture/async-execution",
@@ -96,6 +97,7 @@ export default defineConfig({
             },
             {
               label: "Commands API",
+              collapsed: true,
               items: [
                 "commands/valkey-string"
               ]
