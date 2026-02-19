@@ -1,9 +1,9 @@
 ---
-title: AWS IAM Authentication
+title: Configure AWS IAM Authentication
 description: Guide on using Valkey GLIDE built-in IAM support for secure authentication.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM)** authentication when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
@@ -127,7 +127,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     ```
   </TabItem>
 
-  <TabItem label="Go" syncKey="progLangInExamples">
+  <TabItem label="Go">
     ```go
     import (
   
@@ -155,6 +155,34 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
   	}
   
   	client, err := api.NewGlideClusterClient(&clientConfig)
+    ...
+    ```
+  </TabItem>
+
+  <TabItem label="Php">
+    ```php
+    // Create ValkeyGlide client with IAM authentication
+    // Automatically regenerates the token every 5 mins (default: 300 seconds)
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'endpoint.example.com', 'port' => 6379]],
+        use_tls: true,  // REQUIRED for IAM authentication
+        credentials: [
+            'username' => 'username',  // REQUIRED for IAM
+            'iamConfig' => [
+                ValkeyGlide::IAM_CONFIG_CLUSTER_NAME => 'clustername',
+                ValkeyGlide::IAM_CONFIG_REGION => 'us-east-1',
+                ValkeyGlide::IAM_CONFIG_SERVICE => ValkeyGlide::IAM_SERVICE_ELASTICACHE,
+                // ValkeyGlide::IAM_CONFIG_REFRESH_INTERVAL => 100,  // Optional, default is 300 seconds
+            ]
+        ]
+    );
+
+    // Use the client normally - IAM tokens are managed automatically
+    $client->set('key', 'value');
+    $value = $client->get('key');
+    
+    $client->close();
     ...
     ```
   </TabItem>

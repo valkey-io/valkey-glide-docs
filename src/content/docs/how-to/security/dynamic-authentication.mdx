@@ -1,5 +1,5 @@
 ---
-title: Dynamic Password Management
+title: Configure Dynamic Password
 description: Set up dynamic password rotation and authentication refresh mechanisms with Valkey GLIDE clients for enhanced security.
 ---
 
@@ -8,46 +8,11 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 Valkey GLIDE introduces the ability to dynamically update the connection-configured password at runtime.
 This enhancement facilitates seamless password rotations, ensuring uninterrupted access and improved security for your applications.
 
-## Integration with AWS and GCP Services
-
-GLIDE's dynamic password update feature supports integration with cloud services like Amazon ElastiCache, MemoryDB, and Google Cloud Memorystore.
-
-* **Amazon ElastiCache**: Supports password-based and IAM authentication. AWS recommends regular password rotations.
-
-  > *"Regularly rotating passwords is a best practice to minimize security risks."* - [AWS ElastiCache Authentication](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html)
-
-* **Amazon MemoryDB**: Uses IAM authentication with short-lived tokens that need regular renewal.
-
-  > *"IAM authentication tokens have a limited lifetime and must be refreshed regularly to maintain secure connections."* - [AWS MemoryDB Authentication](https://docs.aws.amazon.com/memorydb/latest/devguide/auth-iam.html)
-
-* **Google Cloud Memorystore**: Offers IAM authentication with ephemeral tokens requiring periodic renewal.
-
-  > *"Google Cloud Memorystore's IAM authentication requires periodic renewal of tokens to maintain secure connections."* - [GCP Memorystore IAM Authentication](https://cloud.google.com/memorystore/docs/cluster/about-iam-auth?hl=en)
-
-In all these scenarios, frequently updating passwords or tokens is essential to maintain secure connections and handle failovers effectively.
-
-## Dynamic Password Update
-
-The dynamic password update functionality allows clients to update their connection passwords on-the-fly, ensuring continuous operation without the need for client restarts or reconnections.
-This feature is particularly useful for scenarios where passwords need to be rotated regularly to maintain secure connections. 
-
-**To avoid authentication errors, update the client's password immediately after any server-side password changes**.
-
-For most scenarios, you can update the password without immediate re-authentication. However, for cases like IAM authentication where tokens need to be refreshed periodically (e.g., every 12 hours), you can utilize the `immediateAuth`/`immediate_auth` option to re-authenticate immediately.
-
-In case you want to remove the password from the connection configuration, you can pass `null`/`None` as the password.
-
 :::caution
-  The dynamic password update functionality does not rotate the password on the server-side. It only updates the client-side password to maintain secure connections.
+The dynamic password update functionality does not rotate the password on the server-side. It only updates the client-side password to maintain secure connections.
 :::
 
-**Benefits:**
-
-* **Seamless Password Update**: Update passwords without interrupting service.
-* **Enhanced Security**: Regularly update passwords to mitigate unauthorized access risks.
-* **Operational Efficiency**: Simplify password management and reduce maintenance overhead.
-
-## Usage Examples
+## Configuration
 
 Below are examples demonstrating how to utilize the dynamic password update feature in different programming languages using GLIDE.
 
@@ -182,7 +147,19 @@ Below are examples demonstrating how to utilize the dynamic password update feat
   </TabItem>
 </Tabs>
 
-### Optional Username
+:::caution
+To avoid authentication errors, update the client's password immediately after any server-side password changes.
+:::
+
+:::tip[Remove Password]
+In case you want to remove the password from the connection configuration, you can pass `null`/`None` as the password.
+:::
+
+:::caution[ACL Permissions]
+When dynamically switching to a new credential, ensure that it has enough permissions to run connection startup commands. See the [ACL Permissions Requirements](/reference/access-control) for more details.
+:::
+
+## Optional Username
 
 In scenarios where a username is not required (e.g., IAM authentication), you can omit it or set it to `null`.
 
@@ -217,9 +194,19 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
   </TabItem>
 </Tabs>
 
-:::caution[ACL Permissions]
-When dynamically switching to a new credential, ensure that it has enough permissions to run connection startup commands. See the [ACL Permissions Requirements](/how-to/security/access-control) for more details.
-:::
+## Immediate Re-Auth
+
+For most scenarios, you can update the password without immediate re-authentication. However, for cases like IAM authentication where tokens need to be refreshed periodically (e.g., every 12 hours), you can utilize the `immediateAuth`/`immediate_auth` option to re-authenticate immediately.
+
+## Integration with AWS and GCP Services
+
+GLIDE's dynamic password update feature supports integration with cloud services like Amazon ElastiCache, MemoryDB, and Google Cloud Memorystore.
+
+* **[AWS ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth.html)**: Supports password-based and IAM authentication. AWS recommends regular password rotations.
+* **[Amazon MemoryDB](https://docs.aws.amazon.com/memorydb/latest/devguide/auth-iam.html)**: Uses IAM authentication with short-lived tokens that need regular renewal.
+* **[Google Cloud Memorystore](https://cloud.google.com/memorystore/docs/cluster/about-iam-auth?hl=en)**: Offers IAM authentication with ephemeral tokens requiring periodic renewal.
+
+In all these scenarios, frequently updating passwords or tokens is essential to maintain secure connections and handle fail-overs effectively.
 
 ## Best Practices
 
@@ -228,5 +215,3 @@ When dynamically switching to a new credential, ensure that it has enough permis
 * **Secure Credential Storage**: Store passwords and tokens securely using environment variables or secret management tools.
 * **Principle of Least Privilege**: Use ACLs to assign minimal necessary permissions to users.
 * **Monitor Authentication Events**: Track authentication attempts and token renewals to detect and respond to potential security threats promptly.
-
-By leveraging GLIDE's dynamic password update capability, you ensure that your applications maintain secure and uninterrupted connections to Valkey, adhering to both internal security policies and best practices recommended by cloud service providers like AWS and GCP.

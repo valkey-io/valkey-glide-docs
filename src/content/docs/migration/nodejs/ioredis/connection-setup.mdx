@@ -1,0 +1,163 @@
+---
+title: Connection Setup
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+
+
+## Constructor Differences
+
+* **ioredis** offers multiple constructors for different connection configurations
+* **Glide** uses a **single configuration object** that comes pre-configured with best practices
+
+Glide typically requires minimal configuration changes for:
+
+* Timeout settings
+* TLS configuration
+* Read from replica settings
+* User authentication (username & password)
+
+For advanced configurations, refer to the <a href={`/languages/nodejs`}>Node.js Glide Guide</a>.
+
+### Standalone Mode
+
+  **ioredis**
+
+  ```js
+  const Redis = require("ioredis");
+
+  // Simple connection
+  const redis = new Redis();
+
+  // With options
+  const redisWithOptions = new Redis({
+    port: 6379,
+    host: "localhost",
+    username: "user",
+    password: "password",
+  });
+  ```
+
+  **Glide**
+
+  ```js
+  import { GlideClient } from '@valkey/valkey-glide';
+
+  // Simple connection
+  const addresses = [
+    { host: "localhost", port: 6379 }
+  ]; 
+  const client = await GlideClient.createClient({
+    addresses: addresses
+  });
+
+  // With options
+  const clientWithOptions = await GlideClient.createClient({
+    addresses: [{ host: "localhost", port: 6379 }],
+    credentials: {
+      username: "user",
+      password: "password",
+    },
+    useTLS: true,
+    requestTimeout: 5000, 
+    readFrom: "AZAffinity",
+    advancedConfiguration: {
+      connectionTimeout: 500 // Example of advanced configuration
+    }
+  });
+  ```
+
+### Cluster Mode
+
+  **ioredis**
+
+  ```js
+  const Redis = require("ioredis");
+
+  const cluster = new Redis.Cluster([
+    { host: "127.0.0.1", port: 6379 },
+    { host: "127.0.0.1", port: 6380 }
+  ]);
+
+  // With options
+  const clusterWithOptions = new Redis.Cluster([
+    { host: "127.0.0.1", port: 6379 },
+    { host: "127.0.0.1", port: 6380 }
+  ], {
+    redisOptions: {
+      password: "password"
+    }
+  });
+  ```
+
+  **Glide**
+
+  ```js
+  import { GlideClusterClient } from '@valkey/valkey-glide';
+
+  const addresses = [
+    { host: "127.0.0.1", port: 6379 },
+    { host: "127.0.0.1", port: 6380 }
+  ];
+
+  const client = await GlideClusterClient.createClient({
+    addresses: addresses
+  });
+
+  // With options
+  const clientWithOptions = await GlideClusterClient.createClient({
+    addresses: addresses,
+    credentials: {
+      password: "password"
+    },
+    useTLS: true,
+    advancedConfiguration: {
+      connectionTimeout: 500 // Example of advanced configuration
+    }
+  });
+  ```
+### Constructor Parameters Comparison
+
+  The table below compares **ioredis constructors** with **Glide configuration parameters**:
+
+  | **ioredis Parameter** | **Equivalent Glide Configuration** |
+  |--------------------------|--------------------------------------|
+  | `host: string`           | `addresses: [{ host: string, port?: number }]` |
+  | `port: number`           | `addresses: [{ host: string, port: number }]` |
+  | `username: string`       | `credentials: { username: string, password: string }` |
+  | `password: string`       | `credentials: { password: string }` |
+  | `db: number`             | `client.select(number)` |
+  | `tls: {}`                | `useTLS?: true` |
+  | Not implmented           | `protocol?: ProtocolVersion;` |
+  | `commandTimeout: number` | `requestTimeout: number` |
+  | `connectTimeout: number` | `advancedConfiguration: { connectionTimeout: number }` |
+  | `retryStrategy: function`| `connectionBackoff?: { numberOfRetries: number, factor: number, exponentBase: number, jitterPercent?: number }` |
+  | `readOnly: boolean`      | `readFrom?: "REPLICA"/ "preferReplica"/ "AZAffinity"/ "AZAffinityReplicasAndPrimary"` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
+  | `lazyConnect: boolean`   | `lazyConnect?: boolean;` |
+
+  **Advanced configuration**
+
+  **Standalone Mode** uses `AdvancedGlideClientConfiguration` and **Cluster Mode** uses `AdvancedGlideClusterClientConfiguration`, but the usage is similar:
+
+  ```js
+  // Standalone mode
+  const client = await GlideClient.createClient({
+    addresses: [{ host: "localhost", port: 6379 }],
+    advancedConfiguration: {
+      connectionTimeout: 500,
+    }
+  });
+
+  // Cluster mode
+  const clusterClient = await GlideClusterClient.createClient({
+    addresses: [{ host: "localhost", port: 6379 }],
+    advancedConfiguration: {
+      connectionTimeout: 500,
+    }
+  });
+  ```
+
