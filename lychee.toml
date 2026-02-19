@@ -4,7 +4,15 @@ max_retries = 3
 retry_wait_time = 10
 
 # Remap absolute paths to add it to mdx
-remap = [ "^(file:///.*valkey-glide-docs/src/content/docs/.*)$ $1.mdx" ]
+remap = [ 
+    "/migration/python /migration/python/index.mdx",
+    "/migration/go /migration/python/index.mdx",
+    "/migration/java /migration/python/index.mdx",
+    "/migration/nodejs /migration/python/index.mdx",
+    "/migration/php /migration/python/index.mdx",
+
+    "^(file:///.*valkey-glide-docs/src/content/docs/.*)$ $1.mdx",
+]
 
 # Exclude specific files from being scanned
 exclude_path = [

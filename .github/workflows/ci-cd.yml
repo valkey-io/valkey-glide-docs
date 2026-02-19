@@ -30,107 +30,107 @@ jobs:
         echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
   # --- Parallel Documentation Build Jobs ---
-  build-node-docs:
-    needs: get-release-tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Valkey Glide Docs
-        uses: actions/checkout@v4
+  # build-node-docs:
+  #   needs: get-release-tag
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Valkey Glide Docs
+  #       uses: actions/checkout@v4
 
-      - name: Checkout Valkey Glide Source
-        uses: actions/checkout@v4
-        with:
-          repository: valkey-io/valkey-glide
-          path: doc-gen/valkey-glide
-          ref: ${{ needs.get-release-tag.outputs.tag }}
+  #     - name: Checkout Valkey Glide Source
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: valkey-io/valkey-glide
+  #         path: doc-gen/valkey-glide
+  #         ref: ${{ needs.get-release-tag.outputs.tag }}
 
-      - name: Install Dependencies
-        run: ./doc-gen/install-deps.sh
+  #     - name: Install Dependencies
+  #       run: ./doc-gen/install-deps.sh
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
 
-      - name: Generate Node Docs
-        run: ./doc-gen/build-node-docs.sh
+  #     - name: Generate Node Docs
+  #       run: ./doc-gen/build-node-docs.sh
 
-      - name: Upload Node Docs
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-docs
-          path: doc-gen/docs/node
-          retention-days: 1
+  #     - name: Upload Node Docs
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: node-docs
+  #         path: doc-gen/docs/node
+  #         retention-days: 1
 
-  build-java-docs:
-    needs: get-release-tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Main Repository
-        uses: actions/checkout@v4
+  # build-java-docs:
+  #   needs: get-release-tag
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Main Repository
+  #       uses: actions/checkout@v4
 
-      - name: Checkout Valkey Glide Source
-        uses: actions/checkout@v4
-        with:
-          repository: valkey-io/valkey-glide
-          path: doc-gen/valkey-glide
-          ref: ${{ needs.get-release-tag.outputs.tag }}
+  #     - name: Checkout Valkey Glide Source
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: valkey-io/valkey-glide
+  #         path: doc-gen/valkey-glide
+  #         ref: ${{ needs.get-release-tag.outputs.tag }}
 
-      - name: Install Dependencies
-        run: ./doc-gen/install-deps.sh
+  #     - name: Install Dependencies
+  #       run: ./doc-gen/install-deps.sh
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+  #     - name: Setup Java
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: '17'
 
-      - name: Generate Java Docs
-        run: ./doc-gen/build-java-docs.sh
+  #     - name: Generate Java Docs
+  #       run: ./doc-gen/build-java-docs.sh
 
-      - name: Upload Java Docs
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-docs
-          path: doc-gen/docs/java
-          retention-days: 1
+  #     - name: Upload Java Docs
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: java-docs
+  #         path: doc-gen/docs/java
+  #         retention-days: 1
 
-  build-python-docs:
-    needs: get-release-tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Main Repository
-        uses: actions/checkout@v4
+  # build-python-docs:
+  #   needs: get-release-tag
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Main Repository
+  #       uses: actions/checkout@v4
 
-      - name: Checkout Valkey Glide Source
-        uses: actions/checkout@v4
-        with:
-          repository: valkey-io/valkey-glide
-          path: doc-gen/valkey-glide
-          ref: ${{ needs.get-release-tag.outputs.tag }}
+  #     - name: Checkout Valkey Glide Source
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: valkey-io/valkey-glide
+  #         path: doc-gen/valkey-glide
+  #         ref: ${{ needs.get-release-tag.outputs.tag }}
 
-      - name: Install Dependencies
-        run: ./doc-gen/install-deps.sh
+  #     - name: Install Dependencies
+  #       run: ./doc-gen/install-deps.sh
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.13'
 
-      - name: Generate Python Docs
-        run: ./doc-gen/build-python-docs.sh
+  #     - name: Generate Python Docs
+  #       run: ./doc-gen/build-python-docs.sh
 
-      - name: Upload Python Docs
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-docs
-          path: doc-gen/docs/python
-          retention-days: 1
+  #     - name: Upload Python Docs
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: python-docs
+  #         path: doc-gen/docs/python
+  #         retention-days: 1
 
   # --- Main Site Build ---
 
   build-site:
-    needs: [build-node-docs, build-java-docs, build-python-docs]
+    # needs: [build-node-docs, build-java-docs, build-python-docs]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -138,23 +138,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Node Docs
-        uses: actions/download-artifact@v4
-        with:
-          name: node-docs
-          path: public/languages/nodejs/api
+      # - name: Download Node Docs
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: node-docs
+      #     path: public/languages/nodejs/api
 
-      - name: Download Java Docs
-        uses: actions/download-artifact@v4
-        with:
-          name: java-docs
-          path: public/languages/java/api
+      # - name: Download Java Docs
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: java-docs
+      #     path: public/languages/java/api
 
-      - name: Download Python Docs
-        uses: actions/download-artifact@v4
-        with:
-          name: python-docs
-          path: public/languages/python/api
+      # - name: Download Python Docs
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: python-docs
+      #     path: public/languages/python/api
+
+      - name: see all docs
+        run: ls -R ${{ github.workspace }}/src/content/docs
 
       # Build the Astro Site
       - name: Build and upload site
