@@ -165,6 +165,6 @@ jobs:
       - name: Check Links
         uses: lycheeverse/lychee-action@v2.7.0
         with:
-          args: ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist
+          args: ${{ github.workspace }}/src/content/docs --root-dir ${{ github.workspace }}/src/content/docs
           # Fail the pipeline if broken links are found
           fail: true

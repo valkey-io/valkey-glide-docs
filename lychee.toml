@@ -2,40 +2,22 @@
 
 max_retries = 3             
 retry_wait_time = 10
-include_verbatim = true       
+
+# Remap absolute paths to add it to mdx
+remap = [ "^(file:///.*valkey-glide-docs/src/content/docs/.*)$ $1.mdx" ]
 
 # Exclude specific files from being scanned
 exclude_path = [
-    "dist/404.html",
-    "dist/languages/java/api",
-    "dist/languages/nodejs/api",
-    "dist/languages/python/api",
+    # Excluding languages folder until removal
+    "languages/"
 ]
 
 # Exclude specific URLs/links (RegEx)
 exclude = [
-    # GitHub edit links
-    'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
-
-    # The repo is private so it will cause error.
-    'https://github.com/valkey-io/valkey-glide-docs',
-
-    # When adding a new page, it would not be live when Lychee checks the links. 
-    # It will return error, blocking both PR and deployment workflows.
-    # We ignore the live URL to get around this. Also, any internal links should use absolute url which 
-    # are still checked by Lychee.
-    'https://glide.valkey.io/.*',
-
     # API Documentation exclusions
     '.*/languages/java/api',
     '.*/languages/nodejs/api',
     '.*/languages/python/api',
-
-    # Specific file link exclusion
-    './dist/404.html',
-
-    # Google Tag Manager
-    'https://www\.googletagmanager\.com.*',
 
     # Localhost URLs
     'http://localhost.*'
