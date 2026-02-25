@@ -152,7 +152,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     ```php
     // Create ValkeyGlide client
     $client = new ValkeyGlide();
@@ -249,7 +249,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     ```php
     // Set multiple keys at once
     $client->mset([
@@ -304,7 +304,7 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     ```php
     $deletedCount = $client->del(['user:1001', 'user:1002', 'user:1003']);
     echo "✓ Deleted {$deletedCount} keys\n";

@@ -426,6 +426,24 @@ Advanced TLS configuration documentation for Go is coming soon.
 
   <TabItem label="PHP">
 
+### Insecure TLS Mode
+
+Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
+
+:::caution
+Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
+:::
+
+#### Example
+
+```php
+$client = new ValkeyGlideCluster(
+    addresses: [['host' => 'address.example.com', 'port' => 6379]],
+    use_tls: true,
+    advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
+);
+```
+
 ### Custom Root Certificates
 
 You can provide custom root certificates for TLS connections using the `advanced_config` parameter.
