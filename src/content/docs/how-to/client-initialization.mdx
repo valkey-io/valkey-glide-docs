@@ -87,11 +87,15 @@ func ConnectCluster() {
 
   <TabItem label="PHP">
 ```php
-$addresses = [
-    ['host' => 'address.example.com', 'port' => 6379]
-];
+try {
+    $addresses = [
+        ['host' => 'address.example.com', 'port' => 6379]
+    ];
 
-$client = new ValkeyGlideCluster(addresses: $addresses);
+    $client = new ValkeyGlideCluster(addresses: $addresses);
+} catch (Exception $e) {
+    error_log("Failed to connect to cluster: " . $e->getMessage());
+}
 ```
   </TabItem>
 </Tabs>
@@ -252,14 +256,18 @@ func ConnectStandalone() {
 
   <TabItem label="PHP">
 ```php
-$addresses = [
-    ['host' => 'primary.example.com', 'port' => 6379],
-    ['host' => 'replica1.example.com', 'port' => 6379],
-    ['host' => 'replica2.example.com', 'port' => 6379]
-];
+try {
+    $addresses = [
+        ['host' => 'primary.example.com', 'port' => 6379],
+        ['host' => 'replica1.example.com', 'port' => 6379],
+        ['host' => 'replica2.example.com', 'port' => 6379]
+    ];
 
-$client = new ValkeyGlide();
-$client->connect(addresses: $addresses);
+    $client = new ValkeyGlide();
+    $client->connect(addresses: $addresses);
+} catch (Exception $e) {
+    error_log("Failed to connect to standalone server: " . $e->getMessage());
+}
 ```
   </TabItem>
 </Tabs>
