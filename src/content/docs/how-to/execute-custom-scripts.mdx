@@ -296,6 +296,67 @@ The `invokeScript` command is not supported in Valkey GLIDE PHP.
 Use the native `eval()` or `evalsha()` commands instead.
 :::
 
+### Using eval()
+
+<Steps>
+
+1. Define the lua script
+
+   ```php
+   $lua = <<<'LUA'
+   redis.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. redis.call('GET', KEYS[1])
+   LUA;
+   ```
+
+2. Execute script with keys and arguments
+
+   ```php
+   $result = $client->eval(
+       $lua,
+       ['username', 'John Doe'],  // keys and args combined
+       1  // num_keys - how many arguments are keys
+   );
+   echo $result; // username: John Doe
+   ```
+
+</Steps>
+
+### Using evalSha() for Better Performance
+
+For scripts executed multiple times, use `evalsha()` to avoid sending the script body repeatedly:
+
+<Steps>
+
+1. Load the script and get its SHA1 hash
+
+   ```php
+   $lua = <<<'LUA'
+   redis.call('SET', KEYS[1], ARGV[1])
+   return KEYS[1] .. ': ' .. redis.call('GET', KEYS[1])
+   LUA;
+   
+   $sha = hash('sha1', $lua);
+   // Or use SCRIPT LOAD to ensure it's cached on server
+   ```
+
+2. Execute using the SHA1 hash
+
+   ```php
+   $result = $client->evalsha(
+       $sha,
+       ['username', 'John Doe'],
+       1  // num_keys
+   );
+   echo $result; // username: John Doe
+   ```
+
+</Steps>
+
+:::tip[Script API vs eval/evalSha]
+Other GLIDE clients provide a `Script` API that automatically handles script caching and SHA1 management. In PHP, you manually manage this using `eval()` and `evalsha()`. For detailed patterns and best practices, see the [Valkey Scripting Reference](/reference/scripting-reference).
+:::
+
 </TabItem>
 </Tabs>
 
