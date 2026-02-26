@@ -108,6 +108,34 @@ if err != nil {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+use ValkeyGlide\OpenTelemetry\{OpenTelemetryConfig, TracesConfig, MetricsConfig};
+
+$otelConfig = OpenTelemetryConfig::builder()
+    ->traces(
+        TracesConfig::builder()
+            ->endpoint('http://localhost:4318/v1/traces')
+            ->samplePercentage(10)  // Optional, defaults to 1
+            ->build()
+    )
+    ->metrics(
+        MetricsConfig::builder()
+            ->endpoint('http://localhost:4318/v1/metrics')
+            ->build()
+    )
+    ->flushIntervalMs(1000)  // Optional, defaults to 5000
+    ->build();
+
+// Pass configuration to client via advanced_config
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'localhost', 'port' => 6379]],
+    advanced_config: ['otel' => $otelConfig]
+);
+```
+  </TabItem>
 </Tabs>
 
 :::tip

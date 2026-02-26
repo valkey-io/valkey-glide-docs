@@ -323,6 +323,65 @@ func main() {
 
 </details>
 </TabItem>
+<TabItem label="PHP">
+<Steps>
+
+1. Define the lua script.
+
+   ```php
+   $luaCode = <<<'LUA'
+   #!lua name=example_module
+   server.register_function('set_then_get', function(key, value)
+      server.call('SET', key, value)
+      return server.call('GET', key)
+   end)
+   LUA;
+   ```
+
+2. Load the function to Valkey.
+
+   ```php
+   $client->functionLoad($luaCode, true);
+   ```
+
+3. Call the function.
+
+   ```php
+   $client->set('page:home:visits', '0');
+   $result = $client->fcall('set_then_get', ['page:home:visits'], ['1']);
+   echo $result;  // 1
+   ```
+
+</Steps>
+
+<details>
+<summary>Full Example</summary>
+
+```php
+$client = new ValkeyGlide();
+$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+// lua code that updates a key and returns its new value
+$luaCode = <<<'LUA'
+#!lua name=page_visits
+server.register_function('update_visits', function(visits)
+    server.call('INCR', visits[1])
+    return server.call('GET', visits[1])
+end)
+LUA;
+
+// loading the function to valkey
+$client->functionLoad($luaCode, true);
+
+$client->set('page:home:visits', '0');
+
+// calling the previously loaded function
+$result = $client->fcall('update_visits', ['page:home:visits']);
+echo $result;  // 1
+```
+
+</details>
+</TabItem>
 </Tabs>
 
 ## Read-Only Functions
@@ -413,6 +472,26 @@ result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
 // Route to a random node
 route := config.SimpleNodeRoute(config.RandomNode)
 result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
+```
+
+</TabItem>
+<TabItem label="PHP">
+
+```php
+$result = $client->fcall_ro('get_value', ['mykey']);
+```
+
+**With Routing (Cluster Mode)**
+
+```php
+// Route to all nodes
+$result = $client->fcall_ro('get_value', [], [], 'allNodes');
+
+// Route to all primary nodes
+$result = $client->fcall_ro('get_value', [], [], 'allPrimaries');
+
+// Route to a random node
+$result = $client->fcall_ro('get_value', [], [], 'randomNode');
 ```
 
 </TabItem>

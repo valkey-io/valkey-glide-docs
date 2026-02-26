@@ -72,7 +72,7 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     ```php
     // Publisher process (separate):
     $publishingClient = new ValkeyGlide();
@@ -200,7 +200,7 @@ Glide clients can register a callback method to handle subscriptions in the clie
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     ```php
     // Note: subscribe() is BLOCKING in PHP - it enters a message loop
     // Use separate processes/threads for subscriber and publisher
@@ -354,9 +354,9 @@ Alternatively, GLIDE clients also provide options to use the client's native asy
     ```
   </TabItem>
 
-  <TabItem label="Php">
+  <TabItem label="PHP">
     :::caution
-    GLIDE Php does not support polling/async message retrieval.
+    GLIDE PHP does not support polling/async message retrieval.
     Only callback-based PubSub is available. See [example](#with-callback) above for usage.
     :::
   </TabItem>
