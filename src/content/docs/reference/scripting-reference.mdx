@@ -705,6 +705,10 @@ try {
 
 ### Script Timeout Handling
 
+:::caution[Client Timeout vs Script Termination]
+When a client timeout occurs, the client stops waiting for a response, but the script continues running on the server. To stop a read-only script that's still executing, use `SCRIPT KILL`.
+:::
+
 <Tabs syncKey="progLangInExamples">
 <TabItem label="Python">
 ```python
@@ -737,11 +741,6 @@ except RequestError as e:
         print("Script was killed by server (only possible for read-only scripts)")
     else:
         print(f"Script error: {e}")
-
-# Important: Client timeout != Script termination
-# - Client stops waiting for response
-# - Script continues running on server
-# - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Java">
@@ -787,11 +786,6 @@ try (Script longScript = new Script("""
         }
     }
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Node">
@@ -831,11 +825,6 @@ try {
         }
     }
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Go">
@@ -876,11 +865,6 @@ if err != nil {
 } else {
     fmt.Printf("Script completed: %v\n", result)
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="PHP">
@@ -915,11 +899,6 @@ try {
         echo "Script error: $message\n";
     }
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 </Tabs>
