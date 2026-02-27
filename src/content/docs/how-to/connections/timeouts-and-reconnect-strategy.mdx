@@ -83,4 +83,124 @@ func ConnectClusterWithTimeout() {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'address.example.com', 'port' => 6379]
+];
+
+$client = new ValkeyGlideCluster(
+    addresses: $addresses,
+    request_timeout: 500
+);
+```
+  </TabItem>
+</Tabs>
+
+## Configuring Reconnect Strategy
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    NodeAddress,
+    BackoffStrategy
+)
+
+addresses = [NodeAddress(host="address.example.com", port=6379)]
+client_config = GlideClusterClientConfiguration(
+    addresses,
+    reconnect_strategy=BackoffStrategy(num_of_retries=3, factor=2, exponent_base=2)
+)
+
+client = await GlideClusterClient.create(client_config)
+```
+  </TabItem>
+
+  <TabItem label="Java">
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.BackoffStrategy;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+    .address(NodeAddress.builder()
+        .host("address.example.com")
+        .port(6379).build())
+    .reconnectStrategy(BackoffStrategy.builder()
+        .numOfRetries(3)
+        .factor(2)
+        .exponentBase(2)
+        .build())
+    .build();
+
+GlideClusterClient client = GlideClusterClient.createClient(config).get();
+```
+  </TabItem>
+
+  <TabItem label="Node">
+```typescript
+import {GlideClusterClient} from "@valkey/valkey-glide";
+
+const addresses = [
+    {
+        host: "address.example.com",
+        port: 6379
+    }
+];
+
+const client = await GlideClusterClient.createClient({
+    addresses: addresses,
+    reconnectStrategy: {
+        numOfRetries: 3,
+        factor: 2,
+        exponentBase: 2
+    }
+});
+```
+  </TabItem>
+
+  <TabItem label="Go">
+```go
+import (
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+func ConnectClusterWithReconnectStrategy() {
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithReconnectStrategy(config.BackoffStrategy{
+            NumOfRetries: 3,
+            Factor:       2,
+            ExponentBase: 2,
+        })
+
+    client, err := glide.NewClusterClient(myConfig)
+}
+```
+  </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'address.example.com', 'port' => 6379]
+];
+
+$reconnect_strategy = [
+    'num_of_retries' => 3,
+    'factor' => 2,
+    'exponent_base' => 2
+];
+
+$client = new ValkeyGlideCluster(
+    addresses: $addresses,
+    reconnect_strategy: $reconnect_strategy
+);
+```
+  </TabItem>
 </Tabs>

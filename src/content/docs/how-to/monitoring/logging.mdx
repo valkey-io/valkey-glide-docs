@@ -16,7 +16,7 @@ ensuring that all logs remain synchronized and preserve the order of events.
 Currently, GLIDE does not support direct integration with third-party logging libraries. While there is interest in adding this capability, 
 it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [GitHub](https://github.com/valkey-io/valkey-glide).
 
-The logger is currently only available for Python, Node, and Java clients.
+The logger is currently available for Python, Node, Java, and PHP clients.
 
 ## Examples
 
@@ -116,6 +116,29 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference]() for the full logger interface.
+
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Configure the log level and the output file name
+    valkey_glide_logger_set_config("debug", "./glide_logs");
+
+    // Logging example
+    $identifier = "LoggingExample";
+    valkey_glide_logger_log("info", $identifier, "Hello World!");
+
+    // Standalone client configuration
+    $addresses = [
+        ['host' => 'localhost', 'port' => 6379]
+    ];
+
+    $client = new ValkeyGlide();
+    $client->connect(addresses: $addresses);
+    $client->ping();
+    ```
+
+    Refer to the [logger functions](https://github.com/valkey-io/valkey-glide-php/blob/main/logger.stub.php) for the full logger interface.
 
   </TabItem>
 </Tabs>

@@ -1,9 +1,8 @@
 ---
 title: Welcome to Valkey GLIDE
-tableOfContents: true
+descriptions: An overview of the General Language Independent Driver for the Enterprise (GLIDE) for Valkey.
 sidebar:
   order: 1
-
 ---
 
 import { Aside, LinkCard } from '@astrojs/starlight/components';
@@ -34,8 +33,8 @@ Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
 * **<a href={`/concepts/client-features/cluster-scan`} >Cluster Scan</a>** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
 * **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
 * **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
-* **<a href={`/concepts/client-features/batching-vs-pipelining`} >Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
-* **<a href={`/concepts/client-features/observability-design`} >OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
+* **<a href={`/concepts/client-features/batch-commands/`} >Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
+* **<a href={`/concepts/client-features/open-telemetry/`} >OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
 
 ## Supported Engine Versions
 

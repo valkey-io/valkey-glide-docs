@@ -260,4 +260,33 @@ Windows support is currently available only for Valkey-GLIDE Java
 
     ```
     </TabItem>
+
+    <TabItem label="PHP">
+    **Requirements:** PHP 8.2+
+
+    Install using pie (recommended):
+
+    ```bash
+    pie install valkey-io/valkey-glide-php
+    ```
+
+    Or install from PECL:
+
+    ```bash
+    pecl install https://github.com/valkey-io/valkey-glide-php/releases/download/v1.0.0/valkey_glide-1.0.0.tgz
+    ```
+
+    Enable the extension in your `php.ini`:
+
+    ```ini
+    extension=valkey_glide
+    ```
+
+    Verify installation:
+
+    ```bash
+    php -m | grep valkey_glide
+    ```
+
+    </TabItem>
 </Tabs>

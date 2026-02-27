@@ -176,6 +176,26 @@ if err != nil {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+// Create client configuration
+$client = new ValkeyGlide();
+$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+// Create atomic transaction using multi()
+$results = $client->multi(ValkeyGlide::MULTI)
+    ->set('account:source', '100')
+    ->set('account:dest', '0')
+    ->incrby('account:dest', 50)
+    ->decrby('account:source', 50)
+    ->get('account:source')
+    ->exec();
+
+echo "Atomic Transaction Results: " . print_r($results, true);
+// Atomic Transaction Results: [true, true, 50, 50, "50"]
+```
+  </TabItem>
 </Tabs>
 
 ### Cluster 
@@ -335,6 +355,25 @@ if err != nil {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+// Initialize cluster client
+$client = new ValkeyGlideCluster(
+    addresses: [['host' => 'localhost', 'port' => 6379]]
+);
+
+// Create atomic transaction (all keys must map to same slot using hash tags)
+$results = $client->multi(ValkeyGlide::MULTI)
+    ->set('{user:100}:visits', '1')
+    ->incrby('{user:100}:visits', 5)
+    ->get('{user:100}:visits')
+    ->exec();
+
+echo "Atomic Cluster Transaction: " . print_r($results, true);
+// Atomic Cluster Transaction: [true, 6, "6"]
+```
+  </TabItem>
 </Tabs>
 
 :::caution[Important]
@@ -478,6 +517,25 @@ pipeline := pipeline.NewStandaloneBatch(false).
 res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
 fmt.Printf("Pipeline Results: %+v\n", res)
 // Pipeline Results: [OK OK value1 value2]
+```
+  </TabItem>
+
+  <TabItem label="PHP">
+```php
+// Create client configuration
+$client = new ValkeyGlide();
+$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+// Create pipeline using multi() with PIPELINE mode
+$results = $client->multi(ValkeyGlide::PIPELINE)
+    ->set('temp:key1', 'value1')
+    ->set('temp:key2', 'value2')
+    ->get('temp:key1')
+    ->get('temp:key2')
+    ->exec();
+
+echo "Pipeline Results: " . print_r($results, true);
+// Pipeline Results: [true, true, "value1", "value2"]
 ```
   </TabItem>
 </Tabs>
@@ -659,6 +717,28 @@ pipeline := pipeline.NewClusterBatch(false).
 res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
 fmt.Printf("Pipeline Cluster Results: %+v\n", res)
 // Pipeline Cluster Results: [OK 125 125 1 2 [user2 user1]]
+```
+  </TabItem>
+
+  <TabItem label="PHP">
+```php
+// Initialize cluster client
+$client = new ValkeyGlideCluster(
+    addresses: [['host' => 'localhost', 'port' => 6379]]
+);
+
+// Create pipeline spanning multiple slots
+$results = $client->multi(ValkeyGlide::PIPELINE)
+    ->set('page:home:views', '100')
+    ->incrby('page:home:views', 25)
+    ->get('page:home:views')
+    ->lpush('recent:logins', 'user1')
+    ->lpush('recent:logins', 'user2')
+    ->lrange('recent:logins', 0, 1)
+    ->exec();
+
+echo "Pipeline Cluster Results: " . print_r($results, true);
+// Pipeline Cluster Results: [true, 125, "125", 1, 2, ["user2", "user1"]]
 ```
   </TabItem>
 </Tabs>

@@ -12,7 +12,7 @@ GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statist
 * `total_clients` contains the number of active clients (regardless of its type)
 
 :::caution[Not Generally Available]
-This is only supported by the Java, Node.js, and Python GLIDE client.
+This is not supported by the Go client.
 :::
 
 <Tabs syncKey="progLangInExamples">
@@ -77,6 +77,26 @@ This is only supported by the Java, Node.js, and Python GLIDE client.
     // Example: Accessing and printing statistics
     console.log(`Total Connections: ${stats.total_connections}`);
     console.log(`Total Clients: ${stats.total_clients}`);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $addresses = [
+        ['host' => 'address.example.com', 'port' => 6379]
+    ];
+
+    $client = new ValkeyGlideCluster(
+        addresses: $addresses,
+        request_timeout: 500
+    );
+
+    // Retrieve statistics
+    $stats = $client->getStatistics();
+
+    // Example: Accessing and printing statistics
+    echo "Total Connections: {$stats['total_connections']}\n";
+    echo "Total Clients: {$stats['total_clients']}\n";
     ```
   </TabItem>
 </Tabs>
