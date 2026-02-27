@@ -687,7 +687,7 @@ $script = "return redis.call('INCR', 'not_a_number')";
 
 try {
     $result = $client->eval($script, ['not_a_number'], 0);
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     $message = $e->getMessage();
     if (str_contains($message, 'WRONGTYPE') || str_contains($message, 'not an integer')) {
         echo "Type error in script\n";
@@ -873,7 +873,7 @@ if err != nil {
 $client = new ValkeyGlide();
 $client->connect(
     addresses: [['host' => 'localhost', 'port' => 6379]],
-    request_timeout: 30000  // 30 seconds for long scripts (default is usually 250ms)
+    request_timeout: 30000  // 30 seconds for long scripts (default is 250ms)
 );
 
 // Handle long-running scripts
@@ -888,7 +888,7 @@ LUA;
 try {
     $result = $client->eval($longScript, [], 0);
     echo "Script completed: $result\n";
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     $message = $e->getMessage();
     if (str_contains(strtolower($message), 'timeout')) {
         echo "Client timeout - script may still be running on server!\n";
@@ -986,7 +986,7 @@ try {
         ['key1', 'key2'],  // Might be in different slots
         2  // num_keys
     );
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     if (str_contains($e->getMessage(), 'CROSSSLOT')) {
         echo "Keys are in different slots\n";
         // Use hash tags or route explicitly

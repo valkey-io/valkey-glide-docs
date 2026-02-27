@@ -93,7 +93,7 @@ try {
     ];
 
     $client = new ValkeyGlideCluster(addresses: $addresses);
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     error_log("Failed to connect to cluster: " . $e->getMessage());
 }
 ```
@@ -265,7 +265,7 @@ try {
 
     $client = new ValkeyGlide();
     $client->connect(addresses: $addresses);
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     error_log("Failed to connect to standalone server: " . $e->getMessage());
 }
 ```

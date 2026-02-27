@@ -47,7 +47,7 @@ try {
     $email = $client->hget('user:1:profile', 'email');
     
     echo "User: {$userData['name']}, Email: $email\n";
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     echo "Error: " . $e->getMessage() . "\n";
 }
 ```
