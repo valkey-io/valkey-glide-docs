@@ -340,6 +340,11 @@ export default defineConfig({
                   link: "https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
+                {
+                  label: "PHP",
+                  link: "https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
               ],
             },
           ],

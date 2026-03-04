@@ -83,6 +83,19 @@ func ConnectClusterWithTLS() {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'address.example.com', 'port' => 6379]
+];
+
+$client = new ValkeyGlideCluster(
+    addresses: $addresses,
+    use_tls: true
+);
+```
+  </TabItem>
 </Tabs>
 
 ### Standalone
@@ -157,6 +170,19 @@ func ConnectStandaloneWithTLS() {
 
     client, err := glide.NewClient(myConfig)
 }
+```
+  </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'primary.example.com', 'port' => 6379],
+    ['host' => 'replica1.example.com', 'port' => 6379],
+    ['host' => 'replica2.example.com', 'port' => 6379]
+];
+
+$client = new ValkeyGlide();
+$client->connect(addresses: $addresses, use_tls: true);
 ```
   </TabItem>
 </Tabs>
@@ -396,5 +422,62 @@ Advanced TLS configuration documentation for Node.js is coming soon.
 :::note[Coming soon]
 Advanced TLS configuration documentation for Go is coming soon.
 :::
+  </TabItem>
+
+  <TabItem label="PHP">
+
+### Insecure TLS Mode
+
+Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
+
+:::caution
+Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
+:::
+
+#### Example
+
+```php
+$client = new ValkeyGlideCluster(
+    addresses: [['host' => 'address.example.com', 'port' => 6379]],
+    use_tls: true,
+    advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
+);
+```
+
+### Custom Root Certificates
+
+You can provide custom root certificates for TLS connections using the `advanced_config` parameter.
+
+#### Example - Connecting with Custom Root Certificate
+
+```php
+// Read certificate file
+$rootCert = file_get_contents('/path/to/ca-cert.pem');
+
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'address.example.com', 'port' => 6379]],
+    use_tls: true,
+    advanced_config: ['tls_config' => ['root_certs' => $rootCert]]
+);
+```
+
+#### Example - Using Certificate as String
+
+```php
+$certData = <<<'CERT'
+-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+...
+-----END CERTIFICATE-----
+CERT;
+
+$client = new ValkeyGlideCluster(
+    addresses: [['host' => 'address.example.com', 'port' => 6379]],
+    use_tls: true,
+    advanced_config: ['tls_config' => ['root_certs' => $certData]]
+);
+```
+
   </TabItem>
 </Tabs>

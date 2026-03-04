@@ -7,9 +7,9 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This page contains code references for working with custom Lua scripts in Valkey GLIDE.
 
-:::caution[Php Not Supported]
-The GLIDE Php client does not yet support the `Script` interface.
-To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
+:::caution[PHP Not Supported]
+The GLIDE PHP client does not support the `Script` interface or `invokeScript()` method.
+To execute custom scripts, use the PHP Valkey command API methods: `eval()`, `evalsha()`, `eval_ro()`, and `evalsha_ro()`.
 :::
 
 ## Migration from Direct EVAL
@@ -23,7 +23,7 @@ GLIDE's `Script` interface offers several advantages over using direct `EVAL` co
 
 The following shows how to covert your `EVAL` command to GLIDE's `Script` interface.
 
-### Before (Direct EVAL)
+### Direct EVAL (Before)
 
 <Tabs syncKey="progLangInExamples">
 <TabItem label="Python">
@@ -74,9 +74,19 @@ result, err := client.CustomCommand(context.Background(), []string{
 })
 ```
 </TabItem>
+<TabItem label="PHP">
+```php
+// PHP uses eval() method directly
+$result = $client->eval(
+    "return redis.call('SET', KEYS[1], ARGV[1])",
+    ['mykey', 'myvalue'],
+    1  // num_keys
+);
+```
+</TabItem>
 </Tabs>
 
-### After (Script Class)
+### Script Class (After)
 
 <Tabs syncKey="progLangInExamples">
 <TabItem label="Python">
@@ -138,6 +148,11 @@ result, err := client.InvokeScriptWithOptions(
 )
 ```
 </TabItem>
+<TabItem label="PHP">
+:::note
+PHP does not support the `Script` class or `invokeScript()` method. Use `eval()` method as shown in the "Before" section.
+:::
+</TabItem>
 </Tabs>
 
 ## Common Script Patterns
@@ -174,6 +189,10 @@ end
 ```python
 from glide import Script
 
+# Read script from file
+with open("rate_limit.lua", "r") as f:
+    rate_limit = f.read()
+
 rate_limit_script = Script(rate_limit)
 
 # Usage
@@ -188,6 +207,11 @@ result = await client.invoke_script(
 ```java
 import glide.api.models.Script;
 import glide.api.models.commands.ScriptOptions;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+// Read script from file
+String rateLimit = Files.readString(Paths.get("rate_limit.lua"));
 
 try (Script rateLimitScript = new Script(rateLimit, false)) {
     // Usage
@@ -205,7 +229,10 @@ try (Script rateLimitScript = new Script(rateLimit, false)) {
 <TabItem label="Node">
 ```typescript
 import {Script} from "@valkey/valkey-glide";
+import {readFileSync} from "fs";
 
+// Read script from file
+const rateLimit = readFileSync("rate_limit.lua", "utf-8");
 const rateLimitScript = new Script(rateLimit);
 
 // Usage
@@ -217,9 +244,14 @@ const result = await client.invokeScript(rateLimitScript, {
 </TabItem>
 <TabItem label="Go">
 ```go
-import "github.com/valkey-io/valkey-glide/go/v2/options"
+import (
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+    "os"
+)
 
-rateLimitScript := options.NewScript(rateLimit)
+// Read script from file
+rateLimit, _ := os.ReadFile("rate_limit.lua")
+rateLimitScript := options.NewScript(string(rateLimit))
 
 // Usage
 result, err := client.InvokeScriptWithOptions(
@@ -230,6 +262,19 @@ result, err := client.InvokeScriptWithOptions(
         Args([]string{"10", "60"}).  // 10 requests per 60 seconds
         Build(),
 )
+```
+</TabItem>
+<TabItem label="PHP">
+```php
+// Read script from file
+$rateLimit = file_get_contents('rate_limit.lua');
+
+// Usage
+$result = $client->eval(
+    $rateLimit,
+    ['rate_limit:user:123', '10', '60'],  // 10 requests per 60 seconds
+    1  // num_keys
+);
 ```
 </TabItem>
 </Tabs>
@@ -256,6 +301,12 @@ end
 <TabItem label="Python">
 ```python
 from glide import Script
+
+# Read scripts from files
+with open("acquire_lock.lua", "r") as f:
+    acquire_lock = f.read()
+with open("release_lock.lua", "r") as f:
+    release_lock = f.read()
 
 acquire_lock_script = Script(acquire_lock)
 release_lock_script = Script(release_lock)
@@ -284,6 +335,12 @@ if lock_acquired:
 ```java
 import glide.api.models.Script;
 import glide.api.models.commands.ScriptOptions;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+// Read scripts from files
+String acquireLock = Files.readString(Paths.get("acquire_lock.lua"));
+String releaseLock = Files.readString(Paths.get("release_lock.lua"));
 
 try (Script acquireLockScript = new Script(acquireLock, false);
      Script releaseLockScript = new Script(releaseLock, false)) {
@@ -318,6 +375,11 @@ try (Script acquireLockScript = new Script(acquireLock, false);
 <TabItem label="Node">
 ```typescript
 import {Script} from "@valkey/valkey-glide";
+import {readFileSync} from "fs";
+
+// Read scripts from files
+const acquireLock = readFileSync("acquire_lock.lua", "utf-8");
+const releaseLock = readFileSync("release_lock.lua", "utf-8");
 
 const acquireLockScript = new Script(acquireLock);
 const releaseLockScript = new Script(releaseLock);
@@ -343,10 +405,17 @@ if (lockAcquired) {
 </TabItem>
 <TabItem label="Go">
 ```go
-import "github.com/valkey-io/valkey-glide/go/v2/options"
+import (
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+    "os"
+)
 
-acquireLockScript := options.NewScript(acquireLock)
-releaseLockScript := options.NewScript(releaseLock)
+// Read scripts from files
+acquireLockBytes, _ := os.ReadFile("acquire_lock.lua")
+releaseLockBytes, _ := os.ReadFile("release_lock.lua")
+
+acquireLockScript := options.NewScript(string(acquireLockBytes))
+releaseLockScript := options.NewScript(string(releaseLockBytes))
 
 // Acquire lock
 lockAcquired, err := client.InvokeScriptWithOptions(
@@ -374,6 +443,33 @@ if err == nil && lockAcquired.(int64) == 1 {
 }
 ```
 </TabItem>
+<TabItem label="PHP">
+```php
+// Read scripts from files
+$acquireLock = file_get_contents('acquire_lock.lua');
+$releaseLock = file_get_contents('release_lock.lua');
+
+// Acquire lock
+$lockAcquired = $client->eval(
+    $acquireLock,
+    ['lock:resource:123', 'unique_token', '30'],  // 30 second expiration
+    1  // num_keys
+);
+
+if ($lockAcquired) {
+    try {
+        // Do work while holding lock
+    } finally {
+        // Release lock
+        $client->eval(
+            $releaseLock,
+            ['lock:resource:123', 'unique_token'],
+            1  // num_keys
+        );
+    }
+}
+```
+</TabItem>
 </Tabs>
 
 ### Conditional Update
@@ -393,6 +489,10 @@ if err == nil && lockAcquired.(int64) == 1 {
 ```python
 from glide import Script
 
+# Read script from file
+with open("conditional_update.lua", "r") as f:
+    conditional_update = f.read()
+
 conditional_update_script = Script(conditional_update)
 
 # Update only if current value matches expected
@@ -407,6 +507,11 @@ updated = await client.invoke_script(
 ```java
 import glide.api.models.Script;
 import glide.api.models.commands.ScriptOptions;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+// Read script from file
+String conditionalUpdate = Files.readString(Paths.get("conditional_update.lua"));
 
 try (Script conditionalUpdateScript = new Script(conditionalUpdate, false)) {
     // Update only if current value matches expected
@@ -424,7 +529,10 @@ try (Script conditionalUpdateScript = new Script(conditionalUpdate, false)) {
 <TabItem label="Node">
 ```typescript
 import {Script} from "@valkey/valkey-glide";
+import {readFileSync} from "fs";
 
+// Read script from file
+const conditionalUpdate = readFileSync("conditional_update.lua", "utf-8");
 const conditionalUpdateScript = new Script(conditionalUpdate);
 
 // Update only if current value matches expected
@@ -436,9 +544,14 @@ const updated = await client.invokeScript(conditionalUpdateScript, {
 </TabItem>
 <TabItem label="Go">
 ```go
-import "github.com/valkey-io/valkey-glide/go/v2/options"
+import (
+    "github.com/valkey-io/valkey-glide/go/v2/options"
+    "os"
+)
 
-conditionalUpdateScript := options.NewScript(conditionalUpdate)
+// Read script from file
+conditionalUpdateBytes, _ := os.ReadFile("conditional_update.lua")
+conditionalUpdateScript := options.NewScript(string(conditionalUpdateBytes))
 
 // Update only if current value matches expected
 updated, err := client.InvokeScriptWithOptions(
@@ -449,6 +562,19 @@ updated, err := client.InvokeScriptWithOptions(
         Args([]string{"pending", "active"}).  // Change from "pending" to "active"
         Build(),
 )
+```
+</TabItem>
+<TabItem label="PHP">
+```php
+// Read script from file
+$conditionalUpdate = file_get_contents('conditional_update.lua');
+
+// Update only if current value matches expected
+$updated = $client->eval(
+    $conditionalUpdate,
+    ['user:123:status', 'pending', 'active'],  // Change from "pending" to "active"
+    1  // num_keys
+);
 ```
 </TabItem>
 </Tabs>
@@ -554,9 +680,34 @@ if err != nil {
 }
 ```
 </TabItem>
+<TabItem label="PHP">
+```php
+// Handle script execution errors
+$script = "return redis.call('INCR', 'not_a_number')";
+
+try {
+    $result = $client->eval($script, ['not_a_number'], 0);
+} catch (ValkeyGlideException $e) {
+    $message = $e->getMessage();
+    if (str_contains($message, 'WRONGTYPE') || str_contains($message, 'not an integer')) {
+        echo "Type error in script\n";
+    } elseif (str_contains(strtolower($message), 'syntax error')) {
+        echo "Lua syntax error in script\n";
+    } elseif (str_contains(strtolower($message), 'unknown command')) {
+        echo "Invalid Redis command in script\n";
+    } else {
+        echo "Script error: $message\n";
+    }
+}
+```
+</TabItem>
 </Tabs>
 
 ### Script Timeout Handling
+
+:::caution[Client Timeout vs Script Termination]
+When a client timeout occurs, the client stops waiting for a response, but the script continues running on the server. To stop a read-only script that's still executing, use `SCRIPT KILL`.
+:::
 
 <Tabs syncKey="progLangInExamples">
 <TabItem label="Python">
@@ -590,11 +741,6 @@ except RequestError as e:
         print("Script was killed by server (only possible for read-only scripts)")
     else:
         print(f"Script error: {e}")
-
-# Important: Client timeout != Script termination
-# - Client stops waiting for response
-# - Script continues running on server
-# - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Java">
@@ -640,11 +786,6 @@ try (Script longScript = new Script("""
         }
     }
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Node">
@@ -684,11 +825,6 @@ try {
         }
     }
 }
-
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
 ```
 </TabItem>
 <TabItem label="Go">
@@ -729,11 +865,42 @@ if err != nil {
 } else {
     fmt.Printf("Script completed: %v\n", result)
 }
+```
+</TabItem>
+<TabItem label="PHP">
+**Requirements:** PHP 8.1+
 
-// Important: Client timeout != Script termination
-// - Client stops waiting for response
-// - Script continues running on server
-// - Use SCRIPT KILL to stop read-only scripts if needed
+```php
+// Configure client timeout for long-running scripts
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'localhost', 'port' => 6379]],
+    request_timeout: 30000  // 30 seconds for long scripts (default is 250ms)
+);
+
+// Handle long-running scripts
+$longScript = <<<'LUA'
+local start = redis.call('TIME')[1]
+while redis.call('TIME')[1] - start < 25 do
+    redis.call('GET', 'dummy_key')  -- Read-only operation
+end
+return 'Done'
+LUA;
+
+try {
+    $result = $client->eval($longScript, [], 0);
+    echo "Script completed: $result\n";
+} catch (ValkeyGlideException $e) {
+    $message = $e->getMessage();
+    if (str_contains(strtolower($message), 'timeout')) {
+        echo "Client timeout - script may still be running on server!\n";
+        echo "Consider increasing request_timeout in client configuration\n";
+    } elseif (str_contains($message, 'Script killed')) {
+        echo "Script was killed by server (only possible for read-only scripts)\n";
+    } else {
+        echo "Script error: $message\n";
+    }
+}
 ```
 </TabItem>
 </Tabs>
@@ -809,6 +976,23 @@ result, err := clusterClient.InvokeScriptWithOptions(
 if err != nil && strings.Contains(err.Error(), "CROSSSLOT") {
     fmt.Println("Keys are in different slots")
     // Use hash tags or route explicitly
+}
+```
+</TabItem>
+<TabItem label="PHP">
+```php
+// Handle cluster routing errors
+try {
+    $result = $clusterClient->eval(
+        $script,
+        ['key1', 'key2'],  // Might be in different slots
+        2  // num_keys
+    );
+} catch (ValkeyGlideException $e) {
+    if (str_contains($e->getMessage(), 'CROSSSLOT')) {
+        echo "Keys are in different slots\n";
+        // Use hash tags or route explicitly
+    }
 }
 ```
 </TabItem>
@@ -931,6 +1115,30 @@ result, err := client.InvokeScriptWithOptions(
 )
 ```
 </TabItem>
+<TabItem label="PHP">
+```php
+// Good: Conditional update with multiple data structures
+$conditionalUpdate = <<<'LUA'
+local current = redis.call('GET', KEYS[1])
+local threshold = tonumber(ARGV[2])
+
+if current and tonumber(current) >= threshold then
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('LPUSH', KEYS[2], ARGV[1])
+    redis.call('EXPIRE', KEYS[2], ARGV[3])
+    return 1
+else
+    return 0
+end
+LUA;
+
+$result = $client->eval(
+    $conditionalUpdate,
+    ['user:score', 'user:history', '100', '50', '86400'],  // new score, threshold, expire in 1 day
+    2  // num_keys
+);
+```
+</TabItem>
 </Tabs>
 
 ### 2. Handle Nil Values Properly
@@ -998,6 +1206,19 @@ safeScript := options.NewScript(`
 `)
 ```
 </TabItem>
+<TabItem label="PHP">
+```php
+// Good: Proper nil handling
+$safeScript = <<<'LUA'
+local val = redis.call('GET', KEYS[1])
+if val then
+    return val
+else
+    return 'default_value'
+end
+LUA;
+```
+</TabItem>
 </Tabs>
 
 ### 3. Use Appropriate Data Types
@@ -1047,6 +1268,15 @@ typedScript := options.NewScript(`
     local value = redis.call('GET', KEYS[1])
     return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
 `)
+```
+</TabItem>
+<TabItem label="PHP">
+```php
+// Good: Return appropriate types
+$typedScript = <<<'LUA'
+local value = redis.call('GET', KEYS[1])
+return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+LUA;
 ```
 </TabItem>
 </Tabs>
@@ -1136,6 +1366,23 @@ clusterClient.InvokeScriptWithOptions(
         Args([]string{"John", "john@example.com"}).
         Build(),
 )
+```
+</TabItem>
+<TabItem label="PHP">
+```php
+// Good: Use hash tags for related keys
+$clusterScript = <<<'LUA'
+redis.call('SET', KEYS[1], ARGV[1])
+redis.call('SET', KEYS[2], ARGV[2])
+return 'OK'
+LUA;
+
+// Execute with hash tags
+$clusterClient->eval(
+    $clusterScript,
+    ['user:{123}:name', 'user:{123}:email', 'John', 'john@example.com'],
+    2  // num_keys
+);
 ```
 </TabItem>
 </Tabs>

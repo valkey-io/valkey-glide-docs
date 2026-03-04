@@ -105,6 +105,24 @@ func ConnectStandaloneWithCredentials() {
 }
 ```
   </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'primary.example.com', 'port' => 6379],
+    ['host' => 'replica1.example.com', 'port' => 6379],
+    ['host' => 'replica2.example.com', 'port' => 6379]
+];
+
+$credentials = [
+    'username' => 'user1',
+    'password' => 'passwordA'
+];
+
+$client = new ValkeyGlide();
+$client->connect(addresses: $addresses, credentials: $credentials);
+```
+  </TabItem>
 </Tabs>
 
 ### Cluster
@@ -185,6 +203,24 @@ func ConnectClusterWithCredentials() {
 
     client, err := glide.NewClusterClient(myConfig)
 }
+```
+  </TabItem>
+
+  <TabItem label="PHP">
+```php
+$addresses = [
+    ['host' => 'address.example.com', 'port' => 6379]
+];
+
+$credentials = [
+    'username' => 'user1',
+    'password' => 'passwordA'
+];
+
+$client = new ValkeyGlideCluster(
+    addresses: $addresses,
+    credentials: $credentials
+);
 ```
   </TabItem>
 </Tabs>

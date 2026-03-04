@@ -45,7 +45,7 @@ $result = $client->set('key', 'value');
 // Both PHPRedis and Valkey GLIDE - constructors throw exceptions
 try {
     $client = new ValkeyGlide($config);
-} catch (Exception $e) {
+} catch (ValkeyGlideException $e) {
     // Handle connection/configuration errors
 }
 

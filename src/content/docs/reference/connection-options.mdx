@@ -20,6 +20,7 @@ The following are the configuration references for each Glide clients:
 | Node.js  | [Reference](/languages/nodejs/api/types/GlideClient.GlideClientConfiguration.html)                    | [Reference](/languages/nodejs/api/types/GlideClusterClient.GlideClusterClientConfiguration.html)             |
 | Python   | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration)  | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration)  |
 | Go       | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClientConfiguration) | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClusterClientConfiguration) |
+| PHP      | [Reference](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php#L360-L410)  | [Reference](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L205-L270) |
 
 ### Example
 
@@ -76,6 +77,20 @@ The following are the configuration references for each Glide clients:
         WithUseTLS(false).
         WithRequestTimeout(1000).
         WithClientName("go_app")
+    ```
+    </TabItem>
+
+    <TabItem label="PHP">
+    **Requirements:** PHP 8.1+
+
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        use_tls: false,
+        request_timeout: 1000,
+        client_name: 'php_app'
+    );
     ```
     </TabItem>
 </Tabs>

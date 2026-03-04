@@ -145,6 +145,39 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     // TODO: Add Example
     ```
   </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Define your server credentials
+    $credentials = [
+        'username' => 'your-username',
+        'password' => 'your-password-or-token'
+    ];
+
+    // Define the list of node addresses
+    $addresses = [
+        ['host' => 'localhost', 'port' => 6379],
+        ['host' => 'localhost', 'port' => 6380],
+        ['host' => 'localhost', 'port' => 6381]
+    ];
+
+    // Create the ValkeyGlideCluster instance
+    $client = new ValkeyGlideCluster(
+        addresses: $addresses,
+        credentials: $credentials,
+        request_timeout: 5000,
+        client_name: 'my-client'
+    );
+
+    // Update password dynamically
+    $client->updateConnectionPassword('your-new-password');
+    // To perform immediate re-authentication, set the second parameter to true
+    $client->updateConnectionPassword('your-new-password', true);
+
+    // Clear password from connection configuration
+    $client->clearConnectionPassword(); // Note: This will clear the password from the connection configuration.
+    ```
+  </TabItem>
 </Tabs>
 
 :::caution
@@ -190,6 +223,14 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
   <TabItem label="Go">
     ```go
     // TODO: Add Example
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $credentials = [
+        'password' => 'your-password-or-token'
+    ];
     ```
   </TabItem>
 </Tabs>
