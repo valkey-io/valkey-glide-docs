@@ -12,18 +12,73 @@ GLIDE is also responsible for tracking topology changes in real time, ensuring t
 Conceptually, the PubSub functionality can be divided into four actions: Subscribing, Publishing, Receiving, and Unsubscribing.
 
 :::note[PHP PubSub Model]
-PHP GLIDE uses a different PubSub model based on the PHPRedis API. Instead of immutable subscription configuration during client creation, PHP uses traditional method calls like `subscribe()`, `psubscribe()`, `publish()`, and `unsubscribe()` with callback functions.
+PHP GLIDE uses a different PubSub model based on the PHPRedis API. Instead of config-based subscriptions, PHP uses blocking method calls like `subscribe()` and `psubscribe()` that enter a message loop with a callback. Unsubscribing is done from within the callback via `unsubscribe()` / `punsubscribe()`. PHP does not have a lazy/blocking distinction — all subscribe calls are blocking.
 :::
+
+GLIDE supports two subscription models:
+
+* **Static (config-based):** Subscriptions defined at client creation time as part of the initial configuration.
+* **Dynamic (GLIDE 2.3+):** Subscriptions added or removed at runtime via explicit API calls.
+
+Both models can coexist on the same client — you can define initial subscriptions in the config and later add or remove subscriptions dynamically. In both cases, GLIDE automatically restores subscription state after topology changes or server disconnects via the PubSub Synchronizer.
+
+## PubSub Synchronizer
+
+At the heart of GLIDE's PubSub implementation is the **PubSub Synchronizer**, a background component that manages the lifecycle of all subscriptions — both static and dynamic.
+
+The synchronizer maintains two separate views of subscription state:
+
+* **Desired state:** What the user wants to be subscribed to. Modified by API calls (`subscribe`, `unsubscribe`, etc.) and by the initial config.
+* **Actual state:** What the server has confirmed via push notifications. Tracked per server address for cluster topology awareness.
+
+A **background reconciliation task** runs continuously, waking either on an explicit trigger (e.g., a new subscribe/unsubscribe call, a topology change, or a disconnection) or on a periodic interval (default: every 3 seconds). Incoming push notifications from the server continuously update the actual subscription state, and the next reconciliation cycle picks up any discrepancies. Each reconciliation cycle:
+
+1. Computes the diff between desired and actual state
+2. Sends `SUBSCRIBE` commands for channels in desired but not in actual
+3. Sends `UNSUBSCRIBE` commands for channels in actual but not in desired
+4. Processes any pending unsubscribes caused by topology changes (slot migrations, node removals)
+
+This architecture provides several benefits:
+
+* **Cluster-aware resubscription:** If a connection drops, a node fails, or slots migrate, the synchronizer detects the discrepancy and automatically resubscribes on the correct nodes. Subscriptions are tracked per node address, so recovery is targeted rather than global.
+* **Subscription load balancing:** In cluster mode, subscriptions are distributed across nodes using sharded semantics — each subscription is routed to the node that owns its slot. This spreads the PubSub load across the cluster rather than concentrating it on a single node.
+* **Consistent model:** Both static and dynamic subscriptions flow through the same reconciliation logic, so they benefit equally from automatic recovery.
+
+You can inspect the synchronizer's state at any time using `get_subscriptions()`, which returns both the desired and actual subscription maps.
 
 ## Subscribing
 
-Subscribing in GLIDE differs from the canonical RESP3 protocol. To restore subscription state after a topology change or server disconnect, the subscription configuration is immutable and provided during client creation. Thus, while it is possible to use subscription commands such as `SUBSCRIBE`/`PSUBSCRIBE`/`SSUBSCRIBE` via the custom commands interface, using them alongside this model might lead to unpredictable behavior. The subscription configuration is applied to the servers using the following logic:
+All subscriptions — both static and dynamic — are routed to servers using the following logic:
 
-* **Standalone mode:** The subscriptions are applied to a random node, either a primary or one of the replicas.
-* **Cluster mode:** For both Sharded and Non-sharded subscriptions, the Sharded semantics are used; the subscription is applied to the node holding the slot for the subscription's channel/pattern.
+* **Standalone mode:** Subscribe commands are applied to a random node, either a primary or one of the replicas.
+* **Cluster mode:** For both Sharded and Non-sharded subscriptions, the Sharded semantics are used; the subscription is applied to the node holding the slot for the subscription's channel/pattern. This ensures load distribution across all nodes in the cluster.
+
+### Static Subscriptions (Config-Based)
+
+Static subscriptions are defined during client creation as part of the client configuration.
+
+### Dynamic Subscriptions (GLIDE 2.3+)
+
+Dynamic subscriptions allow you to subscribe and unsubscribe at runtime without creating a new client. They come in two variants:
+
+* **Blocking (with timeout):** Waits for server confirmation before returning. Accepts a `timeout_ms` parameter (0 = wait indefinitely).
+* **Non-blocking (lazy):** Updates the client's desired subscription state and returns immediately. The actual subscription happens asynchronously in the background via the synchronizer's reconciliation process.
+
+| Operation | Blocking | Non-blocking (Lazy) |
+|-----------|----------|---------------------|
+| Subscribe to exact channels | `subscribe(channels, timeout_ms)` | `subscribe_lazy(channels)` |
+| Subscribe to patterns | `psubscribe(patterns, timeout_ms)` | `psubscribe_lazy(patterns)` |
+| Subscribe to sharded channels (cluster only) | `ssubscribe(channels, timeout_ms)` | `ssubscribe_lazy(channels)` |
+| Unsubscribe from exact channels | `unsubscribe(channels, timeout_ms)` | `unsubscribe_lazy(channels)` |
+| Unsubscribe from patterns | `punsubscribe(patterns, timeout_ms)` | `punsubscribe_lazy(patterns)` |
+| Unsubscribe from sharded channels (cluster only) | `sunsubscribe(channels, timeout_ms)` | `sunsubscribe_lazy(channels)` |
+
+*NOTE: Method naming varies by language (e.g., `subscribeLazy` in Java/Node.js/Go, `subscribe_lazy` in Python). To unsubscribe from all channels/patterns, pass `None`/`null`/empty or use the constants `ALL_CHANNELS`, `ALL_PATTERNS`, `ALL_SHARDED_CHANNELS`.*
+
+Dynamic subscriptions work with both static and dynamic subscriptions — you can use `unsubscribe` to remove a channel that was originally defined in the static config.
 
 :::tip[Best Practice]
-Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. That is, the client with subscriptions should not be the same client that issues commands. In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
+GLIDE uses the RESP3 protocol, which allows PubSub subscriptions and regular commands to coexist on the same client without issues. However, for high-throughput PubSub workloads, consider using a dedicated client for subscriptions to reduce latency on regular commands.
 :::
 
 :::note
@@ -47,7 +102,7 @@ There are three methods for receiving messages:
 
 :::caution
 GLIDE Php does not yet support polling/async message retrieval.
-Only callback-based PubSub is available. See [example](#with-callback) above for usage.
+Only callback-based PubSub is available. See the [how-to guide](/how-to/publish-and-subscribe-messages/#dynamic-subscriptions-glide-23) for usage.
 :::
 
 The intended method is selected during client creation with the subscription configuration.
@@ -56,14 +111,30 @@ Calls to the polling/async methods are prohibited and will fail.
 In the case of async/polling, incoming messages will be buffered in an unbounded buffer.
 The user should ensure timely extraction of incoming messages to avoid straining the memory subsystem.
 
+Messages have three kinds based on how they were subscribed:
+* **Message** — from exact channel subscriptions (`SUBSCRIBE`)
+* **PMessage** — from pattern subscriptions (`PSUBSCRIBE`)
+* **SMessage** — from sharded channel subscriptions (`SSUBSCRIBE`, cluster only)
+
 ## Unsubscribing
 
-Since the subscription configuration is immutable and applied upon client creation, the model does not provide methods for unsubscribing during the client's lifetime. Additionally, issuing commands such as `UNSUBSCRIBE`/`PUNSUBSCRIBE`/`SUNSUBSCRIBE` via the custom commands interface may lead to unpredictable behavior. Subscriptions will be removed from servers upon client closure, typically as a result of the client's object destructor. Note that some languages, such as Python, might require an explicit call to a cleanup method, e.g.:
+**Prior to GLIDE 2.3:** The subscription configuration is immutable and applied upon client creation, so no methods for runtime unsubscribing are provided. Additionally, issuing commands such as `UNSUBSCRIBE`/`PUNSUBSCRIBE`/`SUNSUBSCRIBE` via the custom commands interface may lead to unpredictable behavior. Subscriptions are removed from servers upon client closure, typically as a result of the client's object destructor. Note that some languages, such as Python, might require an explicit call to a cleanup method, e.g.:
 
 ```python
 client.close()
 ```
 
+**GLIDE 2.3+:** Use the `unsubscribe` / `punsubscribe` / `sunsubscribe` methods (blocking or lazy variants) described in the [Dynamic Subscriptions](#dynamic-subscriptions-glide-23) section above. To unsubscribe from all channels/patterns of a given type, pass `None`/`null`/empty, or use the provided constants (`ALL_CHANNELS`, `ALL_PATTERNS`, `ALL_SHARDED_CHANNELS`). This works for both statically and dynamically subscribed channels. Remaining subscriptions are still cleaned up on client closure.
+
+Unsubscribe commands are routed as follows:
+
+* **Standalone mode:** Unsubscribe commands (`UNSUBSCRIBE`, `PUNSUBSCRIBE`) are sent to **all nodes**. This is necessary because in environments like ElastiCache, the DNS address may change, making it impossible to know which specific node holds the subscription.
+* **Cluster mode:** Unsubscribe commands are routed to the specific node address where the subscription is tracked. For **sharded** unsubscribes (`SUNSUBSCRIBE`), channels are grouped by slot and each group is sent to the appropriate slot owner.
+
+## Subscription State Introspection (GLIDE 2.3+)
+
+Use `get_subscriptions()` to inspect the current subscription state. It returns both the **desired** subscriptions (what you've requested) and the **actual** subscriptions (what the server has confirmed). This is useful for verifying that dynamic subscriptions have been fully applied, especially when using non-blocking (lazy) operations.
+
 ## What's Next
 
-Take a look at our [guide](/how-to/publish-and-subscribe-messages/) on how to configure pubsub for different clients.
+Take a look at our [Pub/Sub Messaging](/how-to/publish-and-subscribe-messages/) how-to for usage examples across all supported languages.
