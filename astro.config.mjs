@@ -99,7 +99,7 @@ export default defineConfig({
               label: "Commands API",
               collapsed: true,
               items: [
-                "commands/valkey-string"
+                "commands/valkey-string",
               ]
             },
             {
@@ -310,6 +310,10 @@ export default defineConfig({
           label: "Reference",
           collapsed: true,
           items: [
+            {
+              label: "Commands",
+              autogenerate: { directory: "reference/commands" }
+            },
             "reference/access-control",
             "reference/scripting-reference",
             "reference/client-comparisons",

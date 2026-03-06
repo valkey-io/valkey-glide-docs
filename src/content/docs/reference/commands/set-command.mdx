@@ -1,0 +1,87 @@
+---
+title: String Operations
+description: See which string commands are supported by GLIDE and how to use them.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+
+The following describes the string commands supported by both GLIDE standalone and cluster clients.
+
+## SET
+
+Set key to hold the string value. If key already holds a value, it is overwritten, regardless of its type. Any previous time to live associated with the key is discarded on successful SET operation.
+
+<Tabs syncKey="progLangInExamples">
+
+  <TabItem label="Python">
+    ```python
+    client = GlideClient(configurations)
+
+    await client.set("key", "value")
+    ```
+    [Details](https://glide.valkey.io/languages/python/api/glide_sync/core/#glide_sync.sync_commands.CoreCommands.set)
+   </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const client = await GlideClient.createClient(configurations);
+
+    await client.set("key", "value");
+    ```
+    [Details](https://glide.valkey.io/languages/nodejs/api/classes/GlideClient.GlideClient.html#set)
+   </TabItem>
+
+</Tabs>
+
+## GET
+
+Get the value of key. If the key does not exist the special value nil is returned. An error is returned if the value stored at key is not a string, because GET only handles string values.
+
+<Tabs syncKey="progLangInExamples">
+
+  <TabItem label="Python">
+    ```python
+    client = GlideClient(configurations)
+
+    result = await client.get("key")
+    ```
+    [Details](https://glide.valkey.io/languages/python/api/glide_sync/core/#glide_sync.sync_commands.CoreCommands.get)
+   </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const client = await GlideClient.createClient(configurations);
+
+    const result = await client.get("key");
+    ```
+    [Details](https://glide.valkey.io/languages/nodejs/api/classes/GlideClient.GlideClient.html#get)
+   </TabItem>
+
+</Tabs>
+
+## DEL
+
+Removes the specified keys. A key is ignored if it does not exist. Returns the number of keys that were removed.
+
+<Tabs syncKey="progLangInExamples">
+
+  <TabItem label="Python">
+    ```python
+    client = GlideClient(configurations)
+
+    count = await client.delete(["key1", "key2"])
+    ```
+    [Details](https://glide.valkey.io/languages/python/api/glide_sync/core/#glide_sync.sync_commands.CoreCommands.delete)
+   </TabItem>
+
+  <TabItem label="Node.js">
+    ```javascript
+    const client = await GlideClient.createClient(configurations);
+
+    const count = await client.del(["key1", "key2"]);
+    ```
+    [Details](https://glide.valkey.io/languages/nodejs/api/classes/GlideClient.GlideClient.html#del)
+   </TabItem>
+
+</Tabs>
