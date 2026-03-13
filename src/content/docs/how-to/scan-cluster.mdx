@@ -5,14 +5,15 @@ description: See how to use the Cluster Scan API from GLIDE.
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-GLIDE Cluster Scan API is built on top of the `SCAN` command, making it easier to setup and use in a cluster. 
-It also adds support for slot migration, failovers, and cluster rebalancing. 
+GLIDE Cluster Scan API is built on top of the `SCAN` command, making it easier to setup and use in a cluster.
+It also adds support for slot migration, failovers, and cluster rebalancing.
 
 :::note
 For a detailed explanation of Cluster Scan, see our [article](/concepts/client-features/cluster-scan).
 :::
 
 ## Scan
+
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
     ```py
@@ -81,7 +82,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```php
     $cursor = new ClusterScanCursor();
     $allKeys = [];
-    
+
     while (true) {
         $keys = $client->scan($cursor);
         if ($keys) {
@@ -100,6 +101,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 </Tabs>
 
 ## Scan Using Patterns
+
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
     ```py
@@ -184,10 +186,10 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   <TabItem label="PHP">
     ```php
     $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-    
+
     $cursor = new ClusterScanCursor();
     $matchingKeys = [];
-    
+
     while (true) {
         $keys = $client->scan($cursor, '*key*');
         if ($keys) {
@@ -206,6 +208,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 </Tabs>
 
 ## Scan With The Count Option
+
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
     ```python
@@ -282,7 +285,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   <TabItem label="PHP">
     ```php
     $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-    
+
     $cursor = new ClusterScanCursor();
     $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
     // Returns around `count` amount of keys: ['my_key1']
@@ -291,6 +294,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 </Tabs>
 
 ## Scan For a Specific Data Type.
+
 <Tabs syncKey="progLangExample">
   <TabItem label="Python">
     ```py
@@ -379,10 +383,10 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```php
     $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
     $client->sadd('this_is_a_set', 'value4');
-    
+
     $cursor = new ClusterScanCursor();
     $allKeys = [];
-    
+
     while (true) {
         $keys = $client->scan($cursor, null, 0, 'string');
         if ($keys) {

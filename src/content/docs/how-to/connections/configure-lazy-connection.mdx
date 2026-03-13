@@ -154,7 +154,7 @@ Lazy connection can be configured through the client configuration object.
 
     // No connection established yet - this will trigger the connection
     $result = $standaloneClient->ping();
-    
+
     $standaloneClient->close();
     $clusterClient->close();
     ```
@@ -163,23 +163,22 @@ Lazy connection can be configured through the client configuration object.
 
 ## How It Works
 
-When lazy connect is enabled, the client initialization process completes without establishing actual network connections to the Valkey servers. 
+When lazy connect is enabled, the client initialization process completes without establishing actual network connections to the Valkey servers.
 Instead, connections are created on-demand when the first command is sent. This approach offers several advantages:
 
-- **Reduced Startup Time**: Client creation is faster since no network operations are performed during initialization
-- **Disconnected Environment Support**: Clients can be created even when Valkey servers are temporarily unavailable
-- **Resource Efficiency**: Network resources are only allocated when actually needed
+* **Reduced Startup Time**: Client creation is faster since no network operations are performed during initialization
+* **Disconnected Environment Support**: Clients can be created even when Valkey servers are temporarily unavailable
+* **Resource Efficiency**: Network resources are only allocated when actually needed
 
 ## Important Considerations
 
-- **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
-- **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior
-- **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
-
+* **First Command Latency**: The initial command will experience additional latency as it must establish the connection before execution
+* **Connection Timeout**: During the initial connection establishment, the `connectionTimeout` setting (not `requestTimeout`) governs the timeout behavior
+* **Error Handling**: Connection failures will surface when the first command is attempted, not during client creation
 
 ## Best Practices
 
-- **Use for Development**: Lazy connect is particularly useful in development environments where services may start in different orders
-- **Container Orchestration**: Helpful in containerized environments where Valkey containers might not be ready immediately
-- **Health Checks**: Consider implementing application-level health checks that account for lazy connection behavior
-- **Error Handling**: Ensure proper error handling for the first command, as connection failures will manifest at that point
+* **Use for Development**: Lazy connect is particularly useful in development environments where services may start in different orders
+* **Container Orchestration**: Helpful in containerized environments where Valkey containers might not be ready immediately
+* **Health Checks**: Consider implementing application-level health checks that account for lazy connection behavior
+* **Error Handling**: Ensure proper error handling for the first command, as connection failures will manifest at that point

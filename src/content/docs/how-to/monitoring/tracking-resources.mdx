@@ -5,13 +5,12 @@ description: Track active connections and clients using GLIDE statistics API.
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-
 GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statistics with (currently) 2 properties (available for both `GlideClient` & `GlideClusterClient`):
 
 * `total_connections` contains the number of active connections across **all** clients
 * `total_clients` contains the number of active clients (regardless of its type)
 
-:::caution[Not Generally Available]
+:::caution\[Not Generally Available]
 This is not supported by the Go client.
 :::
 
@@ -37,7 +36,8 @@ This is not supported by the Go client.
     print(f"Total Clients: {stats['total_clients']}")
     ```
   </TabItem>
-    <TabItem label="Java">
+
+  <TabItem label="Java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -55,6 +55,7 @@ This is not supported by the Go client.
     // do something with the `stats`
     ```
   </TabItem>
+
   <TabItem label="Node">
     ```ts
     import {GlideClusterClient} from "@valkey/valkey-glide";

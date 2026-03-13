@@ -5,16 +5,15 @@ description: See how to subscribe and publish messages with Valkey GLIDE clients
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-
 Valkey GLIDE PubSub aims to unify various nuances into a coherent interface, minimizing differences between Sharded, Cluster, and Standalone configurations.
-Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues. 
+Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues.
 
 This guide will go over how to configure GLIDE pubsub system.
 
 ## Use Separate Clients
 
-Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. 
-That is, the client with subscriptions should not be the same client that issues commands. 
+Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions.
+That is, the client with subscriptions should not be the same client that issues commands.
 In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
 
 ## Publishing Client
@@ -83,8 +82,8 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
 </Tabs>
 
 :::note
-Since GLIDE implements automatic re-connections and re-subscriptions on behalf of the user, there is a possibility of message loss during these activities. 
-This is not a GLIDE-specific characteristic; similar effects will occur if the user handles such issues independently. 
+Since GLIDE implements automatic re-connections and re-subscriptions on behalf of the user, there is a possibility of message loss during these activities.
+This is not a GLIDE-specific characteristic; similar effects will occur if the user handles such issues independently.
 Since the RESP protocol does not guarantee strong delivery semantics for PubSub functionality, GLIDE does not introduce additional constraints in this regard.
 :::
 
@@ -94,7 +93,7 @@ To subscribe to messages, use a separate client with subscriptions configured th
 
 ### With Callback
 
-Glide clients can register a callback method to handle subscriptions in the client configuration. 
+Glide clients can register a callback method to handle subscriptions in the client configuration.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Java">
@@ -204,7 +203,7 @@ Glide clients can register a callback method to handle subscriptions in the clie
     ```php
     // Note: subscribe() is BLOCKING in PHP - it enters a message loop
     // Use separate processes/threads for subscriber and publisher
-    
+
     // Subscriber process:
     $listeningClient = new ValkeyGlide();
     $listeningClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);

@@ -9,8 +9,6 @@ import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 import { Content as InstallCommonPrereq } from '../../../commons/instructions/install-prereq.mdx';
 
-
-
 Before building the package from source, make sure that you have installed the listed dependencies below:
 
 * python3 virtualenv
@@ -32,35 +30,36 @@ See the [Valkey installation guide](https://valkey.io/topics/installation/) to i
 ## Dependencies installation
 
 <Steps>
+  1. #### Install common prerequisites
+     <InstallCommonPrereq />
+  2. #### Clone the repository
+     ```bash
+     mkdir -p $HOME/src
+     cd $HOME/src
+     git clone https://github.com/valkey-io/valkey-glide.git
+     cd valkey-glide
+     ```
+  3. #### Build the client
 
-1. #### Install common prerequisites
-    <InstallCommonPrereq/>
-2. #### Clone the repository
-    ```bash
-    mkdir -p $HOME/src
-    cd $HOME/src
-    git clone https://github.com/valkey-io/valkey-glide.git
-    cd valkey-glide
-    ```
-3. #### Build the client
-    You can build the async Python client using the `dev.py` CLI utility found in the `python/` project directory.
-    It handles environment setup, dependency installation, and consistent build logic.
+     You can build the async Python client using the `dev.py` CLI utility found in the `python/` project directory.
+     It handles environment setup, dependency installation, and consistent build logic.
 
-    ```bash
-    cd python/
-    python3 dev.py --help
-    ```
-    :::tip
-    Consider using a Python virtual environment to avoid dependency conflicts:
-    :::
+     ```bash
+     cd python/
+     python3 dev.py --help
+     ```
 
-    #### Examples:
-    ```bash
-    # Build the async client in release mode
-    python3 dev.py build --client async --mode release
-    ```
-    * Use `--mode debug` (default) when developing or debugging.
-    * Use `--mode release` when measuring performance or preparing production builds.
+     :::tip
+     Consider using a Python virtual environment to avoid dependency conflicts:
+     :::
 
+     #### Examples:
+
+     ```bash
+     # Build the async client in release mode
+     python3 dev.py build --client async --mode release
+     ```
+
+     * Use `--mode debug` (default) when developing or debugging.
+     * Use `--mode release` when measuring performance or preparing production builds.
 </Steps>
-

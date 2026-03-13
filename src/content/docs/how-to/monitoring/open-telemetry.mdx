@@ -21,120 +21,120 @@ GLIDE does not export data directly to third-party services—instead, it sends 
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig
+    ```python
+    from glide import OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig
 
-OpenTelemetry.init(OpenTelemetryConfig(
-    traces=OpenTelemetryTracesConfig(
-        endpoint="http://localhost:4318/v1/traces",
-        sample_percentage=10  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
-    ),
-    metrics=OpenTelemetryMetricsConfig(
-        endpoint="http://localhost:4318/v1/metrics"
-    ),
-    flush_interval_ms=1000  # Optional, defaults to 5000
-))
-```
+    OpenTelemetry.init(OpenTelemetryConfig(
+        traces=OpenTelemetryTracesConfig(
+            endpoint="http://localhost:4318/v1/traces",
+            sample_percentage=10  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
+        ),
+        metrics=OpenTelemetryMetricsConfig(
+            endpoint="http://localhost:4318/v1/metrics"
+        ),
+        flush_interval_ms=1000  # Optional, defaults to 5000
+    ))
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.OpenTelemetry;
+    ```java
+    import glide.api.OpenTelemetry;
 
-OpenTelemetry.init(
-     OpenTelemetry.OpenTelemetryConfig.builder()
-        .traces(
-            OpenTelemetry.TracesConfig.builder()
-                .endpoint("http://localhost:4318/v1/traces")
-                .samplePercentage(10) // Optional, defaults to 1. Can also be changed at runtime via setSamplePercentage().
-                .build()
-         )
-         .metrics(
-            OpenTelemetry.MetricsConfig.builder()
-                .endpoint("http://localhost:4318/v1/metrics")
-                .build()
-         )
-        .flushIntervalMs(1000L) // Optional, defaults to 5000
-        .build()
-);
-```
+    OpenTelemetry.init(
+         OpenTelemetry.OpenTelemetryConfig.builder()
+            .traces(
+                OpenTelemetry.TracesConfig.builder()
+                    .endpoint("http://localhost:4318/v1/traces")
+                    .samplePercentage(10) // Optional, defaults to 1. Can also be changed at runtime via setSamplePercentage().
+                    .build()
+             )
+             .metrics(
+                OpenTelemetry.MetricsConfig.builder()
+                    .endpoint("http://localhost:4318/v1/metrics")
+                    .build()
+             )
+            .flushIntervalMs(1000L) // Optional, defaults to 5000
+            .build()
+    );
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig } from "@valkey/valkey-glide";
+    ```typescript
+    import { OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig } from "@valkey/valkey-glide";
 
-// Define traces configuration
-const tracesConfig: OpenTelemetryTracesConfig = {
-  endpoint: "http://localhost:4318/v1/traces",
-  samplePercentage: 10  // Optional, defaults to 1%
-};
+    // Define traces configuration
+    const tracesConfig: OpenTelemetryTracesConfig = {
+      endpoint: "http://localhost:4318/v1/traces",
+      samplePercentage: 10  // Optional, defaults to 1%
+    };
 
-// Define metrics configuration
-const metricsConfig: OpenTelemetryMetricsConfig = {
-  endpoint: "http://localhost:4318/v1/metrics"
-};
+    // Define metrics configuration
+    const metricsConfig: OpenTelemetryMetricsConfig = {
+      endpoint: "http://localhost:4318/v1/metrics"
+    };
 
-// Complete OpenTelemetry configuration
-const openTelemetryConfig: OpenTelemetryConfig = {
-  traces: tracesConfig,           // Optional: can omit if only metrics are needed
-  metrics: metricsConfig,         // Optional: can omit if only traces are needed
-  flushIntervalMs: 1000           // Optional, defaults to 5000 ms
-};
+    // Complete OpenTelemetry configuration
+    const openTelemetryConfig: OpenTelemetryConfig = {
+      traces: tracesConfig,           // Optional: can omit if only metrics are needed
+      metrics: metricsConfig,         // Optional: can omit if only traces are needed
+      flushIntervalMs: 1000           // Optional, defaults to 5000 ms
+    };
 
-// Initialize OpenTelemetry (can only be called once per process)
-OpenTelemetry.init(openTelemetryConfig);
-```
+    // Initialize OpenTelemetry (can only be called once per process)
+    OpenTelemetry.init(openTelemetryConfig);
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2"
 
-interval := int64(1000)
-config := glide.OpenTelemetryConfig{
-	Traces: &glide.OpenTelemetryTracesConfig{
-		Endpoint: "http://localhost:4318/v1/traces",
-		SamplePercentage: 10, // Optional, defaults to 1. Can also be changed at runtime via `SetSamplePercentage()`
-	},
-	Metrics: &glide.OpenTelemetryMetricsConfig{
-		Endpoint: "http://localhost:4318/v1/metrics",
-	},
-	FlushIntervalMs: &interval, // Optional, defaults to 5000
-}
-err := glide.GetOtelInstance().Init(config)
-if err != nil {
-	log.Fatalf("Failed to initialize OpenTelemetry: %v", err)
-}
-```
+    interval := int64(1000)
+    config := glide.OpenTelemetryConfig{
+    	Traces: &glide.OpenTelemetryTracesConfig{
+    		Endpoint: "http://localhost:4318/v1/traces",
+    		SamplePercentage: 10, // Optional, defaults to 1. Can also be changed at runtime via `SetSamplePercentage()`
+    	},
+    	Metrics: &glide.OpenTelemetryMetricsConfig{
+    		Endpoint: "http://localhost:4318/v1/metrics",
+    	},
+    	FlushIntervalMs: &interval, // Optional, defaults to 5000
+    }
+    err := glide.GetOtelInstance().Init(config)
+    if err != nil {
+    	log.Fatalf("Failed to initialize OpenTelemetry: %v", err)
+    }
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-use ValkeyGlide\OpenTelemetry\{OpenTelemetryConfig, TracesConfig, MetricsConfig};
+    ```php
+    use ValkeyGlide\OpenTelemetry\{OpenTelemetryConfig, TracesConfig, MetricsConfig};
 
-$otelConfig = OpenTelemetryConfig::builder()
-    ->traces(
-        TracesConfig::builder()
-            ->endpoint('http://localhost:4318/v1/traces')
-            ->samplePercentage(10)  // Optional, defaults to 1
-            ->build()
-    )
-    ->metrics(
-        MetricsConfig::builder()
-            ->endpoint('http://localhost:4318/v1/metrics')
-            ->build()
-    )
-    ->flushIntervalMs(1000)  // Optional, defaults to 5000
-    ->build();
+    $otelConfig = OpenTelemetryConfig::builder()
+        ->traces(
+            TracesConfig::builder()
+                ->endpoint('http://localhost:4318/v1/traces')
+                ->samplePercentage(10)  // Optional, defaults to 1
+                ->build()
+        )
+        ->metrics(
+            MetricsConfig::builder()
+                ->endpoint('http://localhost:4318/v1/metrics')
+                ->build()
+        )
+        ->flushIntervalMs(1000)  // Optional, defaults to 5000
+        ->build();
 
-// Pass configuration to client via advanced_config
-$client = new ValkeyGlide();
-$client->connect(
-    addresses: [['host' => 'localhost', 'port' => 6379]],
-    advanced_config: ['otel' => $otelConfig]
-);
-```
+    // Pass configuration to client via advanced_config
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        advanced_config: ['otel' => $otelConfig]
+    );
+    ```
   </TabItem>
 </Tabs>
 
@@ -182,6 +182,6 @@ If using `file://` as the endpoint:
 * File exporter paths must start with `file://` and have an existing parent directory.
 * Invalid configuration will throw an error synchronously when calling initialization.
 
-:::caution[Important]
+:::caution\[Important]
 `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
 :::

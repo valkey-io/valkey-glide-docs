@@ -5,8 +5,6 @@ description: A reference page in my new Starlight docs site.
 
 import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 
-
-
 Starting with version 2.1, Glide introduces a new synchronous Python client, alongside the existing default asynchronous client.
 Currently the sync client does not yet support the following features:
 
@@ -22,8 +20,8 @@ Support for these features is on our roadmap and they are planned to be added in
 The synchronous client is located under the `glide_sync` module. It's API is similar to the asynchronous client making it interchangable in most cases with the exception of not having to use  the `await` keyword.
 
 ### Example: Standalone Connection
-<Tabs>
 
+<Tabs>
   <TabItem label="Synchronous">
     ```python
     from glide_sync import (
@@ -83,5 +81,4 @@ The synchronous client is located under the `glide_sync` module. It's API is sim
     print("Pipeline Results:", results)
     ```
   </TabItem>
-
 </Tabs>

@@ -5,20 +5,20 @@ title: Asynchronous Execution
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 To enable high performance and scalability, Valkey GLIDE uses connection multiplexing in its Rust core. This makes it async by nature
-with each client wrapper implementing the asynchronous patterns of their language. This provides a consistent interface across languages 
-while taking advantage of Rust's performance. 
+with each client wrapper implementing the asynchronous patterns of their language. This provides a consistent interface across languages
+while taking advantage of Rust's performance.
 
 ## Rust Core Multiplexing
 
-In connection multiplexing, all requests are sent through a single connection as opposed to using a connection pool. 
-As a result, each GLIDE client instance only maintains a single connection per node. 
+In connection multiplexing, all requests are sent through a single connection as opposed to using a connection pool.
+As a result, each GLIDE client instance only maintains a single connection per node.
 
-When combined with Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities, it allows the Rust Core to 
+When combined with Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities, it allows the Rust Core to
 send off requests without waiting for responses using a single multiplex connection.
 This design allows GLIDE clients to deliver high asynchronous performance with only a single connection.
 
-:::tip[Using a Single Client]
-Using a single client instance (a single connection) is the best way to ensure high performance. 
+:::tip\[Using a Single Client]
+Using a single client instance (a single connection) is the best way to ensure high performance.
 However, in some scenarios, opening connections for separate tasks can be more beneficial.
 
 To learn more, see our guides on [managing connections](/how-to/connection-management/).
@@ -30,49 +30,55 @@ One of GLIDE's goals is to provide a consistent and friendly interface.
 To achieve this, each of GLIDE's clients supports the language's native asynchronous execution model.
 
 <Tabs>
-    <TabItem label="Python">
-        ```python
-        # Support python's async/await
-        await client.set("user:101", "active")
-        ```
+  <TabItem label="Python">
+    ```python
+    # Support python's async/await
+    await client.set("user:101", "active")
+    ```
 
-        :::note
-        GLIDE Python provides a separate synchronous API with the `valkey-glide-sync` [client](/how-to/synchronous-connection).
-        :::
-    </TabItem>
-    <TabItem label="Node">
-        ```typescript
-        // Support Javascript Promises syntax
-        const status = await client.set("user:101", "active");
-        ```
-    </TabItem>
-    <TabItem label="Java">
-        ```java
-        // Async set operation using Future interface
-        CompletableFuture<String> future = client.set("user:101", "active");
-        ```
-    </TabItem>
-    <TabItem label="Go">
-        ```go
-        go func(ctx){
-            // Blocking, but Goroutine compatible
-            result, err := client.Set(ctx, "user:101", "active")
-            if err != nil {
-                log.Println(err)
-            }
-        }()
-        ```
-        :::note[Goroutines Compatible]
-        The GLIDE Go client is thread safe and compatible with goroutines.
-        :::
-    </TabItem>
-    <TabItem label="PHP">
-        ```php
-        // Synchronous blocking API
-        $client->set('user:101', 'active');
-        ```
-        :::note[Synchronous API]
-        The GLIDE PHP client uses a synchronous blocking API, similar to PHPRedis. While operations block until completion, the underlying Rust core still uses connection multiplexing for efficient communication with Valkey.
-        :::
-    </TabItem>
+    :::note
+    GLIDE Python provides a separate synchronous API with the `valkey-glide-sync` [client](/how-to/synchronous-connection).
+    :::
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Support Javascript Promises syntax
+    const status = await client.set("user:101", "active");
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Async set operation using Future interface
+    CompletableFuture<String> future = client.set("user:101", "active");
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    go func(ctx){
+        // Blocking, but Goroutine compatible
+        result, err := client.Set(ctx, "user:101", "active")
+        if err != nil {
+            log.Println(err)
+        }
+    }()
+    ```
+
+    :::note\[Goroutines Compatible]
+    The GLIDE Go client is thread safe and compatible with goroutines.
+    :::
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Synchronous blocking API
+    $client->set('user:101', 'active');
+    ```
+
+    :::note\[Synchronous API]
+    The GLIDE PHP client uses a synchronous blocking API, similar to PHPRedis. While operations block until completion, the underlying Rust core still uses connection multiplexing for efficient communication with Valkey.
+    :::
+  </TabItem>
 </Tabs>

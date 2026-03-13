@@ -8,13 +8,10 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
-
-
 Below is a comprehensive chart comparing common Redis commands between redis-py and Valkey GLIDE:
 
 ### Connection
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | Connect | `redis.Redis(host='localhost', port=6379)` | `GlideClient.create(GlideClientConfiguration(addresses=[NodeAddress(host="localhost", port=6379)]))` |
@@ -23,6 +20,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | Select DB | `r.select(1)` | `client.select(1)` |
 
 ### Strings
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | SET | `r.set('key', 'val')` | `client.set('key', 'val')` |
@@ -40,6 +38,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | SETRANGE | `r.setrange('key', 0, 'val')` | `client.setrange('key', 0, 'val')` |
 
 ### Keys
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | DEL | `r.delete('key1', 'key2')` or `r.delete(['key1', 'key2'])` | `client.delete(['key1', 'key2'])` |
@@ -52,6 +51,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | RENAMENX | `r.renamenx('old', 'new')` | `client.renamenx('old', 'new')` |
 
 ### Hashes
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | HSET | `r.hset('hash', 'k1', 'v1')` or `r.hset('hash', mapping={'k1': 'v1'})` | `client.hset('hash', {'k1': 'v1'})` |
@@ -63,6 +63,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | HEXISTS | `r.hexists('hash', 'field')` | `client.hexists('hash', 'field')` |
 
 ### Lists
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | LPUSH | `r.lpush('list', 'a', 'b')` or `r.lpush('list', ['a', 'b'])` | `client.lpush('list', ['a', 'b'])` |
@@ -72,6 +73,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | LRANGE | `r.lrange('list', 0, -1)` | `client.lrange('list', 0, -1)` |
 
 ### Sets
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | SADD | `r.sadd('set', 'a', 'b')` or `r.sadd('set', ['a', 'b'])` | `client.sadd('set', ['a', 'b'])` |
@@ -80,6 +82,7 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | SISMEMBER | `r.sismember('set', 'a')` | `client.sismember('set', 'a')` |
 
 ### Sorted Sets
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | ZADD | `r.zadd('zset', {'a': 1, 'b': 2})` | `client.zadd('zset', [{'score': 1, 'member': 'a'}, {'score': 2, 'member': 'b'}])` |
@@ -91,22 +94,26 @@ Below is a comprehensive chart comparing common Redis commands between redis-py 
 | ZREVRANK | `r.zrevrank('zset', 'a')` | `client.zrevrank('zset', 'a')` |
 
 ### Transactions
+
 v| Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | MULTI/EXEC | `r.pipeline(transaction=True).set('k', 'v').get('k').execute()` | `client.exec(Transaction().set('k', 'v').get('k'))` |
 
 ### Lua Scripts
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | EVAL | `r.eval(script, 1, 'key', 'arg')` | `client.invoke_script(Script(script), keys=['key'], args=['arg'])` |
 | EVALSHA | `r.evalsha(sha, 1, 'key', 'arg')` | `client.invoke_script(Script(script), keys=['key'], args=['arg'])` |
 
 ### Custom Commands
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | Raw Command | `r.execute_command('SET', 'key', 'value')` | `client.custom_command(['SET', 'key', 'value'])` |
 
 ### Connection Management
+
 | Command | redis-py | Valkey GLIDE |
 |---------|---------|--------------|
 | Close | `r.close()` | `client.close()` |

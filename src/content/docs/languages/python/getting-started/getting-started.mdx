@@ -7,8 +7,6 @@ sidebar:
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-
-
 ## System Requirements
 
 The release of Valkey GLIDE was tested on the following platforms:
@@ -28,6 +26,7 @@ macOS:
 * macOS 13.7 (x86\_64/amd64)
 
 ## Python Supported Versions
+
 We currently support Python 3.9 to 3.13
 
 Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency frameworks.
@@ -37,17 +36,17 @@ Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency fr
 The Python client is available in synchronous and asynchronous version:
 
 <Tabs>
-    <TabItem label="Asynchronous">
+  <TabItem label="Asynchronous">
     ```bash
     pip3 install valkey-glide
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="Synchrous">
+  <TabItem label="Synchrous">
     ```bash
     pip3 install valkey-glide-sync
     ```
-    </TabItem>
+  </TabItem>
 </Tabs>
 
 ## Examples: Async Client

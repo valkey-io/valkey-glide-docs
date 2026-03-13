@@ -39,7 +39,7 @@ GLIDE creates a **trace span for each Valkey command**, giving detailed visibili
 
 This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
 
-:::caution[Attention]
+:::caution\[Attention]
 Some advanced commands are not yet included in tracing instrumentation:
 
 * The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
@@ -116,7 +116,7 @@ If using `file://` as the endpoint:
 * File exporter paths must start with `file://` and have an existing parent directory.
 * Invalid configuration will throw an error synchronously when calling `OpenTelemetry.init()`.
 
-:::caution[Important]
+:::caution\[Important]
 `OpenTelemetry.init()` can only be called **once per process**. Subsequent calls will be ignored. To change configuration, restart the process.
 :::
 

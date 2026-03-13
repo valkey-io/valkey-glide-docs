@@ -5,7 +5,7 @@ description: Guide for integrating Valkey GLIDE with AWS IAM using AWS SDK for s
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-:::note[Built-in IAM Support in GLIDE 2.2+]
+:::note\[Built-in IAM Support in GLIDE 2.2+]
 Starting with GLIDE 2.2+, built-in support for **AWS Identity and Access Management (IAM)** authentication is available when connecting to Amazon ElastiCache and MemoryDB clusters.
 This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
@@ -22,200 +22,200 @@ This guide shows how to utilize the AWS SDK for the IAM token generation.
 Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
 
 ## Authentication with AWS SDK
+
 ### Token Generation
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from typing import Tuple, Union
-from urllib.parse import ParseResult, urlencode, urlunparse
-import botocore.session
-from botocore.model import ServiceId
-from botocore.signers import RequestSigner
-from cachetools import TTLCache, cached
-import valkey
+    ```python
+    from typing import Tuple, Union
+    from urllib.parse import ParseResult, urlencode, urlunparse
+    import botocore.session
+    from botocore.model import ServiceId
+    from botocore.signers import RequestSigner
+    from cachetools import TTLCache, cached
+    import valkey
 
 
-class ElastiCacheIAMProvider(valkey.CredentialProvider):
-    def __init__(self, user, cluster_name, region="us-east-1"):
-        self.user = user
-        self.cluster_name = cluster_name
-        self.region = region
+    class ElastiCacheIAMProvider(valkey.CredentialProvider):
+        def __init__(self, user, cluster_name, region="us-east-1"):
+            self.user = user
+            self.cluster_name = cluster_name
+            self.region = region
 
-        session = botocore.session.get_session()
-        self.request_signer = RequestSigner(
-            ServiceId("elasticache"),
-            self.region,
-            "elasticache",
-            "v4",
-            session.get_credentials(),
-            session.get_component("event_emitter"),
-        )
-
-    # Generated IAM tokens are valid for 15 minutes
-    @cached(cache=TTLCache(maxsize=128, ttl=900))
-    def get_credentials(self) -> Tuple[str, str]:
-        query_params = {"Action": "connect", "User": self.user}
-        url = urlunparse(
-            ParseResult(
-                scheme="https",
-                netloc=self.cluster_name,
-                path="/",
-                query=urlencode(query_params),
-                params="",
-                fragment="",
+            session = botocore.session.get_session()
+            self.request_signer = RequestSigner(
+                ServiceId("elasticache"),
+                self.region,
+                "elasticache",
+                "v4",
+                session.get_credentials(),
+                session.get_component("event_emitter"),
             )
-        )
-        signed_url = self.request_signer.generate_presigned_url(
-            {"method": "GET", "url": url, "body": {}, "headers": {}, "context": {}},
-            operation_name="connect",
-            expires_in=900,
-            region_name=self.region,
-        )
-        # Elasticache expects to receive the URL without the protocol prefix
-        return (self.user, signed_url.removeprefix("https://"))
-```
+
+        # Generated IAM tokens are valid for 15 minutes
+        @cached(cache=TTLCache(maxsize=128, ttl=900))
+        def get_credentials(self) -> Tuple[str, str]:
+            query_params = {"Action": "connect", "User": self.user}
+            url = urlunparse(
+                ParseResult(
+                    scheme="https",
+                    netloc=self.cluster_name,
+                    path="/",
+                    query=urlencode(query_params),
+                    params="",
+                    fragment="",
+                )
+            )
+            signed_url = self.request_signer.generate_presigned_url(
+                {"method": "GET", "url": url, "body": {}, "headers": {}, "context": {}},
+                operation_name="connect",
+                expires_in=900,
+                region_name=self.region,
+            )
+            # Elasticache expects to receive the URL without the protocol prefix
+            return (self.user, signed_url.removeprefix("https://"))
+    ```
   </TabItem>
 
   <TabItem label="Java">
+    :::note\[AWS SDK v2]
+    This token generation example uses AWS SDK for Java v2. For token generation using AWS SDK for Java v1, see the Legacy section below.
+    :::
 
-:::note[AWS SDK v2]
-This token generation example uses AWS SDK for Java v2. For token generation using AWS SDK for Java v1, see the Legacy section below.
-:::
+    ```java
+    import java.net.URI;
+    import java.time.Duration;
+    import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+    import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+    import software.amazon.awssdk.http.SdkHttpMethod;
+    import software.amazon.awssdk.http.SdkHttpRequest;
+    import software.amazon.awssdk.http.auth.aws.signer.AwsV4FamilyHttpSigner.AuthLocation;
+    import software.amazon.awssdk.http.auth.aws.signer.AwsV4HttpSigner;
+    import software.amazon.awssdk.utils.StringUtils;
 
-```java
-import java.net.URI;
-import java.time.Duration;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.http.SdkHttpMethod;
-import software.amazon.awssdk.http.SdkHttpRequest;
-import software.amazon.awssdk.http.auth.aws.signer.AwsV4FamilyHttpSigner.AuthLocation;
-import software.amazon.awssdk.http.auth.aws.signer.AwsV4HttpSigner;
-import software.amazon.awssdk.utils.StringUtils;
+    class ElasticachePasswordGenerator {
+        private final AwsV4HttpSigner awsV4HttpSigner;
+        private final AwsCredentialsProvider credentialsProvider;
 
-class ElasticachePasswordGenerator {
-    private final AwsV4HttpSigner awsV4HttpSigner;
-    private final AwsCredentialsProvider credentialsProvider;
+        private final String cacheName;
+        private final String cacheRegion;
+        private final String userId;
+        private final boolean isServerless;
 
-    private final String cacheName;
-    private final String cacheRegion;
-    private final String userId;
-    private final boolean isServerless;
+        private static final String FAKE_SCHEME = "https://";
 
-    private static final String FAKE_SCHEME = "https://";
+        ElasticachePasswordGenerator(
+                final String cacheName,
+                final String cacheRegion,
+                final String userId,
+                final AwsV4HttpSigner awsV4HttpSigner,
+                final AwsCredentialsProvider credentialsProvider,
+                final boolean isServerless) {
+            this.cacheName = cacheName;
+            this.cacheRegion = cacheRegion;
+            this.userId = userId;
+            this.awsV4HttpSigner = awsV4HttpSigner;
+            this.credentialsProvider = credentialsProvider;
+            this.isServerless = isServerless;
+        }
 
-    ElasticachePasswordGenerator(
-            final String cacheName,
-            final String cacheRegion,
-            final String userId,
-            final AwsV4HttpSigner awsV4HttpSigner,
-            final AwsCredentialsProvider credentialsProvider,
-            final boolean isServerless) {
-        this.cacheName = cacheName;
-        this.cacheRegion = cacheRegion;
-        this.userId = userId;
-        this.awsV4HttpSigner = awsV4HttpSigner;
-        this.credentialsProvider = credentialsProvider;
-        this.isServerless = isServerless;
+        public static ElasticachePasswordGenerator create(
+                final String cacheName, final String cacheRegion, final String userId, final boolean isServerless) {
+            if (StringUtils.isEmpty(cacheName)) {
+                throw new IllegalArgumentException("cacheName must be provided");
+            }
+
+            if (StringUtils.isEmpty(cacheRegion)) {
+                throw new IllegalArgumentException("cacheRegion must be provided");
+            }
+
+            if (StringUtils.isEmpty(userId)) {
+                throw new IllegalArgumentException("userId must be provided");
+            }
+
+            return new ElasticachePasswordGenerator(
+                    cacheName, cacheRegion, userId, AwsV4HttpSigner.create(), DefaultCredentialsProvider.create(), isServerless);
+        }
+
+        public String generatePassword() {
+            final var requestUri = URI.create(String.format("%s%s/", FAKE_SCHEME, cacheName));
+            final var requestBuilder = SdkHttpRequest.builder()
+                    .method(SdkHttpMethod.GET)
+                    .uri(requestUri)
+                    .appendRawQueryParameter("Action", "connect")
+                    .appendRawQueryParameter("User", userId);
+            if (this.isServerless) {
+                requestBuilder.appendRawQueryParameter("ResourceType", "ServerlessCache");
+            }
+
+            final var cacheRequest = requestBuilder.build();
+
+
+            final var signedRequest = awsV4HttpSigner.sign(signRequest -> signRequest
+                    .request(cacheRequest)
+                    .identity(credentialsProvider.resolveCredentials())
+                    .putProperty(AwsV4HttpSigner.EXPIRATION_DURATION, Duration.ofMinutes(15))
+                    .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, "elasticache")
+                    .putProperty(AwsV4HttpSigner.REGION_NAME, cacheRegion)
+                    .putProperty(AwsV4HttpSigner.AUTH_LOCATION, AuthLocation.QUERY_STRING));
+
+            return signedRequest.request().getUri().toString().replace(FAKE_SCHEME, "");
+        }
     }
-
-    public static ElasticachePasswordGenerator create(
-            final String cacheName, final String cacheRegion, final String userId, final boolean isServerless) {
-        if (StringUtils.isEmpty(cacheName)) {
-            throw new IllegalArgumentException("cacheName must be provided");
-        }
-
-        if (StringUtils.isEmpty(cacheRegion)) {
-            throw new IllegalArgumentException("cacheRegion must be provided");
-        }
-
-        if (StringUtils.isEmpty(userId)) {
-            throw new IllegalArgumentException("userId must be provided");
-        }
-
-        return new ElasticachePasswordGenerator(
-                cacheName, cacheRegion, userId, AwsV4HttpSigner.create(), DefaultCredentialsProvider.create(), isServerless);
-    }
-
-    public String generatePassword() {
-        final var requestUri = URI.create(String.format("%s%s/", FAKE_SCHEME, cacheName));
-        final var requestBuilder = SdkHttpRequest.builder()
-                .method(SdkHttpMethod.GET)
-                .uri(requestUri)
-                .appendRawQueryParameter("Action", "connect")
-                .appendRawQueryParameter("User", userId);
-        if (this.isServerless) {
-            requestBuilder.appendRawQueryParameter("ResourceType", "ServerlessCache");
-        }
-
-        final var cacheRequest = requestBuilder.build();
-
-
-        final var signedRequest = awsV4HttpSigner.sign(signRequest -> signRequest
-                .request(cacheRequest)
-                .identity(credentialsProvider.resolveCredentials())
-                .putProperty(AwsV4HttpSigner.EXPIRATION_DURATION, Duration.ofMinutes(15))
-                .putProperty(AwsV4HttpSigner.SERVICE_SIGNING_NAME, "elasticache")
-                .putProperty(AwsV4HttpSigner.REGION_NAME, cacheRegion)
-                .putProperty(AwsV4HttpSigner.AUTH_LOCATION, AuthLocation.QUERY_STRING));
-
-        return signedRequest.request().getUri().toString().replace(FAKE_SCHEME, "");
-    }
-}
-```
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { SignatureV4 } from "@smithy/signature-v4";
-import { HttpRequest } from "@smithy/protocol-http";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
-import { formatUrl } from "@aws-sdk/util-format-url";
-import { Sha256 } from "@aws-crypto/sha256-js";
+    ```typescript
+    import { SignatureV4 } from "@smithy/signature-v4";
+    import { HttpRequest } from "@smithy/protocol-http";
+    import { defaultProvider } from "@aws-sdk/credential-provider-node";
+    import { formatUrl } from "@aws-sdk/util-format-url";
+    import { Sha256 } from "@aws-crypto/sha256-js";
 
 
-class ElastiCacheIAMProvider {
-    private user: string;
-    private clusterName: string;
-    private region: string;
+    class ElastiCacheIAMProvider {
+        private user: string;
+        private clusterName: string;
+        private region: string;
 
-    constructor(user: string, clusterName: string, region: string = "us-east-1") {
-        this.user = user;
-        this.clusterName = clusterName;
-        this.region = region;
+        constructor(user: string, clusterName: string, region: string = "us-east-1") {
+            this.user = user;
+            this.clusterName = clusterName;
+            this.region = region;
+        }
+
+        async  getCredentials() {
+            const credentials = await defaultProvider()();
+
+            const signer = new SignatureV4({
+                service: "elasticache",
+                credentials,
+                region: this.region,
+                sha256: Sha256,
+            });
+
+            const url = new URL(`https://${this.clusterName}/`);
+            url.searchParams.append("Action", "connect");
+            url.searchParams.append("User", this.user);
+
+            const request = new HttpRequest({
+                protocol: url.protocol,
+                hostname: url.hostname,
+                method: "GET",
+                path: url.pathname,
+                query: Object.fromEntries(url.searchParams),
+                headers: {
+                    host: url.hostname,
+                },
+            });
+
+            const signedRequest = await signer.presign(request, { expiresIn: 900 });
+            return formatUrl(signedRequest).replace(/^https?:\/\//, "");
+        }
     }
-
-    async  getCredentials() {
-        const credentials = await defaultProvider()();
-
-        const signer = new SignatureV4({
-            service: "elasticache",
-            credentials,
-            region: this.region,
-            sha256: Sha256,
-        });
-
-        const url = new URL(`https://${this.clusterName}/`);
-        url.searchParams.append("Action", "connect");
-        url.searchParams.append("User", this.user);
-
-        const request = new HttpRequest({
-            protocol: url.protocol,
-            hostname: url.hostname,
-            method: "GET",
-            path: url.pathname,
-            query: Object.fromEntries(url.searchParams),
-            headers: {
-                host: url.hostname,
-            },
-        });
-
-        const signedRequest = await signer.presign(request, { expiresIn: 900 });
-        return formatUrl(signedRequest).replace(/^https?:\/\//, "");
-    }
-}
-```
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -225,9 +225,9 @@ class ElastiCacheIAMProvider {
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Use Built-in IAM Support]
+    :::note\[Use Built-in IAM Support]
     PHP users should use the built-in IAM authentication support available in GLIDE 2.2+.
-    
+
     See the [IAM Authentication with GLIDE](/how-to/security/iam-integration) guide for PHP examples using the native IAM integration.
     :::
   </TabItem>
@@ -237,156 +237,156 @@ class ElastiCacheIAMProvider {
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from typing import Tuple, Union
-import asyncio
-from glide import (
-    GlideClusterClient,
-    GlideClusterClientConfiguration,
-    ServerCredentials,
-    NodeAddress,
-)
-
-async def main():
-    username = "your-username"
-    cluster_name = "your-cluster-name"
-
-    auth = ElastiCacheIAMProvider(user=username,cluster_name=cluster_name, region='us-east-1')
-    _, iam_token = auth.get_credentials()
-    valkey_credentials = ServerCredentials(
-        username=username,
-        password=iam_token,
+    ```python
+    from typing import Tuple, Union
+    import asyncio
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        ServerCredentials,
+        NodeAddress,
     )
 
-    addresses = [NodeAddress("example-cluster-endpoint.use1.cache.amazonaws.com", 6379)]
-    config = GlideClusterClientConfiguration(addresses=addresses, use_tls=True, credentials=valkey_credentials)
-    client = await GlideClusterClient.create(config)
+    async def main():
+        username = "your-username"
+        cluster_name = "your-cluster-name"
 
-    # Update password dynamically
-    _, new_iam_token = auth.get_credentials()
-    await client.update_connection_password(new_iam_token)
+        auth = ElastiCacheIAMProvider(user=username,cluster_name=cluster_name, region='us-east-1')
+        _, iam_token = auth.get_credentials()
+        valkey_credentials = ServerCredentials(
+            username=username,
+            password=iam_token,
+        )
 
-    # To perform immediate re-authentication, set the second parameter to true
-    await client.update_connection_password(new_iam_token, True)
-```
+        addresses = [NodeAddress("example-cluster-endpoint.use1.cache.amazonaws.com", 6379)]
+        config = GlideClusterClientConfiguration(addresses=addresses, use_tls=True, credentials=valkey_credentials)
+        client = await GlideClusterClient.create(config)
+
+        # Update password dynamically
+        _, new_iam_token = auth.get_credentials()
+        await client.update_connection_password(new_iam_token)
+
+        # To perform immediate re-authentication, set the second parameter to true
+        await client.update_connection_password(new_iam_token, True)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.NodeAddress;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.ServerCredentials;
-import static glide.api.models.GlideString.gs;
-import java.util.concurrent.ExecutionException;
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.ServerCredentials;
+    import static glide.api.models.GlideString.gs;
+    import java.util.concurrent.ExecutionException;
 
-public class Main {
-    public static void main(String[] args) {
-        runGlideExamples();
-    }
-    private static void runGlideExamples() {
-        try {
-            String host = "your-hostname";
-            String cacheName = "your-cluster-name";
-            String username = "your-username";
-            String region = "us-east-1";
-            Integer port = 6379;
-            boolean useSsl = true;
-            boolean isServerless = true;
-
-            ElasticachePasswordGenerator PassordGenerator = ElasticachePasswordGenerator.create(cacheName, region, username, isServerless);
-            String iamAuthToken = PassordGenerator.generatePassword();
-            System.out.println(iamAuthToken);
-
-            ServerCredentials my_credentials = ServerCredentials.builder()
-                .username(username)
-                .password(iamAuthToken)
-                .build();
-
-
-            GlideClusterClientConfiguration config =
-                    GlideClusterClientConfiguration.builder()
-                            .address(NodeAddress.builder()
-                                    .host(host)
-                                    .port(port)
-                                    .build())
-                            .useTLS(useSsl)
-                            .credentials(my_credentials)
-                            .build();
+    public class Main {
+        public static void main(String[] args) {
+            runGlideExamples();
+        }
+        private static void runGlideExamples() {
             try {
-                GlideClusterClient client = GlideClusterClient.createClient(config).get();
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+                String host = "your-hostname";
+                String cacheName = "your-cluster-name";
+                String username = "your-username";
+                String region = "us-east-1";
+                Integer port = 6379;
+                boolean useSsl = true;
+                boolean isServerless = true;
 
-                // Update password dynamically
-                String newIAMAuthToken = PassordGenerator.generatePassword();
-                client.updateConnectionPassword(newIAMAuthToken, false);
+                ElasticachePasswordGenerator PassordGenerator = ElasticachePasswordGenerator.create(cacheName, region, username, isServerless);
+                String iamAuthToken = PassordGenerator.generatePassword();
+                System.out.println(iamAuthToken);
 
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+                ServerCredentials my_credentials = ServerCredentials.builder()
+                    .username(username)
+                    .password(iamAuthToken)
+                    .build();
 
-                // To perform immediate re-authentication, set the second parameter to true
-                client.updateConnectionPassword(newIAMAuthToken, true);
 
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+                GlideClusterClientConfiguration config =
+                        GlideClusterClientConfiguration.builder()
+                                .address(NodeAddress.builder()
+                                        .host(host)
+                                        .port(port)
+                                        .build())
+                                .useTLS(useSsl)
+                                .credentials(my_credentials)
+                                .build();
+                try {
+                    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+                    System.out.println("PING: " + client.ping(gs("PING")).get());
 
-                }  catch (ExecutionException | InterruptedException e) {
-                System.out.println("Glide example failed with an exception: ");
-                e.printStackTrace();
+                    // Update password dynamically
+                    String newIAMAuthToken = PassordGenerator.generatePassword();
+                    client.updateConnectionPassword(newIAMAuthToken, false);
+
+                    System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                    // To perform immediate re-authentication, set the second parameter to true
+                    client.updateConnectionPassword(newIAMAuthToken, true);
+
+                    System.out.println("PING: " + client.ping(gs("PING")).get());
+
+                    }  catch (ExecutionException | InterruptedException e) {
+                    System.out.println("Glide example failed with an exception: ");
+                    e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    System.out.println("Received error: " + e.getMessage());
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                System.out.println("Received error: " + e.getMessage());
-                e.printStackTrace();
             }
         }
-    }
-```
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials, AdvancedGlideClusterClientConfiguration } from "@valkey/valkey-glide";
+    ```typescript
+    import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials, AdvancedGlideClusterClientConfiguration } from "@valkey/valkey-glide";
 
-async function main() {
-    const username = "your-username";
-    const cluster_name = "your-cluster-name";
-    const endpoint = "example-cluster-endpoint.use1.cache.amazonaws.com";
+    async function main() {
+        const username = "your-username";
+        const cluster_name = "your-cluster-name";
+        const endpoint = "example-cluster-endpoint.use1.cache.amazonaws.com";
 
-    const addresses = [
-        {
-            host: endpoint,
-            port: 6379,
-        },
-    ];
+        const addresses = [
+            {
+                host: endpoint,
+                port: 6379,
+            },
+        ];
 
-    const provider = new ElastiCacheIAMProvider(
-        username,
-        cluster_name,
-        "us-east-1"
-    );
+        const provider = new ElastiCacheIAMProvider(
+            username,
+            cluster_name,
+            "us-east-1"
+        );
 
-    const iamAuthToken = await provider.getCredentials();
+        const iamAuthToken = await provider.getCredentials();
 
-    const credentials: ServerCredentials = {
-        username: username,
-        password: iamAuthToken
-    };
+        const credentials: ServerCredentials = {
+            username: username,
+            password: iamAuthToken
+        };
 
-    const config: GlideClusterClientConfiguration = {
-        addresses: addresses,
-        credentials: credentials,
-        useTLS: true,
-        clientName: 'my-client',
-    };
+        const config: GlideClusterClientConfiguration = {
+            addresses: addresses,
+            credentials: credentials,
+            useTLS: true,
+            clientName: 'my-client',
+        };
 
-    const client = await GlideClusterClient.createClient(config);
+        const client = await GlideClusterClient.createClient(config);
 
-    // Update password dynamically
-    const newIAMAuthToken = await provider.getCredentials();
-    await client.updateConnectionPassword(newIAMAuthToken);
+        // Update password dynamically
+        const newIAMAuthToken = await provider.getCredentials();
+        await client.updateConnectionPassword(newIAMAuthToken);
 
-    // To perform immediate re-authentication, set the second parameter to true
-    await client.updateConnectionPassword(newIAMAuthToken, true);
-}
-```
+        // To perform immediate re-authentication, set the second parameter to true
+        await client.updateConnectionPassword(newIAMAuthToken, true);
+    }
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -396,9 +396,9 @@ async function main() {
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Use Built-in IAM Support]
+    :::note\[Use Built-in IAM Support]
     PHP users should use the built-in IAM authentication support available in GLIDE 2.2+.
-    
+
     See the [IAM Authentication with GLIDE](/how-to/security/iam-integration) guide for PHP examples using the native IAM integration.
     :::
   </TabItem>
@@ -411,168 +411,168 @@ Java SDK v1 is reaching End of Support on December 31, 2025. Consider migrating 
 :::
 
 <details>
-<summary>Click to expand</summary>
+  <summary>Click to expand</summary>
 
-### Token Generation (Java SDK v1)
+  ### Token Generation (Java SDK v1)
 
-```java
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.Request;
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.AWS4Signer;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.client.utils.URIBuilder;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+  ```java
+  import com.amazonaws.auth.AWSCredentials;
+  import com.amazonaws.auth.AWSCredentialsProvider;
+  import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+  import com.amazonaws.http.HttpMethodName;
+  import com.amazonaws.Request;
+  import com.amazonaws.DefaultRequest;
+  import com.amazonaws.auth.AWS4Signer;
+  import org.apache.http.NameValuePair;
+  import org.apache.http.message.BasicNameValuePair;
+  import org.apache.http.client.utils.URIBuilder;
+  import org.joda.time.DateTime;
+  import org.joda.time.Duration;
+  import java.net.URI;
+  import java.net.URISyntaxException;
+  import java.util.List;
+  import java.util.Map;
+  import java.util.stream.Collectors;
 
-public class ElastiCacheIAMProvider {
-    private static final HttpMethodName REQUEST_METHOD = HttpMethodName.GET;
-    private static final String REQUEST_PROTOCOL = "http://";
-    private static final String PARAM_ACTION = "Action";
-    private static final String PARAM_USER = "User";
-    private static final String PARAM_RESOURCE_TYPE = "ResourceType";
-    private static final String RESOURCE_TYPE_SERVERLESS_CACHE = "ServerlessCache";
-    private static final String ACTION_NAME = "connect";
-    private static final String SERVICE_NAME = "elasticache";
-    private static final long TOKEN_EXPIRY_SECONDS = 900;
+  public class ElastiCacheIAMProvider {
+      private static final HttpMethodName REQUEST_METHOD = HttpMethodName.GET;
+      private static final String REQUEST_PROTOCOL = "http://";
+      private static final String PARAM_ACTION = "Action";
+      private static final String PARAM_USER = "User";
+      private static final String PARAM_RESOURCE_TYPE = "ResourceType";
+      private static final String RESOURCE_TYPE_SERVERLESS_CACHE = "ServerlessCache";
+      private static final String ACTION_NAME = "connect";
+      private static final String SERVICE_NAME = "elasticache";
+      private static final long TOKEN_EXPIRY_SECONDS = 900;
 
-    private final String userId;
-    private final String cacheName;
-    private final String region;
-    private final boolean isServerless;
+      private final String userId;
+      private final String cacheName;
+      private final String region;
+      private final boolean isServerless;
 
-    public ElastiCacheIAMProvider(String userId, String cacheName, String region, boolean isServerless) {
-        this.userId = userId;
-        this.cacheName = cacheName;
-        this.region = region;
-        this.isServerless = isServerless;
-    }
+      public ElastiCacheIAMProvider(String userId, String cacheName, String region, boolean isServerless) {
+          this.userId = userId;
+          this.cacheName = cacheName;
+          this.region = region;
+          this.isServerless = isServerless;
+      }
 
-    public String toSignedRequestUri() throws URISyntaxException {
-        AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
-        AWSCredentials credentials = credentialsProvider.getCredentials();
-        Request<Void> request = getSignableRequest();
-        sign(request, credentials);
-        return new URIBuilder(request.getEndpoint())
-            .addParameters(toNamedValuePair(request.getParameters()))
-            .build()
-            .toString()
-            .replace(REQUEST_PROTOCOL, "");
-    }
+      public String toSignedRequestUri() throws URISyntaxException {
+          AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+          AWSCredentials credentials = credentialsProvider.getCredentials();
+          Request<Void> request = getSignableRequest();
+          sign(request, credentials);
+          return new URIBuilder(request.getEndpoint())
+              .addParameters(toNamedValuePair(request.getParameters()))
+              .build()
+              .toString()
+              .replace(REQUEST_PROTOCOL, "");
+      }
 
-    private <T> Request<T> getSignableRequest() {
-        Request<T> request  = new DefaultRequest<>(SERVICE_NAME);
-        request.setHttpMethod(REQUEST_METHOD);
-        request.setEndpoint(getRequestUri());
-        request.addParameter(PARAM_ACTION, ACTION_NAME);
-        request.addParameter(PARAM_USER, userId);
-        if (isServerless) {
-            request.addParameter(PARAM_RESOURCE_TYPE, RESOURCE_TYPE_SERVERLESS_CACHE);
-        }
-        return request;
-    }
+      private <T> Request<T> getSignableRequest() {
+          Request<T> request  = new DefaultRequest<>(SERVICE_NAME);
+          request.setHttpMethod(REQUEST_METHOD);
+          request.setEndpoint(getRequestUri());
+          request.addParameter(PARAM_ACTION, ACTION_NAME);
+          request.addParameter(PARAM_USER, userId);
+          if (isServerless) {
+              request.addParameter(PARAM_RESOURCE_TYPE, RESOURCE_TYPE_SERVERLESS_CACHE);
+          }
+          return request;
+      }
 
-    private URI getRequestUri() {
-        return URI.create(String.format("%s%s/", REQUEST_PROTOCOL, cacheName));
-    }
+      private URI getRequestUri() {
+          return URI.create(String.format("%s%s/", REQUEST_PROTOCOL, cacheName));
+      }
 
-    private <T> void sign(Request<T> request, AWSCredentials credentials) {
-        AWS4Signer signer = new AWS4Signer();
-        signer.setRegionName(region);
-        signer.setServiceName(SERVICE_NAME);
+      private <T> void sign(Request<T> request, AWSCredentials credentials) {
+          AWS4Signer signer = new AWS4Signer();
+          signer.setRegionName(region);
+          signer.setServiceName(SERVICE_NAME);
 
-        DateTime dateTime = DateTime.now();
-        dateTime = dateTime.plus(Duration.standardSeconds(TOKEN_EXPIRY_SECONDS));
+          DateTime dateTime = DateTime.now();
+          dateTime = dateTime.plus(Duration.standardSeconds(TOKEN_EXPIRY_SECONDS));
 
-        signer.presignRequest(request, credentials, dateTime.toDate());
-    }
+          signer.presignRequest(request, credentials, dateTime.toDate());
+      }
 
-    private static List<NameValuePair> toNamedValuePair(Map<String, List<String>> in) {
-        return in.entrySet().stream()
-            .map(e -> new BasicNameValuePair(e.getKey(), e.getValue().get(0)))
-            .collect(Collectors.toList());
-    }
-}
-```
+      private static List<NameValuePair> toNamedValuePair(Map<String, List<String>> in) {
+          return in.entrySet().stream()
+              .map(e -> new BasicNameValuePair(e.getKey(), e.getValue().get(0)))
+              .collect(Collectors.toList());
+      }
+  }
+  ```
 
-### Usage Example (Java SDK v1)
+  ### Usage Example (Java SDK v1)
 
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.NodeAddress;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.ServerCredentials;
-import static glide.api.models.GlideString.gs;
-import java.util.concurrent.ExecutionException;
+  ```java
+  import glide.api.GlideClusterClient;
+  import glide.api.models.configuration.NodeAddress;
+  import glide.api.models.configuration.GlideClusterClientConfiguration;
+  import glide.api.models.configuration.ServerCredentials;
+  import static glide.api.models.GlideString.gs;
+  import java.util.concurrent.ExecutionException;
 
 
-public class Main {
-    public static void main(String[] args) {
-        runGlideExamples();
-    }
-    private static void runGlideExamples() {
-        try {
-            String host = "example-cluster-endpoint.use1.cache.amazonaws.com";
-            String cacheName = "your-cluster-name";
-            String username = "your-username";
-            String region = "us-east-1";
-            Integer port1 = 6379;
-            boolean useSsl = true;
-            boolean isServerless = true;
+  public class Main {
+      public static void main(String[] args) {
+          runGlideExamples();
+      }
+      private static void runGlideExamples() {
+          try {
+              String host = "example-cluster-endpoint.use1.cache.amazonaws.com";
+              String cacheName = "your-cluster-name";
+              String username = "your-username";
+              String region = "us-east-1";
+              Integer port1 = 6379;
+              boolean useSsl = true;
+              boolean isServerless = true;
 
-            ElastiCacheIAMProvider iamAuthTokenProvider = new ElastiCacheIAMProvider(username, cacheName, region, isServerless);
-            String iamAuthToken = iamAuthTokenProvider.toSignedRequestUri();
-            System.out.println(iamAuthToken);
+              ElastiCacheIAMProvider iamAuthTokenProvider = new ElastiCacheIAMProvider(username, cacheName, region, isServerless);
+              String iamAuthToken = iamAuthTokenProvider.toSignedRequestUri();
+              System.out.println(iamAuthToken);
 
-            ServerCredentials my_credentials = ServerCredentials.builder()
-                .username(username)
-                .password(iamAuthToken)
-                .build();
+              ServerCredentials my_credentials = ServerCredentials.builder()
+                  .username(username)
+                  .password(iamAuthToken)
+                  .build();
 
-            GlideClusterClientConfiguration config =
-                    GlideClusterClientConfiguration.builder()
-                            .address(NodeAddress.builder()
-                                    .host(host)
-                                    .port(port1)
-                                    .build())
-                            .useTLS(useSsl)
-                            .credentials(my_credentials)
-                            .build();
-            try {
-                GlideClusterClient client = GlideClusterClient.createClient(config).get();
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+              GlideClusterClientConfiguration config =
+                      GlideClusterClientConfiguration.builder()
+                              .address(NodeAddress.builder()
+                                      .host(host)
+                                      .port(port1)
+                                      .build())
+                              .useTLS(useSsl)
+                              .credentials(my_credentials)
+                              .build();
+              try {
+                  GlideClusterClient client = GlideClusterClient.createClient(config).get();
+                  System.out.println("PING: " + client.ping(gs("PING")).get());
 
-                // Update password dynamically
-                String newIAMAuthToken = iamAuthTokenProvider.toSignedRequestUri();
-                client.updateConnectionPassword(newIAMAuthToken, false);
+                  // Update password dynamically
+                  String newIAMAuthToken = iamAuthTokenProvider.toSignedRequestUri();
+                  client.updateConnectionPassword(newIAMAuthToken, false);
 
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+                  System.out.println("PING: " + client.ping(gs("PING")).get());
 
-                // To perform immediate re-authentication, set the second parameter to true
-                client.updateConnectionPassword(newIAMAuthToken, true);
+                  // To perform immediate re-authentication, set the second parameter to true
+                  client.updateConnectionPassword(newIAMAuthToken, true);
 
-                System.out.println("PING: " + client.ping(gs("PING")).get());
+                  System.out.println("PING: " + client.ping(gs("PING")).get());
 
-                }  catch (ExecutionException | InterruptedException e) {
-                System.out.println("Glide example failed with an exception: ");
-                e.printStackTrace();
-                }
-            } catch (java.net.URISyntaxException e) {
-                System.out.println("URI Syntax error: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-```
+                  }  catch (ExecutionException | InterruptedException e) {
+                  System.out.println("Glide example failed with an exception: ");
+                  e.printStackTrace();
+                  }
+              } catch (java.net.URISyntaxException e) {
+                  System.out.println("URI Syntax error: " + e.getMessage());
+                  e.printStackTrace();
+              }
+          }
+      }
+  ```
 </details>
 
 ## Best Practices
@@ -585,9 +585,10 @@ This capability is required when performing IAM authentication with AWS SDK beca
 
 To efficiently manage this, GLIDE provides the ability to update short-lived tokens using `updateConnectionPassword` (or `update_connection_password`) to periodically refresh the token without immediately re-authenticating. It also offers the option for immediate re-authentication using `immediateAuth` (or `immediate_auth`), which forces re-authentication and extends the connection for another 12 hours.
 
-:::tip[Best Practices]
-  * Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
-  * Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
+:::tip\[Best Practices]
 
-  This will ensure seamless token management and connection stability when using IAM authentication with GLIDE.
+* Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
+* Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
+
+This will ensure seamless token management and connection stability when using IAM authentication with GLIDE.
 :::

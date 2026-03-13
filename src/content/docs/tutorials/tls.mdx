@@ -5,28 +5,28 @@ description: A reference page in my new Starlight docs site.
 
 import { Steps } from '@astrojs/starlight/components';
 
-:::caution[Work In Progress!]
+:::caution\[Work In Progress!]
 This documentation site is under construction and is not yet complete!
 
 For official Valkey GLIDE documentation, please refer to the official [Valkey GLIDE](https://github.com/valkey-io/valkey-glide) GitHub.
 :::
 
-Connecting to your Valkey database securely is crucial, especially when transmitting sensitive data over a network. 
+Connecting to your Valkey database securely is crucial, especially when transmitting sensitive data over a network.
 TLS encrypts the data in transit, preventing eavesdropping or "man-in-the-middle" attacks.
 
-Valkey GLIDE supports TLS connections out-of-the-box. 
-It uses [rusttls](https://github.com/rustls/rustls) under the hood to handle the secure connection handshake and encryption. 
+Valkey GLIDE supports TLS connections out-of-the-box.
+It uses [rusttls](https://github.com/rustls/rustls) under the hood to handle the secure connection handshake and encryption.
 When you enable TLS in the client, GLIDE ensures that it verifies the server's identity and encrypts all communication.
 
-This tutorial will guide you step-by-step through configuring the Valkey GLIDE client to connect 
-to a TLS-enabled Valkey instance. 
+This tutorial will guide you step-by-step through configuring the Valkey GLIDE client to connect
+to a TLS-enabled Valkey instance.
 
 ## What You'll Learn
 
 This tutorial will go over:
 
-1.  Enabling a basic TLS connection.
-2.  Connecting to a server that uses a custom root certificate (like a self-signed certificate).
+1. Enabling a basic TLS connection.
+2. Connecting to a server that uses a custom root certificate (like a self-signed certificate).
 
 By the end of this tutorial, you'll be able to securely connect your Python application to any TLS-enabled Valkey database using GLIDE.
 
@@ -34,15 +34,15 @@ By the end of this tutorial, you'll be able to securely connect your Python appl
 
 Before you begin, please ensure you have the following set up:
 
-  * **Python 3.9-3.13.**
-  * **Valkey GLIDE installed:** You can install it using pip:
-    ```bash
-    pip install valkey-glide
-    ```
-  * **A running Valkey instance with TLS enabled.** This tutorial assumes your server is already configured for TLS. 
-    See the following on how to enable TLS:
-    * [AWS Elasticache](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html)
-    * [Valkey](https://valkey.io/topics/encryption/)
+* **Python 3.9-3.13.**
+* **Valkey GLIDE installed:** You can install it using pip:
+  ```bash
+  pip install valkey-glide
+  ```
+* **A running Valkey instance with TLS enabled.** This tutorial assumes your server is already configured for TLS.
+  See the following on how to enable TLS:
+  * [AWS Elasticache](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/in-transit-encryption.html)
+  * [Valkey](https://valkey.io/topics/encryption/)
 
 ## Enabling TLS Connections
 
@@ -65,177 +65,180 @@ Connecting to a TLS enabled Valkey without `use_tls=True` will result in a `time
 :::
 
 <details>
-<summary>Full Example</summary>
-```python
-import asyncio
-from glide import GlideClient, GlideClientConfiguration, NodeAddress
+  <summary>Full Example</summary>
 
-async def main():
-    # Define the address
-    addresses = [NodeAddress(host="your-valkey-server.example.com", port=6379)]
+  ```python
+  import asyncio
+  from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
-    # Configure the client to use TLS
-    client_config = GlideClientConfiguration(
-        addresses,
-        use_tls=True
-    )
+  async def main():
+      # Define the address
+      addresses = [NodeAddress(host="your-valkey-server.example.com", port=6379)]
 
-    client = None
-    try:
-        # Create the client
-        client = await GlideClient.create(client_config)
+      # Configure the client to use TLS
+      client_config = GlideClientConfiguration(
+          addresses,
+          use_tls=True
+      )
 
-        # Test the connection
-        response = await client.ping()
-        print(f"Connected successfully! Server responded: {response}")
+      client = None
+      try:
+          # Create the client
+          client = await GlideClient.create(client_config)
 
-    except Exception as e:
-        print(f"Failed to connect or run command: {e}")
-    finally:
-        if client:
-            await client.close()
+          # Test the connection
+          response = await client.ping()
+          print(f"Connected successfully! Server responded: {response}")
 
-if __name__ == "__main__":
-    asyncio.run(main())
-```
+      except Exception as e:
+          print(f"Failed to connect or run command: {e}")
+      finally:
+          if client:
+              await client.close()
+
+  if __name__ == "__main__":
+      asyncio.run(main())
+  ```
 </details>
 
 ### Connecting with a Custom Root Certificate
+
 A common scenario is when you might use self-signed certificates or an internal Certificate Authority (CA) for development or an internal network.
 
-GLIDE allows you to provide your own root certificate (or a chain of certificates) in PEM format. 
+GLIDE allows you to provide your own root certificate (or a chain of certificates) in PEM format.
 This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlideClientConfiguration` classes.
 
 <Steps>
-    1. **Load your root certificate file**
+  1. **Load your root certificate file**
 
-        You **must** read your certificate file (e.g., `ca-cert.pem`) as bytes 
-        using the `"rb"` (read binary) mode when opening the file. 
+     You **must** read your certificate file (e.g., `ca-cert.pem`) as bytes
+     using the `"rb"` (read binary) mode when opening the file.
 
-        ```python
-        # Path to your custom certificate file
-        cert_file_path = "/path/to/your/ca-cert.pem"
+     ```python
+     # Path to your custom certificate file
+     cert_file_path = "/path/to/your/ca-cert.pem"
 
-        with open(cert_file_path, "rb") as f:
-            root_cert_bytes = f.read()
-        ```
+     with open(cert_file_path, "rb") as f:
+         root_cert_bytes = f.read()
+     ```
 
-        :::note
-        If you have multiple certificates in a chain, you can simply concatenate them.
-        ```python
-        with open("/path/to/cert1.pem", "rb") as f:
-            cert1 = f.read()
+     :::note
+     If you have multiple certificates in a chain, you can simply concatenate them.
 
-        with open("/path/to/cert2.pem", "rb") as f:
-            cert2 = f.read()
+     ```python
+     with open("/path/to/cert1.pem", "rb") as f:
+         cert1 = f.read()
 
-        combined_certs = cert1 + cert2
-        ```
-        :::
+     with open("/path/to/cert2.pem", "rb") as f:
+         cert2 = f.read()
 
-    2. **Create the advanced TLS configuration**
+     combined_certs = cert1 + cert2
+     ```
 
-        Create an instance of `TlsAdvancedConfiguration` and pass your certificate bytes to the `root_pem_cacerts` parameter.
+     :::
 
-        ```python
-        tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
-        ```
+  2. **Create the advanced TLS configuration**
 
-    3. **Create the advanced client configuration**
+     Create an instance of `TlsAdvancedConfiguration` and pass your certificate bytes to the `root_pem_cacerts` parameter.
 
-        Wrap your `tls_config` in an `AdvancedGlideClientConfiguration`.
+     ```python
+     tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
+     ```
 
-        ```python
-        advanced_config = AdvancedGlideClientConfiguration(
-            tls_config=tls_config
-        )
-        ```
+  3. **Create the advanced client configuration**
 
-    4. **Configure the main client**
+     Wrap your `tls_config` in an `AdvancedGlideClientConfiguration`.
 
-        Finally, create your main `GlideClientConfiguration`. This time, you must provide **both** `use_tls=True` and your new `advanced_configuration`.
+     ```python
+     advanced_config = AdvancedGlideClientConfiguration(
+         tls_config=tls_config
+     )
+     ```
 
-        ```python
-        addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
+  4. **Configure the main client**
 
-        client_config = GlideClientConfiguration(
-            addresses,
-            use_tls=True,  # Still required!
-            advanced_configuration=advanced_config
-        )
-        ```
+     Finally, create your main `GlideClientConfiguration`. This time, you must provide **both** `use_tls=True` and your new `advanced_configuration`.
 
+     ```python
+     addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
+
+     client_config = GlideClientConfiguration(
+         addresses,
+         use_tls=True,  # Still required!
+         advanced_configuration=advanced_config
+     )
+     ```
 </Steps>
 
 <details>
-<summary> Full Example </summary>
-Let's put it all together in a runnable example.
+  <summary> Full Example </summary>
+  Let's put it all together in a runnable example.
 
-```python
-import asyncio
-from glide import (
-    GlideClient,
-    GlideClientConfiguration,
-    NodeAddress,
-    TlsAdvancedConfiguration,
-    AdvancedGlideClientConfiguration
-)
+  ```python
+  import asyncio
+  from glide import (
+      GlideClient,
+      GlideClientConfiguration,
+      NodeAddress,
+      TlsAdvancedConfiguration,
+      AdvancedGlideClientConfiguration
+  )
 
-async def main_with_custom_cert():
-    # Replace with your server's address and TLS port
-    addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
+  async def main_with_custom_cert():
+      # Replace with your server's address and TLS port
+      addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
 
-    # 1. Load the certificate as bytes
-    cert_file_path = "/path/to/your/ca-cert.pem"
-    try:
-        with open(cert_file_path, "rb") as f:
-            root_cert_bytes = f.read()
-    except FileNotFoundError:
-        print(f"Error: Certificate file not found at {cert_file_path}")
-        return
-    except Exception as e:
-        print(f"Error reading certificate file: {e}")
-        return
+      # 1. Load the certificate as bytes
+      cert_file_path = "/path/to/your/ca-cert.pem"
+      try:
+          with open(cert_file_path, "rb") as f:
+              root_cert_bytes = f.read()
+      except FileNotFoundError:
+          print(f"Error: Certificate file not found at {cert_file_path}")
+          return
+      except Exception as e:
+          print(f"Error reading certificate file: {e}")
+          return
 
-    # 2. Create TLS advanced configuration
-    tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
+      # 2. Create TLS advanced configuration
+      tls_config = TlsAdvancedConfiguration(root_pem_cacerts=root_cert_bytes)
 
-    # 3. Create advanced client configuration
-    advanced_config = AdvancedGlideClientConfiguration(
-        tls_config=tls_config
-    )
+      # 3. Create advanced client configuration
+      advanced_config = AdvancedGlideClientConfiguration(
+          tls_config=tls_config
+      )
 
-    # 4. Create main client configuration
-    client_config = GlideClientConfiguration(
-        addresses,
-        use_tls=True,  # Don't forget this!
-        advanced_configuration=advanced_config
-    )
+      # 4. Create main client configuration
+      client_config = GlideClientConfiguration(
+          addresses,
+          use_tls=True,  # Don't forget this!
+          advanced_configuration=advanced_config
+      )
 
-    try:
-        # 5. Create the client
-        client = await GlideClient.create(client_config)
+      try:
+          # 5. Create the client
+          client = await GlideClient.create(client_config)
 
-        response = await client.ping()
-        print(f"Connected successfully with custom cert! Server responded: {response}")
+          response = await client.ping()
+          print(f"Connected successfully with custom cert! Server responded: {response}")
 
-    except Exception as e:
-        print(f"Failed to connect with custom cert: {e}")
-    finally:
-        if 'client' in locals() and client.is_connected():
-            await client.close()
+      except Exception as e:
+          print(f"Failed to connect with custom cert: {e}")
+      finally:
+          if 'client' in locals() and client.is_connected():
+              await client.close()
 
-if __name__ == "__main__":
-    asyncio.run(main_with_custom_cert())
-```
+  if __name__ == "__main__":
+      asyncio.run(main_with_custom_cert())
+  ```
 </details>
 
 ## Common Pitfalls
 
 * **Reading Certificate in Text Mode:** Always read certificate files in binary mode (`"rb"`). The client requires a bytes object, not a string from reading in text mode (`"r"`).
 * **Certificate Verification Errors:** An error like `CERTIFICATE_VERIFY_FAILED` or `TlsError` means the server's identity check failed. Verify:
-    1.  **Hostname Mismatch:** The `NodeAddress` host must exactly match the name on the server's certificate.
-    2.  **Incorrect/Expired Certificate:** Ensure you are using the correct and valid root CA file.
+  1. **Hostname Mismatch:** The `NodeAddress` host must exactly match the name on the server's certificate.
+  2. **Incorrect/Expired Certificate:** Ensure you are using the correct and valid root CA file.
 * **Forgetting `await`:** GLIDE is an `async` library. Forgetting to `await` client methods (like `GlideClient.create()`, `client.ping()`, etc.) will cause your code to hang or raise a `RuntimeWarning`.
 
 ## Summary

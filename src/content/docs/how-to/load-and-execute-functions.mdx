@@ -9,11 +9,10 @@ import { Steps } from '@astrojs/starlight/components';
 Valkey scripting allows you to execute Lua code directly on the Valkey server.
 This guide will go over executing custom Lua scripts with GLIDE.
 
-
 ## Prerequisites
 
-- Running Valkey server (standalone or cluster)
-- GLIDE [installed](/how-to/installation).
+* Running Valkey server (standalone or cluster)
+* GLIDE [installed](/how-to/installation).
 
 ## Working with Valkey Functions
 
@@ -21,480 +20,463 @@ Valkey Functions is an alternative for persistent server-side Lua code.
 The following example shows a simple example of loading and executing a Valkey Function using GLIDE.
 
 <Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
-<Steps>
-
-1. Define the lua script.
-
-   ```python
-   lua_code = """#!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   """
-   ```
-
-2. Load the function to Valkey.
-
-   ```python
-   await client.function_load(lua_code, replace=True)
-   ```
-
-3. Call the function.
-
-   ```python
-   await client.set("page:home:visits", "0")
-   result = await client.fcall("set_then_get", keys=["page:home:visits"], args=["1"])
-   print(result)  # b'1'
-   ```
-
-</Steps>
-
-<details>
-<summary>Full Example</summary>
-
-```python
-import asyncio
-from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
-
-async def main():
-    config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
-    client = await GlideClient.create(config)
-
-    # lua code that updates a key and returns its new value
-    lua_code = """#!lua name=page_visits
-    server.register_function('update_visits', function(visits)
-        server.call('INCR', visits[1])
-        return server.call('GET', visits[1])
-    end)
-    """
-
-    # loading the function to valkey
-    await client.function_load(lua_code, replace=True)
-
-    await client.set("page:home:visits", "0")
-    # calling the previously loaded function
-    result = await client.fcall("update_visits", keys=["page:home:visits"])
-    print(result)  # b'1'
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
-```
-
-</details>
-
-</TabItem>
-<TabItem label="Java">
-<Steps>
-
-1. Define the lua script.
-
-   ```java
-   String luaCode = """
-   #!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   """;
-   ```
-
-2. Load the function to Valkey.
-
-   ```java
-   client.functionLoad(luaCode, true).get();
-   ```
-
-3. Call the function.
-
-   ```java
-   client.set("page:home:visits", "0").get();
-   Object result = client.fcall("set_then_get", 
-       new String[]{"page:home:visits"}, new String[]{"1"}).get();
-   System.out.println(result);  // 1
-   ```
-
-</Steps>
-
-<details>
-<summary>Full Example</summary>
-
-```java
-import glide.api.GlideClient;
-import glide.api.models.configuration.GlideClientConfiguration;
-import glide.api.models.configuration.NodeAddress;
-
-public class Example {
-    public static void main(String[] args) {
-        GlideClientConfiguration config = GlideClientConfiguration.builder()
-            .address(NodeAddress.builder()
-                .host("localhost")
-                .port(6379)
-                .build())
-            .build();
-
-        try (GlideClient client = GlideClient.createClient(config).get()) {
-            // lua code that updates a key and returns its new value
-            String luaCode = """
-            #!lua name=page_visits
-            server.register_function('update_visits', function(visits)
-                server.call('INCR', visits[1])
-                return server.call('GET', visits[1])
-            end)
-            """;
-
-            // loading the function to valkey
-            client.functionLoad(luaCode, true).get();
-
-            client.set("page:home:visits", "0").get();
-            // calling the previously loaded function
-            Object result = client.fcall("update_visits", 
-                new String[]{"page:home:visits"}, new String[]{}).get();
-            System.out.println(result);  // 1
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
-
-</details>
-</TabItem>
-<TabItem label="Node">
-<Steps>
-
-1. Define the lua script.
-
-   ```typescript
-   const luaCode = `#!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   `;
-   ```
-
-2. Load the function to Valkey.
-
-   ```typescript
-   await client.functionLoad(luaCode, {replace: true});
-   ```
-
-3. Call the function.
-
-   ```typescript
-   await client.set("page:home:visits", "0");
-   const result = await client.fcall("set_then_get", 
-       ["page:home:visits"], ["1"]);
-   console.log(result);  // 1
-   ```
-
-</Steps>
-
-<details>
-<summary>Full Example</summary>
-
-```typescript
-import {GlideClient} from "@valkey/valkey-glide";
-
-async function main() {
-    const client = await GlideClient.createClient({
-        addresses: [{host: "localhost", port: 6379}]
-    });
-
-    // lua code that updates a key and returns its new value
-    const luaCode = `#!lua name=page_visits
-    server.register_function('update_visits', function(visits)
-        server.call('INCR', visits[1])
-        return server.call('GET', visits[1])
-    end)
-    `;
-
-    // loading the function to valkey
-    await client.functionLoad(luaCode, {replace: true});
-
-    await client.set("page:home:visits", "0");
-    // calling the previously loaded function
-    const result = await client.fcall("update_visits", ["page:home:visits"], []);
-    console.log(result);  // 1
-
-    client.close();
-}
-
-main();
-```
-
-</details>
-</TabItem>
-<TabItem label="Go">
-<Steps>
-
-1. Define the lua script.
-
-   ```go
-   luaCode := `#!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   `
-   ```
-
-2. Load the function to Valkey.
-
-   ```go
-   _, err := client.FunctionLoad(ctx, luaCode, true)
-   if err != nil {
-       // handle error
-   }
-   ```
-
-3. Call the function.
-
-   ```go
-   _, err = client.Set(ctx, "page:home:visits", "0")
-   if err != nil {
-       // handle error
-   }
-   result, err := client.FCallWithKeysAndArgs(ctx, "set_then_get", 
-       []string{"page:home:visits"}, []string{"1"})
-   if err != nil {
-       // handle error
-   }
-   fmt.Println(result)  // 1
-   ```
-
-</Steps>
-
-<details>
-<summary>Full Example</summary>
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
-
-func main() {
-    ctx := context.Background()
-    myConfig := config.NewClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
-
-    client, err := glide.NewClient(myConfig)
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // lua code that updates a key and returns its new value
-    luaCode := `#!lua name=page_visits
-    server.register_function('update_visits', function(visits)
-        server.call('INCR', visits[1])
-        return server.call('GET', visits[1])
-    end)
-    `
-
-    // loading the function to valkey
-    _, err = client.FunctionLoad(ctx, luaCode, true)
-    if err != nil {
-        panic(err)
-    }
-
-    _, err = client.Set(ctx, "page:home:visits", "0")
-    if err != nil {
-        panic(err)
-    }
-
-    // calling the previously loaded function
-    result, err := client.FCallWithKeysAndArgs(ctx, "update_visits", 
-        []string{"page:home:visits"}, []string{})
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(result)  // 1
-}
-```
-
-</details>
-</TabItem>
-<TabItem label="PHP">
-<Steps>
-
-1. Define the lua script.
-
-   ```php
-   $luaCode = <<<'LUA'
-   #!lua name=example_module
-   server.register_function('set_then_get', function(key, value)
-      server.call('SET', key, value)
-      return server.call('GET', key)
-   end)
-   LUA;
-   ```
-
-2. Load the function to Valkey.
-
-   ```php
-   $client->functionLoad($luaCode, true);
-   ```
-
-3. Call the function.
-
-   ```php
-   $client->set('page:home:visits', '0');
-   $result = $client->fcall('set_then_get', ['page:home:visits'], ['1']);
-   echo $result;  // 1
-   ```
-
-</Steps>
-
-<details>
-<summary>Full Example</summary>
-
-```php
-$client = new ValkeyGlide();
-$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
-
-// lua code that updates a key and returns its new value
-$luaCode = <<<'LUA'
-#!lua name=page_visits
-server.register_function('update_visits', function(visits)
-    server.call('INCR', visits[1])
-    return server.call('GET', visits[1])
-end)
-LUA;
-
-// loading the function to valkey
-$client->functionLoad($luaCode, true);
-
-$client->set('page:home:visits', '0');
-
-// calling the previously loaded function
-$result = $client->fcall('update_visits', ['page:home:visits']);
-echo $result;  // 1
-```
-
-</details>
-</TabItem>
+  <TabItem label="Python">
+    <Steps>
+      1. Define the lua script.
+
+         ```python
+         lua_code = """#!lua name=example_module
+         server.register_function('set_then_get', function(key, value)
+            server.call('SET', key, value)
+            return server.call('GET', key)
+         end)
+         """
+         ```
+
+      2. Load the function to Valkey.
+
+         ```python
+         await client.function_load(lua_code, replace=True)
+         ```
+
+      3. Call the function.
+
+         ```python
+         await client.set("page:home:visits", "0")
+         result = await client.fcall("set_then_get", keys=["page:home:visits"], args=["1"])
+         print(result)  # b'1'
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```python
+      import asyncio
+      from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
+
+      async def main():
+          config = GlideClientConfiguration(addresses=[NodeAddress("localhost", 6379)])
+          client = await GlideClient.create(config)
+
+          # lua code that updates a key and returns its new value
+          lua_code = """#!lua name=page_visits
+          server.register_function('update_visits', function(visits)
+              server.call('INCR', visits[1])
+              return server.call('GET', visits[1])
+          end)
+          """
+
+          # loading the function to valkey
+          await client.function_load(lua_code, replace=True)
+
+          await client.set("page:home:visits", "0")
+          # calling the previously loaded function
+          result = await client.fcall("update_visits", keys=["page:home:visits"])
+          print(result)  # b'1'
+
+      if __name__ == "__main__":
+          asyncio.run(main())
+
+      ```
+    </details>
+  </TabItem>
+
+  <TabItem label="Java">
+    <Steps>
+      1. Define the lua script.
+
+         ```java
+         String luaCode = """
+         #!lua name=example_module
+         server.register_function('set_then_get', function(key, value)
+            server.call('SET', key, value)
+            return server.call('GET', key)
+         end)
+         """;
+         ```
+
+      2. Load the function to Valkey.
+
+         ```java
+         client.functionLoad(luaCode, true).get();
+         ```
+
+      3. Call the function.
+
+         ```java
+         client.set("page:home:visits", "0").get();
+         Object result = client.fcall("set_then_get", 
+             new String[]{"page:home:visits"}, new String[]{"1"}).get();
+         System.out.println(result);  // 1
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```java
+      import glide.api.GlideClient;
+      import glide.api.models.configuration.GlideClientConfiguration;
+      import glide.api.models.configuration.NodeAddress;
+
+      public class Example {
+          public static void main(String[] args) {
+              GlideClientConfiguration config = GlideClientConfiguration.builder()
+                  .address(NodeAddress.builder()
+                      .host("localhost")
+                      .port(6379)
+                      .build())
+                  .build();
+
+              try (GlideClient client = GlideClient.createClient(config).get()) {
+                  // lua code that updates a key and returns its new value
+                  String luaCode = """
+                  #!lua name=page_visits
+                  server.register_function('update_visits', function(visits)
+                      server.call('INCR', visits[1])
+                      return server.call('GET', visits[1])
+                  end)
+                  """;
+
+                  // loading the function to valkey
+                  client.functionLoad(luaCode, true).get();
+
+                  client.set("page:home:visits", "0").get();
+                  // calling the previously loaded function
+                  Object result = client.fcall("update_visits", 
+                      new String[]{"page:home:visits"}, new String[]{}).get();
+                  System.out.println(result);  // 1
+              } catch (Exception e) {
+                  e.printStackTrace();
+              }
+          }
+      }
+      ```
+    </details>
+  </TabItem>
+
+  <TabItem label="Node">
+    <Steps>
+      1. Define the lua script.
+
+         ```typescript
+         const luaCode = `#!lua name=example_module
+         server.register_function('set_then_get', function(key, value)
+            server.call('SET', key, value)
+            return server.call('GET', key)
+         end)
+         `;
+         ```
+
+      2. Load the function to Valkey.
+
+         ```typescript
+         await client.functionLoad(luaCode, {replace: true});
+         ```
+
+      3. Call the function.
+
+         ```typescript
+         await client.set("page:home:visits", "0");
+         const result = await client.fcall("set_then_get", 
+             ["page:home:visits"], ["1"]);
+         console.log(result);  // 1
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```typescript
+      import {GlideClient} from "@valkey/valkey-glide";
+
+      async function main() {
+          const client = await GlideClient.createClient({
+              addresses: [{host: "localhost", port: 6379}]
+          });
+
+          // lua code that updates a key and returns its new value
+          const luaCode = `#!lua name=page_visits
+          server.register_function('update_visits', function(visits)
+              server.call('INCR', visits[1])
+              return server.call('GET', visits[1])
+          end)
+          `;
+
+          // loading the function to valkey
+          await client.functionLoad(luaCode, {replace: true});
+
+          await client.set("page:home:visits", "0");
+          // calling the previously loaded function
+          const result = await client.fcall("update_visits", ["page:home:visits"], []);
+          console.log(result);  // 1
+
+          client.close();
+      }
+
+      main();
+      ```
+    </details>
+  </TabItem>
+
+  <TabItem label="Go">
+    <Steps>
+      1. Define the lua script.
+
+         ```go
+         luaCode := `#!lua name=example_module
+         server.register_function('set_then_get', function(key, value)
+            server.call('SET', key, value)
+            return server.call('GET', key)
+         end)
+         `
+         ```
+
+      2. Load the function to Valkey.
+
+         ```go
+         _, err := client.FunctionLoad(ctx, luaCode, true)
+         if err != nil {
+             // handle error
+         }
+         ```
+
+      3. Call the function.
+
+         ```go
+         _, err = client.Set(ctx, "page:home:visits", "0")
+         if err != nil {
+             // handle error
+         }
+         result, err := client.FCallWithKeysAndArgs(ctx, "set_then_get", 
+             []string{"page:home:visits"}, []string{"1"})
+         if err != nil {
+             // handle error
+         }
+         fmt.Println(result)  // 1
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```go
+      package main
+
+      import (
+          "context"
+          "fmt"
+          glide "github.com/valkey-io/valkey-glide/go/v2"
+          "github.com/valkey-io/valkey-glide/go/v2/config"
+      )
+
+      func main() {
+          ctx := context.Background()
+          myConfig := config.NewClientConfiguration().
+              WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+          client, err := glide.NewClient(myConfig)
+          if err != nil {
+              panic(err)
+          }
+          defer client.Close()
+
+          // lua code that updates a key and returns its new value
+          luaCode := `#!lua name=page_visits
+          server.register_function('update_visits', function(visits)
+              server.call('INCR', visits[1])
+              return server.call('GET', visits[1])
+          end)
+          `
+
+          // loading the function to valkey
+          _, err = client.FunctionLoad(ctx, luaCode, true)
+          if err != nil {
+              panic(err)
+          }
+
+          _, err = client.Set(ctx, "page:home:visits", "0")
+          if err != nil {
+              panic(err)
+          }
+
+          // calling the previously loaded function
+          result, err := client.FCallWithKeysAndArgs(ctx, "update_visits", 
+              []string{"page:home:visits"}, []string{})
+          if err != nil {
+              panic(err)
+          }
+          fmt.Println(result)  // 1
+      }
+      ```
+    </details>
+  </TabItem>
+
+  <TabItem label="PHP">
+    <Steps>
+      1. Define the lua script.
+
+         ```php
+         $luaCode = <<<'LUA'
+         #!lua name=example_module
+         server.register_function('set_then_get', function(key, value)
+            server.call('SET', key, value)
+            return server.call('GET', key)
+         end)
+         LUA;
+         ```
+
+      2. Load the function to Valkey.
+
+         ```php
+         $client->functionLoad($luaCode, true);
+         ```
+
+      3. Call the function.
+
+         ```php
+         $client->set('page:home:visits', '0');
+         $result = $client->fcall('set_then_get', ['page:home:visits'], ['1']);
+         echo $result;  // 1
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```php
+      $client = new ValkeyGlide();
+      $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+      // lua code that updates a key and returns its new value
+      $luaCode = <<<'LUA'
+      #!lua name=page_visits
+      server.register_function('update_visits', function(visits)
+          server.call('INCR', visits[1])
+          return server.call('GET', visits[1])
+      end)
+      LUA;
+
+      // loading the function to valkey
+      $client->functionLoad($luaCode, true);
+
+      $client->set('page:home:visits', '0');
+
+      // calling the previously loaded function
+      $result = $client->fcall('update_visits', ['page:home:visits']);
+      echo $result;  // 1
+      ```
+    </details>
+  </TabItem>
 </Tabs>
 
 ## Read-Only Functions
+
 GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
 <Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
+  <TabItem label="Python">
+    ```python
+    result = await client.fcall_ro("get_value", keys=["mykey"])
+    ```
 
-```python
-result = await client.fcall_ro("get_value", keys=["mykey"])
-```
+    **With Routing (Cluster Mode)**
 
-**With Routing (Cluster Mode)**
+    ```python
+    from glide.routes import AllNodes, AllPrimaries, RandomNode
 
-```python
-from glide.routes import AllNodes, AllPrimaries, RandomNode
+    # Route to all nodes
+    result = await client.fcall_ro_route("get_value", AllNodes())
 
-# Route to all nodes
-result = await client.fcall_ro_route("get_value", AllNodes())
+    # Route to all primary nodes
+    result = await client.fcall_ro_route("get_value", AllPrimaries())
 
-# Route to all primary nodes
-result = await client.fcall_ro_route("get_value", AllPrimaries())
+    # Route to a random node
+    result = await client.fcall_ro_route("get_value", RandomNode())
+    ```
+  </TabItem>
 
-# Route to a random node
-result = await client.fcall_ro_route("get_value", RandomNode())
-```
+  <TabItem label="Java">
+    ```java
+    Object result = client.fcallReadOnly("get_value", new String[]{"mykey"}).get();
+    ```
 
-</TabItem>
-<TabItem label="Java">
+    **With Routing (Cluster Mode)**
 
-```java
-Object result = client.fcallReadOnly("get_value", new String[]{"mykey"}).get();
-```
+    ```java
+    import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_NODES;
+    import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_PRIMARIES;
 
-**With Routing (Cluster Mode)**
+    // Route to all nodes
+    ClusterValue<Object> result = client.fcallReadOnly("get_value", ALL_NODES).get();
 
-```java
-import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_NODES;
-import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_PRIMARIES;
+    // Route to all primary nodes
+    ClusterValue<Object> result = client.fcallReadOnly("get_value", ALL_PRIMARIES).get();
+    ```
+  </TabItem>
 
-// Route to all nodes
-ClusterValue<Object> result = client.fcallReadOnly("get_value", ALL_NODES).get();
+  <TabItem label="Node">
+    ```typescript
+    const result = await client.fcallReadonly("get_value", ["mykey"]);
+    ```
 
-// Route to all primary nodes
-ClusterValue<Object> result = client.fcallReadOnly("get_value", ALL_PRIMARIES).get();
-```
+    **With Routing (Cluster Mode)**
 
-</TabItem>
-<TabItem label="Node">
+    ```typescript
+    // Route to all nodes
+    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allNodes" });
 
-```typescript
-const result = await client.fcallReadonly("get_value", ["mykey"]);
-```
+    // Route to all primary nodes
+    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allPrimaries" });
 
-**With Routing (Cluster Mode)**
+    // Route to a random node
+    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "randomNode" });
+    ```
+  </TabItem>
 
-```typescript
-// Route to all nodes
-const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allNodes" });
+  <TabItem label="Go">
+    ```go
+    result, err := client.FCallReadOnly(ctx, "get_value")
+    ```
 
-// Route to all primary nodes
-const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allPrimaries" });
+    **With Routing (Cluster Mode)**
 
-// Route to a random node
-const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "randomNode" });
-```
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/config"
 
-</TabItem>
-<TabItem label="Go">
+    // Route to all nodes
+    route := config.SimpleNodeRoute(config.AllNodes)
+    result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
 
-```go
-result, err := client.FCallReadOnly(ctx, "get_value")
-```
+    // Route to all primary nodes
+    route := config.SimpleNodeRoute(config.AllPrimaries)
+    result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
 
-**With Routing (Cluster Mode)**
+    // Route to a random node
+    route := config.SimpleNodeRoute(config.RandomNode)
+    result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
+    ```
+  </TabItem>
 
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/config"
+  <TabItem label="PHP">
+    ```php
+    $result = $client->fcall_ro('get_value', ['mykey']);
+    ```
 
-// Route to all nodes
-route := config.SimpleNodeRoute(config.AllNodes)
-result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
+    **With Routing (Cluster Mode)**
 
-// Route to all primary nodes
-route := config.SimpleNodeRoute(config.AllPrimaries)
-result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
+    ```php
+    // Route to all nodes
+    $result = $client->fcall_ro('get_value', [], [], 'allNodes');
 
-// Route to a random node
-route := config.SimpleNodeRoute(config.RandomNode)
-result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
-```
+    // Route to all primary nodes
+    $result = $client->fcall_ro('get_value', [], [], 'allPrimaries');
 
-</TabItem>
-<TabItem label="PHP">
-
-```php
-$result = $client->fcall_ro('get_value', ['mykey']);
-```
-
-**With Routing (Cluster Mode)**
-
-```php
-// Route to all nodes
-$result = $client->fcall_ro('get_value', [], [], 'allNodes');
-
-// Route to all primary nodes
-$result = $client->fcall_ro('get_value', [], [], 'allPrimaries');
-
-// Route to a random node
-$result = $client->fcall_ro('get_value', [], [], 'randomNode');
-```
-
-</TabItem>
+    // Route to a random node
+    $result = $client->fcall_ro('get_value', [], [], 'randomNode');
+    ```
+  </TabItem>
 </Tabs>
 
 ## What's Next

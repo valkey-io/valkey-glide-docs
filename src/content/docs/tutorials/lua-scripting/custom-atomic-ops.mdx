@@ -10,32 +10,35 @@ This makes it a natural fit for implementing custom atomic operations.
 #### What You'll Learn
 
 This tutorial will cover:
-  * How Lua scripts are used to create custom operations.
-  * How to pass arguments using `KEYS` and `ARGV` input arguments.
-  * Understanding Script Caching and how it reduces network bandwidth.
+
+* How Lua scripts are used to create custom operations.
+* How to pass arguments using `KEYS` and `ARGV` input arguments.
+* Understanding Script Caching and how it reduces network bandwidth.
 
 ## Prerequisites
 
 Before starting, ensure you have the following:
 
-  * **Python:** Version 3.9 to 3.13.
-  * **Docker:** To run a standalone Valkey instance.
-  * **Valkey GLIDE:** The Python client library.
-  * **Basic Knowledge of Lua.**
+* **Python:** Version 3.9 to 3.13.
+* **Docker:** To run a standalone Valkey instance.
+* **Valkey GLIDE:** The Python client library.
+* **Basic Knowledge of Lua.**
 
 Start a Valkey instance using Docker:
+
 ```bash
 docker run -d --name my-valkey -p 6379:6379 valkey/valkey:8
 ```
 
 Install the GLIDE client:
+
 ```bash
 pip install valkey-glide
 ```
 
 ## Scenario: A Rare Sneaker Drop
 
-Imagine you are launching a limited-edition sneaker with only 100 pairs available. The moment the product page goes live, 
+Imagine you are launching a limited-edition sneaker with only 100 pairs available. The moment the product page goes live,
 you expect hundreds if not thousands of customers clicking “BUY” simultaneously.
 
 How do you ensure no more than 100 pairs are purchased correctly? This is a classic race condition where multiple clients
@@ -43,7 +46,7 @@ try to read the same object to then modify it.
 
 ## Using Valkey Commands
 
-To avoid a race condition, a client will need to ensure that the item_key has not changed while it is updating the item_key.
+To avoid a race condition, a client will need to ensure that the item\_key has not changed while it is updating the item\_key.
 To do this, we can use the `WATCH` commands in combination with `MULTI/EXEC`. The pseudo code would look something like:
 
 ```
@@ -84,7 +87,7 @@ FUNCTION purchase_item(item_key, quantity_requested):
             BREAK loop
 ```
 
-The pattern above is called optimistic locking. While it ensures consistency between your clients, it is not efficient 
+The pattern above is called optimistic locking. While it ensures consistency between your clients, it is not efficient
 in high contention situations; Many clients are trying to buy the same item. Any client that fails to modify `item_key` successfully must retry until they do.
 With a lot of clients this can generate a “retry storm”, putting additional load on the Valkey server and increasing latency.
 
@@ -93,6 +96,7 @@ With a lot of clients this can generate a “retry storm”, putting additional 
 A better alternative is to use Lua scripting. Lua scripts are executed as a single atomic operation, allowing you to implement custom atomic action safely and efficiently.
 
 The following Lua script implements our "purchase" logic. It checks for `current_stock >= requested_quantity`:
+
 * If yes, it deducts the stock.
 * If no, it fails.
 
@@ -116,26 +120,27 @@ end
 When executed, this script is guaranteed to be all-or-nothing.
 
 The script interacts with Valkey using [`server.call()`](https://valkey.io/topics/lua-api/#server.call) which executes
-Valkey commands with arguments. On error, [`server.call()`](https://valkey.io/topics/lua-api/#server.call) 
-will raise it to the user, stopping the script immediately. 
+Valkey commands with arguments. On error, [`server.call()`](https://valkey.io/topics/lua-api/#server.call)
+will raise it to the user, stopping the script immediately.
 To handle errors, use [`server.pcall()`](https://valkey.io/topics/lua-api/#server.pcall).
 
 Keys and inputs are passed into `KEYS` and `ARGV` parameters in our scripts which we will cover in the next section.
 
-:::tip[Keep It Light]
-Valkey ensures atomicity by blocking all actions on a node until Lua script finishes. 
+:::tip\[Keep It Light]
+Valkey ensures atomicity by blocking all actions on a node until Lua script finishes.
 Be sure to keep your scripts small and avoid long-running operations.
 :::
 
-:::tip[Lua Scripting API]
+:::tip\[Lua Scripting API]
 For more on the available methods for use in Lua scripts, see the documentation on [Lua API](https://valkey.io/topics/lua-api/).
 :::
 
 ## Handling Inputs with KEYS and ARGV
 
 Valkey provides `KEYS` and `ARGV` to handle input parameters, each with their own specific purpose:
+
 * `KEY` is used to pass in keys values in Valkey (ex: `product:123`).
-* `ARGV` is used for general input parameters. 
+* `ARGV` is used for general input parameters.
 
 ```python
 product_key = "product:shoe:stock"
@@ -151,18 +156,20 @@ result = await client.invoke_script(
 Note that both `KEYS` and `ARGV` parameters must be strings.
 
 ### Why Use `KEYS`?
+
 Valkey uses declared `KEYS` to locate the correct node (in both standalone and cluster mode). To ensure execution safety:
-- Pass all accessed keys via the `keys=` argument.
-- Only interact with keys listed in `KEYS`.
-- Never hardcode or programmatically generate key names.
+
+* Pass all accessed keys via the `keys=` argument.
+* Only interact with keys listed in `KEYS`.
+* Never hardcode or programmatically generate key names.
 
 ### Using `ARGV` and Script Caching
 
-GLIDE caches `Script()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs. 
+GLIDE caches `Script()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs.
 Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
 
-:::caution[Script Hashing]
-Script hashes are based on the entire script content. This includes spaces, line breaks, and all characters. 
+:::caution\[Script Hashing]
+Script hashes are based on the entire script content. This includes spaces, line breaks, and all characters.
 Always ensure you are loading the exact same scripts.
 :::
 
@@ -170,6 +177,7 @@ Always ensure you are loading the exact same scripts.
 
 The following is an example implementation for a client that handles inventory deduction atomically using Lua scripting.
 It will:
+
 1. Seed the database with 100 items.
 2. Execute the Lua script to attempt a purchase of 3 items.
 3. Handle the result and print the remaining stock.

@@ -7,16 +7,16 @@ This guide covers how to use Lua scripts with Valkey GLIDE for Python, including
 
 ## Table of Contents
 
-- [Prerequisites and Setup](#prerequisites-and-setup)
-- [Overview](#overview)
-- [Basic Script Usage](#basic-script-usage)
-- [Scripts with Keys and Arguments](#scripts-with-keys-and-arguments)
-- [Script Management](#script-management)
-- [Cluster Mode Considerations](#cluster-mode-considerations)
-- [Advanced Features](#advanced-features)
-- [Best Practices](#best-practices)
-- [Error Handling](#error-handling)
-- [Migration from Direct EVAL](#migration-from-direct-eval)
+* [Prerequisites and Setup](#prerequisites-and-setup)
+* [Overview](#overview)
+* [Basic Script Usage](#basic-script-usage)
+* [Scripts with Keys and Arguments](#scripts-with-keys-and-arguments)
+* [Script Management](#script-management)
+* [Cluster Mode Considerations](#cluster-mode-considerations)
+* [Advanced Features](#advanced-features)
+* [Best Practices](#best-practices)
+* [Error Handling](#error-handling)
+* [Migration from Direct EVAL](#migration-from-direct-eval)
 
 ## Prerequisites and Setup
 
@@ -69,9 +69,9 @@ await cluster_client.close()
 
 ### Requirements
 
-- Running Valkey/Redis server on localhost:6379 (or cluster on ports 7000+)
-- GLIDE Python client installed
-- Python 3.8+ with asyncio support
+* Running Valkey/Redis server on localhost:6379 (or cluster on ports 7000+)
+* GLIDE Python client installed
+* Python 3.8+ with asyncio support
 
 ### Running the Examples
 
@@ -87,9 +87,10 @@ if __name__ == "__main__":
 ```
 
 **Important Notes:**
-- All script arguments must be strings, not integers
-- Keys and arguments are automatically encoded by GLIDE
-- Scripts are cached automatically using SHA1 hashes
+
+* All script arguments must be strings, not integers
+* Keys and arguments are automatically encoded by GLIDE
+* Scripts are cached automatically using SHA1 hashes
 
 ## Overview
 
@@ -97,10 +98,10 @@ Valkey GLIDE provides a `Script` class that wraps Lua scripts and handles their 
 
 ### Key Benefits
 
-- **Automatic Caching**: Scripts are cached using SHA1 hashes for efficient reuse
-- **Cluster Support**: Scripts work seamlessly in both standalone and cluster modes
-- **Performance**: Uses `EVALSHA` internally to avoid sending script code repeatedly
-- **Management**: Built-in methods for script lifecycle management
+* **Automatic Caching**: Scripts are cached using SHA1 hashes for efficient reuse
+* **Cluster Support**: Scripts work seamlessly in both standalone and cluster modes
+* **Performance**: Uses `EVALSHA` internally to avoid sending script code repeatedly
+* **Management**: Built-in methods for script lifecycle management
 
 ## Basic Script Usage
 
@@ -228,6 +229,7 @@ result = await client.fcall("update_visits", keys=["page:home:visits"])
 
 print(result)  # b'1'
 ```
+
 See this [article](http://valkey.io/topics/functions-intro/) for more on how to use Valkey functions.
 
 ## Script Management
@@ -307,6 +309,7 @@ del script
 ```
 
 ### Killing Running Scripts
+
 A script can be safely killed if it has only performed read-only operations. However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
 
 ```python
@@ -482,6 +485,7 @@ for i in range(100):
 ```
 
 ## Best Practices
+
 ### 1. Use Scripts for Atomic Non-primitive Operations
 
 ```python
@@ -675,6 +679,7 @@ print(f"GET result: {results[1]}")   # b'script-value'
 If you're migrating from direct `EVAL` commands, here's how to adapt:
 
 ### Before (Direct EVAL)
+
 ```python
 # Old approach with custom commands (not recommended)
 result = await client.custom_command([
@@ -687,6 +692,7 @@ result = await client.custom_command([
 ```
 
 ### After (Script Class)
+
 ```python
 # New approach with Script class (recommended)
 script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
@@ -710,6 +716,7 @@ result = await client.invoke_script(
 Here are some common script patterns:
 
 ### Rate Limiting
+
 ```python
 rate_limit_script = Script("""
     local key = KEYS[1]
@@ -743,6 +750,7 @@ result = await client.invoke_script(
 ```
 
 ### Distributed Lock
+
 ```python
 acquire_lock_script = Script("""
     if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
@@ -781,6 +789,7 @@ if lock_acquired:
 ```
 
 ### Conditional Update
+
 ```python
 conditional_update_script = Script("""
     local current = redis.call('GET', KEYS[1])
@@ -804,9 +813,9 @@ updated = await client.invoke_script(
 
 Valkey GLIDE's `Script` class provides a powerful and efficient way to execute Lua scripts. By following the patterns and best practices outlined in this guide, you can:
 
-- Write efficient, atomic operations
-- Handle complex business logic server-side
-- Ensure optimal performance through automatic caching
-- Work seamlessly in both standalone and cluster environments
+* Write efficient, atomic operations
+* Handle complex business logic server-side
+* Ensure optimal performance through automatic caching
+* Work seamlessly in both standalone and cluster environments
 
 For more information, see the [Valkey Lua scripting documentation](https://valkey.io/commands/eval/) and the [GLIDE API documentation](https://valkey.io/valkey-glide/).

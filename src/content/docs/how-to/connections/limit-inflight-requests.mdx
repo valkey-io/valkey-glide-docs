@@ -38,7 +38,7 @@ Inflight requests limit can be configured through the general client configurati
     ```
   </TabItem>
 
-  <TabItem label="Go"> 
+  <TabItem label="Go">
     :::note
     This feature is not yet available in GLIDE Go.
     :::
@@ -51,9 +51,8 @@ Inflight requests limit can be configured through the general client configurati
   </TabItem>
 </Tabs>
 
-
-
 ## Why Limit Inflight Requests
+
 Excessive inflight requests can lead to queuing within the GLIDE infrastructure, increasing memory usage and potentially causing OOM issues.
 By capping inflight requests per connection, this feature reduces the risk of excessive queuing and helps maintain reliable system performance.
 The default inflight request limit is 1000 per connection, though this value can be configured in all GLIDE wrappers to suit application needs.

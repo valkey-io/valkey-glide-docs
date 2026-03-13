@@ -8,8 +8,8 @@ Valkey/Redis-OSS supports authentication mechanisms, enabling secure connections
 * **Password Authentication**: Clients authenticate using a predefined password.
 * **Access Control Lists (ACLs)**: Offers granular user permissions with individual passwords.
 
-:::tip[ACLs Overview]
-  ACLs provide extensive control over permissions. For detailed insights, please visit the [Valkey ACL documentation](https://valkey.io/topics/acl/).
+:::tip\[ACLs Overview]
+ACLs provide extensive control over permissions. For detailed insights, please visit the [Valkey ACL documentation](https://valkey.io/topics/acl/).
 :::
 
 ## Connection Startup Commands
@@ -27,6 +27,5 @@ Valkey GLIDE's [connection](https://github.com/valkey-io/valkey-glide/blob/d3c75
 | `PubSub Resubscription` | `+@pubsub`                | RESP3 and existing subscriptions                          |
 
 :::caution
-  Missing any of the required permissions above when the associated feature used will result in a connection error.
+Missing any of the required permissions above when the associated feature used will result in a connection error.
 :::
-

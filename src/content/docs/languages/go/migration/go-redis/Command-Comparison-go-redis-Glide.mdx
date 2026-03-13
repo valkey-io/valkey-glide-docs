@@ -7,1233 +7,1253 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 :::tip
 Visit our <a href={`/languages/go/migration/go-redis/command-comparison-chart`}>comprehensive comparison chart</a> for common Valkey commands and how they are implemented in both go-redis and Glide.
 :::
 
 ## String Operations
-### SET & GET 
-
-  The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
-
-  * Both **go-redis** and **Glide** support these commands with similar syntax.
-
-  **go-redis**
-
-  ```go
-  err := rdb.Set(ctx, "key", "value", 0).Err()
-  if err != nil {
-      panic(err)
-  }
-
-  val, err := rdb.Get(ctx, "key").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println("key", val) // "key value"
-
-  // With expiration
-  err = rdb.Set(ctx, "key", "value", time.Hour).Err()
-  ```
-
-  **Glide**
-
-  ```go
-  _, err := client.Set(ctx, "key", "value")
-  if err != nil {
-      panic(err)
-  }
-
-  val, err := client.Get(ctx, "key")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println("key", val.Value()) // "key value"
-
-  // With expiration
-  import "github.com/valkey-io/valkey-glide/go/v2/options"
-  _, err = client.SetWithOptions(ctx, "key", "value", options.SetOptions{
-      Expiry: &options.Expiry{
-          Type:  options.Seconds,
-          Count: 3600,
-      },
-  })
-  ```
-### SETEX (Set with Expiry) 
-
-  The `SETEX` command sets a key with an expiration time in seconds.
-
-  * In **go-redis**, this is a dedicated function.
-  * In **Glide**, expiration is handled using options within the `Set()` command.
-
-  **go-redis**
-
-  ```go
-  err := rdb.SetEx(ctx, "key", "value", time.Hour).Err()
-  if err != nil {
-      panic(err)
-  }
-  ```
-
-  **Glide**
-
-  ```go
-  import "github.com/valkey-io/valkey-glide/go/v2/options"
-
-  _, err := client.SetWithOptions(ctx, "key", "value", options.SetOptions{
-      Expiry: &options.Expiry{
-          Type:  options.Seconds,
-          Count: 3600,
-      },
-  })
-  if err != nil {
-      panic(err)
-  }
-  ```
-### SETNX (Set if Not Exists) 
-
-  The `SETNX` command sets a key only if it does not already exist.
-
-  * In **go-redis**, this is a dedicated function that returns true if the key was set, false if the key already exists.
-  * In **Glide**, this is handled using options within the `Set()` command.
-
-  **go-redis**
-
-  ```go
-  result, err := rdb.SetNX(ctx, "key", "value", 0).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // true if key was set, false if key exists
-  ```
-
-  **Glide**
-
-  ```go
-  import "github.com/valkey-io/valkey-glide/go/v2/options"
-
-  result, err := client.SetWithOptions(ctx, "key", "value", options.SetOptions{
-      ConditionalSet: options.OnlyIfDoesNotExist,
-  })
-  if err != nil {
-      panic(err)
-  }
-  // Returns "OK" if key was set, nil if key exists
-  fmt.Println(result.Value()) // "OK" or empty if nil
-  ```
-### MSET & MGET (Multiple Set/Get) 
-
-  The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
-
-  * In **go-redis**, `MSet()` accepts a map or key-value pairs as arguments.
-  * In **Glide**, `MSet()` accepts a map with key-value pairs.
-  * For `MGet()`, **go-redis** accepts multiple keys as arguments, while **Glide** requires a slice of keys.
-
-  **go-redis**
-
-  ```go
-  // Multiple set
-  err := rdb.MSet(ctx, map[string]interface{}{
-      "key1": "value1",
-      "key2": "value2",
-  }).Err()
-  if err != nil {
-      panic(err)
-  }
-
-  // Multiple get
-  values, err := rdb.MGet(ctx, "key1", "key2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(values) // [value1 value2]
-  ```
-
-  **Glide**
-
-  ```go
-  // Multiple set
-  _, err := client.MSet(ctx, map[string]string{
-      "key1": "value1",
-      "key2": "value2",
-  })
-  if err != nil {
-      panic(err)
-  }
-
-  // Multiple get
-  values, err := client.MGet(ctx, []string{"key1", "key2"})
-  if err != nil {
-      panic(err)
-  }
-  // values is []models.Result[string]
-  for _, val := range values {
-      if val.IsNil() {
-          fmt.Println("nil")
-      } else {
-          fmt.Println(val.Value())
-      }
-  }
-  ```
-### INCR & DECR 
-
-  The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
-
-  * Both **go-redis** and **Glide** support these commands in the same way.
-  * The key must contain an integer value, otherwise an error will be returned.
-
-  **go-redis**
-
-  ```go
-  result, err := rdb.Incr(ctx, "counter").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1
-
-  result, err = rdb.Decr(ctx, "counter").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 0
-  ```
-
-  **Glide**
-
-  ```go
-  result, err := client.Incr(ctx, "counter")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1
-
-  result, err = client.Decr(ctx, "counter")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 0
-  ```
-### INCRBY & DECRBY 
-
-  The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
-
-  * Both **go-redis** and **Glide** support these commands in the same way.
-  * The key must contain an integer value, otherwise an error will be returned.
-
-  **go-redis**
-
-  ```go
-  result, err := rdb.IncrBy(ctx, "counter", 5).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 5
-
-  result, err = rdb.DecrBy(ctx, "counter", 2).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 3
-  ```
-
-  **Glide**
-
-  ```go
-  result, err := client.IncrBy(ctx, "counter", 5)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 5
-
-  result, err = client.DecrBy(ctx, "counter", 2)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 3
-  ```
-### APPEND 
-
-  The `APPEND` command appends a value to the end of an existing string stored at a key.
-
-  * Both **go-redis** and **Glide** support this command in the same way.
-  * Returns the length of the string after the append operation.
-
-  **go-redis**
-
-  ```go
-  err := rdb.Set(ctx, "greeting", "Hello", 0).Err()
-  if err != nil {
-      panic(err)
-  }
-
-  length, err := rdb.Append(ctx, "greeting", " World").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(length) // 11
-
-  result, err := rdb.Get(ctx, "greeting").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "Hello World"
-  ```
-
-  **Glide**
-
-  ```go
-  _, err := client.Set(ctx, "greeting", "Hello")
-  if err != nil {
-      panic(err)
-  }
-
-  length, err := client.Append(ctx, "greeting", " World")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(length) // 11
-
-  result, err := client.Get(ctx, "greeting")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result.Value()) // "Hello World"
-  ```
-### GETRANGE & SETRANGE 
-
-  The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
-
-  * Both **go-redis** and **Glide** support these commands in the same way.
-
-  **go-redis**
-
-  ```go
-  err := rdb.Set(ctx, "key", "Hello World", 0).Err()
-  if err != nil {
-      panic(err)
-  }
-
-  result, err := rdb.GetRange(ctx, "key", 0, 4).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "Hello"
-
-  length, err := rdb.SetRange(ctx, "key", 6, "Redis").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(length) // 11
-
-  updated, err := rdb.Get(ctx, "key").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(updated) // "Hello Redis"
-  ```
-
-  **Glide**
-
-  ```go
-  _, err := client.Set(ctx, "key", "Hello World")
-  if err != nil {
-      panic(err)
-  }
-
-  result, err := client.GetRange(ctx, "key", 0, 4)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "Hello"
-
-  length, err := client.SetRange(ctx, "key", 6, "Redis")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(length) // 11
-
-  updated, err := client.Get(ctx, "key")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(updated.Value()) // "Hello Redis"
-  ```
 
+### SET & GET
+
+The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
+
+* Both **go-redis** and **Glide** support these commands with similar syntax.
+
+**go-redis**
+
+```go
+err := rdb.Set(ctx, "key", "value", 0).Err()
+if err != nil {
+    panic(err)
+}
+
+val, err := rdb.Get(ctx, "key").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println("key", val) // "key value"
+
+// With expiration
+err = rdb.Set(ctx, "key", "value", time.Hour).Err()
+```
+
+**Glide**
+
+```go
+_, err := client.Set(ctx, "key", "value")
+if err != nil {
+    panic(err)
+}
+
+val, err := client.Get(ctx, "key")
+if err != nil {
+    panic(err)
+}
+fmt.Println("key", val.Value()) // "key value"
+
+// With expiration
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+_, err = client.SetWithOptions(ctx, "key", "value", options.SetOptions{
+    Expiry: &options.Expiry{
+        Type:  options.Seconds,
+        Count: 3600,
+    },
+})
+```
+
+### SETEX (Set with Expiry)
+
+The `SETEX` command sets a key with an expiration time in seconds.
+
+* In **go-redis**, this is a dedicated function.
+* In **Glide**, expiration is handled using options within the `Set()` command.
+
+**go-redis**
+
+```go
+err := rdb.SetEx(ctx, "key", "value", time.Hour).Err()
+if err != nil {
+    panic(err)
+}
+```
+
+**Glide**
+
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+_, err := client.SetWithOptions(ctx, "key", "value", options.SetOptions{
+    Expiry: &options.Expiry{
+        Type:  options.Seconds,
+        Count: 3600,
+    },
+})
+if err != nil {
+    panic(err)
+}
+```
+
+### SETNX (Set if Not Exists)
+
+The `SETNX` command sets a key only if it does not already exist.
+
+* In **go-redis**, this is a dedicated function that returns true if the key was set, false if the key already exists.
+* In **Glide**, this is handled using options within the `Set()` command.
+
+**go-redis**
+
+```go
+result, err := rdb.SetNX(ctx, "key", "value", 0).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // true if key was set, false if key exists
+```
+
+**Glide**
+
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+result, err := client.SetWithOptions(ctx, "key", "value", options.SetOptions{
+    ConditionalSet: options.OnlyIfDoesNotExist,
+})
+if err != nil {
+    panic(err)
+}
+// Returns "OK" if key was set, nil if key exists
+fmt.Println(result.Value()) // "OK" or empty if nil
+```
+
+### MSET & MGET (Multiple Set/Get)
+
+The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
+
+* In **go-redis**, `MSet()` accepts a map or key-value pairs as arguments.
+* In **Glide**, `MSet()` accepts a map with key-value pairs.
+* For `MGet()`, **go-redis** accepts multiple keys as arguments, while **Glide** requires a slice of keys.
+
+**go-redis**
+
+```go
+// Multiple set
+err := rdb.MSet(ctx, map[string]interface{}{
+    "key1": "value1",
+    "key2": "value2",
+}).Err()
+if err != nil {
+    panic(err)
+}
+
+// Multiple get
+values, err := rdb.MGet(ctx, "key1", "key2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(values) // [value1 value2]
+```
+
+**Glide**
+
+```go
+// Multiple set
+_, err := client.MSet(ctx, map[string]string{
+    "key1": "value1",
+    "key2": "value2",
+})
+if err != nil {
+    panic(err)
+}
+
+// Multiple get
+values, err := client.MGet(ctx, []string{"key1", "key2"})
+if err != nil {
+    panic(err)
+}
+// values is []models.Result[string]
+for _, val := range values {
+    if val.IsNil() {
+        fmt.Println("nil")
+    } else {
+        fmt.Println(val.Value())
+    }
+}
+```
+
+### INCR & DECR
+
+The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
+
+* Both **go-redis** and **Glide** support these commands in the same way.
+* The key must contain an integer value, otherwise an error will be returned.
+
+**go-redis**
+
+```go
+result, err := rdb.Incr(ctx, "counter").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1
+
+result, err = rdb.Decr(ctx, "counter").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 0
+```
+
+**Glide**
+
+```go
+result, err := client.Incr(ctx, "counter")
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1
+
+result, err = client.Decr(ctx, "counter")
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 0
+```
+
+### INCRBY & DECRBY
+
+The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
+
+* Both **go-redis** and **Glide** support these commands in the same way.
+* The key must contain an integer value, otherwise an error will be returned.
+
+**go-redis**
+
+```go
+result, err := rdb.IncrBy(ctx, "counter", 5).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 5
+
+result, err = rdb.DecrBy(ctx, "counter", 2).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 3
+```
+
+**Glide**
+
+```go
+result, err := client.IncrBy(ctx, "counter", 5)
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 5
+
+result, err = client.DecrBy(ctx, "counter", 2)
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 3
+```
+
+### APPEND
+
+The `APPEND` command appends a value to the end of an existing string stored at a key.
+
+* Both **go-redis** and **Glide** support this command in the same way.
+* Returns the length of the string after the append operation.
+
+**go-redis**
+
+```go
+err := rdb.Set(ctx, "greeting", "Hello", 0).Err()
+if err != nil {
+    panic(err)
+}
+
+length, err := rdb.Append(ctx, "greeting", " World").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(length) // 11
+
+result, err := rdb.Get(ctx, "greeting").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "Hello World"
+```
+
+**Glide**
+
+```go
+_, err := client.Set(ctx, "greeting", "Hello")
+if err != nil {
+    panic(err)
+}
+
+length, err := client.Append(ctx, "greeting", " World")
+if err != nil {
+    panic(err)
+}
+fmt.Println(length) // 11
+
+result, err := client.Get(ctx, "greeting")
+if err != nil {
+    panic(err)
+}
+fmt.Println(result.Value()) // "Hello World"
+```
+
+### GETRANGE & SETRANGE
+
+The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
+
+* Both **go-redis** and **Glide** support these commands in the same way.
+
+**go-redis**
+
+```go
+err := rdb.Set(ctx, "key", "Hello World", 0).Err()
+if err != nil {
+    panic(err)
+}
+
+result, err := rdb.GetRange(ctx, "key", 0, 4).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "Hello"
+
+length, err := rdb.SetRange(ctx, "key", 6, "Redis").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(length) // 11
+
+updated, err := rdb.Get(ctx, "key").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(updated) // "Hello Redis"
+```
+
+**Glide**
+
+```go
+_, err := client.Set(ctx, "key", "Hello World")
+if err != nil {
+    panic(err)
+}
+
+result, err := client.GetRange(ctx, "key", 0, 4)
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "Hello"
+
+length, err := client.SetRange(ctx, "key", 6, "Redis")
+if err != nil {
+    panic(err)
+}
+fmt.Println(length) // 11
+
+updated, err := client.Get(ctx, "key")
+if err != nil {
+    panic(err)
+}
+fmt.Println(updated.Value()) // "Hello Redis"
+```
 
 ## Key Operations
-### DEL (Delete) 
 
-  The `DEL` command removes one or more keys from Valkey.
+### DEL (Delete)
 
-  * In **go-redis**, `Del()` accepts multiple keys as separate arguments.
-  * In **Glide**, `Del()` requires a slice of keys.
+The `DEL` command removes one or more keys from Valkey.
 
-  **go-redis**
+* In **go-redis**, `Del()` accepts multiple keys as separate arguments.
+* In **Glide**, `Del()` requires a slice of keys.
 
-  ```go
-  result, err := rdb.Del(ctx, "key1", "key2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (number of keys deleted)
-  ```
+**go-redis**
 
-  **Glide**
+```go
+result, err := rdb.Del(ctx, "key1", "key2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (number of keys deleted)
+```
 
-  ```go
-  result, err := client.Del(ctx, []string{"key1", "key2"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (number of keys deleted)
-  ```
-### EXISTS 
+**Glide**
 
-  The `EXISTS` command checks if one or more keys exist in Valkey.
+```go
+result, err := client.Del(ctx, []string{"key1", "key2"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (number of keys deleted)
+```
 
-  * In **go-redis**, `Exists()` accepts multiple keys as separate arguments and returns the number of keys that exist.
-  * In **Glide**, `Exists()` requires a slice of keys and also returns the number of keys that exist.
+### EXISTS
 
-  **go-redis**
+The `EXISTS` command checks if one or more keys exist in Valkey.
 
-  ```go
-  result, err := rdb.Exists(ctx, "existKey", "nonExistKey").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (number of keys that exist)
-  ```
+* In **go-redis**, `Exists()` accepts multiple keys as separate arguments and returns the number of keys that exist.
+* In **Glide**, `Exists()` requires a slice of keys and also returns the number of keys that exist.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  result, err := client.Exists(ctx, []string{"existKey", "nonExistKey"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (number of keys that exist)
-  ```
-### EXPIRE & TTL 
+```go
+result, err := rdb.Exists(ctx, "existKey", "nonExistKey").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (number of keys that exist)
+```
 
-  The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
+**Glide**
 
-  * Both **go-redis** and **Glide** support these commands with similar syntax.
+```go
+result, err := client.Exists(ctx, []string{"existKey", "nonExistKey"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (number of keys that exist)
+```
 
-  **go-redis**
+### EXPIRE & TTL
 
-  ```go
-  result, err := rdb.Expire(ctx, "key", 10*time.Second).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // true (success)
+The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
 
-  ttl, err := rdb.TTL(ctx, "key").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(ttl) // 10s (seconds remaining)
-  ```
+* Both **go-redis** and **Glide** support these commands with similar syntax.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  result, err := client.Expire(ctx, "key", 10*time.Second)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // true (success)
+```go
+result, err := rdb.Expire(ctx, "key", 10*time.Second).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // true (success)
 
-  ttl, err := client.TTL(ctx, "key")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(ttl) // 10 (seconds remaining)
-  ```
-### KEYS & SCAN 
+ttl, err := rdb.TTL(ctx, "key").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(ttl) // 10s (seconds remaining)
+```
 
-  The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
+**Glide**
 
-  * `KEYS` is not recommended for production use as it blocks the server until completion.
-  * `SCAN` is the preferred method for iterating through keys in production environments.
-  * In **Glide**, the cursor returned by `Scan()` needs to be handled using the `models.Cursor` type.
+```go
+result, err := client.Expire(ctx, "key", 10*time.Second)
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // true (success)
 
-  **go-redis**
+ttl, err := client.TTL(ctx, "key")
+if err != nil {
+    panic(err)
+}
+fmt.Println(ttl) // 10 (seconds remaining)
+```
 
-  ```go
-  // KEYS (not recommended for production)
-  allKeys, err := rdb.Keys(ctx, "*").Result()
-  if err != nil {
-      panic(err)
-  }
+### KEYS & SCAN
 
-  // SCAN (recommended for production)
-  var cursor uint64
-  var keys []string
-  for {
-      var err error
-      keys, cursor, err = rdb.Scan(ctx, cursor, "*", 10).Result()
-      if err != nil {
-          panic(err)
-      }
-      
-      if len(keys) > 0 {
-          fmt.Println("SCAN iteration:", keys)
-      }
-      
-      if cursor == 0 {
-          break
-      }
-  }
-  ```
+The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
 
-  **Glide**
+* `KEYS` is not recommended for production use as it blocks the server until completion.
+* `SCAN` is the preferred method for iterating through keys in production environments.
+* In **Glide**, the cursor returned by `Scan()` needs to be handled using the `models.Cursor` type.
 
-  ```go
-  import "github.com/valkey-io/valkey-glide/go/v2/models"
+**go-redis**
 
-  // KEYS (not recommended for production)
-  allKeys, err := client.Keys(ctx, "*")
-  if err != nil {
-      panic(err)
-  }
+```go
+// KEYS (not recommended for production)
+allKeys, err := rdb.Keys(ctx, "*").Result()
+if err != nil {
+    panic(err)
+}
 
-  // SCAN (recommended for production)
-  cursor := models.NewCursor("0")
-  for {
-      result, err := client.Scan(ctx, cursor)
-      if err != nil {
-          panic(err)
-      }
-      
-      keys := result.Data
-      if len(keys) > 0 {
-          fmt.Println("SCAN iteration:", keys)
-      }
-      
-      cursor = result.Cursor
-      if cursor.IsFinished() {
-          break
-      }
-  }
-  ```
-### RENAME & RENAMENX 
+// SCAN (recommended for production)
+var cursor uint64
+var keys []string
+for {
+    var err error
+    keys, cursor, err = rdb.Scan(ctx, cursor, "*", 10).Result()
+    if err != nil {
+        panic(err)
+    }
+    
+    if len(keys) > 0 {
+        fmt.Println("SCAN iteration:", keys)
+    }
+    
+    if cursor == 0 {
+        break
+    }
+}
+```
 
-  The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
+**Glide**
 
-  * Both **go-redis** and **Glide** support these commands with similar syntax.
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/models"
 
-  **go-redis**
+// KEYS (not recommended for production)
+allKeys, err := client.Keys(ctx, "*")
+if err != nil {
+    panic(err)
+}
 
-  ```go
-  err := rdb.Set(ctx, "oldkey", "value", 0).Err()
-  if err != nil {
-      panic(err)
-  }
+// SCAN (recommended for production)
+cursor := models.NewCursor("0")
+for {
+    result, err := client.Scan(ctx, cursor)
+    if err != nil {
+        panic(err)
+    }
+    
+    keys := result.Data
+    if len(keys) > 0 {
+        fmt.Println("SCAN iteration:", keys)
+    }
+    
+    cursor = result.Cursor
+    if cursor.IsFinished() {
+        break
+    }
+}
+```
 
-  result, err := rdb.Rename(ctx, "oldkey", "newkey").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "OK"
+### RENAME & RENAMENX
 
-  err = rdb.Set(ctx, "key1", "value1", 0).Err()
-  if err != nil {
-      panic(err)
-  }
+The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
 
-  success, err := rdb.RenameNX(ctx, "key1", "key2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(success) // true (success)
-  ```
+* Both **go-redis** and **Glide** support these commands with similar syntax.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  _, err := client.Set(ctx, "oldkey", "value")
-  if err != nil {
-      panic(err)
-  }
+```go
+err := rdb.Set(ctx, "oldkey", "value", 0).Err()
+if err != nil {
+    panic(err)
+}
 
-  result, err := client.Rename(ctx, "oldkey", "newkey")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "OK"
+result, err := rdb.Rename(ctx, "oldkey", "newkey").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "OK"
 
-  _, err = client.Set(ctx, "key1", "value1")
-  if err != nil {
-      panic(err)
-  }
+err = rdb.Set(ctx, "key1", "value1", 0).Err()
+if err != nil {
+    panic(err)
+}
 
-  success, err := client.RenameNX(ctx, "key1", "key2")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(success) // true (success)
-  ```
+success, err := rdb.RenameNX(ctx, "key1", "key2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(success) // true (success)
+```
 
+**Glide**
+
+```go
+_, err := client.Set(ctx, "oldkey", "value")
+if err != nil {
+    panic(err)
+}
+
+result, err := client.Rename(ctx, "oldkey", "newkey")
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "OK"
+
+_, err = client.Set(ctx, "key1", "value1")
+if err != nil {
+    panic(err)
+}
+
+success, err := client.RenameNX(ctx, "key1", "key2")
+if err != nil {
+    panic(err)
+}
+fmt.Println(success) // true (success)
+```
 
 ## Hash Operations
-### HSET & HGET 
 
-  The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
+### HSET & HGET
 
-  * In **go-redis**, `HSet()` accepts field-value pairs as separate arguments or a map.
-  * In **Glide**, `HSet()` accepts a map with field-value pairs.
+The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
 
-  **go-redis**
+* In **go-redis**, `HSet()` accepts field-value pairs as separate arguments or a map.
+* In **Glide**, `HSet()` accepts a map with field-value pairs.
 
-  ```go
-  // Set multiple fields
-  result, err := rdb.HSet(ctx, "hash", "key1", "1", "key2", "2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (fields added)
+**go-redis**
 
-  // Get a single field
-  value, err := rdb.HGet(ctx, "hash", "key1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value) // "1"
-  ```
+```go
+// Set multiple fields
+result, err := rdb.HSet(ctx, "hash", "key1", "1", "key2", "2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (fields added)
 
-  **Glide**
+// Get a single field
+value, err := rdb.HGet(ctx, "hash", "key1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(value) // "1"
+```
 
-  ```go
-  // Set multiple fields
-  result, err := client.HSet(ctx, "hash", map[string]string{
-      "key1": "1",
-      "key2": "2",
-  })
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (fields added)
+**Glide**
 
-  // Get a single field
-  value, err := client.HGet(ctx, "hash", "key1")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value.Value()) // "1"
-  ```
-### HMSET & HMGET 
+```go
+// Set multiple fields
+result, err := client.HSet(ctx, "hash", map[string]string{
+    "key1": "1",
+    "key2": "2",
+})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (fields added)
 
-  The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
+// Get a single field
+value, err := client.HGet(ctx, "hash", "key1")
+if err != nil {
+    panic(err)
+}
+fmt.Println(value.Value()) // "1"
+```
 
-  * In **go-redis**, `HMSet()` accepts either field-value pairs as arguments or a map.
-  * In **Glide**, there is no separate `HMSet()` method; instead, `HSet()` is used for setting multiple fields.
-  * For `HMGet()`, **go-redis** accepts multiple fields as arguments, while **Glide** requires a slice of fields.
+### HMSET & HMGET
 
-  **go-redis**
+The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
 
-  ```go
-  // Set multiple fields
-  err := rdb.HMSet(ctx, "hash", map[string]interface{}{
-      "key1": "1",
-      "key2": "2",
-  }).Err()
-  if err != nil {
-      panic(err)
-  }
+* In **go-redis**, `HMSet()` accepts either field-value pairs as arguments or a map.
+* In **Glide**, there is no separate `HMSet()` method; instead, `HSet()` is used for setting multiple fields.
+* For `HMGet()`, **go-redis** accepts multiple fields as arguments, while **Glide** requires a slice of fields.
 
-  // Get multiple fields
-  values, err := rdb.HMGet(ctx, "hash", "key1", "key2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(values) // ["1", "2"]
-  ```
+**go-redis**
 
-  **Glide**
+```go
+// Set multiple fields
+err := rdb.HMSet(ctx, "hash", map[string]interface{}{
+    "key1": "1",
+    "key2": "2",
+}).Err()
+if err != nil {
+    panic(err)
+}
 
-  ```go
-  // Set multiple fields (same as HSet in Glide)
-  _, err := client.HSet(ctx, "hash", map[string]string{
-      "key1": "1",
-      "key2": "2",
-  })
-  if err != nil {
-      panic(err)
-  }
+// Get multiple fields
+values, err := rdb.HMGet(ctx, "hash", "key1", "key2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(values) // ["1", "2"]
+```
 
-  // Get multiple fields
-  values, err := client.HMGet(ctx, "hash", []string{"key1", "key2"})
-  if err != nil {
-      panic(err)
-  }
-  // values is []models.Result[string]
-  for _, val := range values {
-      if val.IsNil() {
-          fmt.Println("nil")
-      } else {
-          fmt.Println(val.Value())
-      }
-  }
-  ```
-### HGETALL 
+**Glide**
 
-  The `HGETALL` command retrieves all field-value pairs from a hash.
+```go
+// Set multiple fields (same as HSet in Glide)
+_, err := client.HSet(ctx, "hash", map[string]string{
+    "key1": "1",
+    "key2": "2",
+})
+if err != nil {
+    panic(err)
+}
 
-  * Both **go-redis** and **Glide** support this command in the same way.
-  * Returns a map with field names as keys and their values.
+// Get multiple fields
+values, err := client.HMGet(ctx, "hash", []string{"key1", "key2"})
+if err != nil {
+    panic(err)
+}
+// values is []models.Result[string]
+for _, val := range values {
+    if val.IsNil() {
+        fmt.Println("nil")
+    } else {
+        fmt.Println(val.Value())
+    }
+}
+```
 
-  **go-redis**
+### HGETALL
 
-  ```go
-  err := rdb.HSet(ctx, "user", map[string]interface{}{
-      "name": "John",
-      "age":  "30",
-  }).Err()
-  if err != nil {
-      panic(err)
-  }
+The `HGETALL` command retrieves all field-value pairs from a hash.
 
-  user, err := rdb.HGetAll(ctx, "user").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(user) // map[name:John age:30]
-  ```
+* Both **go-redis** and **Glide** support this command in the same way.
+* Returns a map with field names as keys and their values.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  _, err := client.HSet(ctx, "user", map[string]string{
-      "name": "John",
-      "age":  "30",
-  })
-  if err != nil {
-      panic(err)
-  }
+```go
+err := rdb.HSet(ctx, "user", map[string]interface{}{
+    "name": "John",
+    "age":  "30",
+}).Err()
+if err != nil {
+    panic(err)
+}
 
-  user, err := client.HGetAll(ctx, "user")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(user) // map[name:John age:30]
-  ```
-### HDEL & HEXISTS 
+user, err := rdb.HGetAll(ctx, "user").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(user) // map[name:John age:30]
+```
 
-  The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
+**Glide**
 
-  * In **go-redis**, `HDel()` accepts multiple fields as separate arguments.
-  * In **Glide**, `HDel()` requires a slice of fields.
+```go
+_, err := client.HSet(ctx, "user", map[string]string{
+    "name": "John",
+    "age":  "30",
+})
+if err != nil {
+    panic(err)
+}
 
-  **go-redis**
+user, err := client.HGetAll(ctx, "user")
+if err != nil {
+    panic(err)
+}
+fmt.Println(user) // map[name:John age:30]
+```
 
-  ```go
-  result, err := rdb.HDel(ctx, "hash", "field1", "field2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (fields deleted)
+### HDEL & HEXISTS
 
-  exists, err := rdb.HExists(ctx, "hash", "field1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(exists) // false
-  ```
+The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
 
-  **Glide**
+* In **go-redis**, `HDel()` accepts multiple fields as separate arguments.
+* In **Glide**, `HDel()` requires a slice of fields.
 
-  ```go
-  result, err := client.HDel(ctx, "hash", []string{"field1", "field2"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (fields deleted)
+**go-redis**
 
-  exists, err := client.HExists(ctx, "hash", "field1")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(exists) // false
-  ```
+```go
+result, err := rdb.HDel(ctx, "hash", "field1", "field2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (fields deleted)
 
+exists, err := rdb.HExists(ctx, "hash", "field1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(exists) // false
+```
+
+**Glide**
+
+```go
+result, err := client.HDel(ctx, "hash", []string{"field1", "field2"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (fields deleted)
+
+exists, err := client.HExists(ctx, "hash", "field1")
+if err != nil {
+    panic(err)
+}
+fmt.Println(exists) // false
+```
 
 ## List Operations
-### LPUSH & RPUSH 
 
-  The `LPUSH` command adds elements to the head of a list, while `RPUSH` adds elements to the tail.
+### LPUSH & RPUSH
 
-  * In **go-redis**, these commands accept multiple elements as separate arguments.
-  * In **Glide**, these commands require a slice of elements.
+The `LPUSH` command adds elements to the head of a list, while `RPUSH` adds elements to the tail.
 
-  **go-redis**
+* In **go-redis**, these commands accept multiple elements as separate arguments.
+* In **Glide**, these commands require a slice of elements.
 
-  ```go
-  result, err := rdb.LPush(ctx, "list", "element1", "element2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (list length)
+**go-redis**
 
-  result, err = rdb.RPush(ctx, "list", "element3", "element4").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 4 (list length)
-  ```
+```go
+result, err := rdb.LPush(ctx, "list", "element1", "element2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (list length)
 
-  **Glide**
+result, err = rdb.RPush(ctx, "list", "element3", "element4").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 4 (list length)
+```
 
-  ```go
-  result, err := client.LPush(ctx, "list", []string{"element1", "element2"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (list length)
+**Glide**
 
-  result, err = client.RPush(ctx, "list", []string{"element3", "element4"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 4 (list length)
-  ```
-### LPOP & RPOP 
+```go
+result, err := client.LPush(ctx, "list", []string{"element1", "element2"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (list length)
 
-  The `LPOP` command removes and returns an element from the head of a list, while `RPOP` removes and returns an element from the tail.
+result, err = client.RPush(ctx, "list", []string{"element3", "element4"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 4 (list length)
+```
 
-  * Both **go-redis** and **Glide** support these commands with similar syntax.
+### LPOP & RPOP
 
-  **go-redis**
+The `LPOP` command removes and returns an element from the head of a list, while `RPOP` removes and returns an element from the tail.
 
-  ```go
-  value, err := rdb.LPop(ctx, "list").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value) // "element2"
+* Both **go-redis** and **Glide** support these commands with similar syntax.
 
-  value, err = rdb.RPop(ctx, "list").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value) // "element4"
-  ```
+**go-redis**
 
-  **Glide**
+```go
+value, err := rdb.LPop(ctx, "list").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(value) // "element2"
 
-  ```go
-  value, err := client.LPop(ctx, "list")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value.Value()) // "element2"
+value, err = rdb.RPop(ctx, "list").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(value) // "element4"
+```
 
-  value, err = client.RPop(ctx, "list")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(value.Value()) // "element4"
-  ```
-### LRANGE 
+**Glide**
 
-  The `LRANGE` command returns a range of elements from a list.
+```go
+value, err := client.LPop(ctx, "list")
+if err != nil {
+    panic(err)
+}
+fmt.Println(value.Value()) // "element2"
 
-  * Both **go-redis** and **Glide** support this command with similar syntax.
+value, err = client.RPop(ctx, "list")
+if err != nil {
+    panic(err)
+}
+fmt.Println(value.Value()) // "element4"
+```
 
-  **go-redis**
+### LRANGE
 
-  ```go
-  values, err := rdb.LRange(ctx, "list", 0, -1).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(values) // ["element1", "element3"]
-  ```
+The `LRANGE` command returns a range of elements from a list.
 
-  **Glide**
+* Both **go-redis** and **Glide** support this command with similar syntax.
 
-  ```go
-  values, err := client.LRange(ctx, "list", 0, -1)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(values) // ["element1", "element3"]
-  ```
+**go-redis**
 
+```go
+values, err := rdb.LRange(ctx, "list", 0, -1).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(values) // ["element1", "element3"]
+```
+
+**Glide**
+
+```go
+values, err := client.LRange(ctx, "list", 0, -1)
+if err != nil {
+    panic(err)
+}
+fmt.Println(values) // ["element1", "element3"]
+```
 
 ## Set Operations
-### SADD & SMEMBERS 
 
-  The `SADD` command adds members to a set, while `SMEMBERS` returns all members of a set.
+### SADD & SMEMBERS
 
-  * In **go-redis**, `SAdd()` accepts multiple members as separate arguments.
-  * In **Glide**, `SAdd()` requires a slice of members.
+The `SADD` command adds members to a set, while `SMEMBERS` returns all members of a set.
 
-  **go-redis**
+* In **go-redis**, `SAdd()` accepts multiple members as separate arguments.
+* In **Glide**, `SAdd()` requires a slice of members.
 
-  ```go
-  result, err := rdb.SAdd(ctx, "set", "member1", "member2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (members added)
+**go-redis**
 
-  members, err := rdb.SMembers(ctx, "set").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(members) // ["member1", "member2"]
-  ```
+```go
+result, err := rdb.SAdd(ctx, "set", "member1", "member2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (members added)
 
-  **Glide**
+members, err := rdb.SMembers(ctx, "set").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(members) // ["member1", "member2"]
+```
 
-  ```go
-  result, err := client.SAdd(ctx, "set", []string{"member1", "member2"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (members added)
+**Glide**
 
-  members, err := client.SMembers(ctx, "set")
-  if err != nil {
-      panic(err)
-  }
-  // Convert map[string]struct{} to slice for printing
-  var memberSlice []string
-  for member := range members {
-      memberSlice = append(memberSlice, member)
-  }
-  fmt.Println(memberSlice) // ["member1", "member2"]
-  ```
-### SREM & SISMEMBER 
+```go
+result, err := client.SAdd(ctx, "set", []string{"member1", "member2"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (members added)
 
-  The `SREM` command removes members from a set, while `SISMEMBER` checks if a member exists in a set.
+members, err := client.SMembers(ctx, "set")
+if err != nil {
+    panic(err)
+}
+// Convert map[string]struct{} to slice for printing
+var memberSlice []string
+for member := range members {
+    memberSlice = append(memberSlice, member)
+}
+fmt.Println(memberSlice) // ["member1", "member2"]
+```
 
-  * In **go-redis**, `SRem()` accepts multiple members as separate arguments.
-  * In **Glide**, `SRem()` requires a slice of members.
+### SREM & SISMEMBER
 
-  **go-redis**
+The `SREM` command removes members from a set, while `SISMEMBER` checks if a member exists in a set.
 
-  ```go
-  result, err := rdb.SRem(ctx, "set", "member1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (members removed)
+* In **go-redis**, `SRem()` accepts multiple members as separate arguments.
+* In **Glide**, `SRem()` requires a slice of members.
 
-  exists, err := rdb.SIsMember(ctx, "set", "member1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(exists) // false
-  ```
+**go-redis**
 
-  **Glide**
+```go
+result, err := rdb.SRem(ctx, "set", "member1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (members removed)
 
-  ```go
-  result, err := client.SRem(ctx, "set", []string{"member1"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (members removed)
+exists, err := rdb.SIsMember(ctx, "set", "member1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(exists) // false
+```
 
-  exists, err := client.SIsMember(ctx, "set", "member1")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(exists) // false
-  ```
+**Glide**
 
+```go
+result, err := client.SRem(ctx, "set", []string{"member1"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (members removed)
+
+exists, err := client.SIsMember(ctx, "set", "member1")
+if err != nil {
+    panic(err)
+}
+fmt.Println(exists) // false
+```
 
 ## Sorted Set Operations
-### ZADD & ZRANGE 
 
-  The `ZADD` command adds members with scores to a sorted set, while `ZRANGE` returns a range of members.
+### ZADD & ZRANGE
 
-  * In **go-redis**, `ZAdd()` accepts score-member pairs.
-  * In **Glide**, `ZAdd()` accepts a map with member-score pairs.
+The `ZADD` command adds members with scores to a sorted set, while `ZRANGE` returns a range of members.
 
-  **go-redis**
+* In **go-redis**, `ZAdd()` accepts score-member pairs.
+* In **Glide**, `ZAdd()` accepts a map with member-score pairs.
 
-  ```go
-  import "github.com/redis/go-redis/v9"
+**go-redis**
 
-  result, err := rdb.ZAdd(ctx, "zset", redis.Z{Score: 1, Member: "member1"}, redis.Z{Score: 2, Member: "member2"}).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (members added)
+```go
+import "github.com/redis/go-redis/v9"
 
-  members, err := rdb.ZRange(ctx, "zset", 0, -1).Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(members) // ["member1", "member2"]
-  ```
+result, err := rdb.ZAdd(ctx, "zset", redis.Z{Score: 1, Member: "member1"}, redis.Z{Score: 2, Member: "member2"}).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (members added)
 
-  **Glide**
+members, err := rdb.ZRange(ctx, "zset", 0, -1).Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(members) // ["member1", "member2"]
+```
 
-  ```go
-  result, err := client.ZAdd(ctx, "zset", map[string]float64{
-      "member1": 1.0,
-      "member2": 2.0,
-  })
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 2 (members added)
+**Glide**
 
-  import "github.com/valkey-io/valkey-glide/go/v2/options"
+```go
+result, err := client.ZAdd(ctx, "zset", map[string]float64{
+    "member1": 1.0,
+    "member2": 2.0,
+})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 2 (members added)
 
-  members, err := client.ZRange(ctx, "zset", options.RangeByIndex{Start: 0, End: -1})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(members) // ["member1", "member2"]
-  ```
-### ZRANK & ZREVRANK 
+import "github.com/valkey-io/valkey-glide/go/v2/options"
 
-  The `ZRANK` command returns the rank of a member in a sorted set (lowest to highest), while `ZREVRANK` returns the rank from highest to lowest.
+members, err := client.ZRange(ctx, "zset", options.RangeByIndex{Start: 0, End: -1})
+if err != nil {
+    panic(err)
+}
+fmt.Println(members) // ["member1", "member2"]
+```
 
-  * Both **go-redis** and **Glide** support these commands with similar syntax.
+### ZRANK & ZREVRANK
 
-  **go-redis**
+The `ZRANK` command returns the rank of a member in a sorted set (lowest to highest), while `ZREVRANK` returns the rank from highest to lowest.
 
-  ```go
-  rank, err := rdb.ZRank(ctx, "zset", "member1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(rank) // 0
+* Both **go-redis** and **Glide** support these commands with similar syntax.
 
-  revRank, err := rdb.ZRevRank(ctx, "zset", "member1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(revRank) // 1
-  ```
+**go-redis**
 
-  **Glide**
+```go
+rank, err := rdb.ZRank(ctx, "zset", "member1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(rank) // 0
 
-  ```go
-  rank, err := client.ZRank(ctx, "zset", "member1")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(rank.Value()) // 0
+revRank, err := rdb.ZRevRank(ctx, "zset", "member1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(revRank) // 1
+```
 
-  revRank, err := client.ZRevRank(ctx, "zset", "member1")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(revRank.Value()) // 1
-  ```
-### ZREM & ZSCORE 
+**Glide**
 
-  The `ZREM` command removes members from a sorted set, while `ZSCORE` returns the score of a member.
+```go
+rank, err := client.ZRank(ctx, "zset", "member1")
+if err != nil {
+    panic(err)
+}
+fmt.Println(rank.Value()) // 0
 
-  * In **go-redis**, `ZRem()` accepts multiple members as separate arguments.
-  * In **Glide**, `ZRem()` requires a slice of members.
+revRank, err := client.ZRevRank(ctx, "zset", "member1")
+if err != nil {
+    panic(err)
+}
+fmt.Println(revRank.Value()) // 1
+```
 
-  **go-redis**
+### ZREM & ZSCORE
 
-  ```go
-  result, err := rdb.ZRem(ctx, "zset", "member1").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (members removed)
+The `ZREM` command removes members from a sorted set, while `ZSCORE` returns the score of a member.
 
-  score, err := rdb.ZScore(ctx, "zset", "member2").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(score) // 2.0
-  ```
+* In **go-redis**, `ZRem()` accepts multiple members as separate arguments.
+* In **Glide**, `ZRem()` requires a slice of members.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  result, err := client.ZRem(ctx, "zset", []string{"member1"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // 1 (members removed)
+```go
+result, err := rdb.ZRem(ctx, "zset", "member1").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (members removed)
 
-  score, err := client.ZScore(ctx, "zset", "member2")
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(score.Value()) // 2.0
-  ```
+score, err := rdb.ZScore(ctx, "zset", "member2").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(score) // 2.0
+```
 
+**Glide**
+
+```go
+result, err := client.ZRem(ctx, "zset", []string{"member1"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // 1 (members removed)
+
+score, err := client.ZScore(ctx, "zset", "member2")
+if err != nil {
+    panic(err)
+}
+fmt.Println(score.Value()) // 2.0
+```
 
 ## Advanced Operations
-### Transactions (MULTI/EXEC) 
 
-  Transactions allow you to execute multiple commands atomically.
+### Transactions (MULTI/EXEC)
 
-  * In **go-redis**, transactions are handled using `TxPipeline()`.
-  * In **Glide**, transactions are handled using batch operations with `Exec()`.
+Transactions allow you to execute multiple commands atomically.
 
-  **go-redis**
+* In **go-redis**, transactions are handled using `TxPipeline()`.
+* In **Glide**, transactions are handled using batch operations with `Exec()`.
 
-  ```go
-  pipe := rdb.TxPipeline()
-  pipe.Set(ctx, "key1", "value1", 0)
-  pipe.Set(ctx, "key2", "value2", 0)
-  pipe.Incr(ctx, "counter")
+**go-redis**
 
-  results, err := pipe.Exec(ctx)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(len(results)) // 3 (commands executed)
-  ```
+```go
+pipe := rdb.TxPipeline()
+pipe.Set(ctx, "key1", "value1", 0)
+pipe.Set(ctx, "key2", "value2", 0)
+pipe.Incr(ctx, "counter")
 
-  **Glide**
+results, err := pipe.Exec(ctx)
+if err != nil {
+    panic(err)
+}
+fmt.Println(len(results)) // 3 (commands executed)
+```
 
-  ```go
-  import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+**Glide**
 
-  batch := pipeline.NewStandaloneBatch()
-  batch.Set("key1", "value1")
-  batch.Set("key2", "value2")
-  batch.Incr("counter")
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-  results, err := client.Exec(ctx, batch, false)
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(len(results)) // 3 (commands executed)
-  ```
-### EVAL / EVALSHA 
+batch := pipeline.NewStandaloneBatch()
+batch.Set("key1", "value1")
+batch.Set("key2", "value2")
+batch.Incr("counter")
 
-  The `EVAL` command executes Lua scripts, while `EVALSHA` executes scripts by their SHA1 hash.
+results, err := client.Exec(ctx, batch, false)
+if err != nil {
+    panic(err)
+}
+fmt.Println(len(results)) // 3 (commands executed)
+```
 
-  * Both **go-redis** and **Glide** support Lua script execution.
-  * In **Glide**, scripts are managed using the `Script` type and `InvokeScript()` method.
+### EVAL / EVALSHA
 
-  **go-redis**
+The `EVAL` command executes Lua scripts, while `EVALSHA` executes scripts by their SHA1 hash.
 
-  ```go
-  script := `
-      local key = KEYS[1]
-      local value = ARGV[1]
-      redis.call('SET', key, value)
-      return redis.call('GET', key)
-  `
+* Both **go-redis** and **Glide** support Lua script execution.
+* In **Glide**, scripts are managed using the `Script` type and `InvokeScript()` method.
 
-  result, err := rdb.Eval(ctx, script, []string{"mykey"}, "myvalue").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "myvalue"
-  ```
+**go-redis**
 
-  **Glide**
+```go
+script := `
+    local key = KEYS[1]
+    local value = ARGV[1]
+    redis.call('SET', key, value)
+    return redis.call('GET', key)
+`
 
-  ```go
-  import "github.com/valkey-io/valkey-glide/go/v2/options"
+result, err := rdb.Eval(ctx, script, []string{"mykey"}, "myvalue").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "myvalue"
+```
 
-  scriptCode := `
-      local key = KEYS[1]
-      local value = ARGV[1]
-      redis.call('SET', key, value)
-      return redis.call('GET', key)
-  `
+**Glide**
 
-  script := options.NewScript(scriptCode)
-  result, err := client.InvokeScriptWithOptions(ctx, script, options.ScriptOptions{
-      Keys: []string{"mykey"},
-      Args: []string{"myvalue"},
-  })
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "myvalue"
-  ```
-## Custom Commands 
+```go
+import "github.com/valkey-io/valkey-glide/go/v2/options"
 
-  Both libraries support executing custom or arbitrary Valkey commands.
+scriptCode := `
+    local key = KEYS[1]
+    local value = ARGV[1]
+    redis.call('SET', key, value)
+    return redis.call('GET', key)
+`
 
-  * In **go-redis**, use `Do()` method.
-  * In **Glide**, use `CustomCommand()` method.
+script := options.NewScript(scriptCode)
+result, err := client.InvokeScriptWithOptions(ctx, script, options.ScriptOptions{
+    Keys: []string{"mykey"},
+    Args: []string{"myvalue"},
+})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "myvalue"
+```
 
-  **go-redis**
+## Custom Commands
 
-  ```go
-  result, err := rdb.Do(ctx, "PING").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "PONG"
+Both libraries support executing custom or arbitrary Valkey commands.
 
-  // Custom command with arguments
-  result, err = rdb.Do(ctx, "SET", "customkey", "customvalue").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "OK"
-  ```
+* In **go-redis**, use `Do()` method.
+* In **Glide**, use `CustomCommand()` method.
 
-  **Glide**
+**go-redis**
 
-  ```go
-  result, err := client.CustomCommand(ctx, []string{"PING"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "PONG"
+```go
+result, err := rdb.Do(ctx, "PING").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "PONG"
 
-  // Custom command with arguments
-  result, err = client.CustomCommand(ctx, []string{"SET", "customkey", "customvalue"})
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "OK"
-  ```
-### AUTH 
+// Custom command with arguments
+result, err = rdb.Do(ctx, "SET", "customkey", "customvalue").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "OK"
+```
 
-  Authentication is typically handled during connection setup, but can also be done explicitly.
+**Glide**
 
-  * In **go-redis**, authentication is usually set in the client options or can be done with `Auth()`.
-  * In **Glide**, authentication is set in the client configuration during connection setup.
+```go
+result, err := client.CustomCommand(ctx, []string{"PING"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "PONG"
 
-  **go-redis**
+// Custom command with arguments
+result, err = client.CustomCommand(ctx, []string{"SET", "customkey", "customvalue"})
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "OK"
+```
 
-  ```go
-  // During connection setup
-  rdb := redis.NewClient(&redis.Options{
-      Addr:     "localhost:6379",
-      Username: "user",
-      Password: "password",
-  })
+### AUTH
 
-  // Or explicitly after connection
-  result, err := rdb.Auth(ctx, "password").Result()
-  if err != nil {
-      panic(err)
-  }
-  fmt.Println(result) // "OK"
-  ```
+Authentication is typically handled during connection setup, but can also be done explicitly.
 
-  **Glide**
+* In **go-redis**, authentication is usually set in the client options or can be done with `Auth()`.
+* In **Glide**, authentication is set in the client configuration during connection setup.
 
-  ```go
-  // During connection setup (recommended)
-  client, err := glide.NewClient(&config.ClientConfiguration{
-      Addresses: []config.NodeAddress{
-          {Host: "localhost", Port: 6379},
-      },
-      Credentials: &config.ServerCredentials{
-          Username: "user",
-          Password: "password",
-      },
-  })
+**go-redis**
 
-  // Authentication is handled automatically during connection
-  ```
+```go
+// During connection setup
+rdb := redis.NewClient(&redis.Options{
+    Addr:     "localhost:6379",
+    Username: "user",
+    Password: "password",
+})
 
+// Or explicitly after connection
+result, err := rdb.Auth(ctx, "password").Result()
+if err != nil {
+    panic(err)
+}
+fmt.Println(result) // "OK"
+```
+
+**Glide**
+
+```go
+// During connection setup (recommended)
+client, err := glide.NewClient(&config.ClientConfiguration{
+    Addresses: []config.NodeAddress{
+        {Host: "localhost", Port: 6379},
+    },
+    Credentials: &config.ServerCredentials{
+        Username: "user",
+        Password: "password",
+    },
+})
+
+// Authentication is handled automatically during connection
+```

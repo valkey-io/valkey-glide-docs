@@ -8,7 +8,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 Valkey Modules extend Valkey's core commands and functionality. Starting in GLIDE 1.2, commonly used modules, like JSON and Vector Search, are supported through a dedicated wrapper interface.
 
 :::caution
-The Modules API interfaces are only available for Java, Node, and Python. 
+The Modules API interfaces are only available for Java, Node, and Python.
 Support for other languages maybe be added in the future.
 
 For modules without dedicated wrappers, you can still access any loaded module's functionality directly using the [Custom Commands API](/concepts/client-features/custom-commands/).
@@ -16,12 +16,13 @@ For modules without dedicated wrappers, you can still access any loaded module's
 
 ## General Concept
 
-The Modules API provides convenient wrapper methods for commonly used Valkey modules. 
-These wrappers are built on top of the Custom Command API, automatically constructing and executing the appropriate module commands. 
-This allows for type-safe methods, parameter validation, and IDE autocomplete support. Under the hood, each wrapper method translates your call into the 
+The Modules API provides convenient wrapper methods for commonly used Valkey modules.
+These wrappers are built on top of the Custom Command API, automatically constructing and executing the appropriate module commands.
+This allows for type-safe methods, parameter validation, and IDE autocomplete support. Under the hood, each wrapper method translates your call into the
 corresponding module command and executes it via the [Custom Commands API](/concepts/client-features/custom-commands/).
 
 Currently, GLIDE supports dedicated interfaces for:
+
 * [Amazon MemoryDB Vector search commands](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search-commands.html)
 * [Amazon ElastiCache JSON commands](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/json-list-commands.html)
 

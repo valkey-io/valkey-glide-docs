@@ -7,18 +7,19 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 Below is a comprehensive chart comparing common Redis commands between ioredis and Valkey GLIDE:
 
 ## Connection
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | Connect | `new Redis()` | `GlideClient.createClient({addresses: [{host: "localhost", port: 6379 }]})` |
 | Cluster | `new Redis.Cluster([])` | `GlideClusterClient.createClient({addresses: [{ host: "127.0.0.1", port: 6379 }, { host: "127.0.0.1", port: 6380 }]})` |
 | Auth | `redis.auth('pass')` | `client.updateConnectionPassword('pass')` |
 | Select DB | `redis.select(1)` | `client.select(1)` |
+
 ## Strings
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | SET | `redis.set('key', 'val')` | `client.set('key', 'val')` |
@@ -34,7 +35,9 @@ Below is a comprehensive chart comparing common Redis commands between ioredis a
 | APPEND | `redis.append('key', 'val')` | `client.append('key', 'val')` |
 | GETRANGE | `redis.getrange('key', 0, 3)` | `client.getRange('key', 0, 3)` |
 | SETRANGE | `redis.setrange('key', 0, 'val')` | `client.setRange('key', 0, 'val')` |
+
 ## Keys
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | DEL | `redis.del('key1', 'key2')` | `client.del(['key1', 'key2'])` |
@@ -45,7 +48,9 @@ Below is a comprehensive chart comparing common Redis commands between ioredis a
 | SCAN | `redis.scan('0')` | `client.scan('0')` |
 | RENAME | `redis.rename('old', 'new')` | `client.rename('old', 'new')` |
 | RENAMENX | `redis.renamenx('old', 'new')` | `client.renameNx('old', 'new')` |
+
 ## Hashes
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | HSET | `redis.hset('hash', 'k1', 'v1', 'k2', 'v2')` | `client.hset('hash', {k1: 'v1', k2: 'v2'})` |
@@ -55,7 +60,9 @@ Below is a comprehensive chart comparing common Redis commands between ioredis a
 | HGETALL | `redis.hgetall('hash')` | `client.hgetall('hash')` |
 | HDEL | `redis.hdel('hash', 'k1', 'k2')` | `client.hdel('hash', ['k1', 'k2'])` |
 | HEXISTS | `redis.hexists('hash', 'field')` | `client.hexists('hash', 'field')` |
+
 ## Lists
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | LPUSH | `redis.lpush('list', 'a', 'b')` | `client.lpush('list', ['a', 'b'])` |
@@ -63,14 +70,18 @@ Below is a comprehensive chart comparing common Redis commands between ioredis a
 | LPOP | `redis.lpop('list')` | `client.lpop('list')` |
 | RPOP | `redis.rpop('list')` | `client.rpop('list')` |
 | LRANGE | `redis.lrange('list', 0, -1)` | `client.lrange('list', 0, -1)` |
+
 ## Sets
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | SADD | `redis.sadd('set', 'a', 'b')` | `client.sadd('set', ['a', 'b'])` |
 | SMEMBERS | `redis.smembers('set')` | `client.smembers('set')` |
 | SREM | `redis.srem('set', 'a', 'b')` | `client.srem('set', ['a', 'b'])` |
 | SISMEMBER | `redis.sismember('set', 'a')` | `client.sismember('set', 'a')` |
+
 ## Sorted Sets
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | ZADD | `redis.zadd('zset', 1, 'a', 2, 'b')` | `client.zadd('zset', [{score: 1, member: 'a'}, {score: 2, member: 'b'}])` |
@@ -80,20 +91,28 @@ Below is a comprehensive chart comparing common Redis commands between ioredis a
 | ZSCORE | `redis.zscore('zset', 'a')` | `client.zscore('zset', 'a')` |
 | ZRANK | `redis.zrank('zset', 'a')` | `client.zrank('zset', 'a')` |
 | ZREVRANK | `redis.zrevrank('zset', 'a')` | `client.zrevrank('zset', 'a')` |
+
 ## Transactions
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | MULTI/EXEC | `redis.multi().set('k', 'v').get('k').exec()` | `client.exec(new Transaction().set('k', 'v').get('k'))` |
+
 ## Lua Scripts
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | EVAL | `redis.eval(script, numKeys, ...keysAndArgs)` | `client.invokeScript(new Script(script), {keys: [], args: []})` |
 | EVALSHA | `redis.evalsha(sha, numKeys, ...keysAndArgs)` | `client.invokeScript(new Script(script), {keys: [], args: []})` |
+
 ## Custom Commands
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | Raw Command | `redis.call('SET', 'key', 'value')` | `client.customCommand(['SET', 'key', 'value'])` |
+
 ## Connection Management
+
 | Command | ioredis | Valkey GLIDE |
 |---------|---------|--------------|
 | Close | `redis.disconnect()` | `client.close()` |

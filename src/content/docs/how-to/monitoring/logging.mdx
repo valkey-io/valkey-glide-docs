@@ -9,21 +9,21 @@ This guide will go over how the GLIDE clients logger works and how to configure 
 
 ## How Logging Works
 
-Valkey GLIDE clients are built upon a shared, high-performance [Rust Core](/concepts/architecture/rust-core-design) that utilizes a singleton logger exposed via the Foreign Function Interface (FFI). 
-This architecture allows client wrappers to configure the logger and push their own messages directly into the core, 
+Valkey GLIDE clients are built upon a shared, high-performance [Rust Core](/concepts/architecture/rust-core-design) that utilizes a singleton logger exposed via the Foreign Function Interface (FFI).
+This architecture allows client wrappers to configure the logger and push their own messages directly into the core,
 ensuring that all logs remain synchronized and preserve the order of events.
 
-Currently, GLIDE does not support direct integration with third-party logging libraries. While there is interest in adding this capability, 
+Currently, GLIDE does not support direct integration with third-party logging libraries. While there is interest in adding this capability,
 it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [GitHub](https://github.com/valkey-io/valkey-glide).
 
 The logger is currently available for Python, Node, Java, and PHP clients.
 
 ## Examples
 
-The following examples show how to configure the logger in GLIDE clients. 
+The following examples show how to configure the logger in GLIDE clients.
 
 <Tabs syncKey="">
-  <TabItem label="Python">  
+  <TabItem label="Python">
     ```python
     import asyncio
     from glide import GlideClientConfiguration, NodeAddress, GlideClient, Logger, LogLevel
@@ -45,7 +45,6 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference]() for the full logger interface.
-
   </TabItem>
 
   <TabItem label="Node">
@@ -71,7 +70,6 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference]() for the full logger interface.
-
   </TabItem>
 
   <TabItem label="Java">
@@ -116,7 +114,6 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference]() for the full logger interface.
-
   </TabItem>
 
   <TabItem label="PHP">
@@ -139,7 +136,6 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the [logger functions](https://github.com/valkey-io/valkey-glide-php/blob/main/logger.stub.php) for the full logger interface.
-
   </TabItem>
 </Tabs>
 
@@ -155,5 +151,5 @@ To prevent large files, log files are rotated hourly.
 
 ## Cleanup Outputs
 
-Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes. 
-To disable these color codes, you can set the environment variable `NO_COLOR=1` before starting the logger. 
+Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes.
+To disable these color codes, you can set the environment variable `NO_COLOR=1` before starting the logger.

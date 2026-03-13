@@ -5,19 +5,19 @@ description: Understanding how GLIDE handles Lua scripting, caching, and atomici
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute 
+Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute
 custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
 
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
 
-:::tip[Valkey Functions]
+:::tip\[Valkey Functions]
 GLIDE also support Valkey Functions, an alternative approach scripting. To see how to use Valkey Functions
 with GLIDE, see our [guide](/how-to/load-and-execute-functions/).
 
 To learn more about Valkey Functions, see the Valkey [documentations](https://valkey.io/topics/functions-intro/).
 :::
 
-:::caution[Php Not Supported]
+:::caution\[Php Not Supported]
 The GLIDE Php client does not yet support this interface.
 To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
 :::
@@ -116,6 +116,7 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
 ## Handling Inputs with KEYS and ARGV
 
 Valkey provides `KEYS` and `ARGV` to handle input parameters:
+
 * **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
 * **ARGV**: Used for general input parameters
 
@@ -191,12 +192,13 @@ If no `KEYS` are provided, GLIDE will route the script to a random node for exec
 Thus, hardcoding the keys will most likely lead to errors.
 
 For proper execution, make sure to:
+
 * Pass all accessed keys via the `KEYS` argument
 * Only interact with keys listed in `KEYS`
 * `KEYS` must belong to the same slot (use [hashtags](https://valkey.io/topics/cluster-spec/#hash-tags) like `user:{100}:name` if needed)
 
-Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of scripts. 
-Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing 
+Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of scripts.
+Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing
 values directly into the script would create unique scripts each time, preventing effective caching.
 
 <Tabs syncKey="progLangInExamples">
@@ -251,7 +253,7 @@ values directly into the script would create unique scripts each time, preventin
   </TabItem>
 </Tabs>
 
-:::tip[Large Data]
+:::tip\[Large Data]
 GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
 :::
 
@@ -330,7 +332,7 @@ Scripts with identical code produce identical hashes, enabling efficient caching
   </TabItem>
 </Tabs>
 
-:::caution[Script hashing is content-sensitive]
+:::caution\[Script hashing is content-sensitive]
 Script hashes are based on the entire script content, including spaces, line breaks, and all characters.
 Ensure you load the exact same script to benefit from caching.
 :::
@@ -342,13 +344,13 @@ Scripts remain cached on the Valkey server until:
 * You explicitly flush the cache with `script_flush()`
   All of which are handled automatically by GLIDE.
 
-:::tip[Ephemeral Scripts]
+:::tip\[Ephemeral Scripts]
 Valkey scripts are not guaranteed to be persisted. It is the responsibility of the client to manage the scripts used.
 :::
 
 To learn more about script lifecycle, see Valkey's [documentation](https://valkey.io/topics/eval-intro/#script-cache).
 
-### Stop Running Script 
+### Stop Running Script
 
 A script can be safely killed if it has only performed read-only operations.
 However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
@@ -633,7 +635,7 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
   </TabItem>
 </Tabs>
 
-## What's Next 
+## What's Next
 
 To learn how execute custom scripts in practice, check out the [guide](/how-to/execute-custom-scripts) on Valkey scripting.
 

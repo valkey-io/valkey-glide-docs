@@ -9,51 +9,55 @@ If your issues persist, please feel free to reach out to [Valkey GLIDE community
 
 ## Enable Client Logging
 
-To help diagnose issues, you will need to enable client logging to DEBUG mode. 
+To help diagnose issues, you will need to enable client logging to DEBUG mode.
 
-In many situations, clients surface errors as generic `timeout` errors as they try to reconnect. 
+In many situations, clients surface errors as generic `timeout` errors as they try to reconnect.
 Enabling DEBUG logs may provide more context on the issue.
 
 To enable logging, you will need to set the logger from within your application.
 
 <Tabs syncKey="progLangInExamples">
-    <TabItem label="Python">
-        ```python
-        from glide import Logger, Level
+  <TabItem label="Python">
+    ```python
+    from glide import Logger, Level
 
-        Logger.set_logger_config(Level.DEBUG)
-        ```
-    </TabItem>
-    <TabItem label="Java">
-        ```java
-        import glide.api.Logger;
+    Logger.set_logger_config(Level.DEBUG)
+    ```
+  </TabItem>
 
-        Logger.setLoggerConfig(Logger.Level.DEBUG);
-        ```
-    </TabItem>
-    <TabItem label="Node">
-        ```typescript
-        import { Logger } from "@valkey/valkey-glide";
+  <TabItem label="Java">
+    ```java
+    import glide.api.Logger;
 
-        Logger.setLoggerConfig("debug");
-        ```
-    </TabItem>
-    <TabItem label="Go">
-        ```go
-        import (
-            "github.com/valkey-io/valkey-glide/go/glide"
-        )
+    Logger.setLoggerConfig(Logger.Level.DEBUG);
+    ```
+  </TabItem>
 
-        glide.SetLoggerConfig(glide.LogLevelDebug)
-        ```
-    </TabItem>
-    <TabItem label="PHP">
-        ```php
-        use Glide\Logger;
+  <TabItem label="Node">
+    ```typescript
+    import { Logger } from "@valkey/valkey-glide";
 
-        Logger::setLoggerConfig(Logger::LEVEL_DEBUG);
-        ```
-    </TabItem>
+    Logger.setLoggerConfig("debug");
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/glide"
+    )
+
+    glide.SetLoggerConfig(glide.LogLevelDebug)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    use Glide\Logger;
+
+    Logger::setLoggerConfig(Logger::LEVEL_DEBUG);
+    ```
+  </TabItem>
 </Tabs>
 
 :::tip
@@ -62,16 +66,16 @@ For more details on setting up logging, refer to the [Logging Guide](/how-to/mon
 
 ## `Timeout` errors
 
-This section troubleshoots `timeout` errors. 
+This section troubleshoots `timeout` errors.
 
 ### Single Node Failover
 
 During a single node failover, the entire cluster becomes unavailable. Debug logs may show `CLUSTER_DOWN` errors.
 
-This may happen if your cluster only has 2 shards, which is often the setup during testing. 
+This may happen if your cluster only has 2 shards, which is often the setup during testing.
 
-In a cluster with only 2 shards, losing 1 shard means 50% of hash slots are unavailable. 
-This forces the cluster into a `CLUSTER_DOWN` state to preserve data integrity. 
+In a cluster with only 2 shards, losing 1 shard means 50% of hash slots are unavailable.
+This forces the cluster into a `CLUSTER_DOWN` state to preserve data integrity.
 GLIDE reports this as `timeouts` because it keeps retrying against a cluster that refuses to serve requests.
 
 **Fix:** Use a minimum of 3 shards (preferably 4+) for production. With 3 shards, losing one affects only ~33% of data, allowing the remaining nodes to stay online.
@@ -84,83 +88,87 @@ This happens when default connection timeouts (often ~250ms) are too aggressive 
 To fix this, increase the **connection timeout** which is separate from the **request timeout**.
 
 <Tabs syncKey="progLangInExamples">
-    <TabItem label="Python">
-        ```python
-        from glide import (
-            GlideClusterClientConfiguration,
-            AdvancedGlideClusterClientConfiguration,
-            NodeAddress
-        )
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClientConfiguration,
+        AdvancedGlideClusterClientConfiguration,
+        NodeAddress
+    )
 
-        config = GlideClusterClientConfiguration(
-            addresses=[NodeAddress("localhost", 6379)],
-            request_timeout=5000,  # Request timeout in milliseconds
-            advanced_configuration=AdvancedGlideClusterClientConfiguration(
-                connection_timeout=10000  # Connection timeout in milliseconds
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        request_timeout=5000,  # Request timeout in milliseconds
+        advanced_configuration=AdvancedGlideClusterClientConfiguration(
+            connection_timeout=10000  # Connection timeout in milliseconds
+        )
+    )
+    client = await GlideClusterClient.create(config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.configuration.*;
+
+    GlideClusterClientConfiguration config = 
+        GlideClusterClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .requestTimeout(5000)  // Request timeout in milliseconds
+            .advancedConfiguration(
+                AdvancedGlideClusterClientConfiguration.builder()
+                    .connectionTimeout(10000)  // Connection timeout in milliseconds
+                    .build()
             )
-        )
-        client = await GlideClusterClient.create(config)
-        ```
-    </TabItem>
-    <TabItem label="Java">
-        ```java
-        import glide.api.models.configuration.*;
+            .build();
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+  </TabItem>
 
-        GlideClusterClientConfiguration config = 
-            GlideClusterClientConfiguration.builder()
-                .address(NodeAddress.builder().host("localhost").port(6379).build())
-                .requestTimeout(5000)  // Request timeout in milliseconds
-                .advancedConfiguration(
-                    AdvancedGlideClusterClientConfiguration.builder()
-                        .connectionTimeout(10000)  // Connection timeout in milliseconds
-                        .build()
-                )
-                .build();
-        GlideClusterClient client = GlideClusterClient.createClient(config).get();
-        ```
-    </TabItem>
-    <TabItem label="Node">
-        ```javascript
-        const client = await GlideClusterClient.createClient({
-            addresses: [{ host: "localhost", port: 6379 }],
-            requestTimeout: 5000,  // Request timeout in milliseconds
-            advancedConfiguration: {
-                connectionTimeout: 10000  // Connection timeout in milliseconds
-            }
-        });
-        ```
-    </TabItem>
-    <TabItem label="Go">
-        ```go
-        import (
-            "github.com/valkey-io/valkey-glide/go/glide/config"
-            "time"
-        )
+  <TabItem label="Node">
+    ```javascript
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        requestTimeout: 5000,  // Request timeout in milliseconds
+        advancedConfiguration: {
+            connectionTimeout: 10000  // Connection timeout in milliseconds
+        }
+    });
+    ```
+  </TabItem>
 
-        cfg := config.NewGlideClusterClientConfiguration().
-            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-            WithRequestTimeout(5 * time.Second)
+  <TabItem label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/glide/config"
+        "time"
+    )
 
-        advCfg := config.NewAdvancedGlideClusterClientConfiguration().
-            WithConnectionTimeout(10 * time.Second)
+    cfg := config.NewGlideClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithRequestTimeout(5 * time.Second)
 
-        cfg.WithAdvancedConfiguration(advCfg)
-        client, err := glide.NewGlideClusterClient(cfg)
-        ```
-    </TabItem>
-    <TabItem label="PHP">
-        ```php
-        $client = new ValkeyGlide();
-        $client->connect(
-            addresses: [['host' => 'localhost', 'port' => 6379]],
-            request_timeout: 5000,  // Request timeout in milliseconds
-            advanced_config: [
-                'connection_timeout' => 10000,  // Connection timeout in milliseconds
-                'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
-            ]
-        );
-        ```
-    </TabItem>
+    advCfg := config.NewAdvancedGlideClusterClientConfiguration().
+        WithConnectionTimeout(10 * time.Second)
+
+    cfg.WithAdvancedConfiguration(advCfg)
+    client, err := glide.NewGlideClusterClient(cfg)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        request_timeout: 5000,  // Request timeout in milliseconds
+        advanced_config: [
+            'connection_timeout' => 10000,  // Connection timeout in milliseconds
+            'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
+        ]
+    );
+    ```
+  </TabItem>
 </Tabs>
 
 ## Extension Not Loaded (PHP)

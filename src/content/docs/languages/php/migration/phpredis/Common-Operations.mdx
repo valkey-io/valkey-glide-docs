@@ -12,6 +12,7 @@ sidebar:
 ## String Operations
 
 ### PHPRedis
+
 ```php
 $redis->set('key', 'value');
 $value = $redis->get('key');
@@ -21,6 +22,7 @@ $values = $redis->mget(['key1', 'key2']);
 ```
 
 ### Valkey GLIDE PHP
+
 ```php
 $client->set('key', 'value');
 $value = $client->get('key');
@@ -32,6 +34,7 @@ $values = $client->mget(['key1', 'key2']);
 ## Hash Operations
 
 ### PHPRedis
+
 ```php
 $redis->hset('hash', 'field', 'value');
 $value = $redis->hget('hash', 'field');
@@ -41,6 +44,7 @@ $all = $redis->hgetall('hash');
 ```
 
 ### Valkey GLIDE PHP
+
 ```php
 $client->hset('hash', 'field', 'value');
 $value = $client->hget('hash', 'field');
@@ -52,6 +56,7 @@ $all = $client->hgetall('hash');
 ## List Operations
 
 ### PHPRedis
+
 ```php
 $redis->lpush('list', 'value');
 $redis->rpush('list', 'value');
@@ -62,6 +67,7 @@ $range = $redis->lrange('list', 0, -1);
 ```
 
 ### Valkey GLIDE PHP
+
 ```php
 $client->lpush('list', ['value']);
 $client->rpush('list', ['value']);
@@ -74,6 +80,7 @@ $range = $client->lrange('list', 0, -1);
 ## Set Operations
 
 ### PHPRedis
+
 ```php
 $redis->sadd('set', 'member');
 $redis->srem('set', 'member');
@@ -83,6 +90,7 @@ $count = $redis->scard('set');
 ```
 
 ### Valkey GLIDE PHP
+
 ```php
 $client->sadd('set', ['member']);
 $client->srem('set', ['member']);
@@ -90,4 +98,3 @@ $members = $client->smembers('set');
 $exists = $client->sismember('set', 'member');
 $count = $client->scard('set');
 ```
-

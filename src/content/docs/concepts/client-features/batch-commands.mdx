@@ -42,47 +42,47 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import Batch
+    ```python
+    from glide import Batch
 
-# Create an atomic batch (transaction)
-batch = Batch(True)
-# Create a non-atomic batch (pipeline)
-batch = Batch(False)
-```
+    # Create an atomic batch (transaction)
+    batch = Batch(True)
+    # Create a non-atomic batch (pipeline)
+    batch = Batch(False)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.Batch;
+    ```java
+    import glide.api.models.Batch;
 
-// Create an atomic batch (transaction)
-Batch batch = new Batch(true);
-// Create a non-atomic batch (pipeline)
-Batch pipeline = new Batch(false);
-```
+    // Create an atomic batch (transaction)
+    Batch batch = new Batch(true);
+    // Create a non-atomic batch (pipeline)
+    Batch pipeline = new Batch(false);
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {Batch} from "@valkey/valkey-glide";
+    ```typescript
+    import {Batch} from "@valkey/valkey-glide";
 
-// Create an atomic batch (transaction)
-const batch = new Batch(true)
-// Create a non-atomic batch (pipeline)
-const batch = new Batch(false)
-```
+    // Create an atomic batch (transaction)
+    const batch = new Batch(true)
+    // Create a non-atomic batch (pipeline)
+    const batch = new Batch(false)
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-// Create an atomic batch (transaction)
-transaction := pipeline.NewStandaloneBatch(true)
-// Create a non-atomic batch (pipeline)
-pipeline := pipeline.NewStandaloneBatch(false)
-```
+    // Create an atomic batch (transaction)
+    transaction := pipeline.NewStandaloneBatch(true)
+    // Create a non-atomic batch (pipeline)
+    pipeline := pipeline.NewStandaloneBatch(false)
+    ```
   </TabItem>
 </Tabs>
 
@@ -97,54 +97,54 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import ClusterBatch
+    ```python
+    from glide import ClusterBatch
 
-# Create an atomic cluster batch (must use keys mapping to same slot)
-batch = ClusterBatch(True)
-# Create a non-atomic cluster batch (pipeline may span multiple slots)
-batch = ClusterBatch(False)
-```
+    # Create an atomic cluster batch (must use keys mapping to same slot)
+    batch = ClusterBatch(True)
+    # Create a non-atomic cluster batch (pipeline may span multiple slots)
+    batch = ClusterBatch(False)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.ClusterBatch;
+    ```java
+    import glide.api.models.ClusterBatch;
 
-// Create an atomic cluster batch (must use keys mapping to same slot)
-ClusterBatch atomicCluster = new ClusterBatch(true);
-// Create a non-atomic cluster batch (pipeline may span multiple slots)
-ClusterBatch pipelineCluster = new ClusterBatch(false);
-```
+    // Create an atomic cluster batch (must use keys mapping to same slot)
+    ClusterBatch atomicCluster = new ClusterBatch(true);
+    // Create a non-atomic cluster batch (pipeline may span multiple slots)
+    ClusterBatch pipelineCluster = new ClusterBatch(false);
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {ClusterBatch} from "@valkey/valkey-glide";
+    ```typescript
+    import {ClusterBatch} from "@valkey/valkey-glide";
 
-// Create an atomic cluster batch (must use keys mapping to same slot)
-const batch = new ClusterBatch(true)
-// Create a non-atomic cluster batch (pipeline may span multiple slots)
-const batch = new ClusterBatch(false)
-```
+    // Create an atomic cluster batch (must use keys mapping to same slot)
+    const batch = new ClusterBatch(true)
+    // Create a non-atomic cluster batch (pipeline may span multiple slots)
+    const batch = new ClusterBatch(false)
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-// Create an atomic cluster batch (must use keys mapping to same slot)
-transaction := pipeline.NewClusterBatch(true)
-// Create a non-atomic cluster batch (pipeline may span multiple slots)
-pipeline := pipeline.NewClusterBatch(false)
-```
+    // Create an atomic cluster batch (must use keys mapping to same slot)
+    transaction := pipeline.NewClusterBatch(true)
+    // Create a non-atomic cluster batch (pipeline may span multiple slots)
+    pipeline := pipeline.NewClusterBatch(false)
+    ```
   </TabItem>
 </Tabs>
 
 :::note
 When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](#multi-node-support).
 
-If the client is configured to read from replicas (ReplicaPrefered, AZ_AFFINITY, AZ_AFFINITY_REPLICAS_AND_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY, AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
 :::
 
 ### Error handling - Raise on Error
@@ -153,64 +153,64 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-# Standalone Mode
-async def exec(
-    self,
-    batch: Batch,
-    raise_on_error: bool,
-    options: Optional[BatchOptions] = None,
-)
+    ```python
+    # Standalone Mode
+    async def exec(
+        self,
+        batch: Batch,
+        raise_on_error: bool,
+        options: Optional[BatchOptions] = None,
+    )
 
-# Cluster Mode
-async def exec(
-    self,
-    batch: ClusterBatch,
-    raise_on_error: bool,
-    options: Optional[ClusterBatchOptions] = None,
-)
-```
+    # Cluster Mode
+    async def exec(
+        self,
+        batch: ClusterBatch,
+        raise_on_error: bool,
+        options: Optional[ClusterBatchOptions] = None,
+    )
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-// Standalone Mode
-CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError);
-CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError, BatchOptions options);
-// Cluster Mode
-CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError);
-CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError, ClusterBatchOptions options);
-```
+    ```java
+    // Standalone Mode
+    CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError);
+    CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError, BatchOptions options);
+    // Cluster Mode
+    CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError);
+    CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError, ClusterBatchOptions options);
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-// Standalone Mode
-public async exec(
-    batch: Batch,
-    raiseOnError: boolean,
-    options?: BatchOptions & DecoderOption,
-)
+    ```typescript
+    // Standalone Mode
+    public async exec(
+        batch: Batch,
+        raiseOnError: boolean,
+        options?: BatchOptions & DecoderOption,
+    )
 
-// Cluster Mode
-public async exec(
-    batch: ClusterBatch,
-    raiseOnError: boolean,
-    options?: ClusterBatchOptions & DecoderOption,
-)
-```
+    // Cluster Mode
+    public async exec(
+        batch: ClusterBatch,
+        raiseOnError: boolean,
+        options?: ClusterBatchOptions & DecoderOption,
+    )
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-// Standalone Mode
-Exec(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool) ([]any, error)
-ExecWithOptions(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool, options pipeline.StandaloneBatchOptions) ([]any, error)
+    ```go
+    // Standalone Mode
+    Exec(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool) ([]any, error)
+    ExecWithOptions(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool, options pipeline.StandaloneBatchOptions) ([]any, error)
 
-// Cluster Mode
-Exec(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool) ([]any, error)
-ExecWithOptions(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool, options pipeline.ClusterBatchOptions) ([]any, error)
-```
+    // Cluster Mode
+    Exec(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool) ([]any, error)
+    ExecWithOptions(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool, options pipeline.ClusterBatchOptions) ([]any, error)
+    ```
   </TabItem>
 </Tabs>
 
@@ -228,118 +228,118 @@ Behavior:
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-# Cluster pipeline with raiseOnError = False
-batch = ClusterBatch(False)
+    ```python
+    # Cluster pipeline with raiseOnError = False
+    batch = ClusterBatch(False)
 
-batch.set(key, "hello")
-batch.lpop(key)
-batch.delete([key])
-batch.rename(key, key2)
+    batch.set(key, "hello")
+    batch.lpop(key)
+    batch.delete([key])
+    batch.rename(key, key2)
 
-result = await GlideClusterClient.exec(batch, raise_on_error=False)
-print("Result is:", result)
-# Output: Result is: ['OK', RequestError('WRONGTYPE: Operation against a key holding the wrong kind of value'), 1, RequestError('An error was signalled by the server: - ResponseError: no such key')]
-```
+    result = await GlideClusterClient.exec(batch, raise_on_error=False)
+    print("Result is:", result)
+    # Output: Result is: ['OK', RequestError('WRONGTYPE: Operation against a key holding the wrong kind of value'), 1, RequestError('An error was signalled by the server: - ResponseError: no such key')]
+    ```
 
-```python
-# Transaction with raiseOnError = true
-batch = ClusterBatch(True)
+    ```python
+    # Transaction with raiseOnError = true
+    batch = ClusterBatch(True)
 
-batch.set(key, "hello")
-batch.lpop(key)
-batch.delete([key])
-batch.rename(key, key2)
+    batch.set(key, "hello")
+    batch.lpop(key)
+    batch.delete([key])
+    batch.rename(key, key2)
 
-try:
-    await GlideClient.exec(batch, raise_on_error=True)
-except RequestError as e:
-    print("Batch execution aborted:", e)
-# Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
-```
+    try:
+        await GlideClient.exec(batch, raise_on_error=True)
+    except RequestError as e:
+        print("Batch execution aborted:", e)
+    # Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-// Cluster pipeline with raiseOnError = false
-ClusterBatch batch = new ClusterBatch(false);
-batch.set("key", "value")          // OK
-      .lpop("key")                 // WRONGTYPE error (not a list)
-      .rename("non-existing-key", "{non-existing-key}:1"); // NO SUCH KEY error
-var res = glideClusterClient.exec(batch, false).get();
-System.out.println("Result is: " + Arrays.toString(res));
-// Output: Result is: [OK, glide.api.models.exceptions.RequestException: WRONGTYPE: Operation against a key holding the wrong kind of value, glide.api.models.exceptions.RequestException: An error was signalled by the server: - ResponseError: no such key]
-```
+    ```java
+    // Cluster pipeline with raiseOnError = false
+    ClusterBatch batch = new ClusterBatch(false);
+    batch.set("key", "value")          // OK
+          .lpop("key")                 // WRONGTYPE error (not a list)
+          .rename("non-existing-key", "{non-existing-key}:1"); // NO SUCH KEY error
+    var res = glideClusterClient.exec(batch, false).get();
+    System.out.println("Result is: " + Arrays.toString(res));
+    // Output: Result is: [OK, glide.api.models.exceptions.RequestException: WRONGTYPE: Operation against a key holding the wrong kind of value, glide.api.models.exceptions.RequestException: An error was signalled by the server: - ResponseError: no such key]
+    ```
 
-```java
-// Transaction with raiseOnError = true
-Batch batch = new Batch(true)
-    .set("keyA", "valueA")        // OK
-    .lpop("keyA")                 // WRONGTYPE error (not a list)
-    .get("keyB");                 // Would be queued but not executed if error occurs first
+    ```java
+    // Transaction with raiseOnError = true
+    Batch batch = new Batch(true)
+        .set("keyA", "valueA")        // OK
+        .lpop("keyA")                 // WRONGTYPE error (not a list)
+        .get("keyB");                 // Would be queued but not executed if error occurs first
 
-try {
-    Object[] results = glideClient.exec(batch, true).get();
-} catch (RequestException e) {
-    System.err.println("Batch execution aborted: " + e.getMessage());
-    // Example output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
-}
-```
+    try {
+        Object[] results = glideClient.exec(batch, true).get();
+    } catch (RequestException e) {
+        System.err.println("Batch execution aborted: " + e.getMessage());
+        // Example output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+    }
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-// Cluster pipeline with raiseOnError = false
-const batch = new ClusterBatch(false);
-batch.set(key, "hello")     // OK
-       .lpop(key)           // WRONGTYPE error (not a list)
-       .del([key])          // 1
-       .rename(key, key2);  // NO SUCH KEY error
+    ```typescript
+    // Cluster pipeline with raiseOnError = false
+    const batch = new ClusterBatch(false);
+    batch.set(key, "hello")     // OK
+           .lpop(key)           // WRONGTYPE error (not a list)
+           .del([key])          // 1
+           .rename(key, key2);  // NO SUCH KEY error
 
-const result = await GlideClusterClient.exec(batch, false);
-console.log("Result is:", result);
-// Output: Result is: [OK, RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value, 1, RequestError: An error was signalled by the server: - ResponseError: no such key])
-```
+    const result = await GlideClusterClient.exec(batch, false);
+    console.log("Result is:", result);
+    // Output: Result is: [OK, RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value, 1, RequestError: An error was signalled by the server: - ResponseError: no such key])
+    ```
 
-```typescript
-// Transaction with raiseOnError = true
-const batch = new Batch(true);
-batch.set(key, "hello")     // OK
-       .lpop(key)           // WRONGTYPE error (not a list)
-       .del([key])          // 1
-       .rename(key, key2);  // NO SUCH KEY error
+    ```typescript
+    // Transaction with raiseOnError = true
+    const batch = new Batch(true);
+    batch.set(key, "hello")     // OK
+           .lpop(key)           // WRONGTYPE error (not a list)
+           .del([key])          // 1
+           .rename(key, key2);  // NO SUCH KEY error
 
-try {
-    await GlideClient.exec(batch, true);
-} catch (error) {
-    console.log("Batch execution aborted: ", error);
-}
-// Output: Batch execution aborted:  RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value
-```
+    try {
+        await GlideClient.exec(batch, true);
+    } catch (error) {
+        console.log("Batch execution aborted: ", error);
+    }
+    // Output: Batch execution aborted:  RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-// Cluster pipeline with raiseOnError = false
-pipeline := pipeline.NewClusterBatch(false).
-	Set("key", "value").                                   // OK
-	LPop("key").                                           // WRONGTYPE error (not a list)
-    Rename("{non-existing-key}", "{non-existing-key}:1")   // NO SUCH KEY error
-res, err := clusterClient.Exec(ctx, *pipeline, false)
-fmt.Printf("Result is: %+v\n", res)
-// Output: Result is: [OK WRONGTYPE: Operation against a key holding the wrong kind of value An error was signalled by the server: - ResponseError: no such key]
-```
+    ```go
+    // Cluster pipeline with raiseOnError = false
+    pipeline := pipeline.NewClusterBatch(false).
+    	Set("key", "value").                                   // OK
+    	LPop("key").                                           // WRONGTYPE error (not a list)
+        Rename("{non-existing-key}", "{non-existing-key}:1")   // NO SUCH KEY error
+    res, err := clusterClient.Exec(ctx, *pipeline, false)
+    fmt.Printf("Result is: %+v\n", res)
+    // Output: Result is: [OK WRONGTYPE: Operation against a key holding the wrong kind of value An error was signalled by the server: - ResponseError: no such key]
+    ```
 
-```go
-// Transaction with raiseOnError = true
-transaction := pipeline.NewStandaloneBatch(true).
-	Set("key", "value").                   // OK
-	LPop("key").                           // WRONGTYPE error (not a list)
-    Get("key")                             // Would be executed, but no response would be returned due to the error
-res, err := client.Exec(ctx, *transaction, true)
-fmt.Printf("Batch execution aborted: %+v\n", err)
-// Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
-```
+    ```go
+    // Transaction with raiseOnError = true
+    transaction := pipeline.NewStandaloneBatch(true).
+    	Set("key", "value").                   // OK
+    	LPop("key").                           // WRONGTYPE error (not a list)
+        Get("key")                             // Would be executed, but no response would be returned due to the error
+    res, err := client.Exec(ctx, *transaction, true)
+    fmt.Printf("Batch execution aborted: %+v\n", err)
+    // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+    ```
   </TabItem>
 </Tabs>
 
@@ -353,40 +353,40 @@ Configuration for **standalone** batches.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import BatchOptions
+    ```python
+    from glide import BatchOptions
 
-batch_options = BatchOptions(timeout=2000) # 2 seconds
-```
+    batch_options = BatchOptions(timeout=2000) # 2 seconds
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.BatchOptions;
+    ```java
+    import glide.api.models.BatchOptions;
 
-BatchOptions options = BatchOptions.builder()
-    .timeout(2000)         // 2-second timeout
-    .build();
-```
+    BatchOptions options = BatchOptions.builder()
+        .timeout(2000)         // 2-second timeout
+        .build();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {BatchOptions} from "@valkey/valkey-glide";
+    ```typescript
+    import {BatchOptions} from "@valkey/valkey-glide";
 
-const options: BatchOptions = {
-    timeout: 2000, // 2 seconds
-};
-```
+    const options: BatchOptions = {
+        timeout: 2000, // 2 seconds
+    };
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-options := pipeline.NewStandaloneBatchOptions().
-	WithTimeout(2 * time.Second)  // 2-second timeout
-```
+    options := pipeline.NewStandaloneBatchOptions().
+    	WithTimeout(2 * time.Second)  // 2-second timeout
+    ```
   </TabItem>
 </Tabs>
 
@@ -410,43 +410,43 @@ Defines retry behavior (only for **non-atomic** cluster batches).
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import BatchRetryStrategy
+    ```python
+    from glide import BatchRetryStrategy
 
-retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
-```
+    retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.BatchRetryStrategy;
+    ```java
+    import glide.api.models.BatchRetryStrategy;
 
-ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
-    .retryServerError(true)
-    .retryConnectionError(true)
-    .build();
-```
+    ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
+        .retryServerError(true)
+        .retryConnectionError(true)
+        .build();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {ClusterBatchRetryStrategy} from "@valkey/valkey-glide";
+    ```typescript
+    import {ClusterBatchRetryStrategy} from "@valkey/valkey-glide";
 
-const retryStrategy : ClusterBatchRetryStrategy = {
-        retryServerError: false,
-        retryConnectionError: false,
-}
-```
+    const retryStrategy : ClusterBatchRetryStrategy = {
+            retryServerError: false,
+            retryConnectionError: false,
+    }
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-retryStrategy := pipeline.NewClusterBatchRetryStrategy().
-	WithRetryConnectionError(true).
-	WithRetryServerError(true)
-```
+    retryStrategy := pipeline.NewClusterBatchRetryStrategy().
+    	WithRetryConnectionError(true).
+    	WithRetryServerError(true)
+    ```
   </TabItem>
 </Tabs>
 
@@ -458,60 +458,60 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import ClusterBatchOptions, BatchRetryStrategy
+    ```python
+    from glide import ClusterBatchOptions, BatchRetryStrategy
 
-retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
-options = ClusterBatchOptions(retry_strategy=retry_strategy)
-```
+    retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
+    options = ClusterBatchOptions(retry_strategy=retry_strategy)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.ClusterBatchOptions;
-import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
-import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleSingleNodeRoute.RANDOM;
+    ```java
+    import glide.api.models.ClusterBatchOptions;
+    import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
+    import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleSingleNodeRoute.RANDOM;
 
-ClusterBatchOptions options = ClusterBatchOptions.builder()
-    .timeout(1000)                    // 1-second timeout
-    .retryStrategy(
-        ClusterBatchRetryStrategy.builder()
-            .retryServerError(true)     // Retry on server errors
-            .retryConnectionError(false)// Do not retry on connection errors
-            .build()
-    )
-    .route(RANDOM) // Route the batch to a random node
-    .build();
-```
+    ClusterBatchOptions options = ClusterBatchOptions.builder()
+        .timeout(1000)                    // 1-second timeout
+        .retryStrategy(
+            ClusterBatchRetryStrategy.builder()
+                .retryServerError(true)     // Retry on server errors
+                .retryConnectionError(false)// Do not retry on connection errors
+                .build()
+        )
+        .route(RANDOM) // Route the batch to a random node
+        .build();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {ClusterBatchOptions} from "@valkey/valkey-glide";
+    ```typescript
+    import {ClusterBatchOptions} from "@valkey/valkey-glide";
 
-const options: ClusterBatchOptions = {
-    timeout: 5000,                    // 5 seconds
-    route: "randomNode",              // Route the batch to a random node
-    retryStrategy: {
-        retryServerError: true,       // Retry on server errors
-        retryConnectionError: false,  // Do not retry on connection errors
-    },
-};
-```
+    const options: ClusterBatchOptions = {
+        timeout: 5000,                    // 5 seconds
+        route: "randomNode",              // Route the batch to a random node
+        retryStrategy: {
+            retryServerError: true,       // Retry on server errors
+            retryConnectionError: false,  // Do not retry on connection errors
+        },
+    };
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
-options := pipeline.NewClusterBatchOptions().
-	WithTimeout(1 * time.Second).  // 1-second timeout
-	WithRetryStrategy(pipeline.NewClusterBatchRetryStrategy().
-		WithRetryConnectionError(true).
-		WithRetryServerError(true)
-	).
-	WithRoute(config.RandomRoute)
-```
+    options := pipeline.NewClusterBatchOptions().
+    	WithTimeout(1 * time.Second).  // 1-second timeout
+    	WithRetryStrategy(pipeline.NewClusterBatchRetryStrategy().
+    		WithRetryConnectionError(true).
+    		WithRetryServerError(true)
+    	).
+    	WithRoute(config.RandomRoute)
+    ```
   </TabItem>
 </Tabs>
 
@@ -606,26 +606,26 @@ OK
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-  * Replace calls to `new Transaction()` with `new Batch(true)`.
-  * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
-  * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
+    - Replace calls to `new Transaction()` with `new Batch(true)`.
+    - Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
+    - Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
   </TabItem>
 
   <TabItem label="Java">
-  * Replace calls to `new Transaction()` with `new Batch(true)`.
-  * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
-  * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
+    * Replace calls to `new Transaction()` with `new Batch(true)`.
+    * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
+    * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
   </TabItem>
 
   <TabItem label="Node">
-  * Replace calls to `new Transaction()` with `new Batch(true)`.
-  * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
-  * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
+    * Replace calls to `new Transaction()` with `new Batch(true)`.
+    * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
+    * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
   </TabItem>
 
   <TabItem label="Go">
-  * Replace calls to `pipeline.NewTransaction()` with `pipeline.NewStandaloneBatch(true)`.
-  * Replace calls to `pipeline.NewClusterTransaction()` with `pipeline.NewClusterBatch(true)`.
-  * Replace `client.Exec(transaction)` with `client.Exec(ctx, batch, raiseOnError)` or `client.ExecWithOptions(ctx, batch, raiseOnError, options)`.
+    * Replace calls to `pipeline.NewTransaction()` with `pipeline.NewStandaloneBatch(true)`.
+    * Replace calls to `pipeline.NewClusterTransaction()` with `pipeline.NewClusterBatch(true)`.
+    * Replace `client.Exec(transaction)` with `client.Exec(ctx, batch, raiseOnError)` or `client.ExecWithOptions(ctx, batch, raiseOnError, options)`.
   </TabItem>
 </Tabs>

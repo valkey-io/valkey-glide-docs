@@ -7,18 +7,19 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 Below is a comprehensive chart comparing common Redis commands between Jedis and Valkey GLIDE:
 
 ### Connection
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | Connect | `new Jedis("host", port)` | `GlideClient.createClient(config).get()` |
 | Cluster | `new JedisCluster(jedisClusterNodes)` | `GlideClusterClient.createClient(config).get()` |
 | Auth | `jedis.auth("pass")` | `client.updateConnectionPassword("pass", true).get()` |
 | Select DB | `jedis.select(1)` | `client.select(1).get()` |
+
 ### Strings
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | SET | `jedis.set("key", "val")` | `client.set("key", "val")` |
@@ -34,7 +35,9 @@ Below is a comprehensive chart comparing common Redis commands between Jedis and
 | APPEND | `jedis.append("key", "val")` | `client.append("key", "val").get()` |
 | GETRANGE | `jedis.getrange("key", 0, 3)` | `client.getRange("key", 0, 3).get()` |
 | SETRANGE | `jedis.setrange("key", 0, "val")` | `client.setRange("key", 0, "val").get()` |
+
 ### Keys
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | DEL | `jedis.del("key1", "key2")` | `client.del(new String[]{"key1", "key2"}).get()` |
@@ -45,7 +48,9 @@ Below is a comprehensive chart comparing common Redis commands between Jedis and
 | SCAN | `jedis.scan(cursor)` | `client.scan(cursor).get()` |
 | RENAME | `jedis.rename("old", "new")` | `client.rename("old", "new").get()` |
 | RENAMENX | `jedis.renamenx("old", "new")` | `client.renameNx("old", "new").get()` |
+
 ### Hashes
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | HSET | `jedis.hset("hash", map)` | `client.hset("hash", map).get()` |
@@ -55,7 +60,9 @@ Below is a comprehensive chart comparing common Redis commands between Jedis and
 | HGETALL | `jedis.hgetAll("hash")` | `client.hgetall("hash").get()` |
 | HDEL | `jedis.hdel("hash", "f1", "f2")` | `client.hdel("hash", new String[]{"f1", "f2"}).get()` |
 | HEXISTS | `jedis.hexists("hash", "field")` | `client.hexists("hash", "field").get()` |
+
 ### Lists
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | LPUSH | `jedis.lpush("list", "a", "b")` | `client.lpush("list", new String[]{"a", "b"}).get()` |
@@ -63,14 +70,18 @@ Below is a comprehensive chart comparing common Redis commands between Jedis and
 | LPOP | `jedis.lpop("list")` | `client.lpop("list").get()` |
 | RPOP | `jedis.rpop("list")` | `client.rpop("list").get()` |
 | LRANGE | `jedis.lrange("list", 0, -1)` | `client.lrange("list", 0, -1).get()` |
+
 ### Sets
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | SADD | `jedis.sadd("set", "a", "b")` | `client.sadd("set", new String[]{"a", "b"}).get()` |
 | SMEMBERS | `jedis.smembers("set")` | `client.smembers("set").get()` |
 | SREM | `jedis.srem("set", "a", "b")` | `client.srem("set", new String[]{"a", "b"}).get()` |
 | SISMEMBER | `jedis.sismember("set", "a")` | `client.sismember("set", "a").get()` |
+
 ### Sorted Sets
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | ZADD | `jedis.zadd("zset", 1, "a", 2, "b")` | `client.zadd("zset", scoreMembers).get()` |
@@ -80,20 +91,28 @@ Below is a comprehensive chart comparing common Redis commands between Jedis and
 | ZSCORE | `jedis.zscore("zset", "a")` | `client.zscore("zset", "a").get()` |
 | ZRANK | `jedis.zrank("zset", "a")` | `client.zrank("zset", "a").get()` |
 | ZREVRANK | `jedis.zrevrank("zset", "a")` | `client.zrevrank("zset", "a").get()` |
+
 ### Transactions
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | MULTI/EXEC | `jedis.multi().set("k", "v").exec()` | `client.exec(new Transaction().set("k", "v")).get()` |
+
 ### Lua Scripts
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | EVAL | `jedis.eval(script, numKeys, keys, args)` | `client.invokeScript(new Script(script), options).get()` |
 | EVALSHA | `jedis.evalsha(sha, numKeys, keys, args)` | `client.invokeScript(new Script(script), options).get()` |
+
 ### Custom Commands
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | Raw Command | `jedis.sendCommand(Command.SET, "key", "value")` | `client.customCommand(new String[]{"SET", "key", "value"}).get()` |
+
 ### Connection Management
+
 | Command | Jedis | Valkey GLIDE |
 |---------|---------|--------------|
 | Close | `jedis.close(); cluster.close();` | `client.close()` |

@@ -12,8 +12,9 @@ sidebar:
 The following are examples of the differences between GLIDE Php client and PhpRedis.
 
 ## 1. Method Signatures
-- **PHPRedis**: Variadic arguments for multi-value operations
-- **Valkey GLIDE**: Supports both variadic arguments AND array parameters
+
+* **PHPRedis**: Variadic arguments for multi-value operations
+* **Valkey GLIDE**: Supports both variadic arguments AND array parameters
 
 ```php
 // Both PHPRedis and Valkey GLIDE support variadic style
@@ -26,8 +27,9 @@ $client->del('key1', 'key2', 'key3');   // Variadic style
 ```
 
 ## 2. Return Types
-- **PHPRedis**: Mixed return types, sometimes inconsistent
-- **Valkey GLIDE**: Consistent, typed return values
+
+* **PHPRedis**: Mixed return types, sometimes inconsistent
+* **Valkey GLIDE**: Consistent, typed return values
 
 ```php
 // PHPRedis - returns int|false
@@ -38,8 +40,9 @@ $result = $client->set('key', 'value');
 ```
 
 ## 3. Error Handling
-- **PHPRedis**: Returns `false` on error, throws exceptions in constructors
-- **Valkey GLIDE**: Same pattern - returns `false` on method errors, throws exceptions only in constructors
+
+* **PHPRedis**: Returns `false` on error, throws exceptions in constructors
+* **Valkey GLIDE**: Same pattern - returns `false` on method errors, throws exceptions only in constructors
 
 ```php
 // Both PHPRedis and Valkey GLIDE - constructors throw exceptions
@@ -56,8 +59,9 @@ if ($client->get('nonexistent') === false) {
 ```
 
 ## 4. Configuration
-- **PHPRedis**: Method chaining for configuration
-- **Valkey GLIDE**: Constructor parameters
+
+* **PHPRedis**: Method chaining for configuration
+* **Valkey GLIDE**: Constructor parameters
 
 ```php
 // PHPRedis
@@ -71,4 +75,3 @@ $client = new ValkeyGlide(
     client_name: 'myapp'
 );
 ```
-

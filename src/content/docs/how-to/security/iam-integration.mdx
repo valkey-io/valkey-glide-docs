@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM)** authentication when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
-:::caution[GLIDE 2.2+ Required]
+:::caution\[GLIDE 2.2+ Required]
 For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-using-aws-sdk) on how to configure IAM authentication using the AWS SDK.
 :::
 
@@ -32,6 +32,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **refreshIntervalSeconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 ## Examples
+
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     ```python
@@ -69,43 +70,45 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     ...
     ```
   </TabItem>
+
   <TabItem label="Java">
-  ```java
+    ```java
 
-    import java.util.Collections;
-    import java.util.List;
+      import java.util.Collections;
+      import java.util.List;
 
-    import glide.api.GlideClusterClient;
-    import glide.api.models.configuration.AwsIamConfig;
-    import glide.api.models.configuration.AwsIamConfig.ServiceType;
-    import glide.api.models.configuration.GlideClusterClientConfiguration;
-    import glide.api.models.configuration.NodeAddress;
+      import glide.api.GlideClusterClient;
+      import glide.api.models.configuration.AwsIamConfig;
+      import glide.api.models.configuration.AwsIamConfig.ServiceType;
+      import glide.api.models.configuration.GlideClusterClientConfiguration;
+      import glide.api.models.configuration.NodeAddress;
+      ...
+
+      List<NodeAddress> nodeList =
+                  Collections.singletonList(
+                          NodeAddress.builder().host("endpoint.example.com").port(6379).build());
+
+      // Configure IAM authentication
+      // Automatically regenerates the token every 5 mins (default: 300 seconds)
+      AwsIamConfig iamConfig =
+              AwsIamConfig.builder()
+                      .clusterName("clustername")
+                      .service(ServiceType.ELASTICACHE) // or ServiceType.MEMORYDB
+                      .region("us-east-1")
+                      // .refreshIntervalSeconds(100) // Optional, default is 300 seconds
+                      .build();
+
+      GlideClusterClientConfiguration config =
+              GlideClusterClientConfiguration.builder()
+                      .addresses(nodeList)
+                      .credentials("username", iamConfig)
+                      .build();
+
+      GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ...
-
-    List<NodeAddress> nodeList =
-                Collections.singletonList(
-                        NodeAddress.builder().host("endpoint.example.com").port(6379).build());
-
-    // Configure IAM authentication
-    // Automatically regenerates the token every 5 mins (default: 300 seconds)
-    AwsIamConfig iamConfig =
-            AwsIamConfig.builder()
-                    .clusterName("clustername")
-                    .service(ServiceType.ELASTICACHE) // or ServiceType.MEMORYDB
-                    .region("us-east-1")
-                    // .refreshIntervalSeconds(100) // Optional, default is 300 seconds
-                    .build();
-
-    GlideClusterClientConfiguration config =
-            GlideClusterClientConfiguration.builder()
-                    .addresses(nodeList)
-                    .credentials("username", iamConfig)
-                    .build();
-
-    GlideClusterClient client = GlideClusterClient.createClient(config).get();
-  ...
-  ```
+    ```
   </TabItem>
+
   <TabItem label="Node">
     ```ts
     // Automatically regenerates the token every 5 mins
@@ -130,31 +133,31 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
   <TabItem label="Go">
     ```go
     import (
-  
+
     	"github.com/valkey-io/valkey-glide/go/glide/api"
     	"github.com/valkey-io/valkey-glide/go/glide/config"
     )
     ...
 
-  	// Configure IAM authentication
-  	// Automatically regenerates the token every 5 mins (default: 300 seconds)
-  	iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
-  	// Optional: Set custom refresh interval
-  	// iamConfig.WithRefreshIntervalSeconds(100)
-  
-  	credentials, err := config.NewServerCredentialsWithIam("username", iamConfig)
-  	if err != nil {
-  		return nil, fmt.Errorf("failed to create credentials: %w", err)
-  	}
-  
-  	clientConfig := config.GlideClusterClientConfiguration{
-  		Addresses: []config.NodeAddress{
-  			{Host: "endpoint.example.com", Port: 6379},
-  		},
-  		Credentials: credentials,
-  	}
-  
-  	client, err := api.NewGlideClusterClient(&clientConfig)
+    // Configure IAM authentication
+    // Automatically regenerates the token every 5 mins (default: 300 seconds)
+    iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
+    // Optional: Set custom refresh interval
+    // iamConfig.WithRefreshIntervalSeconds(100)
+
+    credentials, err := config.NewServerCredentialsWithIam("username", iamConfig)
+    if err != nil {
+    	return nil, fmt.Errorf("failed to create credentials: %w", err)
+    }
+
+    clientConfig := config.GlideClusterClientConfiguration{
+    	Addresses: []config.NodeAddress{
+    		{Host: "endpoint.example.com", Port: 6379},
+    	},
+    	Credentials: credentials,
+    }
+
+    client, err := api.NewGlideClusterClient(&clientConfig)
     ...
     ```
   </TabItem>
@@ -181,7 +184,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     // Use the client normally - IAM tokens are managed automatically
     $client->set('key', 'value');
     $value = $client->get('key');
-    
+
     $client->close();
     ...
     ```

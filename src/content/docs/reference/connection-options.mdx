@@ -4,12 +4,12 @@ title: "Connection Options"
 
 import { Tabs, TabItem, Badge } from '@astrojs/starlight/components'
 
-Valkey GLIDE maintains consistent and intuitive configuration across all supported languages. 
+Valkey GLIDE maintains consistent and intuitive configuration across all supported languages.
 This guides will go over how connection configurations are handled across clients and listing the available options.
 
 ## Configuration Options
 
-GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface 
+GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface
 between clients while staying within the idiomatic norms of each specific programming language.
 
 The following are the configuration references for each Glide clients:
@@ -25,7 +25,7 @@ The following are the configuration references for each Glide clients:
 ### Example
 
 <Tabs>
-    <TabItem label="Python">
+  <TabItem label="Python">
     ```python
     from glide import GlideClientConfiguration, NodeAddress
 
@@ -36,10 +36,9 @@ The following are the configuration references for each Glide clients:
         client_name="python_app"
     )
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="Node">
-
+  <TabItem label="Node">
     ```typescript
     import { GlideClientOptions } from "@valkey/valkey-glide";
 
@@ -50,10 +49,9 @@ The following are the configuration references for each Glide clients:
         clientName: "node_app"
     };
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="Java">
-
+  <TabItem label="Java">
     ```java
     import glide.api.models.configuration.GlideClientConfiguration;
     import glide.api.models.configuration.NodeAddress;
@@ -65,10 +63,9 @@ The following are the configuration references for each Glide clients:
         .clientName("java_app")
         .build();
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="Go">
-
+  <TabItem label="Go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/config"
 
@@ -78,9 +75,9 @@ The following are the configuration references for each Glide clients:
         WithRequestTimeout(1000).
         WithClientName("go_app")
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="PHP">
+  <TabItem label="PHP">
     **Requirements:** PHP 8.1+
 
     ```php
@@ -92,5 +89,5 @@ The following are the configuration references for each Glide clients:
         client_name: 'php_app'
     );
     ```
-    </TabItem>
+  </TabItem>
 </Tabs>

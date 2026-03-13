@@ -6,8 +6,6 @@ description: A reference page in my new Starlight docs site.
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 In Valkey GLIDE 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs.
 This change provides greater flexibility by supporting both **atomic batches** (Transactions) and **non-atomic batches** (Pipelining), while ensuring easy configuration and clear, detailed examples for each scenario.
 
@@ -72,7 +70,7 @@ const batch = new ClusterBatch(false)
 ```
 
 :::note
-When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. 
+When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception.
 Read more in [Multi-Node support](#multi-node-support).
 
 If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY,  AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
@@ -339,7 +337,7 @@ try {
 }
 ```
 
-:::caution[Important]
+:::caution\[Important]
 If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
 :::
 

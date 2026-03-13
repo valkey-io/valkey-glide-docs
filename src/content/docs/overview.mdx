@@ -27,18 +27,18 @@ Valkey GLIDE is API-compatible with Redis 6.2, 7.0, 7.1, and 7.2.
 ### Key Features
 
 * **[AZ Affinity](https://valkey.io/blog/az-affinity-strategy/)** – Ensures low-latency connections and minimal cross-zone costs by routing read traffic to replicas in the clients availability zone. **(Requires Valkey server version 8.0+ or AWS ElastiCache for Valkey 7.2+)**.
-* **<a href={`/concepts/client-features/pubsub-model`} >PubSub Auto-Reconnection</a>** – Seamless background resubscription on topology updates or disconnection.
-* **<a href={`/concepts/client-features/pubsub-model#subscribing`} >Sharded PubSub</a>** – Native support for sharded PubSub across cluster slots.
-* **<a href={`/concepts/client-features/multi-slot-command-handling#multi-slot-command-execution-in-glide`} >Cluster-Aware MGET/MSET/DEL/FLUSHALL</a>** – Execute multi-key commands across cluster slots without manual key grouping.
-* **<a href={`/concepts/client-features/cluster-scan`} >Cluster Scan</a>** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
+* **<a href={`/concepts/client-features/pubsub-model`}>PubSub Auto-Reconnection</a>** – Seamless background resubscription on topology updates or disconnection.
+* **<a href={`/concepts/client-features/pubsub-model#subscribing`}>Sharded PubSub</a>** – Native support for sharded PubSub across cluster slots.
+* **<a href={`/concepts/client-features/multi-slot-command-handling#multi-slot-command-execution-in-glide`}>Cluster-Aware MGET/MSET/DEL/FLUSHALL</a>** – Execute multi-key commands across cluster slots without manual key grouping.
+* **<a href={`/concepts/client-features/cluster-scan`}>Cluster Scan</a>** – Unified key iteration across shards using a consistent, high-level API for cluster environments.
 * **Support for TS / CJS / MJS** – Fully compatible with modern and legacy JavaScript/TypeScript runtimes.
 * **Support for asyncio / anyio / trio** – Native compatibility with modern Python async frameworks, enabling efficient and seamless integration into asynchronous workflows.
-* **<a href={`/concepts/client-features/batch-commands/`} >Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
-* **<a href={`/concepts/client-features/open-telemetry/`} >OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
+* **<a href={`/concepts/client-features/batch-commands/`}>Batching (Pipeline and Transaction)</a>** – Efficiently execute multiple commands in a single network roundtrip, significantly reducing latency and improving throughput.
+* **<a href={`/concepts/client-features/open-telemetry/`}>OpenTelemetry</a>** – Integrated tracing support for enhanced observability and easier debugging in distributed environments.
 
 ## Supported Engine Versions
 
-<SupportedEngineVersions/>
+<SupportedEngineVersions />
 
 ## What's Next
 

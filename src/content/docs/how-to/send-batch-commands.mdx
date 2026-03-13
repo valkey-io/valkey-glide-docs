@@ -5,7 +5,7 @@ description: Learn how to send batch commands with GLIDE clients.
 
 import {LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 
-With GLIDE 2.0, `Batch` API replaces the previous `Transaction` API to support both atomic and non-atomic execution of commands in batches. 
+With GLIDE 2.0, `Batch` API replaces the previous `Transaction` API to support both atomic and non-atomic execution of commands in batches.
 This guide will go over how to send commands in batches using the new `Batch` API.
 
 To learn more on how GLIDE handles transactions and pipelining, see our [article](/concepts/client-features/batch-commands).
@@ -17,366 +17,367 @@ In GLIDE 2.0, the `Batch` API provides a unified interface for handling both Tra
 ## Making Transactions (Atomic Batch)
 
 A transaction is an all-or-nothing set of commands sent in a single request to Valkey. GLIDE handles this as atomic batches.
-### Standalone 
+
+### Standalone
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import (
- GlideClientConfiguration,
- NodeAddress,
- GlideClient,
- BatchOptions,
-)
-
- # Create client configuration
-addresses = [
-    NodeAddress("server_primary.example.com", 6379),
-    NodeAddress("server_replica.example.com", 6379)
-]
-config = GlideClientConfiguration(addresses)
-
- # Initialize client
-client = await GlideClient.create(config)
-
- # Configure batch options
-options = BatchOptions(timeout=2000)
-
-# Create atomic batch (true indicates atomic/transaction mode)
-atomic_batch = Batch(True)
-atomic_batch.set("account:source", "100")
-atomic_batch.set("account:dest", "0")
-atomic_batch.incrby("account:dest", 50)
-atomic_batch.decrby("account:source", 50)
-atomic_batch.get("account:source")
-
-try:
-    # Execute with raiseOnError = true
-    results = await client.exec(atomic_batch, raise_on_error=True, options=options)
-    print("Atomic Batch Results:", results)
-    # Expected output: Atomic Batch Results: ['OK', 'OK', 50, 50, '50']
- except RequestError as e:
-    print(f"Batch failed:", e)
-```
-  </TabItem>
-
-  <TabItem label="Java">
-```java
-import glide.api.GlideClient;
-import glide.api.models.configuration.GlideClientConfiguration;
-import glide.api.models.Batch;
-import glide.api.models.BatchOptions;
-import glide.api.models.exceptions.RequestException;
-
-// Create client configuration
-GlideClientConfiguration config = GlideClientConfiguration.builder()
-    .address(NodeAddress.builder().host("localhost").port(6379).build())
-    .build();
-
-// Initialize client
-GlideClient client = GlideClient.createClient(config).get();
-
-// Configure batch options
-BatchOptions options = BatchOptions.builder()
-    .timeout(2000)   // 2-second timeout
-    .build();
-
-// Create atomic batch
-Batch atomicBatch = new Batch(true)
-    .set("account:source", "100")
-    .set("account:dest", "0")
-    .incrBy("account:dest", 50)
-    .decrBy("account:source", 50)
-    .get("account:source");
-
-// Execute with raiseOnError = true
-try {
-    Object[] results = client.exec(atomicBatch, true, options).get();
-    System.out.println("Atomic Batch Results: " + Arrays.toString(results));
-    // Atomic Batch Results: ["OK", "OK", 50, 50, "50"]
-} catch (RequestException e) {
-    System.err.println("Batch failed: " + e.getMessage());
-}
-```
-  </TabItem>
-
-  <TabItem label="Node">
-```typescript
-import { GlideClient, Batch, BatchOptions } from "@valkey/valkey-glide";
-
-// Create client configuration
-const addresses = [
-    {
-        host: "localhost",
-        port: 6379,
-    },
-];
-
-// Initialize client
-const client = await GlideClient.createClient({ addresses: addresses });
-
-// Configure batch options
-const options : BatchOptions = {
-    timeout: 2000  // 2-second timeout
-};
-
-// Create atomic batch (true indicates atomic/transaction mode)
-const atomicBatch = new Batch(true)
-    .set("account:source", "100")
-    .set("account:dest", "0")
-    .incrBy("account:dest", 50)
-    .decrBy("account:source", 50)
-    .get("account:source");
-
-try {
-    // Execute with raiseOnError = true
-    const results = await client.exec(atomicBatch, true, options);
-    console.log("Atomic Batch Results:", results);
-    // Atomic Batch Results: ["OK", "OK", 50, 50, "50"]
-} catch (e) {
-    console.error("Batch failed:", e.message);
-}
-```
-  </TabItem>
-
-  <TabItem label="Go">
-```go
-import (
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
-)
-
-// Create client configuration
-clientConf := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
-
-// Initialize client
-client, _ := glide.NewClient(clientConf)
-
-// Configure batch options
-options := pipeline.NewStandaloneBatchOptions().
-	WithTimeout(2 * time.Second)  // 2-second timeout
-
-// Create atomic batch
-transaction := pipeline.NewStandaloneBatch(true).
-    Set("account:source", "100").
-    Set("account:dest", "0").
-    IncrBy("account:dest", 50).
-    DecrBy("account:source", 50).
-    Get("account:source")
-
-// Execute with raiseOnError = true
-res, err := client.ExecWithOptions(ctx, *transaction, true, *options)
-if err != nil {
-    fmt.Printf("Batch failed: %v\n", err)
-} else {
-    fmt.Printf("Atomic Batch Results: %+v\n", res)
-    // Atomic Batch Results: [OK OK 50 50 50]
-}
-```
-  </TabItem>
-
-  <TabItem label="PHP">
-```php
-// Create client configuration
-$client = new ValkeyGlide();
-$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
-
-// Create atomic transaction using multi()
-$results = $client->multi(ValkeyGlide::MULTI)
-    ->set('account:source', '100')
-    ->set('account:dest', '0')
-    ->incrby('account:dest', 50)
-    ->decrby('account:source', 50)
-    ->get('account:source')
-    ->exec();
-
-echo "Atomic Transaction Results: " . print_r($results, true);
-// Atomic Transaction Results: [true, true, 50, 50, "50"]
-```
-  </TabItem>
-</Tabs>
-
-### Cluster 
-
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
-```python
-from glide import (
-    GlideClusterClientConfiguration,
-    NodeAddress,
-    GlideClusterClient,
-    ClusterBatch,
-    ClusterBatchOptions
-)
-
-# Initialize cluster client configuration
-addresses = [
-    NodeAddress("127.0.0.1", 6379)
-]
-config = GlideClusterClientConfiguration(addresses)
-
-# Initialize client
-glideClusterClient = await GlideClusterClient.create(config)
-
-# Configure atomic batch options
-options = ClusterBatchOptions(timeout=3000)  # 3-second timeout
-
-# Create atomic cluster batch (all keys map to same slot)
-atomicClusterBatch = ClusterBatch(True)
-atomicClusterBatch.set("user:100:visits", "1")
-atomicClusterBatch.incrby("user:100:visits", 5)
-atomicClusterBatch.get("user:100:visits")
-
-try:
-    # Execute with raise_on_error = True
-    clusterResults = await glideClusterClient.exec(atomicClusterBatch, raise_on_error=True, options=options)
-    print("Atomic Cluster Batch:", clusterResults)
-    # Expected output: Atomic Cluster Batch: ['OK', 6, '6']
-except RequestError as e:
-    print("Atomic cluster batch failed:", e)
-```
-  </TabItem>
-
-  <TabItem label="Java">
-```java
-import glide.api.models.ClusterBatch;
-import glide.api.models.ClusterBatchOptions;
-import glide.api.models.exceptions.RequestException;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.NodeAddress;
-import glide.api.GlideClusterClient;
-
-// Initialize cluster client
-GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
-    .address(
-        NodeAddress.builder()
-            .host("127.0.0.1")
-            .port(6379)
-            .build()
+    ```python
+    from glide import (
+     GlideClientConfiguration,
+     NodeAddress,
+     GlideClient,
+     BatchOptions,
     )
-    .build();
 
-// Initialize client
-GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
+     # Create client configuration
+    addresses = [
+        NodeAddress("server_primary.example.com", 6379),
+        NodeAddress("server_replica.example.com", 6379)
+    ]
+    config = GlideClientConfiguration(addresses)
 
-// Configure atomic batch options
-ClusterBatchOptions options = ClusterBatchOptions.builder()
-    .timeout(3000)   // 3-second timeout
-    .build();
+     # Initialize client
+    client = await GlideClient.create(config)
 
-// Create atomic cluster batch (all keys map to same slot)
-ClusterBatch atomicClusterBatch = new ClusterBatch(true)
-    .set("user:100:visits", "1")
-    .incrBy("user:100:visits", 5)
-    .get("user:100:visits");
+     # Configure batch options
+    options = BatchOptions(timeout=2000)
 
-// Execute with raiseOnError = true
-try {
-    Object[] clusterResults = glideClusterClient.exec(atomicClusterBatch, true, options).get();
-    System.out.println("Atomic Cluster Batch: " + Arrays.toString(clusterResults));
-    // Expected- Atomic Cluster Batch: ["OK", 6, "6"]
-} catch (RequestException e) {
-    System.err.println("Atomic cluster batch failed: " + e.getMessage());
-}
-```
+    # Create atomic batch (true indicates atomic/transaction mode)
+    atomic_batch = Batch(True)
+    atomic_batch.set("account:source", "100")
+    atomic_batch.set("account:dest", "0")
+    atomic_batch.incrby("account:dest", 50)
+    atomic_batch.decrby("account:source", 50)
+    atomic_batch.get("account:source")
+
+    try:
+        # Execute with raiseOnError = true
+        results = await client.exec(atomic_batch, raise_on_error=True, options=options)
+        print("Atomic Batch Results:", results)
+        # Expected output: Atomic Batch Results: ['OK', 'OK', 50, 50, '50']
+     except RequestError as e:
+        print(f"Batch failed:", e)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.Batch;
+    import glide.api.models.BatchOptions;
+    import glide.api.models.exceptions.RequestException;
+
+    // Create client configuration
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    // Initialize client
+    GlideClient client = GlideClient.createClient(config).get();
+
+    // Configure batch options
+    BatchOptions options = BatchOptions.builder()
+        .timeout(2000)   // 2-second timeout
+        .build();
+
+    // Create atomic batch
+    Batch atomicBatch = new Batch(true)
+        .set("account:source", "100")
+        .set("account:dest", "0")
+        .incrBy("account:dest", 50)
+        .decrBy("account:source", 50)
+        .get("account:source");
+
+    // Execute with raiseOnError = true
+    try {
+        Object[] results = client.exec(atomicBatch, true, options).get();
+        System.out.println("Atomic Batch Results: " + Arrays.toString(results));
+        // Atomic Batch Results: ["OK", "OK", 50, 50, "50"]
+    } catch (RequestException e) {
+        System.err.println("Batch failed: " + e.getMessage());
+    }
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { GlideClusterClient, ClusterBatch, ClusterBatchOptions } from "@valkey/valkey-glide";
+    ```typescript
+    import { GlideClient, Batch, BatchOptions } from "@valkey/valkey-glide";
 
-// Initialize cluster client configuration
-const addresses = [
-    {
-        host: "127.0.0.1",
-        port: 6379
+    // Create client configuration
+    const addresses = [
+        {
+            host: "localhost",
+            port: 6379,
+        },
+    ];
+
+    // Initialize client
+    const client = await GlideClient.createClient({ addresses: addresses });
+
+    // Configure batch options
+    const options : BatchOptions = {
+        timeout: 2000  // 2-second timeout
+    };
+
+    // Create atomic batch (true indicates atomic/transaction mode)
+    const atomicBatch = new Batch(true)
+        .set("account:source", "100")
+        .set("account:dest", "0")
+        .incrBy("account:dest", 50)
+        .decrBy("account:source", 50)
+        .get("account:source");
+
+    try {
+        // Execute with raiseOnError = true
+        const results = await client.exec(atomicBatch, true, options);
+        console.log("Atomic Batch Results:", results);
+        // Atomic Batch Results: ["OK", "OK", 50, 50, "50"]
+    } catch (e) {
+        console.error("Batch failed:", e.message);
     }
-];
-
-// Initialize client
-const glideClusterClient = await GlideClusterClient.createClient({ addresses: addresses });
-
-// Configure atomic batch options
-const options: ClusterBatchOptions = {
-    timeout: 3000  // 3-second timeout
-};
-
-// Create atomic cluster batch (all keys map to same slot)
-const atomicClusterBatch = new ClusterBatch(true)
-    .set("user:100:visits", "1")
-    .incrBy("user:100:visits", 5)
-    .get("user:100:visits");
-
-// Execute with raiseOnError = true
-try {
-    const clusterResults = await glideClusterClient.exec(atomicClusterBatch, true, options);
-    console.log("Atomic Cluster Batch:", clusterResults);
-    // Expected output: Atomic Cluster Batch: ["OK", 6, "6"]
-} catch (e) {
-    console.error("Atomic cluster batch failed:", e);
-}
-```
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
-)
+    ```go
+    import (
+    	glide "github.com/valkey-io/valkey-glide/go/v2"
+    	"github.com/valkey-io/valkey-glide/go/v2/config"
+    	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    )
 
-// Create client configuration
-clientConf := config.NewClusterClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    // Create client configuration
+    clientConf := config.NewClientConfiguration().
+    		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-// Initialize client
-client, _ := glide.NewClusterClient(clientConf)
+    // Initialize client
+    client, _ := glide.NewClient(clientConf)
 
-// Configure batch options
-options := pipeline.NewClusterBatchOptions().
-	WithTimeout(3 * time.Second)  // 3-second timeout
+    // Configure batch options
+    options := pipeline.NewStandaloneBatchOptions().
+    	WithTimeout(2 * time.Second)  // 2-second timeout
 
-// Create atomic batch
-transaction := pipeline.NewClusterBatch(true).
-    Set("{user:100}:visits", "1").
-    IncrBy("{user:100}:visits", 5).
-    Get("{user:100}:visits")
+    // Create atomic batch
+    transaction := pipeline.NewStandaloneBatch(true).
+        Set("account:source", "100").
+        Set("account:dest", "0").
+        IncrBy("account:dest", 50).
+        DecrBy("account:source", 50).
+        Get("account:source")
 
-// Execute with raiseOnError = true
-res, err := client.ExecWithOptions(ctx, *transaction, true, *options)
-if err != nil {
-    fmt.Printf("Atomic cluster batch failed: %v\n", err)
-} else {
-    fmt.Printf("Atomic Cluster Batch: %+v\n", res)
-    // Atomic Cluster Batch Results: [OK 6 6]
-}
-```
+    // Execute with raiseOnError = true
+    res, err := client.ExecWithOptions(ctx, *transaction, true, *options)
+    if err != nil {
+        fmt.Printf("Batch failed: %v\n", err)
+    } else {
+        fmt.Printf("Atomic Batch Results: %+v\n", res)
+        // Atomic Batch Results: [OK OK 50 50 50]
+    }
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-// Initialize cluster client
-$client = new ValkeyGlideCluster(
-    addresses: [['host' => 'localhost', 'port' => 6379]]
-);
+    ```php
+    // Create client configuration
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
 
-// Create atomic transaction (all keys must map to same slot using hash tags)
-$results = $client->multi(ValkeyGlide::MULTI)
-    ->set('{user:100}:visits', '1')
-    ->incrby('{user:100}:visits', 5)
-    ->get('{user:100}:visits')
-    ->exec();
+    // Create atomic transaction using multi()
+    $results = $client->multi(ValkeyGlide::MULTI)
+        ->set('account:source', '100')
+        ->set('account:dest', '0')
+        ->incrby('account:dest', 50)
+        ->decrby('account:source', 50)
+        ->get('account:source')
+        ->exec();
 
-echo "Atomic Cluster Transaction: " . print_r($results, true);
-// Atomic Cluster Transaction: [true, 6, "6"]
-```
+    echo "Atomic Transaction Results: " . print_r($results, true);
+    // Atomic Transaction Results: [true, true, 50, 50, "50"]
+    ```
   </TabItem>
 </Tabs>
 
-:::caution[Important]
+### Cluster
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        GlideClusterClient,
+        ClusterBatch,
+        ClusterBatchOptions
+    )
+
+    # Initialize cluster client configuration
+    addresses = [
+        NodeAddress("127.0.0.1", 6379)
+    ]
+    config = GlideClusterClientConfiguration(addresses)
+
+    # Initialize client
+    glideClusterClient = await GlideClusterClient.create(config)
+
+    # Configure atomic batch options
+    options = ClusterBatchOptions(timeout=3000)  # 3-second timeout
+
+    # Create atomic cluster batch (all keys map to same slot)
+    atomicClusterBatch = ClusterBatch(True)
+    atomicClusterBatch.set("user:100:visits", "1")
+    atomicClusterBatch.incrby("user:100:visits", 5)
+    atomicClusterBatch.get("user:100:visits")
+
+    try:
+        # Execute with raise_on_error = True
+        clusterResults = await glideClusterClient.exec(atomicClusterBatch, raise_on_error=True, options=options)
+        print("Atomic Cluster Batch:", clusterResults)
+        # Expected output: Atomic Cluster Batch: ['OK', 6, '6']
+    except RequestError as e:
+        print("Atomic cluster batch failed:", e)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.ClusterBatch;
+    import glide.api.models.ClusterBatchOptions;
+    import glide.api.models.exceptions.RequestException;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.NodeAddress;
+    import glide.api.GlideClusterClient;
+
+    // Initialize cluster client
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(
+            NodeAddress.builder()
+                .host("127.0.0.1")
+                .port(6379)
+                .build()
+        )
+        .build();
+
+    // Initialize client
+    GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
+
+    // Configure atomic batch options
+    ClusterBatchOptions options = ClusterBatchOptions.builder()
+        .timeout(3000)   // 3-second timeout
+        .build();
+
+    // Create atomic cluster batch (all keys map to same slot)
+    ClusterBatch atomicClusterBatch = new ClusterBatch(true)
+        .set("user:100:visits", "1")
+        .incrBy("user:100:visits", 5)
+        .get("user:100:visits");
+
+    // Execute with raiseOnError = true
+    try {
+        Object[] clusterResults = glideClusterClient.exec(atomicClusterBatch, true, options).get();
+        System.out.println("Atomic Cluster Batch: " + Arrays.toString(clusterResults));
+        // Expected- Atomic Cluster Batch: ["OK", 6, "6"]
+    } catch (RequestException e) {
+        System.err.println("Atomic cluster batch failed: " + e.getMessage());
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient, ClusterBatch, ClusterBatchOptions } from "@valkey/valkey-glide";
+
+    // Initialize cluster client configuration
+    const addresses = [
+        {
+            host: "127.0.0.1",
+            port: 6379
+        }
+    ];
+
+    // Initialize client
+    const glideClusterClient = await GlideClusterClient.createClient({ addresses: addresses });
+
+    // Configure atomic batch options
+    const options: ClusterBatchOptions = {
+        timeout: 3000  // 3-second timeout
+    };
+
+    // Create atomic cluster batch (all keys map to same slot)
+    const atomicClusterBatch = new ClusterBatch(true)
+        .set("user:100:visits", "1")
+        .incrBy("user:100:visits", 5)
+        .get("user:100:visits");
+
+    // Execute with raiseOnError = true
+    try {
+        const clusterResults = await glideClusterClient.exec(atomicClusterBatch, true, options);
+        console.log("Atomic Cluster Batch:", clusterResults);
+        // Expected output: Atomic Cluster Batch: ["OK", 6, "6"]
+    } catch (e) {
+        console.error("Atomic cluster batch failed:", e);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+    	glide "github.com/valkey-io/valkey-glide/go/v2"
+    	"github.com/valkey-io/valkey-glide/go/v2/config"
+    	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    )
+
+    // Create client configuration
+    clientConf := config.NewClusterClientConfiguration().
+    		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+    // Initialize client
+    client, _ := glide.NewClusterClient(clientConf)
+
+    // Configure batch options
+    options := pipeline.NewClusterBatchOptions().
+    	WithTimeout(3 * time.Second)  // 3-second timeout
+
+    // Create atomic batch
+    transaction := pipeline.NewClusterBatch(true).
+        Set("{user:100}:visits", "1").
+        IncrBy("{user:100}:visits", 5).
+        Get("{user:100}:visits")
+
+    // Execute with raiseOnError = true
+    res, err := client.ExecWithOptions(ctx, *transaction, true, *options)
+    if err != nil {
+        fmt.Printf("Atomic cluster batch failed: %v\n", err)
+    } else {
+        fmt.Printf("Atomic Cluster Batch: %+v\n", res)
+        // Atomic Cluster Batch Results: [OK 6 6]
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Initialize cluster client
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'localhost', 'port' => 6379]]
+    );
+
+    // Create atomic transaction (all keys must map to same slot using hash tags)
+    $results = $client->multi(ValkeyGlide::MULTI)
+        ->set('{user:100}:visits', '1')
+        ->incrby('{user:100}:visits', 5)
+        ->get('{user:100}:visits')
+        ->exec();
+
+    echo "Atomic Cluster Transaction: " . print_r($results, true);
+    // Atomic Cluster Transaction: [true, 6, "6"]
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution\[Important]
 If you attempt to include keys from different slots, the batch creation will throw an exception informing you that keys must map to the same slot when `isAtomic = true`.
 :::
 
@@ -388,155 +389,155 @@ Pipelining is a group of commands sent in a single request that does not guarant
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import (
-    GlideClientConfiguration,
-    NodeAddress,
-    GlideClient,
-    Batch,
-    BatchOptions
-)
+    ```python
+    from glide import (
+        GlideClientConfiguration,
+        NodeAddress,
+        GlideClient,
+        Batch,
+        BatchOptions
+    )
 
-# Create client configuration
-addresses = [
-    NodeAddress("localhost", 6379)
-]
-config = GlideClientConfiguration(addresses)
+    # Create client configuration
+    addresses = [
+        NodeAddress("localhost", 6379)
+    ]
+    config = GlideClientConfiguration(addresses)
 
-# Initialize client
-client = await GlideClient.create(config)
+    # Initialize client
+    client = await GlideClient.create(config)
 
-# Configure batch options
-options = BatchOptions(timeout=2000)  # 2-second timeout
+    # Configure batch options
+    options = BatchOptions(timeout=2000)  # 2-second timeout
 
-# Create non-atomic batch (False indicates pipeline mode)
-pipeline = Batch(False)
-pipeline.set("temp:key1", "value1")
-pipeline.set("temp:key2", "value2")
-pipeline.get("temp:key1")
-pipeline.get("temp:key2")
+    # Create non-atomic batch (False indicates pipeline mode)
+    pipeline = Batch(False)
+    pipeline.set("temp:key1", "value1")
+    pipeline.set("temp:key2", "value2")
+    pipeline.get("temp:key1")
+    pipeline.get("temp:key2")
 
-# Execute with raise_on_error = False
-results = await client.exec(pipeline, raise_on_error=False, options=options)
-print("Pipeline Results:", results)
-# Expected output: Pipeline Results: ['OK', 'OK', 'value1', 'value2']
-```
+    # Execute with raise_on_error = False
+    results = await client.exec(pipeline, raise_on_error=False, options=options)
+    print("Pipeline Results:", results)
+    # Expected output: Pipeline Results: ['OK', 'OK', 'value1', 'value2']
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.GlideClient;
-import glide.api.models.Batch;
-import glide.api.models.BatchOptions;
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.Batch;
+    import glide.api.models.BatchOptions;
 
-// Create client configuration
-GlideClientConfiguration config = GlideClientConfiguration.builder()
-    .address(NodeAddress.builder().host("localhost").port(6379).build())
-    .build();
+    // Create client configuration
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
 
-// Initialize client
-GlideClient client = GlideClient.createClient(config).get();
+    // Initialize client
+    GlideClient client = GlideClient.createClient(config).get();
 
-// Configure batch options
-BatchOptions options = BatchOptions.builder()
-    .timeout(2000)   // 2-second timeout
-    .build();
+    // Configure batch options
+    BatchOptions options = BatchOptions.builder()
+        .timeout(2000)   // 2-second timeout
+        .build();
 
-Batch pipeline = new Batch(false)
-    .set("temp:key1", "value1")
-    .set("temp:key2", "value2")
-    .get("temp:key1")
-    .get("temp:key2");
+    Batch pipeline = new Batch(false)
+        .set("temp:key1", "value1")
+        .set("temp:key2", "value2")
+        .get("temp:key1")
+        .get("temp:key2");
 
-Object[] results = client.exec(pipeline, false, options).get();
-System.out.println("Pipeline Results: " + Arrays.toString(results));
-// Pipeline Results: ["OK", "OK", "value1", "value2"]
-```
+    Object[] results = client.exec(pipeline, false, options).get();
+    System.out.println("Pipeline Results: " + Arrays.toString(results));
+    // Pipeline Results: ["OK", "OK", "value1", "value2"]
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { GlideClient, Batch, BatchOptions} from "@valkey/valkey-glide";
+    ```typescript
+    import { GlideClient, Batch, BatchOptions} from "@valkey/valkey-glide";
 
-// Create client configuration
-const addresses = [
-  {
-    host: "localhost",
-    port: 6379,
-  },
-];
+    // Create client configuration
+    const addresses = [
+      {
+        host: "localhost",
+        port: 6379,
+      },
+    ];
 
-// Initialize client
-const client = await GlideClient.createClient({ addresses: addresses });
+    // Initialize client
+    const client = await GlideClient.createClient({ addresses: addresses });
 
-// Configure batch options
-const options : BatchOptions = {
-  timeout: 2000  // 2-second timeout
-};
+    // Configure batch options
+    const options : BatchOptions = {
+      timeout: 2000  // 2-second timeout
+    };
 
-// Create non-atomic batch (false indicates pipeline mode)
-const pipeline = new Batch(false)
-  .set("temp:key1", "value1")
-  .set("temp:key2", "value2")
-  .get("temp:key1")
-  .get("temp:key2");
+    // Create non-atomic batch (false indicates pipeline mode)
+    const pipeline = new Batch(false)
+      .set("temp:key1", "value1")
+      .set("temp:key2", "value2")
+      .get("temp:key1")
+      .get("temp:key2");
 
-// Execute with raiseOnError = false
-const results = await client.exec(pipeline, false, options);
-console.log("Pipeline Results:", results);
-// Pipeline Results: ["OK", "OK", "value1", "value2"]
-```
+    // Execute with raiseOnError = false
+    const results = await client.exec(pipeline, false, options);
+    console.log("Pipeline Results:", results);
+    // Pipeline Results: ["OK", "OK", "value1", "value2"]
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
-)
+    ```go
+    import (
+    	glide "github.com/valkey-io/valkey-glide/go/v2"
+    	"github.com/valkey-io/valkey-glide/go/v2/config"
+    	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    )
 
-// Create client configuration
-clientConf := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    // Create client configuration
+    clientConf := config.NewClientConfiguration().
+    		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-// Initialize client
-client, _ := glide.NewClient(clientConf)
+    // Initialize client
+    client, _ := glide.NewClient(clientConf)
 
-// Configure batch options
-options := pipeline.NewStandaloneBatchOptions().
-	WithTimeout(2 * time.Second)  // 2-second timeout
+    // Configure batch options
+    options := pipeline.NewStandaloneBatchOptions().
+    	WithTimeout(2 * time.Second)  // 2-second timeout
 
-// Create non-atomic batch
-pipeline := pipeline.NewStandaloneBatch(false).
-    Set("temp:key1", "value1").
-    Set("temp:key2", "value2").
-    Get("temp:key1").
-    Get("temp:key2")
+    // Create non-atomic batch
+    pipeline := pipeline.NewStandaloneBatch(false).
+        Set("temp:key1", "value1").
+        Set("temp:key2", "value2").
+        Get("temp:key1").
+        Get("temp:key2")
 
-res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
-fmt.Printf("Pipeline Results: %+v\n", res)
-// Pipeline Results: [OK OK value1 value2]
-```
+    res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
+    fmt.Printf("Pipeline Results: %+v\n", res)
+    // Pipeline Results: [OK OK value1 value2]
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-// Create client configuration
-$client = new ValkeyGlide();
-$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    ```php
+    // Create client configuration
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
 
-// Create pipeline using multi() with PIPELINE mode
-$results = $client->multi(ValkeyGlide::PIPELINE)
-    ->set('temp:key1', 'value1')
-    ->set('temp:key2', 'value2')
-    ->get('temp:key1')
-    ->get('temp:key2')
-    ->exec();
+    // Create pipeline using multi() with PIPELINE mode
+    $results = $client->multi(ValkeyGlide::PIPELINE)
+        ->set('temp:key1', 'value1')
+        ->set('temp:key2', 'value2')
+        ->get('temp:key1')
+        ->get('temp:key2')
+        ->exec();
 
-echo "Pipeline Results: " . print_r($results, true);
-// Pipeline Results: [true, true, "value1", "value2"]
-```
+    echo "Pipeline Results: " . print_r($results, true);
+    // Pipeline Results: [true, true, "value1", "value2"]
+    ```
   </TabItem>
 </Tabs>
 
@@ -544,202 +545,202 @@ echo "Pipeline Results: " . print_r($results, true);
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import (
-    GlideClusterClientConfiguration,
-    NodeAddress,
-    GlideClusterClient,
-    ClusterBatch,
-    ClusterBatchOptions,
-    ClusterBatchRetryStrategy
-)
+    ```python
+    from glide import (
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        GlideClusterClient,
+        ClusterBatch,
+        ClusterBatchOptions,
+        ClusterBatchRetryStrategy
+    )
 
-# Initialize cluster client configuration
-addresses = [
-    NodeAddress("localhost", 6379)
-]
-config = GlideClusterClientConfiguration(addresses)
+    # Initialize cluster client configuration
+    addresses = [
+        NodeAddress("localhost", 6379)
+    ]
+    config = GlideClusterClientConfiguration(addresses)
 
-# Initialize client
-glideClusterClient = await GlideClusterClient.create(config)
+    # Initialize client
+    glideClusterClient = await GlideClusterClient.create(config)
 
-# Configure retry strategy and pipeline options
-retry_strategy = ClusterBatchRetryStrategy(
-    retry_server_error=False,
-    retry_connection_error=True
-)
+    # Configure retry strategy and pipeline options
+    retry_strategy = ClusterBatchRetryStrategy(
+        retry_server_error=False,
+        retry_connection_error=True
+    )
 
-pipeline_options = ClusterBatchOptions(
-    timeout=5000,                # 5-second timeout
-    retry_strategy=retry_strategy
-)
+    pipeline_options = ClusterBatchOptions(
+        timeout=5000,                # 5-second timeout
+        retry_strategy=retry_strategy
+    )
 
-# Create pipeline spanning multiple slots
-pipeline_cluster = ClusterBatch(False)  # False indicates non-atomic (pipeline)
-pipeline_cluster.set("page:home:views", "100")
-pipeline_cluster.incrby("page:home:views", 25)
-pipeline_cluster.get("page:home:views")
-pipeline_cluster.lpush("recent:logins", ["user1"])
-pipeline_cluster.lpush("recent:logins", ["user2"])
-pipeline_cluster.lrange("recent:logins", 0, 1)
+    # Create pipeline spanning multiple slots
+    pipeline_cluster = ClusterBatch(False)  # False indicates non-atomic (pipeline)
+    pipeline_cluster.set("page:home:views", "100")
+    pipeline_cluster.incrby("page:home:views", 25)
+    pipeline_cluster.get("page:home:views")
+    pipeline_cluster.lpush("recent:logins", ["user1"])
+    pipeline_cluster.lpush("recent:logins", ["user2"])
+    pipeline_cluster.lrange("recent:logins", 0, 1)
 
-# Execute with raise_on_error = False
-pipeline_results = await glideClusterClient.exec(pipeline_cluster, raise_on_error=False, options=pipeline_options)
-print("Pipeline Cluster Results:", pipeline_results)
-# Expected output: Pipeline Cluster Results: ['OK', 125, '125', 1, 2, ['user2', 'user1']]
-```
+    # Execute with raise_on_error = False
+    pipeline_results = await glideClusterClient.exec(pipeline_cluster, raise_on_error=False, options=pipeline_options)
+    print("Pipeline Cluster Results:", pipeline_results)
+    # Expected output: Pipeline Cluster Results: ['OK', 125, '125', 1, 2, ['user2', 'user1']]
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.models.ClusterBatch;
-import glide.api.models.ClusterBatchOptions;
-import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.NodeAddress;
-import glide.api.GlideClusterClient;
+    ```java
+    import glide.api.models.ClusterBatch;
+    import glide.api.models.ClusterBatchOptions;
+    import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.NodeAddress;
+    import glide.api.GlideClusterClient;
 
-// Initialize cluster client
-GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
-    .address(
-        NodeAddress.builder()
-            .host("localhost")
-            .port(6379)
-            .build()
-    )
-    .build();
+    // Initialize cluster client
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(
+            NodeAddress.builder()
+                .host("localhost")
+                .port(6379)
+                .build()
+        )
+        .build();
 
-GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
+    GlideClusterClient glideClusterClient = GlideClusterClient.createClient(config).get();
 
-// Configure retry strategy and pipeline options
-ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
-    .retryServerError(false)
-    .retryConnectionError(true)
-    .build();
+    // Configure retry strategy and pipeline options
+    ClusterBatchRetryStrategy retryStrategy = ClusterBatchRetryStrategy.builder()
+        .retryServerError(false)
+        .retryConnectionError(true)
+        .build();
 
-ClusterBatchOptions pipelineOptions = ClusterBatchOptions.builder()
-    .timeout(5000)                          // 5-second timeout
-    .retryStrategy(retryStrategy)
-    .build();
+    ClusterBatchOptions pipelineOptions = ClusterBatchOptions.builder()
+        .timeout(5000)                          // 5-second timeout
+        .retryStrategy(retryStrategy)
+        .build();
 
-// Create pipeline spanning multiple slots
-ClusterBatch pipelineCluster = new ClusterBatch(false)
-    .set("page:home:views", "100")
-    .incrBy("page:home:views", 25)
-    .get("page:home:views")
-    .lpush("recent:logins", "user1")
-    .lpush("recent:logins", "user2")
-    .lrange("recent:logins", 0, 1);
+    // Create pipeline spanning multiple slots
+    ClusterBatch pipelineCluster = new ClusterBatch(false)
+        .set("page:home:views", "100")
+        .incrBy("page:home:views", 25)
+        .get("page:home:views")
+        .lpush("recent:logins", "user1")
+        .lpush("recent:logins", "user2")
+        .lrange("recent:logins", 0, 1);
 
-// Execute with raiseOnError = false
-Object[] pipelineResults = glideClusterClient.exec(pipelineCluster, false, pipelineOptions).get();
-System.out.println("Pipeline Cluster Results: " + Arrays.toString(pipelineResults));
-// Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
-```
+    // Execute with raiseOnError = false
+    Object[] pipelineResults = glideClusterClient.exec(pipelineCluster, false, pipelineOptions).get();
+    System.out.println("Pipeline Cluster Results: " + Arrays.toString(pipelineResults));
+    // Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import { GlideClusterClient, ClusterBatch, ClusterBatchOptions, ClusterBatchRetryStrategy } from "@valkey/valkey-glide";
-// Initialize cluster client configuration
-const addresses = [
-    {
-        host: "localhost",
-        port: 6379
-    }
-];
+    ```typescript
+    import { GlideClusterClient, ClusterBatch, ClusterBatchOptions, ClusterBatchRetryStrategy } from "@valkey/valkey-glide";
+    // Initialize cluster client configuration
+    const addresses = [
+        {
+            host: "localhost",
+            port: 6379
+        }
+    ];
 
-// Initialize client
-const glideClusterClient = await GlideClusterClient.createClient({ addresses : addresses });
+    // Initialize client
+    const glideClusterClient = await GlideClusterClient.createClient({ addresses : addresses });
 
-// Configure retry strategy and pipeline options
-const retryStrategy : ClusterBatchRetryStrategy = {
-    retryServerError: false,
-    retryConnectionError: true
-};
+    // Configure retry strategy and pipeline options
+    const retryStrategy : ClusterBatchRetryStrategy = {
+        retryServerError: false,
+        retryConnectionError: true
+    };
 
-const pipelineOptions : ClusterBatchOptions = {
-    timeout: 5000,                // 5-second timeout
-    retryStrategy: retryStrategy
-};
+    const pipelineOptions : ClusterBatchOptions = {
+        timeout: 5000,                // 5-second timeout
+        retryStrategy: retryStrategy
+    };
 
-// Create pipeline spanning multiple slots
-const pipelineCluster = new ClusterBatch(false)  // false indicates non-atomic (pipeline)
-    .set("page:home:views", "100")
-    .incrBy("page:home:views", 25)
-    .get("page:home:views")
-    .lpush("recent:logins", ["user1"])
-    .lpush("recent:logins", ["user2"])
-    .lrange("recent:logins", 0, 1);
+    // Create pipeline spanning multiple slots
+    const pipelineCluster = new ClusterBatch(false)  // false indicates non-atomic (pipeline)
+        .set("page:home:views", "100")
+        .incrBy("page:home:views", 25)
+        .get("page:home:views")
+        .lpush("recent:logins", ["user1"])
+        .lpush("recent:logins", ["user2"])
+        .lrange("recent:logins", 0, 1);
 
 
-// Execute with raiseOnError = false
-const pipelineResults = await glideClusterClient.exec(pipelineCluster, false, pipelineOptions);
-console.log("Pipeline Cluster Results:", pipelineResults);
-// Expected output: Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
-```
+    // Execute with raiseOnError = false
+    const pipelineResults = await glideClusterClient.exec(pipelineCluster, false, pipelineOptions);
+    console.log("Pipeline Cluster Results:", pipelineResults);
+    // Expected output: Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
-	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
-)
+    ```go
+    import (
+    	glide "github.com/valkey-io/valkey-glide/go/v2"
+    	"github.com/valkey-io/valkey-glide/go/v2/config"
+    	"github.com/valkey-io/valkey-glide/go/v2/pipeline"
+    )
 
-// Create client configuration
-clientConf := config.NewClusterClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    // Create client configuration
+    clientConf := config.NewClusterClientConfiguration().
+    		WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-// Initialize client
-client, _ := glide.NewClusterClient(clientConf)
+    // Initialize client
+    client, _ := glide.NewClusterClient(clientConf)
 
-// Configure retry strategy and pipeline options
-retryStrategy := pipeline.NewClusterBatchRetryStrategy().
-	WithRetryConnectionError(true).
-	WithRetryServerError(false)
+    // Configure retry strategy and pipeline options
+    retryStrategy := pipeline.NewClusterBatchRetryStrategy().
+    	WithRetryConnectionError(true).
+    	WithRetryServerError(false)
 
-options := pipeline.NewClusterBatchOptions().
-	WithTimeout(5 * time.Second).  // 5-second timeout
-	WithRetryStrategy(retryStrategy)
+    options := pipeline.NewClusterBatchOptions().
+    	WithTimeout(5 * time.Second).  // 5-second timeout
+    	WithRetryStrategy(retryStrategy)
 
-// Create pipeline spanning multiple slots
-pipeline := pipeline.NewClusterBatch(false).
-    Set("page:home:views", "100").
-    IncrBy("page:home:views", 25).
-    Get("page:home:views").
-    Lpush("recent:logins", "user1").
-    Lpush("recent:logins", "user2").
-    Lrange("recent:logins", 0, 1)
+    // Create pipeline spanning multiple slots
+    pipeline := pipeline.NewClusterBatch(false).
+        Set("page:home:views", "100").
+        IncrBy("page:home:views", 25).
+        Get("page:home:views").
+        Lpush("recent:logins", "user1").
+        Lpush("recent:logins", "user2").
+        Lrange("recent:logins", 0, 1)
 
-// Execute with raiseOnError = false
-res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
-fmt.Printf("Pipeline Cluster Results: %+v\n", res)
-// Pipeline Cluster Results: [OK 125 125 1 2 [user2 user1]]
-```
+    // Execute with raiseOnError = false
+    res, err := client.ExecWithOptions(ctx, *pipeline, false, *options)
+    fmt.Printf("Pipeline Cluster Results: %+v\n", res)
+    // Pipeline Cluster Results: [OK 125 125 1 2 [user2 user1]]
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-// Initialize cluster client
-$client = new ValkeyGlideCluster(
-    addresses: [['host' => 'localhost', 'port' => 6379]]
-);
+    ```php
+    // Initialize cluster client
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'localhost', 'port' => 6379]]
+    );
 
-// Create pipeline spanning multiple slots
-$results = $client->multi(ValkeyGlide::PIPELINE)
-    ->set('page:home:views', '100')
-    ->incrby('page:home:views', 25)
-    ->get('page:home:views')
-    ->lpush('recent:logins', 'user1')
-    ->lpush('recent:logins', 'user2')
-    ->lrange('recent:logins', 0, 1)
-    ->exec();
+    // Create pipeline spanning multiple slots
+    $results = $client->multi(ValkeyGlide::PIPELINE)
+        ->set('page:home:views', '100')
+        ->incrby('page:home:views', 25)
+        ->get('page:home:views')
+        ->lpush('recent:logins', 'user1')
+        ->lpush('recent:logins', 'user2')
+        ->lrange('recent:logins', 0, 1)
+        ->exec();
 
-echo "Pipeline Cluster Results: " . print_r($results, true);
-// Pipeline Cluster Results: [true, 125, "125", 1, 2, ["user2", "user1"]]
-```
+    echo "Pipeline Cluster Results: " . print_r($results, true);
+    // Pipeline Cluster Results: [true, 125, "125", 1, 2, ["user2", "user1"]]
+    ```
   </TabItem>
 </Tabs>
 

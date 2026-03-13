@@ -19,84 +19,84 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import (
-    GlideClusterClient,
-    GlideClusterClientConfiguration,
-    NodeAddress
-)
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress
+    )
 
-addresses = [NodeAddress(host="address.example.com", port=6379)]
-client_config = GlideClusterClientConfiguration(addresses)
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(addresses)
 
-client = await GlideClusterClient.create(client_config)
-```
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.NodeAddress;
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
 
-NodeAddress address = NodeAddress.builder()
-    .host("address.example.com")
-    .port(6379)
-    .build();
+    NodeAddress address = NodeAddress.builder()
+        .host("address.example.com")
+        .port(6379)
+        .build();
 
-GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
-    .address(address)
-    .build();
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(address)
+        .build();
 
-GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
-```
+    GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {GlideClusterClient} from "@valkey/valkey-glide";
+    ```typescript
+    import {GlideClusterClient} from "@valkey/valkey-glide";
 
-const addresses = [
-    {
-        host: "address.example.com",
-        port: 6379
-    }
-];
+    const addresses = [
+        {
+            host: "address.example.com",
+            port: 6379
+        }
+    ];
 
-const client = await GlideClusterClient.createClient({
-    addresses: addresses
-});
-```
+    const client = await GlideClusterClient.createClient({
+        addresses: addresses
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
 
-func ConnectCluster() {
-    myConfig := config.NewClusterClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379})
+    func ConnectCluster() {
+        myConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379})
 
-    client, err := glide.NewClusterClient(myConfig)
-}
-```
+        client, err := glide.NewClusterClient(myConfig)
+    }
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-try {
-    $addresses = [
-        ['host' => 'address.example.com', 'port' => 6379]
-    ];
+    ```php
+    try {
+        $addresses = [
+            ['host' => 'address.example.com', 'port' => 6379]
+        ];
 
-    $client = new ValkeyGlideCluster(addresses: $addresses);
-} catch (ValkeyGlideException $e) {
-    error_log("Failed to connect to cluster: " . $e->getMessage());
-}
-```
+        $client = new ValkeyGlideCluster(addresses: $addresses);
+    } catch (ValkeyGlideException $e) {
+        error_log("Failed to connect to cluster: " . $e->getMessage());
+    }
+    ```
   </TabItem>
 </Tabs>
 
@@ -108,23 +108,23 @@ For more details on the routing of specific commands:
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-Please refer to the documentation within the code.
+    Please refer to the documentation within the code.
   </TabItem>
 
   <TabItem label="Java">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/configuration/RequestRoutingConfiguration.java) for routing configuration.
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/configuration/RequestRoutingConfiguration.java) for routing configuration.
   </TabItem>
 
   <TabItem label="Node">
-Please refer to the documentation within the code.
+    Please refer to the documentation within the code.
   </TabItem>
 
   <TabItem label="Go">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/config/request_routing_config.go) for routing configuration.
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/config/request_routing_config.go) for routing configuration.
   </TabItem>
 
   <TabItem label="PHP">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L411-L419) for routing configuration.
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L411-L419) for routing configuration.
   </TabItem>
 </Tabs>
 
@@ -136,23 +136,23 @@ To learn more about response aggregation for specific commands:
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-Please refer to the documentation within the code.
+    Please refer to the documentation within the code.
   </TabItem>
 
   <TabItem label="Java">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/ClusterValue.java).
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/ClusterValue.java).
   </TabItem>
 
   <TabItem label="Node">
-Please refer to the documentation within the code.
+    Please refer to the documentation within the code.
   </TabItem>
 
   <TabItem label="Go">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/models/response_types.go).
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/models/response_types.go).
   </TabItem>
 
   <TabItem label="PHP">
-Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php) for command return types.
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php) for command return types.
   </TabItem>
 </Tabs>
 
@@ -168,113 +168,113 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-```python
-from glide import (
-    GlideClient,
-    GlideClientConfiguration,
-    NodeAddress
-)
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress
+    )
 
-addresses = [
-    NodeAddress(host="primary.example.com", port=6379),
-    NodeAddress(host="replica1.example.com", port=6379),
-    NodeAddress(host="replica2.example.com", port=6379)
-  ]
-client_config = GlideClientConfiguration(addresses)
+    addresses = [
+        NodeAddress(host="primary.example.com", port=6379),
+        NodeAddress(host="replica1.example.com", port=6379),
+        NodeAddress(host="replica2.example.com", port=6379)
+      ]
+    client_config = GlideClientConfiguration(addresses)
 
-client = await GlideClient.create(client_config)
-```
+    client = await GlideClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
-```java
-import glide.api.GlideClient;
-import glide.api.models.configuration.GlideClientConfiguration;
-import glide.api.models.configuration.NodeAddress;
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
 
-GlideClientConfiguration config = GlideClientConfiguration.builder()
-    .address(NodeAddress.builder()
-        .host("primary.example.com")
-        .port(6379)
-        .build())
-    .address(NodeAddress.builder()
-        .host("replica1.example.com")
-        .port(6379)
-        .build())
-    .address(NodeAddress.builder()
-        .host("replica2.example.com")
-        .port(6379)
-        .build())
-    .build();
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("primary.example.com")
+            .port(6379)
+            .build())
+        .address(NodeAddress.builder()
+            .host("replica1.example.com")
+            .port(6379)
+            .build())
+        .address(NodeAddress.builder()
+            .host("replica2.example.com")
+            .port(6379)
+            .build())
+        .build();
 
-GlideClient standaloneClient = GlideClient.createClient(config).get();
-```
+    GlideClient standaloneClient = GlideClient.createClient(config).get();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-```typescript
-import {GlideClient} from "@valkey/valkey-glide";
+    ```typescript
+    import {GlideClient} from "@valkey/valkey-glide";
 
-const addresses = [
-    {
-        host: "primary.example.com",
-        port: 6379
-    },
-    {
-        host: "replica1.example.com",
-        port: 6379
-    },
-    {
-        host: "replica2.example.com",
-        port: 6379
-    },
-];
+    const addresses = [
+        {
+            host: "primary.example.com",
+            port: 6379
+        },
+        {
+            host: "replica1.example.com",
+            port: 6379
+        },
+        {
+            host: "replica2.example.com",
+            port: 6379
+        },
+    ];
 
-const client = await GlideClient.createClient({
-    addresses: addresses
-});
-```
+    const client = await GlideClient.createClient({
+        addresses: addresses
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-```go
-import (
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
 
-func ConnectStandalone() {
-    myConfig := config.NewClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
-        WithAddress(&config.NodeAddress{Host: "replica1.example.com", Port: 6379}).
-        WithAddress(&config.NodeAddress{Host: "replica2.example.com", Port: 6379})
+    func ConnectStandalone() {
+        myConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+            WithAddress(&config.NodeAddress{Host: "replica1.example.com", Port: 6379}).
+            WithAddress(&config.NodeAddress{Host: "replica2.example.com", Port: 6379})
 
-    client, err := glide.NewClient(myConfig)
-}
-```
+        client, err := glide.NewClient(myConfig)
+    }
+    ```
   </TabItem>
 
   <TabItem label="PHP">
-```php
-try {
-    $addresses = [
-        ['host' => 'primary.example.com', 'port' => 6379],
-        ['host' => 'replica1.example.com', 'port' => 6379],
-        ['host' => 'replica2.example.com', 'port' => 6379]
-    ];
+    ```php
+    try {
+        $addresses = [
+            ['host' => 'primary.example.com', 'port' => 6379],
+            ['host' => 'replica1.example.com', 'port' => 6379],
+            ['host' => 'replica2.example.com', 'port' => 6379]
+        ];
 
-    $client = new ValkeyGlide();
-    $client->connect(addresses: $addresses);
-} catch (ValkeyGlideException $e) {
-    error_log("Failed to connect to standalone server: " . $e->getMessage());
-}
-```
+        $client = new ValkeyGlide();
+        $client->connect(addresses: $addresses);
+    } catch (ValkeyGlideException $e) {
+        error_log("Failed to connect to standalone server: " . $e->getMessage());
+    }
+    ```
   </TabItem>
 </Tabs>
 
 ## Configuration Options
 
-GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface 
+GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface
 between clients while staying within the idiomatic norms of each specific programming language.
 
 Refer to our [Connection Options](/reference/connection-options) page for more on the available options for each client.

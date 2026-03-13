@@ -5,8 +5,6 @@ description: A reference page in my new Starlight docs site.
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 Valkey GLIDE supports secure TLS connections to a data store.
 
 It's important to note that TLS support in Valkey GLIDE relies on [rusttls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
@@ -87,10 +85,11 @@ client = await GlideClusterClient.create(client_config)
 You can provide custom root certificates for TLS connections. This is useful when connecting to servers with self-signed certificates or corporate certificate authorities.
 
 **Certificate Behavior:**
-- If `root_pem_cacerts` is `None` (default), the system's default certificate trust store is used
-- If `root_pem_cacerts` is an empty bytes object, an error will be returned
-- Certificates must be in PEM format as a bytes object
-- Multiple certificates can be provided by concatenating them in PEM format
+
+* If `root_pem_cacerts` is `None` (default), the system's default certificate trust store is used
+* If `root_pem_cacerts` is an empty bytes object, an error will be returned
+* Certificates must be in PEM format as a bytes object
+* Multiple certificates can be provided by concatenating them in PEM format
 
 ###### Example - Connecting with Custom Root Certificate from File
 
@@ -242,18 +241,18 @@ MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
 **Common Issues:**
 
 1. **Certificate Verification Failed**
-   - Ensure the certificate is valid and not expired
-   - Verify the hostname matches the certificate's Common Name (CN) or Subject Alternative Name (SAN)
-   - Check that the certificate chain is complete
+   * Ensure the certificate is valid and not expired
+   * Verify the hostname matches the certificate's Common Name (CN) or Subject Alternative Name (SAN)
+   * Check that the certificate chain is complete
 
 2. **Connection Refused**
-   - Verify the server is configured to accept TLS connections
-   - Ensure the port number is correct (typically 6379 for TLS)
+   * Verify the server is configured to accept TLS connections
+   * Ensure the port number is correct (typically 6379 for TLS)
 
 3. **Empty Certificate Error**
-   - Do not provide an empty bytes object for `root_pem_cacerts`
-   - Either provide valid certificates or leave it as `None` to use system certificates
+   * Do not provide an empty bytes object for `root_pem_cacerts`
+   * Either provide valid certificates or leave it as `None` to use system certificates
 
 4. **File Not Found**
-   - Verify the certificate file path is correct
-   - Ensure the file is accessible with proper read permissions
+   * Verify the certificate file path is correct
+   * Ensure the file is accessible with proper read permissions

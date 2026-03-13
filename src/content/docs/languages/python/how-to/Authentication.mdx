@@ -5,8 +5,6 @@ description: A reference page in my new Starlight docs site.
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 By default, when connecting to Valkey, Valkey GLIDEs operates in an unauthenticated mode.
 
 Valkey GLIDE also offers support for an authenticated connection mode.
@@ -60,13 +58,14 @@ client = await GlideClient.create(client_config)
 
 ## Using IAM Authentication
 
-Starting with GLIDE 2.2+ built-in support for **AWS Identity and Access Management (IAM)** authentication is available when connecting to Amazon ElastiCache and MemoryDB clusters. 
+Starting with GLIDE 2.2+ built-in support for **AWS Identity and Access Management (IAM)** authentication is available when connecting to Amazon ElastiCache and MemoryDB clusters.
 This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
 See the <a href={`/concepts/client-features/aws-iam-auth-with-glide`}>IAM Authentication with GLIDE</a> section for a detailed explanation.
 
 ### IAM Authentication with AWS SDK
-This section shows how to utilize the AWS SDK for the IAM token generation. 
+
+This section shows how to utilize the AWS SDK for the IAM token generation.
 Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html) for a detailed explanation regarding generating the IAM token.
 
 #### Token generation

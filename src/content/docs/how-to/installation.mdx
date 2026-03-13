@@ -69,7 +69,6 @@ export const mavenExample =
 </dependency>
 `
 
-
 This guide will go over how to install Valkey GLIDE for your specific system.
 
 ## System Requirements
@@ -82,14 +81,14 @@ The release of Valkey GLIDE was tested on the following platforms:
 * Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
 
 <details>
-<summary>`glibc` requirements</summary>
-Node.js requires `glibc` 2.17+. This should be the standard for GNU Linux based systems.
+  <summary>`glibc` requirements</summary>
+  Node.js requires `glibc` 2.17+. This should be the standard for GNU Linux based systems.
 
-However, to check you can use:
+  However, to check you can use:
 
-```
-ldd --version
-```
+  ```
+  ldd --version
+  ```
 </details>
 
 :::caution
@@ -101,25 +100,25 @@ Currently Alpine Linux / MUSL is NOT supported.
 * macOS 14.7 (Apple silicon/aarch\_64)
 * macOS 13.7 (x86\_64/amd64)
 
-
 ### Windows
-Windows support is currently available only for Valkey-GLIDE Java
-* Windows (x86\_64)
 
+Windows support is currently available only for Valkey-GLIDE Java
+
+* Windows (x86\_64)
 
 ## Installing and Setting Up
 
 <Tabs syncKey="progLangInExamples">
-    <TabItem label="Python">
+  <TabItem label="Python">
     **Requirements:** Python 3.9 to 3.13.
-    
+
     To get started, GLIDE Python is available on [pypi]().
 
     ```bash
     pip3 install valkey-glide
     ```
 
-    For the synchronous Python client, use 
+    For the synchronous Python client, use
 
     ```bash
     pip3 install valkey-glide-sync
@@ -128,19 +127,19 @@ Windows support is currently available only for Valkey-GLIDE Java
     :::note
     Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency frameworks.
     :::
+  </TabItem>
 
-    </TabItem>
-
-    <TabItem label="Java">
+  <TabItem label="Java">
     **Requirements:** JDK 11+
 
-    To get started, add one of the following snippet into the build file for your tool. 
+    To get started, add one of the following snippet into the build file for your tool.
 
-    :::caution[Include Classifiers]
+    :::caution\[Include Classifiers]
     You must include the classifier for your OS. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) plugin to
-    detect the correct classifier for your OS. 
-    
+    detect the correct classifier for your OS.
+
     Otherwise, the following specifiers are supported:
+
     ```
     osx-x86_64
     linux-aarch_64
@@ -149,93 +148,95 @@ Windows support is currently available only for Valkey-GLIDE Java
     linux_musl-x86_64
     windows-x86_64
     ```
+
     :::
 
     <Tabs syncKey="javaBuildTool">
-        <TabItem label="Gradle">
+      <TabItem label="Gradle">
+        Example with osdector:
 
-            Example with osdector:
-            ```groovy
-            // with osdetector
-            plugins {
-                id "com.google.osdetector" version "1.7.3"
-            }
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
-            }
-            ```
+        ```groovy
+        // with osdetector
+        plugins {
+            id "com.google.osdetector" version "1.7.3"
+        }
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+        }
+        ```
 
-            Example with osx-aarch_64:
-            ```groovy
-            // osx-aarch_64
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
-            }
-            ```
+        Example with osx-aarch\_64:
 
-            Example with osx-x86_64:
-            ```groovy
-            // osx-x86_64
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
-            }
-            ```
+        ```groovy
+        // osx-aarch_64
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-aarch_64'
+        }
+        ```
 
-            Example with linux-aarch_64:
-            ```groovy
-            // linux-aarch_64
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
-            }
-            ```
+        Example with osx-x86\_64:
 
-            Example with linux-x86_64:
-            ```groovy
-            // linux-x86_64
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
-            }
-            ```
+        ```groovy
+        // osx-x86_64
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'osx-x86_64'
+        }
+        ```
 
-            Example with windows-x86_64:
-            ```groovy
-            // windows-x86_64
-            dependencies {
-                implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'windows-x86_64'
-            }
-            ```
-        </TabItem>
+        Example with linux-aarch\_64:
 
-        <TabItem label="Maven">
-            <Code
-            lang="xml"
-            code={mavenExample}/>
-        </TabItem>
+        ```groovy
+        // linux-aarch_64
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-aarch_64'
+        }
+        ```
 
-        <TabItem label="SBT">
-            ```scala
-            // osx-aarch_64
-            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
+        Example with linux-x86\_64:
 
-            // osx-x86_64
-            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-x86_64"
+        ```groovy
+        // linux-x86_64
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'linux-x86_64'
+        }
+        ```
 
-            // linux-aarch_64
-            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-aarch_64"
+        Example with windows-x86\_64:
 
-            // linux-x86_64
-            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
+        ```groovy
+        // windows-x86_64
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: 'windows-x86_64'
+        }
+        ```
+      </TabItem>
 
-            // windows-x86_64
-            libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "windows-x86_64"
-            ```
-        </TabItem>
+      <TabItem label="Maven">
+        <Code lang="xml" code={mavenExample} />
+      </TabItem>
+
+      <TabItem label="SBT">
+        ```scala
+        // osx-aarch_64
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
+
+        // osx-x86_64
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-x86_64"
+
+        // linux-aarch_64
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-aarch_64"
+
+        // linux-x86_64
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "linux-x86_64"
+
+        // windows-x86_64
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "windows-x86_64"
+        ```
+      </TabItem>
     </Tabs>
+  </TabItem>
 
-    </TabItem>
-
-    <TabItem label="Node">
-
+  <TabItem label="Node">
     **Requirements:** Node.js 16+
 
     **For npm users on Linux it is recommended to use npm >=11**. It supports optional downloads based on libc. Yarn users should not be concerned.
@@ -249,9 +250,9 @@ Windows support is currently available only for Valkey-GLIDE Java
     ```bash
     npm install @valkey/valkey-glide
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="Go">
+  <TabItem label="Go">
     **Requirements:** Go 1.22+
 
     ```bash
@@ -259,9 +260,9 @@ Windows support is currently available only for Valkey-GLIDE Java
     go get github.com/valkey-io/valkey-glide/go/v2
 
     ```
-    </TabItem>
+  </TabItem>
 
-    <TabItem label="PHP">
+  <TabItem label="PHP">
     **Requirements:** PHP 8.1+
 
     Install using pie (recommended):
@@ -287,6 +288,5 @@ Windows support is currently available only for Valkey-GLIDE Java
     ```bash
     php -m | grep valkey_glide
     ```
-
-    </TabItem>
+  </TabItem>
 </Tabs>
