@@ -9,7 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@data/*": ["src/data/*"],
-      "@components/*": ["src/components/*"],
+      "@components/*": ["src/components/*"]
     }
   },
   "include": [".astro/types.d.ts", "**/*"],

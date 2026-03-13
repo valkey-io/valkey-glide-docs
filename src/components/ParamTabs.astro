@@ -1,71 +1,70 @@
 ---
 /**
  * ParamTabs - URL Parameter-Aware Tabs Component
- * 
+ *
  * Wraps Astro Starlight's Tabs component to enable tab selection via URL parameters.
- * 
+ *
  * Example:
- * 
+ *
  *   <ParamTabs param="lang" syncKey="key">
  *     <TabItem label="Node">Node content</TabItem>
  *     <TabItem label="Java">Java content</TabItem>
  *   </ParamTabs>
- * 
+ *
  *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
  *  Tabs with the same `syncKey` will also sync to the "Node" tab.
  */
-import { Tabs } from '@astrojs/starlight/components';
+import { Tabs } from "@astrojs/starlight/components";
 
 const props = Astro.props;
 
-const paramName = props.param || '';
+const paramName = props.param || "";
 ---
 
 {
-  paramName ? (
-    <div class="param-tabs" data-param={paramName}>
-      <Tabs {...props}>
-        <slot />
-      </Tabs>
-    </div>
-  ) : (
-    <Tabs {...props}>
-      <slot />
-    </Tabs>
-  )
+    paramName ? (
+        <div class="param-tabs" data-param={paramName}>
+            <Tabs {...props}>
+                <slot />
+            </Tabs>
+        </div>
+    ) : (
+        <Tabs {...props}>
+            <slot />
+        </Tabs>
+    )
 }
 
 <script>
-  await customElements.whenDefined('starlight-tabs');
+    await customElements.whenDefined("starlight-tabs");
 
-  const paramTabs = document.querySelectorAll('.param-tabs');
-  
-  paramTabs.forEach((wrapper) => {
-    const paramKey = (wrapper as HTMLElement).dataset.param;
-    if (!paramKey) {
-      return;
-    }
+    const paramTabs = document.querySelectorAll(".param-tabs");
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetValue = urlParams.get(paramKey);
+    paramTabs.forEach((wrapper) => {
+        const paramKey = (wrapper as HTMLElement).dataset.param;
+        if (!paramKey) {
+            return;
+        }
 
-    if (!targetValue) return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetValue = urlParams.get(paramKey);
 
-    const tabs = wrapper.querySelectorAll('[role="tab"]');
-    
-    for (const tab of tabs) {
-      const label = tab.textContent?.trim().toLowerCase();
+        if (!targetValue) return;
 
-      if (label === targetValue.toLowerCase()) {
+        const tabs = wrapper.querySelectorAll('[role="tab"]');
 
-        // Wait on the next animation frame to ensure Starlight Tabs is ready
-        requestAnimationFrame(() => {
-          const element = tab as HTMLElement;
-          element.click();
-          element.blur();
-        });
-        break; 
-      }
-    }
-  });
+        for (const tab of tabs) {
+            const label = tab.textContent?.trim().toLowerCase();
+
+            if (label === targetValue.toLowerCase()) {
+                // Wait on the next animation frame to ensure Starlight Tabs is ready
+                requestAnimationFrame(() => {
+                    const element = tab as HTMLElement;
+                    element.click();
+                    element.blur();
+                });
+                break;
+            }
+        }
+    });
 </script>

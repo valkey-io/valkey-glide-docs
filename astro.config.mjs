@@ -24,20 +24,24 @@ function collapsed(isCollapsed = false, sidebarItems) {
   });
 }
 
-const isDev = process.argv.includes('dev');
-const googleTagManagerHeader = isDev ? [] : [
-  {
-    tag: /** @type {const} */ ('script'),
-    content: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+const isDev = process.argv.includes("dev");
+const googleTagManagerHeader = isDev
+  ? []
+  : [
+      {
+        tag: /** @type {const} */ ("script"),
+        content: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
       new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
       j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
       })(window,document,'script','dataLayer','GTM-5SQ3G3KB');`,
-  },
-];
-const googleTagManagerBody = isDev ? {} : {
-  SkipLink: './src/components/SkipLinkWithGTM.astro',
-}
+      },
+    ];
+const googleTagManagerBody = isDev
+  ? {}
+  : {
+      SkipLink: "./src/components/SkipLinkWithGTM.astro",
+    };
 
 export default defineConfig({
   site: "https://glide.valkey.io",
@@ -49,7 +53,7 @@ export default defineConfig({
     starlight({
       title: "Valkey Glide",
       head: [...googleTagManagerHeader],
-      components: {...googleTagManagerBody},
+      components: { ...googleTagManagerBody },
       logo: {
         light: "./src/assets/valkey-glide-logo-with-name-light.svg",
         dark: "./src/assets/valkey-glide-logo-with-name-dark.svg",
@@ -69,12 +73,12 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: "Overview", 
-          slug: "overview"
+          label: "Overview",
+          slug: "overview",
         },
         {
           label: "What's New",
-          slug: "releases"
+          slug: "releases",
         },
         {
           label: "Learn",
@@ -91,16 +95,14 @@ export default defineConfig({
               label: "Concepts",
               collapsed: true,
               items: [
-              "concepts/architecture/rust-core-design",
-              "concepts/architecture/async-execution",
-              ]
+                "concepts/architecture/rust-core-design",
+                "concepts/architecture/async-execution",
+              ],
             },
             {
               label: "Commands API",
               collapsed: true,
-              items: [
-                "commands/valkey-string"
-              ]
+              items: ["commands/valkey-string"],
             },
             {
               label: "Core Features",
@@ -112,7 +114,7 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  slug: "tutorials/tls"
+                  slug: "tutorials/tls",
                 },
                 {
                   label: "Lua Scripting",
@@ -121,8 +123,8 @@ export default defineConfig({
                 {
                   label: "Pub/Sub",
                   autogenerate: { directory: "tutorials/pubsub" },
-                }
-              ]
+                },
+              ],
             },
           ],
         },
@@ -146,20 +148,20 @@ export default defineConfig({
                 "how-to/security/authentication",
                 "how-to/security/dynamic-authentication",
                 "how-to/security/tls",
-              {
+                {
                   label: "AWS Integrations",
                   items: [
                     {
                       label: "IAM Authentication with GLIDE",
-                      slug: "how-to/security/iam-integration"
+                      slug: "how-to/security/iam-integration",
                     },
                     {
                       label: "IAM Authentication using AWS SDK",
-                      slug: "how-to/security/iam-integration-using-aws-sdk"
+                      slug: "how-to/security/iam-integration-using-aws-sdk",
                     },
-                  ]
+                  ],
                 },
-              ]
+              ],
             },
             {
               label: "Connections",
@@ -167,8 +169,8 @@ export default defineConfig({
                 "how-to/connections/configure-lazy-connection",
                 "how-to/connections/limit-inflight-requests",
                 "how-to/connections/read-strategy",
-                "how-to/connections/timeouts-and-reconnect-strategy"
-              ]
+                "how-to/connections/timeouts-and-reconnect-strategy",
+              ],
             },
             {
               label: "Monitoring",
@@ -176,9 +178,9 @@ export default defineConfig({
                 "how-to/monitoring/logging",
                 "how-to/monitoring/open-telemetry",
                 "how-to/monitoring/tracking-resources",
-              ]
-            }
-          ]
+              ],
+            },
+          ],
         },
         {
           label: "Migration",
@@ -203,7 +205,7 @@ export default defineConfig({
                         "migration/java/jedis/jedis-compatibility-layer/supported-features",
                         "migration/java/jedis/jedis-compatibility-layer/configurations-mapping",
                         "migration/java/jedis/jedis-compatibility-layer/getting-help",
-                      ]
+                      ],
                     },
                     {
                       label: "Manual Migrations",
@@ -213,9 +215,9 @@ export default defineConfig({
                         "migration/java/jedis/manual-migrations/connection-setup",
                         "migration/java/jedis/manual-migrations/command-comparison-jedis-glide",
                         "migration/java/jedis/manual-migrations/command-comparison-chart",
-                      ]
-                    }
-                  ]
+                      ],
+                    },
+                  ],
                 },
                 {
                   label: "From Lettuce",
@@ -225,7 +227,7 @@ export default defineConfig({
                     "migration/java/lettuce/connection-setup",
                     "migration/java/lettuce/command-comparison-lettuce-glide",
                     "migration/java/lettuce/command-comparison-chart",
-                  ]
+                  ],
                 },
                 {
                   label: "From Redisson",
@@ -236,9 +238,9 @@ export default defineConfig({
                     "migration/java/redisson/key-differences-summary",
                     "migration/java/redisson/command-comparison-redisson-glide",
                     "migration/java/redisson/command-comparison-chart",
-                  ]
-                }
-              ]
+                  ],
+                },
+              ],
             },
             {
               label: "Node.js",
@@ -252,9 +254,9 @@ export default defineConfig({
                     "migration/nodejs/ioredis/connection-setup",
                     "migration/nodejs/ioredis/command-comparison-ioredis-glide",
                     "migration/nodejs/ioredis/command-comparison-chart",
-                  ]
+                  ],
                 },
-              ]
+              ],
             },
             {
               label: "Go",
@@ -270,9 +272,9 @@ export default defineConfig({
                     "migration/go/go-redis/error-handling",
                     "migration/go/go-redis/command-comparison-go-redis-glide",
                     "migration/go/go-redis/command-comparison-chart",
-                  ]
+                  ],
                 },
-              ]
+              ],
             },
             {
               label: "Python",
@@ -284,9 +286,9 @@ export default defineConfig({
                     "migration/python/redis-py",
                     "migration/python/redis-py/command-comparison-redis-py-glide",
                     "migration/python/redis-py/command-comparison-chart",
-                  ]
+                  ],
                 },
-              ]
+              ],
             },
             {
               label: "PHP",
@@ -294,12 +296,10 @@ export default defineConfig({
                 "migration/php",
                 {
                   label: "From PHPRedis",
-                  items: [
-                    "migration/php/phpredis",
-                  ]
-                }
-              ]
-            }
+                  items: ["migration/php/phpredis"],
+                },
+              ],
+            },
           ]),
         },
         {
@@ -351,7 +351,7 @@ export default defineConfig({
         },
         {
           label: "Feedback & Support",
-          slug: "feedback-and-support"
+          slug: "feedback-and-support",
         },
       ],
     }),

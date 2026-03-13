@@ -72,19 +72,19 @@ npm i @valkey/valkey-glide
 import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
 // When Valkey is in standalone mode, add address of the primary node, and any replicas you'd like to be able to read from.
 const addresses = [
-    {
-        host: "localhost",
-        port: 6379,
-    },
+  {
+    host: "localhost",
+    port: 6379,
+  },
 ];
 // Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
 const client = await GlideClient.createClient({
-    addresses: addresses,
-    // if the server uses TLS, you'll need to enable it. Otherwise, the connection attempt will time out silently.
-    // useTLS: true,
-    // It is recommended to set a timeout for your specific use case
-    requestTimeout: 500, // 500ms timeout
-    clientName: "test_standalone_client",
+  addresses: addresses,
+  // if the server uses TLS, you'll need to enable it. Otherwise, the connection attempt will time out silently.
+  // useTLS: true,
+  // It is recommended to set a timeout for your specific use case
+  requestTimeout: 500, // 500ms timeout
+  clientName: "test_standalone_client",
 });
 // The empty array signifies that there are no additional arguments.
 const pong = await client.customCommand(["PING"]);
@@ -101,19 +101,19 @@ console.log(`Get response is = ${get_response}`);
 import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
 // When Valkey is in cluster mode, add address of any nodes, and the client will find all nodes in the cluster.
 const addresses = [
-    {
-        host: "localhost",
-        port: 6379,
-    },
+  {
+    host: "localhost",
+    port: 6379,
+  },
 ];
 // Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
 const client = await GlideClusterClient.createClient({
-    addresses: addresses,
-    // if the cluster nodes use TLS, you'll need to enable it. Otherwise the connection attempt will time out silently.
-    // useTLS: true,
-    // It is recommended to set a timeout for your specific use case
-    requestTimeout: 500, // 500ms timeout
-    clientName: "test_cluster_client",
+  addresses: addresses,
+  // if the cluster nodes use TLS, you'll need to enable it. Otherwise the connection attempt will time out silently.
+  // useTLS: true,
+  // It is recommended to set a timeout for your specific use case
+  requestTimeout: 500, // 500ms timeout
+  clientName: "test_cluster_client",
 });
 // The empty array signifies that there are no additional arguments.
 const pong = await client.customCommand(["PING"], { route: "randomNode" });

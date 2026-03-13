@@ -16,6 +16,7 @@ The main script `build-docs.sh` orchestrates the generation process by executing
 Before running these scripts, ensure you have the following installed on your system:
 
 ### Requirements
+
 - **Git** - for cloning the Valkey Glide repository
 - SSH access to Valkey Glide Github repository as the scripts will clone the folder.
 - JDK, npm, pnpm Python3, and other requirements to build each clients.
@@ -26,6 +27,7 @@ Before running these scripts, ensure you have the following installed on your sy
 
 First, clone the Valkey GLIDE repository into the `doc-gen` folder.
 The scripts expects Valkey GLIDE repo to be in `doc-gen`.
+
 ```bash
 cd doc-gen
 git clone --depth 1 --branch main <valkey-glide-repo-ssh>
@@ -46,21 +48,27 @@ For developement purposes, you may not need the latest docs all the time. As suc
 You can also generate documentation for specific clients by running the individual scripts:
 
 #### Node.js Documentation
+
 ```bash
 ./build-node-docs.sh
 ```
+
 Output location: `./docs/node/`
 
 #### Java Documentation
+
 ```bash
 ./build-java-docs.sh
 ```
+
 Output location: `./docs/java/`
 
 #### Python Documentation
+
 ```bash
 ./build-python-docs.sh
 ```
+
 Output location: `./docs/python/`
 
 ## How to Use test-deploy.sh
@@ -73,6 +81,7 @@ This is because astro dev server could not serve our doc-gen files.
 ```
 
 After running the script, open your browser and navigate to:
+
 ```
 http://localhost:8000/valkey-glide-docs/
 ```

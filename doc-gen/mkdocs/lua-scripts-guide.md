@@ -84,6 +84,7 @@ if __name__ == "__main__":
 ```
 
 **Important Notes:**
+
 - All script arguments must be strings, not integers
 - Keys and arguments are automatically encoded by GLIDE
 - Scripts are cached automatically using SHA1 hashes
@@ -281,6 +282,7 @@ del script
 ```
 
 ### Killing Running Scripts
+
 A script can be safely killed if it has only performed read-only operations. However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
 
 ```python
@@ -456,6 +458,7 @@ for i in range(100):
 ```
 
 ## Best Practices
+
 ### 1. Use Scripts for Atomic Non-primitive Operations
 
 ```python
@@ -649,6 +652,7 @@ print(f"GET result: {results[1]}")   # b'script-value'
 If you're migrating from direct `EVAL` commands, here's how to adapt:
 
 ### Before (Direct EVAL)
+
 ```python
 # Old approach with custom commands (not recommended)
 result = await client.custom_command([
@@ -661,6 +665,7 @@ result = await client.custom_command([
 ```
 
 ### After (Script Class)
+
 ```python
 # New approach with Script class (recommended)
 script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
@@ -684,6 +689,7 @@ result = await client.invoke_script(
 Here are some common script patterns:
 
 ### Rate Limiting
+
 ```python
 rate_limit_script = Script("""
     local key = KEYS[1]
@@ -717,6 +723,7 @@ result = await client.invoke_script(
 ```
 
 ### Distributed Lock
+
 ```python
 acquire_lock_script = Script("""
     if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
@@ -755,6 +762,7 @@ if lock_acquired:
 ```
 
 ### Conditional Update
+
 ```python
 conditional_update_script = Script("""
     local current = redis.call('GET', KEYS[1])
