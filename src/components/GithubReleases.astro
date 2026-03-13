@@ -52,10 +52,12 @@ async function getSanitizedBody(body: string): Promise<string> {
 }
 ---
 {releaseData.map(async (release) => (
-  <h2>{release.name || release.tag_name}</h2>
-  <p>Release Date: {formatDate(release.published_at)}</p>
-  <div class="sl-markdown-content" set:html={await getSanitizedBody(release.body)} />
-  <p><b>Release: </b> <a href={release.html_url}>{release.html_url}</a></p>
+  <>
+    <h2>{release.name || release.tag_name}</h2>
+    <p>Release Date: {formatDate(release.published_at)}</p>
+    <div class="sl-markdown-content" set:html={await getSanitizedBody(release.body)} />
+    <p><b>Release: </b> <a href={release.html_url}>{release.html_url}</a></p>
+  </>
 ))}
 
 <LinkCard title="View on GitHub" description='See all releases on GitHub' href={`https://github.com/${owner}/${repo}/releases`} />
