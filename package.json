@@ -13,8 +13,11 @@
     "preview": "astro preview",
     "astro": "astro",
     "format:non-mdx": "prettier --write .",
-    "format:mdx": "remark --output --quiet \"src/content/docs/**/*.{md,mdx}\"",
+    "format:mdx": "remark --output --frail \"src/content/docs/**/*.{md,mdx}\"",
     "format": "pnpm run format:non-mdx && pnpm run format:mdx",
+    "format:check:non-mdx": "prettier --check .",
+    "format:check:mdx": "remark --frail --no-stdout \"src/content/docs/**/*.{md,mdx}\"",
+    "format:check": "pnpm run format:check:non-mdx && pnpm run format:check:mdx",
     "test-deploy": "pnpm build && ./test-deploy.sh"
   },
   "dependencies": {
