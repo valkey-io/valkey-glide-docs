@@ -154,63 +154,63 @@ windows-x86_64
       code={`
 <!-- osx-x86_64 -->
 <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <classifier>osx-x86_64</classifier>
-    <version>${javaGlideLatest}</version>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>osx-x86_64</classifier>
+<version>${javaGlideLatest}</version>
 </dependency>
 
 <!-- osx-aarch_64 -->
 <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <classifier>osx-aarch_64</classifier>
-    <version>${javaGlideLatest}</version>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>osx-aarch_64</classifier>
+<version>${javaGlideLatest}</version>
 </dependency>
 
 <!-- linux-aarch_64 -->
 <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <classifier>linux-aarch_64</classifier>
-    <version>${javaGlideLatest}</version>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>linux-aarch_64</classifier>
+<version>${javaGlideLatest}</version>
 </dependency>
 
 <!-- linux-x86_64 -->
 <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <classifier>linux-x86_64</classifier>
-    <version>${javaGlideLatest}</version>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>linux-x86_64</classifier>
+<version>${javaGlideLatest}</version>
 </dependency>
 
 <!-- windows-x86_64 -->
 <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <classifier>windows-x86_64</classifier>
-    <version>${javaGlideLatest}</version>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>windows-x86_64</classifier>
+<version>${javaGlideLatest}</version>
 </dependency>
 
 <!-- with os-maven-plugin -->
 
 <build>
-  <extensions>
-      <extension>
-          <groupId>kr.motd.maven</groupId>
-          <artifactId>os-maven-plugin</artifactId>
-      </extension>
-  </extensions>
+<extensions>
+<extension>
+  <groupId>kr.motd.maven</groupId>
+  <artifactId>os-maven-plugin</artifactId>
+</extension>
+</extensions>
 </build>
 <dependencies>
-  <dependency>
-      <groupId>io.valkey</groupId>
-      <artifactId>valkey-glide</artifactId>
-      <classifier>\${os.detected.classifier}</classifier>
-      <version>${javaGlideLatest}</version>
-  </dependency>
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>\${os.detected.classifier}</classifier>
+<version>${javaGlideLatest}</version>
+</dependency>
 </dependencies>;`
-    }
+}
     />
   </TabItem>
 
