@@ -1,0 +1,29 @@
+---
+title: Timeouts and Reconnect Strategy
+description: How to configure timeouts and reconnect strategy with the C# GLIDE client.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Timeouts and Reconnect Strategy
+
+Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the [`ClusterClientConfiguration`](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ConnectionConfiguration.cs) and [`StandaloneClientConfiguration`](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ConnectionConfiguration.cs) parameters.
+
+| Configuration setting   | Description                                                                                                                                                                                                                                                                                                                                                                                                                       | Default value       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| requestTimeout          | This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed. | 250 milliseconds    |
+| connectionRetryStrategy | The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures.                                                                                                                                                                                                                                                                                                                 | Exponential backoff |
+
+### Example: Setting Increased Request Timeout for Long-Running Commands
+
+```csharp
+using Valkey.Glide;
+using static Valkey.Glide.ConnectionConfiguration;
+
+var config = new ClusterClientConfigurationBuilder()
+    .WithAddress("address.example.com", 6379)
+    .WithRequestTimeout(TimeSpan.FromMilliseconds(500))
+    .Build();
+
+await using var client = await GlideClusterClient.CreateClient(config);
+```
