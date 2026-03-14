@@ -1,0 +1,38 @@
+---
+title: TLS
+description: How to configure TLS connections with the C# GLIDE client.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Valkey GLIDE supports secure TLS connections to a data store.
+
+It's important to note that TLS support in Valkey GLIDE relies on [rustls](https://github.com/rustls/rustls). Currently, Valkey GLIDE employs the default rustls settings with no option for customization.
+
+## Example: Connecting with TLS Mode Enabled to a Cluster Server
+
+```csharp
+using Valkey.Glide;
+using static Valkey.Glide.ConnectionConfiguration;
+
+var config = new ClusterClientConfigurationBuilder()
+    .WithAddress("address.example.com", 6379)
+    .WithTls()
+    .Build();
+
+await using var client = await GlideClusterClient.CreateClient(config);
+```
+
+## Example: Connecting with TLS Mode Enabled to a Standalone Server
+
+```csharp
+using Valkey.Glide;
+using static Valkey.Glide.ConnectionConfiguration;
+
+var config = new StandaloneClientConfigurationBuilder()
+    .WithAddress("primary.example.com", 6379)
+    .WithTls()
+    .Build();
+
+await using var client = await GlideClient.CreateClient(config);
+```
