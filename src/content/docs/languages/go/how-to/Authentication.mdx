@@ -16,7 +16,7 @@ In authenticated mode, you have the following options:
 
 To provide the necessary authentication credentials to the client, you can use the `ServerCredentials` struct.
 
-See the <a href={`/concepts/client-features/dynamic-authentication/#acl-permissions-requirements`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
+See the <a href={`/how-to/security/dynamic-authentication/`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
 ## Example: Connecting with Username and Password to a Cluster
 
@@ -57,4 +57,4 @@ func ConnectStandaloneWithCredentials() {
 Starting with GLIDE 2.2+ built-in support for **AWS Identity and Access Management (IAM)** authentication is available when connecting to Amazon ElastiCache and MemoryDB clusters.
 This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
-See the <a href={`/concepts/client-features/aws-iam-auth-with-glide`}>IAM Authentication with GLIDE</a> section for a detailed explanation.
+See the <a href={`/how-to/security/iam-integration/`}>IAM Authentication with GLIDE</a> section for a detailed explanation.
