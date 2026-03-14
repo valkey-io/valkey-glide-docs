@@ -341,6 +341,11 @@ export default defineConfig({
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
                 {
+                  label: "C#",
+                  link: "https://github.com/valkey-io/valkey-glide-csharp",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+                {
                   label: "PHP",
                   link: "https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php",
                   attrs: { style: "font-style: italic", target: "_blank" },
