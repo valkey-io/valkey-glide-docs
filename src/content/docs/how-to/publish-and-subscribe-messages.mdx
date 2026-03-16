@@ -24,10 +24,10 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
   <TabItem label="Java">
     ```java
     // Publishing is done with a separate client
-    GlideClientConfiguration publishConfig = GlideClientConfiguration.builder()
+    GlideClientConfiguration publisherConfig = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
             .build();
-    try (var publisher = GlideClient.createClient(publishConfig).get()) {
+    try (var publisher = GlideClient.createClient(publisherConfig).get()) {
         // Publish message on ch1 channel
         publisher.publish("Test message", "ch1").get();
     }
@@ -37,10 +37,10 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
   <TabItem label="Node">
     ```typescript
     // Publishing is done with a separate client
-    const publishConfig = {
+    const publisherConfig = {
         addresses: [{ host: "localhost", port: 6379 }],
     };
-    const publisher = await GlideClient.createClient(publishConfig);
+    const publisher = await GlideClient.createClient(publisherConfig);
 
     // Publish message on ch1 channel
     await publisher.publish("Test message", "ch1");
