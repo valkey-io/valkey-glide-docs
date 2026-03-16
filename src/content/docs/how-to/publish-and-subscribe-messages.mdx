@@ -51,11 +51,11 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
 
   <TabItem label="Python">
     ```py
-    publish_config = GlideClientConfiguration(
+    publisher_config = GlideClientConfiguration(
         [NodeAddress("localhost", 6379)]
     )
 
-    publisher = await GlideClient.create(publish_config)
+    publisher = await GlideClient.create(publisher_config)
 
     # Publish message on ch1 channel
     await publisher.publish("Test message", "ch1")
