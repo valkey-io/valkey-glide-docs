@@ -27,9 +27,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     GlideClientConfiguration publishConfig = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
             .build();
-    try (var publishingClient = GlideClient.createClient(publishConfig).get()) {
+    try (var publisher = GlideClient.createClient(publishConfig).get()) {
         // publish message on ch1 channel
-        publishingClient.publish("Test message", "ch1").get();
+        publisher.publish("Test message", "ch1").get();
     }
     ```
   </TabItem>
@@ -40,25 +40,25 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     const publishConfig = {
         addresses: [{ host: "localhost", port: 6379 }],
     };
-    const publishingClient = await GlideClient.createClient(publishConfig);
+    const publisher = await GlideClient.createClient(publishConfig);
 
     // publish message on ch1 channel
-    await publishingClient.publish("Test message", "ch1");
+    await publisher.publish("Test message", "ch1");
 
-    publishingClient.close();
+    publisher.close();
     ```
   </TabItem>
 
   <TabItem label="Python">
     ```py
-    publishing_config = GlideClientConfiguration(
+    publish_config = GlideClientConfiguration(
         [NodeAddress("localhost", 6379)]
     )
 
-    publishing_client = await GlideClient.create(publishing_config)
+    publisher = await GlideClient.create(publish_config)
 
     # publish message on ch1 channel
-    await publishing_client.publish("Test message", "ch1")
+    await publisher.publish("Test message", "ch1")
     ```
   </TabItem>
 
@@ -74,9 +74,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
   <TabItem label="PHP">
     ```php
     // Publisher process (separate):
-    $publishingClient = new ValkeyGlide();
-    $publishingClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
-    $publishingClient->publish('ch1', 'Test message');
+    $publisher = new ValkeyGlide();
+    $publisher->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    $publisher->publish('ch1', 'Test message');
     ```
   </TabItem>
 
@@ -90,10 +90,8 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
         .WithAddress("localhost", 6379)
         .Build();
 
-    await using var publishingClient = await GlideClient.CreateClient(publishConfig);
-
-    // Publish message on ch1 channel
-    await publishingClient.PublishAsync("ch1", "Test message");
+    await using var publisher = await GlideClient.CreateClient(publishConfig);
+    await publisher.PublishAsync("ch1", "Test message");
     ```
   </TabItem>
 </Tabs>
