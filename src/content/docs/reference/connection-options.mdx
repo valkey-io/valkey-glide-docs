@@ -21,6 +21,7 @@ The following are the configuration references for each Glide clients:
 | Python   | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClientConfiguration)  | [Reference](/languages/python/api/glide_shared/config/#glide_shared.config.GlideClusterClientConfiguration)  |
 | Go       | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClientConfiguration) | [Reference](https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2/config#NewClusterClientConfiguration) |
 | PHP      | [Reference](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php#L360-L410)  | [Reference](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L205-L270) |
+| C#       | [Reference](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ConnectionConfiguration.cs) | [Reference](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ConnectionConfiguration.cs) |
 
 ### Example
 
@@ -88,6 +89,19 @@ The following are the configuration references for each Glide clients:
         request_timeout: 1000,
         client_name: 'php_app'
     );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(1000))
+        .WithClientName("csharp_app")
+        .Build();
     ```
   </TabItem>
 </Tabs>
