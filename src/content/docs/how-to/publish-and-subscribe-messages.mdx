@@ -142,8 +142,10 @@ Glide clients can register a callback method to handle subscriptions in the clie
 
   <TabItem label="Node">
     ```typescript
-    const callback = (msg: PubSubMsg, context: any) => {
-        console.log(`Received ${msg.message}, context ${context}`);
+    // Define callback and context
+    const context = "example";
+    const callback = (msg: PubSubMsg, ctx: any) => {
+        console.log(`Received ${msg.message}, context ${ctx}`);
     };
 
     // Configure the client to invoke the callback for messages published
@@ -172,8 +174,10 @@ Glide clients can register a callback method to handle subscriptions in the clie
 
   <TabItem label="Python">
     ```py
-    def callback(msg: CoreCommands.PubSubMsg, context: Any):
-        print(f"Received {msg}, context {context}\n")
+    # Define callback and context
+    context = "example"
+    def callback(msg: CoreCommands.PubSubMsg, ctx: Any):
+        print(f"Received {msg}, context {ctx}\n")
 
     # Configure the client to invoke the callback for messages published
     # to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
@@ -201,6 +205,7 @@ Glide clients can register a callback method to handle subscriptions in the clie
 
   <TabItem label="Go">
     ```go
+    // Define callback and context
     ctx := "example"
     callback := func(message *PubSubMessage, context any) {
         fmt.Printf("Received %s, context %s\n", message.Message, context)
@@ -252,10 +257,10 @@ Glide clients can register a callback method to handle subscriptions in the clie
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    // Create a callback and context
+    // Define callback and context
     void PubSubCallback(PubSubMessage message, object? context)
         => Console.WriteLine($"Received {message.Message} on {message.Channel}, context {context}");
-    var context = "example-context";
+    var context = "example";
 
     // Configure subscriptions with callback
     var subscriptionsConfig = new StandalonePubSubsubscriptionsConfig()
