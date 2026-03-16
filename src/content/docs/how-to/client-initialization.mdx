@@ -98,6 +98,19 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
     }
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
 </Tabs>
 
 ### Request Routing
@@ -126,6 +139,10 @@ For more details on the routing of specific commands:
   <TabItem label="PHP">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L411-L419) for routing configuration.
   </TabItem>
+
+  <TabItem label="C#">
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/Route.cs) for routing configuration.
+  </TabItem>
 </Tabs>
 
 ### Response Aggregation
@@ -153,6 +170,10 @@ To learn more about response aggregation for specific commands:
 
   <TabItem label="PHP">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php) for command return types.
+  </TabItem>
+
+  <TabItem label="C#">
+    Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ClusterValue.cs) for cluster response types.
   </TabItem>
 </Tabs>
 
@@ -268,6 +289,21 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
     } catch (ValkeyGlideException $e) {
         error_log("Failed to connect to standalone server: " . $e->getMessage());
     }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithAddress("replica1.example.com", 6379)
+        .WithAddress("replica2.example.com", 6379)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
     ```
   </TabItem>
 </Tabs>
