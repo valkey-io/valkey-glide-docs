@@ -9,7 +9,7 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 
 |Configuration setting	|Description	|**Default value**	|
 |---	|---	|---	|
-|request\_timeout	|This specified time duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This time frame includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
+|request\_timeout	|This specified timeout duration, measured in milliseconds, represents the period during which the client will await the completion of a request. This includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed.	|250 milliseconds	|
 |reconnect\_strategy	|The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures	|Exponential backoff	|
 
 ## Example: Setting Increased Request Timeout for Long-Running Commands
