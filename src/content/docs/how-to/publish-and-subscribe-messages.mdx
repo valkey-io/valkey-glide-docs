@@ -79,6 +79,23 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     $publishingClient->publish('ch1', 'Test message');
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Publishing is done with a separate client
+    var publishConfig = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var publishingClient = await GlideClient.CreateClient(publishConfig);
+
+    // Publish message on ch1 channel
+    await publishingClient.PublishAsync("ch1", "Test message");
+    ```
+  </TabItem>
 </Tabs>
 
 :::note
@@ -222,6 +239,35 @@ Glide clients can register a callback method to handle subscriptions in the clie
     $listeningClient->close();
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Define a callback
+    void OnMessage(PubSubMessage message, object? context)
+    {
+        Console.WriteLine($"Received {message.Message} on {message.Channel}, context {context}");
+    }
+
+    // Configure subscriptions with callback
+    var subConfig = new StandalonePubSubSubscriptionConfig()
+        .WithChannel("ch1")
+        .WithChannel("ch2")
+        .WithPattern("chat*")
+        .WithCallback(OnMessage, "example-context");
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithPubSubSubscriptions(subConfig)
+        .Build();
+
+    await using var listeningClient = await GlideClient.CreateClient(config);
+
+    // Do some work/wait — the callback will be invoked on incoming messages
+    ```
+  </TabItem>
 </Tabs>
 
 ### Non-Callback
@@ -358,6 +404,40 @@ Alternatively, GLIDE clients also provide options to use the client's native asy
     GLIDE PHP does not support polling/async message retrieval.
     Only callback-based PubSub is available. See [example](#with-callback) above for usage.
     :::
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure subscriptions without callback
+    var subConfig = new StandalonePubSubSubscriptionConfig()
+        .WithChannel("ch1")
+        .WithChannel("ch2")
+        .WithPattern("chat*");
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithPubSubSubscriptions(subConfig)
+        .Build();
+
+    await using var listeningClient = await GlideClient.CreateClient(config);
+
+    // Poll for messages using the PubSubQueue
+    if (listeningClient.PubSubQueue is { } queue)
+    {
+        // Non-blocking: returns false if no message is available
+        if (queue.TryGetMessage(out var msg))
+        {
+            Console.WriteLine($"Received: {msg!.Message} on {msg.Channel}");
+        }
+
+        // Async: waits for the next message
+        PubSubMessage message = await queue.GetMessageAsync();
+        Console.WriteLine($"Received: {message.Message} on {message.Channel}");
+    }
+    ```
   </TabItem>
 </Tabs>
 
