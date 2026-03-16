@@ -162,6 +162,14 @@ Windows support is currently available only for Valkey-GLIDE Java
     extension=valkey_glide
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    **Requirements:** .NET 8.0+
+
+    ```bash
+    dotnet add package Valkey.Glide
+    ```
+  </TabItem>
 </ParamTabs>
 
 :::tip\[Installation Guides]
@@ -325,6 +333,33 @@ For testing against a live instance, update the `GlideClient` configurations.
     }
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Create client configuration
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    try
+    {
+        // Test the connection
+        TimeSpan latency = await client.PingAsync();
+
+        // Valkey responds with the round-trip time
+        Console.WriteLine($"Connected! Ping latency: {latency.TotalMilliseconds}ms");
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Connection failed: {e.Message}");
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 Running the above snippet should give you this response.
@@ -439,6 +474,26 @@ These options, and other interfaces, stay consistent between languages.
             'socket_timeout' => 3000
         ]
     );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Setting up connection configuration
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        // Connection timeout
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
+        // TLS configuration (if needed)
+        // .WithTls()
+        // Database selection (0-15 for Valkey)
+        .WithDataBaseId(0)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
     ```
   </TabItem>
 </Tabs>
