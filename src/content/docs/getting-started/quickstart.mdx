@@ -485,15 +485,12 @@ These options, and other interfaces, stay consistent between languages.
     // Setting up connection configuration
     var config = new StandaloneClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
-        // Connection timeout
         .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
-        // TLS configuration (if needed)
-        // .WithTls()
-        // Database selection (0-15 for Valkey)
-        .WithDataBaseId(0)
+        .WithTls(false)
+        .WithDatabaseId(0)
         .Build();
 
-    await using var client = await GlideClient.CreateClient(config);
+        await using var client = await GlideClient.CreateClient(config);
     ```
   </TabItem>
 </Tabs>
