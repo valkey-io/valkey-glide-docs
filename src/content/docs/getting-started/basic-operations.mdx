@@ -168,6 +168,27 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     }
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Set a key-value pair
+    await client.StringSetAsync("user:1000", "john_doe");
+    Console.WriteLine("✓ Key set successfully");
+
+    // Get the value
+    ValkeyValue value = await client.StringGetAsync("user:1000");
+    Console.WriteLine($"✓ Retrieved value: {value}");
+    ```
+  </TabItem>
 </Tabs>
 
 ## Making Multiple Atomic Operations
@@ -260,6 +281,24 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     echo "✓ Retrieved values: " . implode(', ', $values) . "\n";
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Set multiple keys at once
+    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    {
+        new("user:1001", "alice"),
+        new("user:1002", "bob"),
+        new("user:1003", "charlie"),
+    });
+    Console.WriteLine("✓ Multiple keys set");
+
+    // Get multiple keys at once
+    ValkeyValue[] values = await client.StringGetAsync(
+        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
+    Console.WriteLine($"✓ Retrieved values: {string.Join(", ", values)}");
+    ```
+  </TabItem>
 </Tabs>
 
 ## Removing Keys
@@ -304,6 +343,14 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
     ```php
     $deletedCount = $client->del(['user:1001', 'user:1002', 'user:1003']);
     echo "✓ Deleted {$deletedCount} keys\n";
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    long deletedCount = await client.KeyDeleteAsync(
+        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
+    Console.WriteLine($"✓ Deleted {deletedCount} keys");
     ```
   </TabItem>
 </Tabs>
