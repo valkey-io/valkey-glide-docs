@@ -352,7 +352,7 @@ For testing against a live instance, update the `GlideClient` configurations.
         TimeSpan latency = await client.PingAsync();
 
         // Valkey responds with the round-trip time
-        Console.WriteLine($"Connected! Ping latency: {latency.TotalMilliseconds}ms");
+        Console.WriteLine($"Connected! Server latency: {latency.TotalMilliseconds}ms");
     }
     catch (Exception e)
     {
