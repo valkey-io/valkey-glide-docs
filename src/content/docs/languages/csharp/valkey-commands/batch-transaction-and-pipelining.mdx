@@ -45,6 +45,7 @@ using Valkey.Glide.Pipeline;
 
 // Create an atomic batch (transaction)
 var transaction = new Batch(isAtomic: true);
+
 // Create a non-atomic batch (pipeline)
 var pipeline = new Batch(isAtomic: false);
 ```
@@ -60,6 +61,7 @@ using Valkey.Glide.Pipeline;
 
 // Create an atomic cluster batch (must use keys mapping to same slot)
 var transaction = new ClusterBatch(isAtomic: true);
+
 // Create a non-atomic cluster batch (pipeline may span multiple slots)
 var pipeline = new ClusterBatch(isAtomic: false);
 ```
@@ -98,30 +100,34 @@ Behavior:
 ```csharp
 // Cluster pipeline with raiseOnError = false
 var pipeline = new ClusterBatch(isAtomic: false);
-pipeline.StringSetAsync("key", "value");                          // OK
-pipeline.ListLeftPop("key");                                      // WRONGTYPE error (not a list)
-pipeline.KeyRename("{non-existing-key}", "{non-existing-key}:1"); // NO SUCH KEY error
-var res = await clusterClient.Exec(pipeline, raiseOnError: false);
 
-// res is an object?[] with one entry per command:
-//   res[0] = true                            (StringSet succeeded)
-//   res[1] = RequestException("WRONGTYPE")   (ListLeftPop failed)
-//   res[2] = RequestException("no such key") (KeyRename failed)
+pipeline.StringSet("key", "value");                          
+pipeline.ListLeftPop("key");                                     
+pipeline.KeyRename("{non-existing-key}", "{non-existing-key}:1");
+
+// Result contains one entry per command:
+//   result[0] = true                            (StringSet succeeded)
+//   result[1] = RequestException("WRONGTYPE")   (ListLeftPop failed - "key" is not a list)
+//   result[2] = RequestException("no such key") (KeyRename failed - keys do not exist)
+var result = await clusterClient.Exec(pipeline, raiseOnError: false);
 ```
 
 ```csharp
 // Transaction with raiseOnError = true
 var transaction = new Batch(isAtomic: true);
-transaction.StringSetAsync("key", "value");  // OK
-transaction.ListLeftPop("key");              // WRONGTYPE error (not a list)
-transaction.StringGetAsync("key");           // Would execute, but error is raised first
+
+transaction.StringSet("key", "value");
+transaction.ListLeftPop("key");
+transaction.StringGet("key");
+
 try
 {
-    var res = await client.Exec(transaction, raiseOnError: true);
+    var result = await client.Exec(transaction, raiseOnError: true);
 }
 catch (RequestException ex)
 {
-    // ex.Message: "WRONGTYPE: Operation against a key holding the wrong kind of value"
+    // RequestException("WRONGTYPE")
+    // ListLeftPop failed - "key" is not a list
 }
 ```
 
@@ -129,8 +135,8 @@ catch (RequestException ex)
 
 Configuration for **standalone** batches.
 
-| Option    | Type   | Default                                      | Description                                                                                       |
-|-----------|--------|----------------------------------------------|---------------------------------------------------------------------------------------------------|
+| Option    | Type   | Default                                       | Description                                                                                       |
+|-----------|--------|-----------------------------------------------|---------------------------------------------------------------------------------------------------|
 | `timeout` | `uint?` | Client-level request timeout (e.g., 5000 ms) | Maximum time in milliseconds to wait for the batch response. If exceeded, a timeout error is returned for the batch. |
 
 ```csharp
@@ -143,11 +149,11 @@ var options = new BatchOptions(timeout: 2000); // 2-second timeout
 
 Configuration for cluster batches.
 
-| Option          | Type                         | Default                      | Description                                                                                                           |
-|:---------------:|:----------------------------:|:----------------------------:|:---------------------------------------------------------------------------------------------------------------------:|
-| `timeout`       | `uint?`                      | Client's requestTimeout      | Maximum time in milliseconds to wait for entire cluster batch response.                                               |
+| Option          | Type                         | Default                       | Description                                                                                                           |
+|:---------------:|:----------------------------:|:-----------------------------:|:---------------------------------------------------------------------------------------------------------------------:|
+| `timeout`       | `uint?`                      | Client's requestTimeout       | Maximum time in milliseconds to wait for entire cluster batch response.                                               |
 | `retryStrategy` | `ClusterBatchRetryStrategy?` | null (defaults to no retries) | Configures retry settings for server and connection errors. Not supported if `isAtomic = true` — retry strategies only apply to non-atomic (pipeline) batches. |
-| `route`         | `SingleNodeRoute?`           | null                         | Configures single-node routing for the batch request.                                                                 |
+| `route`         | `SingleNodeRoute?`           | null                          | Configures single-node routing for the batch request.                                                                 |
 
 ### **`ClusterBatchRetryStrategy`**
 
@@ -230,15 +236,14 @@ await using var client = await GlideClient.CreateClient(config);
 
 // Create atomic batch
 var transaction = new Batch(isAtomic: true);
-transaction.StringSetAsync("account:source", "100");
-transaction.StringSetAsync("account:dest", "0");
-transaction.StringIncrementAsync("account:dest", 50);
-transaction.StringDecrementAsync("account:source", 50);
-transaction.StringGetAsync("account:source");
+transaction.StringSet("account:source", "100");
+transaction.StringSet("account:dest", "0");
+transaction.StringIncrement("account:dest", 50);
+transaction.StringDecrement("account:source", 50);
+transaction.StringGet("account:source");
 
-// Execute with raiseOnError = true
-var res = await client.Exec(transaction, raiseOnError: true);
-// Results: [true, true, 50, 50, "50"]
+// Result: [true, true, 50, 50, "50"]
+var result = await client.Exec(transaction, raiseOnError: true);
 ```
 
 **Standalone (Non-Atomic Batch)**
@@ -256,13 +261,13 @@ await using var client = await GlideClient.CreateClient(config);
 
 // Create non-atomic batch (pipeline)
 var pipeline = new Batch(isAtomic: false);
-pipeline.StringSetAsync("temp:key1", "value1");
-pipeline.StringSetAsync("temp:key2", "value2");
-pipeline.StringGetAsync("temp:key1");
-pipeline.StringGetAsync("temp:key2");
+pipeline.StringSet("temp:key1", "value1");
+pipeline.StringSet("temp:key2", "value2");
+pipeline.StringGet("temp:key1");
+pipeline.StringGet("temp:key2");
 
-var res = await client.Exec(pipeline, raiseOnError: true);
-// Results: [true, true, "value1", "value2"]
+// Result: [true, true, "value1", "value2"]
+var result = await client.Exec(pipeline, raiseOnError: true);
 ```
 
 **Cluster (Atomic Batch)**
@@ -280,13 +285,12 @@ await using var client = await GlideClusterClient.CreateClient(config);
 
 // Create atomic batch (all keys must map to same slot)
 var transaction = new ClusterBatch(isAtomic: true);
-transaction.StringSetAsync("{user:100}:visits", "1");
-transaction.StringIncrementAsync("{user:100}:visits", 5);
-transaction.StringGetAsync("{user:100}:visits");
+transaction.StringSet("{user:100}:visits", "1");
+transaction.StringIncrement("{user:100}:visits", 5);
+transaction.StringGet("{user:100}:visits");
 
-// Execute with raiseOnError = true
-var res = await client.Exec(transaction, raiseOnError: true);
-// Results: [true, 6, "6"]
+// Result: [true, 6, "6"]
+var result = await client.Exec(transaction, raiseOnError: true);
 ```
 
 <Aside type="caution">
@@ -320,16 +324,16 @@ var options = new ClusterBatchOptions(
 
 // Create pipeline spanning multiple slots
 var pipeline = new ClusterBatch(isAtomic: false);
-pipeline.StringSetAsync("page:home:views", "100");
-pipeline.StringIncrementAsync("page:home:views", 25);
-pipeline.StringGetAsync("page:home:views");
+pipeline.StringSet("page:home:views", "100");
+pipeline.StringIncrement("page:home:views", 25);
+pipeline.StringGet("page:home:views");
 pipeline.ListLeftPush("recent:logins", "user1");
 pipeline.ListLeftPush("recent:logins", "user2");
 pipeline.ListRange("recent:logins", 0, 1);
 
 // Execute with raiseOnError = false
-var res = await client.Exec(pipeline, raiseOnError: false, options);
-// Results: [true, 125, "125", 1, 2, ["user2", "user1"]]
+// result: [true, 125, "125", 1, 2, ["user2", "user1"]]
+var result = await client.Exec(pipeline, raiseOnError: false, options);
 ```
 
 ## Multi-Node Support
