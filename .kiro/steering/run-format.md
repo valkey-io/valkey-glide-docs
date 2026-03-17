@@ -20,7 +20,7 @@ Runs two formatters in sequence:
 If you only need to format a subset of files:
 
 ```bash
-pnpm run format:non-mdx   # non-content files only
+pnpm run format:non-mdx   # Non-content files only
 pnpm run format:mdx       # Markdown/MDX content only
 ```
 
