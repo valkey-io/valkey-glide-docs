@@ -20,7 +20,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the <a href={`/how-to/security/dynamic-authentication/`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
-## Example: Connecting with Username and Password to a Cluster
+## Example: Connecting with Username and Password to a Cluster Server
 
 ```typescript
 import {GlideClusterClient} from "@valkey/valkey-glide";
@@ -43,7 +43,7 @@ const client = await GlideClusterClient.createClient({
 });
 ```
 
-### Example: Connecting with Username and Password to a Standalone server
+### Example: Connecting with Username and Password to a Standalone Server
 
 ```typescript
 import {GlideClient} from "@valkey/valkey-glide";

@@ -18,7 +18,7 @@ To provide the necessary authentication credentials to the client, you can use t
 
 See the <a href={`/how-to/security/dynamic-authentication/`}>Dynamic Authentication</a> section for a detailed explanation about using ACLs with GLIDE.
 
-## Example: Connecting with Username and Password to a Cluster
+## Example: Connecting with Username and Password to a Cluster Server
 
 ```python
 from glide import (
@@ -35,7 +35,7 @@ client_config = GlideClusterClientConfiguration(addresses, credentials=credentia
 client = await GlideClusterClient.create(client_config)
 ```
 
-## Example: Connecting with Username and Password to a Standalone server
+## Example: Connecting with Username and Password to a Standalone Server
 
 ```python
 from glide import (
