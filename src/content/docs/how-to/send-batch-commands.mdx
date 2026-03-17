@@ -223,7 +223,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     atomicBatch.StringGetAsync("account:source");
 
     // Execute with raiseOnError = true
-    object?[]? results = await client.Exec(atomicBatch, raiseOnError: true, options);
+    var results = await client.Exec(atomicBatch, raiseOnError: true, options);
     Console.WriteLine($"Atomic Batch Results: {string.Join(", ", results!)}");
     // Atomic Batch Results: OK, OK, 50, 50, 50
     ```
@@ -413,7 +413,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    // Create cluster client configuration
+    // Create client configuration
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .Build();
@@ -429,7 +429,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     atomicBatch.StringIncrementAsync("user:100:visits", 5);
     atomicBatch.StringGetAsync("user:100:visits");
 
-    object?[]? results = await client.Exec(atomicBatch, raiseOnError: true, options);
+    var results = await client.Exec(atomicBatch, raiseOnError: true, options);
     Console.WriteLine($"Atomic Cluster Batch: {string.Join(", ", results!)}");
     // Atomic Cluster Batch: OK, 6, 6
     ```
@@ -622,7 +622,7 @@ Pipelining is a group of commands sent in a single request that does not guarant
     pipeline.StringGetAsync("temp:key1");
     pipeline.StringGetAsync("temp:key2");
 
-    object?[]? results = await client.Exec(pipeline, raiseOnError: false, options);
+    var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Results: {string.Join(", ", results!)}");
     // Pipeline Results: OK, OK, value1, value2
     ```
@@ -837,7 +837,7 @@ Pipelining is a group of commands sent in a single request that does not guarant
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    // Create cluster client configuration
+    // Create client configuration
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .Build();
@@ -860,9 +860,9 @@ Pipelining is a group of commands sent in a single request that does not guarant
     pipeline.ListLeftPush("recent:logins", "user2");
     pipeline.ListRange("recent:logins", 0, 1);
 
-    object?[]? results = await client.Exec(pipeline, raiseOnError: false, options);
+    var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Cluster Results: {string.Join(", ", results!)}");
-    // Pipeline Cluster Results: OK, 125, 125, 1, 2, ...
+    // Pipeline Cluster Results: OK, 125, 125, 1, 2, [user2, user1]
     ```
   </TabItem>
 </Tabs>
