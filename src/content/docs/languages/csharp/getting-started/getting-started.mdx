@@ -87,7 +87,7 @@ Console.WriteLine(pong); // Round-trip time
 using Valkey.Glide;
 using static Valkey.Glide.ConnectionConfiguration;
 
-// GlideClient example
+// Standalone example
 var standaloneConfig = new StandaloneClientConfigurationBuilder()
     .WithAddress("primary.example.com", 6379)
     .WithClientName("some client name")
@@ -101,7 +101,7 @@ var standaloneConfig = new StandaloneClientConfigurationBuilder()
 
 await using var standaloneClient = await GlideClient.CreateClient(standaloneConfig);
 
-// GlideClusterClient example
+// Cluster example
 var clusterConfig = new ClusterClientConfigurationBuilder()
     .WithAddress("address.example.com", 6379)
     .WithClientName("some client name")

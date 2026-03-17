@@ -348,10 +348,11 @@ For testing against a live instance, update the `GlideClient` configurations.
 
     try
     {
-        // Test the connection — PingAsync returns the round-trip latency
-        TimeSpan latency = await client.PingAsync();
+        // Test the connection
+        var result = await client.PingAsync();
 
-        Console.WriteLine($"Connected! Server latency: {latency.TotalMilliseconds}ms");
+        // Valkey responds with PONG
+        Console.WriteLine($"Connected! Server responded: {result}");
     }
     catch (Exception e)
     {
@@ -361,18 +362,14 @@ For testing against a live instance, update the `GlideClient` configurations.
   </TabItem>
 </Tabs>
 
-Running the above snippet should give you a response similar to:
+Running the above snippet should give you this response.
 
 ```bash
 Connected! Server responded: PONG
 ```
 
-:::note
-The C# client's `PingAsync()` returns a `TimeSpan` representing the round-trip latency rather than the string `"PONG"`.
-:::
-
 :::caution
-Always `close()` GLIDE clients to cleanup resources when the instance is no longer needed.
+Always close/dispose GLIDE clients to cleanup resources when the instance is no longer needed.
 :::
 
 ## Connection Configuration
