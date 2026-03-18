@@ -14,12 +14,12 @@ Valkey General Language Independent Driver for the Enterprise (GLIDE) is the off
 
 ## Documentation
 
-For full ducumentations, see Valkey GLIDE main [documentation site](/valkey-glide-docs/).  
-Visit Valkey GLIDE Node.js [documentations](/valkey-glide-docs/languages/nodejs) for more examples and further details on TLS, Read strategy, Timeouts and various other topics.
+For full ducumentations, see Valkey GLIDE main [documentation site](/overview).  
+Visit Valkey GLIDE Node.js [documentations](/getting-started/quickstart?lang=node) for more examples and further details on TLS, Read strategy, Timeouts and various other topics.
 
 ## Supported Engine Versions
 
-Refer to the [Supported Engine Versions table](/valkey-glide-docs/overview/#supported-engine-versions) for details.
+Refer to the [Supported Engine Versions table](/overview#supported-engine-versions) for details.
 
 # Getting Started - Node Wrapper
 
@@ -54,7 +54,7 @@ Node.js 16 or higher.
 
 ### Building & Testing
 
-Development instructions for local building & testing the package are in the [developer instructions](/valkey-glide-docs/languages/nodejs/developer/) section.
+Development instructions for local building & testing the package are in the [developer instructions](https://github.com/valkey-io/valkey-glide/blob/main/node/DEVELOPER.md) section.
 
 # Quick Start
 

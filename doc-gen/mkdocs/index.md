@@ -2,7 +2,7 @@
 
 This is the reference documentation for Valkey GLIDE Python driver API.
 
-For guides, examples, and advanced topics on Valkey GLIDE Python, visit the [documentation](/valkey-glide-docs/languages/python).
+For guides, examples, and advanced topics on Valkey GLIDE Python, visit the [documentation](/getting-started/quickstart?lang=python).
 
 # What is Valkey GLIDE
 
