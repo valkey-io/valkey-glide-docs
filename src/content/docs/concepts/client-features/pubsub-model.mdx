@@ -11,7 +11,7 @@ GLIDE is also responsible for tracking topology changes in real time, ensuring t
 
 Conceptually, the PubSub functionality can be divided into four actions: Subscribing, Publishing, Receiving, and Unsubscribing.
 
-:::note\[PHP PubSub Model]
+:::note[PHP PubSub Model]
 PHP GLIDE uses a different PubSub model based on the PHPRedis API. Instead of immutable subscription configuration during client creation, PHP uses traditional method calls like `subscribe()`, `psubscribe()`, `publish()`, and `unsubscribe()` with callback functions.
 :::
 
@@ -22,7 +22,7 @@ Subscribing in GLIDE differs from the canonical RESP3 protocol. To restore subsc
 * **Standalone mode:** The subscriptions are applied to a random node, either a primary or one of the replicas.
 * **Cluster mode:** For both Sharded and Non-sharded subscriptions, the Sharded semantics are used; the subscription is applied to the node holding the slot for the subscription's channel/pattern.
 
-:::tip\[Best Practice]
+:::tip[Best Practice]
 Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. That is, the client with subscriptions should not be the same client that issues commands. In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
 :::
 

@@ -10,14 +10,14 @@ custom logic directly on the server. This page will explain how GLIDE handles Va
 
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
 
-:::tip\[Valkey Functions]
+:::tip[Valkey Functions]
 GLIDE also support Valkey Functions, an alternative approach scripting. To see how to use Valkey Functions
 with GLIDE, see our [guide](/how-to/load-and-execute-functions/).
 
 To learn more about Valkey Functions, see the Valkey [documentations](https://valkey.io/topics/functions-intro/).
 :::
 
-:::caution\[Php Not Supported]
+:::caution[Php Not Supported]
 The GLIDE Php client does not yet support this interface.
 To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
 :::
@@ -253,7 +253,7 @@ values directly into the script would create unique scripts each time, preventin
   </TabItem>
 </Tabs>
 
-:::tip\[Large Data]
+:::tip[Large Data]
 GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
 :::
 
@@ -332,7 +332,7 @@ Scripts with identical code produce identical hashes, enabling efficient caching
   </TabItem>
 </Tabs>
 
-:::caution\[Script hashing is content-sensitive]
+:::caution[Script hashing is content-sensitive]
 Script hashes are based on the entire script content, including spaces, line breaks, and all characters.
 Ensure you load the exact same script to benefit from caching.
 :::
@@ -344,7 +344,7 @@ Scripts remain cached on the Valkey server until:
 * You explicitly flush the cache with `script_flush()`
   All of which are handled automatically by GLIDE.
 
-:::tip\[Ephemeral Scripts]
+:::tip[Ephemeral Scripts]
 Valkey scripts are not guaranteed to be persisted. It is the responsibility of the client to manage the scripts used.
 :::
 

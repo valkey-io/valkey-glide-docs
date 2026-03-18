@@ -17,7 +17,7 @@ When combined with Valkey's [pipelining](https://valkey.io/topics/pipelining/) c
 send off requests without waiting for responses using a single multiplex connection.
 This design allows GLIDE clients to deliver high asynchronous performance with only a single connection.
 
-:::tip\[Using a Single Client]
+:::tip[Using a Single Client]
 Using a single client instance (a single connection) is the best way to ensure high performance.
 However, in some scenarios, opening connections for separate tasks can be more beneficial.
 
@@ -66,7 +66,7 @@ To achieve this, each of GLIDE's clients supports the language's native asynchro
     }()
     ```
 
-    :::note\[Goroutines Compatible]
+    :::note[Goroutines Compatible]
     The GLIDE Go client is thread safe and compatible with goroutines.
     :::
   </TabItem>
@@ -77,7 +77,7 @@ To achieve this, each of GLIDE's clients supports the language's native asynchro
     $client->set('user:101', 'active');
     ```
 
-    :::note\[Synchronous API]
+    :::note[Synchronous API]
     The GLIDE PHP client uses a synchronous blocking API, similar to PHPRedis. While operations block until completion, the underlying Rust core still uses connection multiplexing for efficient communication with Valkey.
     :::
   </TabItem>

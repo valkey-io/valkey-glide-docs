@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This page contains code references for working with custom Lua scripts in Valkey GLIDE.
 
-:::caution\[PHP Not Supported]
+:::caution[PHP Not Supported]
 The GLIDE PHP client does not support the `Script` interface or `invokeScript()` method.
 To execute custom scripts, use the PHP Valkey command API methods: `eval()`, `evalsha()`, `eval_ro()`, and `evalsha_ro()`.
 :::
@@ -731,7 +731,7 @@ end
 
 ### Script Timeout Handling
 
-:::caution\[Client Timeout vs Script Termination]
+:::caution[Client Timeout vs Script Termination]
 When a client timeout occurs, the client stops waiting for a response, but the script continues running on the server. To stop a read-only script that's still executing, use `SCRIPT KILL`.
 :::
 

@@ -126,12 +126,12 @@ To handle errors, use [`server.pcall()`](https://valkey.io/topics/lua-api/#serve
 
 Keys and inputs are passed into `KEYS` and `ARGV` parameters in our scripts which we will cover in the next section.
 
-:::tip\[Keep It Light]
+:::tip[Keep It Light]
 Valkey ensures atomicity by blocking all actions on a node until Lua script finishes.
 Be sure to keep your scripts small and avoid long-running operations.
 :::
 
-:::tip\[Lua Scripting API]
+:::tip[Lua Scripting API]
 For more on the available methods for use in Lua scripts, see the documentation on [Lua API](https://valkey.io/topics/lua-api/).
 :::
 
@@ -168,7 +168,7 @@ Valkey uses declared `KEYS` to locate the correct node (in both standalone and c
 GLIDE caches `Script()` server-side using content hashes to reduce overhead. Always use ARGV for variable inputs.
 Hardcoding values generates unique hashes for otherwise identical scripts, which defeats caching and can exhaust host memory.
 
-:::caution\[Script Hashing]
+:::caution[Script Hashing]
 Script hashes are based on the entire script content. This includes spaces, line breaks, and all characters.
 Always ensure you are loading the exact same scripts.
 :::

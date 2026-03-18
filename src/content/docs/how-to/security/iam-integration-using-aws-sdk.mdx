@@ -5,7 +5,7 @@ description: Guide for integrating Valkey GLIDE with AWS IAM using AWS SDK for s
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-:::note\[Built-in IAM Support in GLIDE 2.2+]
+:::note[Built-in IAM Support in GLIDE 2.2+]
 Starting with GLIDE 2.2+, built-in support for **AWS Identity and Access Management (IAM)** authentication is available when connecting to Amazon ElastiCache and MemoryDB clusters.
 This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
@@ -79,7 +79,7 @@ Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache
   </TabItem>
 
   <TabItem label="Java">
-    :::note\[AWS SDK v2]
+    :::note[AWS SDK v2]
     This token generation example uses AWS SDK for Java v2. For token generation using AWS SDK for Java v1, see the Legacy section below.
     :::
 
@@ -225,7 +225,7 @@ Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache
   </TabItem>
 
   <TabItem label="PHP">
-    :::note\[Use Built-in IAM Support]
+    :::note[Use Built-in IAM Support]
     PHP users should use the built-in IAM authentication support available in GLIDE 2.2+.
 
     See the [IAM Authentication with GLIDE](/how-to/security/iam-integration) guide for PHP examples using the native IAM integration.
@@ -396,7 +396,7 @@ Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache
   </TabItem>
 
   <TabItem label="PHP">
-    :::note\[Use Built-in IAM Support]
+    :::note[Use Built-in IAM Support]
     PHP users should use the built-in IAM authentication support available in GLIDE 2.2+.
 
     See the [IAM Authentication with GLIDE](/how-to/security/iam-integration) guide for PHP examples using the native IAM integration.
@@ -585,7 +585,7 @@ This capability is required when performing IAM authentication with AWS SDK beca
 
 To efficiently manage this, GLIDE provides the ability to update short-lived tokens using `updateConnectionPassword` (or `update_connection_password`) to periodically refresh the token without immediately re-authenticating. It also offers the option for immediate re-authentication using `immediateAuth` (or `immediate_auth`), which forces re-authentication and extends the connection for another 12 hours.
 
-:::tip\[Best Practices]
+:::tip[Best Practices]
 
 * Refresh the IAM token every 10 minutes using `updateConnectionPassword` without triggering immediate re-authentication.
 * Perform an immediate re-authentication every 10 hours to prolong the connection for another 12-hour window.
