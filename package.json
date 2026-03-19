@@ -13,7 +13,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "format:non-mdx": "prettier --write .",
-    "format:mdx": "remark --output \"src/content/docs/**/*.{md,mdx}\"; bash scripts/fix-remark-escapes.sh",
+    "format:mdx": "remark \"src/content/docs/**/*.{md,mdx}\" --output --frail && bash scripts/fix-remark-escapes.sh",
     "format": "pnpm run format:non-mdx && pnpm run format:mdx",
     "format:check:non-mdx": "prettier --check .",
     "format:check:mdx": "remark --no-stdout \"src/content/docs/**/*.{md,mdx}\"",
