@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightLinksValidator from "starlight-links-validator";
 import mermaid from "astro-mermaid";
 
 function collapsed(isCollapsed = false, sidebarItems) {
@@ -59,6 +60,17 @@ export default defineConfig({
         dark: "./src/assets/valkey-glide-logo-with-name-dark.svg",
         replacesTitle: true,
       },
+      plugins: [
+        starlightLinksValidator({
+          errorOnRelativeLinks: true,
+          errorOnInvalidHashes: true,
+          exclude: [
+            "/languages/java/api/**",
+            "/languages/nodejs/api/**",
+            "/languages/python/api/**",
+          ],
+        }),
+      ],
       customCss: ["./src/styles/custom.css"],
       favicon: "/favicon-32x32.png",
       editLink: {

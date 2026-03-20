@@ -1,15 +1,7 @@
 # lychee.toml
 
 max_retries = 3             
-retry_wait_time = 10       
-
-# Exclude specific files from being scanned
-exclude_path = [
-    "dist/404.html",
-    "dist/languages/java/api",
-    "dist/languages/nodejs/api",
-    "dist/languages/python/api",
-]
+retry_wait_time = 10 
 
 # Exclude specific URLs/links (RegEx)
 exclude = [
