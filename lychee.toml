@@ -1,7 +1,15 @@
 # lychee.toml
 
 max_retries = 3             
-retry_wait_time = 10 
+retry_wait_time = 10       
+
+# Exclude specific files from being scanned (regex)
+exclude_path = [
+    ".*404\\.html",
+    ".*/languages/java/api",
+    ".*/languages/nodejs/api",
+    ".*/languages/python/api",
+]
 
 # Exclude specific URLs/links (RegEx)
 exclude = [
@@ -17,11 +25,11 @@ exclude = [
     # are still checked by Lychee.
     'https://glide.valkey.io/.*',
 
-    # API Documentation exclusions
-    '.*/languages/java/api',
-    '.*/languages/nodejs/api',
-    '.*/languages/python/api',
+    # API docs are deployed separately and don't exist in the build output
+    '.*/languages/java/api.*',
+    '.*/languages/nodejs/api.*',
+    '.*/languages/python/api.*',
 
-    # Specific file link exclusion
-    './dist/404.html'
+    # Dev server URLs that appear in build output
+    'http://localhost.*',
 ]
