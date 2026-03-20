@@ -34,24 +34,9 @@ jobs:
         run: pnpm format:check
 
       - name: Check internal
-        if: always()
         run: pnpm build
 
-      - name: Verify sitemap exists
-        if: always()
-        run: ls -la dist/sitemap* && cat dist/sitemap-index.xml
-
-      - name: Verify broken test link exists in build
-        run: grep -q 'this-repo-does-not-exist' dist/overview/index.html
-
-      - name: Check external links (manual)
+      - name: Check external links
         run: |
           sudo snap install lychee
           lychee dist --root-dir dist
-
-      - name: Check external links
-        if: always()
-        uses: lycheeverse/lychee-action@v2.7.0
-        with:
-          args: ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist
-          fail: true
