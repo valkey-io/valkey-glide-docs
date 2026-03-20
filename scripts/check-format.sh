@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Run remark check and filter out known false positives (MDX bracket syntax warnings).
 # Fails if any real warnings remain.
@@ -19,17 +19,27 @@ if [ $remark_exit -ne 0 ]; then
   exit 1
 fi
 
-filtered=$(echo "$output" | grep -v 'for a link or escaped opening bracket' | sed '$d')
-
-echo "$filtered"
-
-warnings=$(echo "$filtered" | grep 'warning')
-
-if [ -n "$warnings" ]; then
+# If the last line ends with ": no issues found" then there's no warnings reported.
+if echo "$output" | tail -1 | grep -q ': no issues found$'; then
+  echo "$output"
   echo ""
-  echo "❌ FAIL: Remark lint found warnings"
+  echo "✅ PASS: No warnings found"
+  exit 0
+fi
+
+ansi_color_stripped=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g')
+
+# Filtering out expected warnings related to MDX bracket syntax in Starlight's aside shorthand syntax.
+filtered=$(echo "$ansi_color_stripped" | grep -v '^[0-9]*:[0-9]*-[0-9]*:[0-9]* *warning Unexpected reference to undefined definition, expected corresponding definition (`.*`) for a link or escaped opening bracket (`\\\\*\[`) for regular text *no-undefined-references *remark-lint$')
+
+unexpected_warnings=$(echo "$filtered" | grep '^[0-9]*:[0-9]*-[0-9]*:[0-9]* *warning .*')
+
+if [ -n "$unexpected_warnings" ]; then
+  echo "$output"
+  echo ""
+  echo "❌ FAIL: Remark lint found unexpected warnings"
   exit 1
 fi
 
 echo ""
-echo "✅ PASS: No remark lint warnings found"
+echo "✅ PASS: No unexpected warnings found"
