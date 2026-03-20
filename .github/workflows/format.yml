@@ -37,6 +37,10 @@ jobs:
         if: always()
         run: pnpm build
 
+      - name: Verify sitemap exists
+        if: always()
+        run: ls -la dist/sitemap* && cat dist/sitemap-index.xml
+
       - name: Check external links
         if: always()
         uses: lycheeverse/lychee-action@v2.7.0
