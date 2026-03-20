@@ -1,34 +1,66 @@
 # Valkey GLIDE Documentation
 
-This repository host the source for the Valkey GLIDE documentation [site](https://glide.valkey.io).
+Welcome to the Valkey GLIDE documentation repository. The site is available at https://glide.valkey.io.
 
-## Technology
+> **Note:** This repository contains only the documentation of Valkey GLIDE. 
+> To contribute to the Valkey GLIDE client library itself, visit [valkey-glide](https://github.com/valkey-io/valkey-glide/).
+
+## Overview
 
 The site is built with [Starlight](https://starlight.astro.build/), an Astro framework for building static documentation sites.
 
-The framework provides out-of-the-box features for building documentations like components, site search, navigation, and integrations with MDX files. It also leverages Astro's features like island architecture to build dynamic components.
+The framework provides out-of-the-box features for building documentations like UI components, site search, navigation, all using a Markdown like syntax. It also leverages Astro's features to build custom dynamic components. 
+This aims to allow contributors to quickly add or edit existing pages using familiar Markdown syntax, while having the options to extend the site with modern Javascript components.
 
 ## Getting Started
 
-First clone the repo and install the required tools.
+You'll need the following installed:
+
+- [Node.js](https://nodejs.org/) v20+
+- [pnpm](https://pnpm.io/) v10+ (`brew install pnpm` or `npm install -g pnpm`)
+
+Then clone the repo and install dependencies:
 
 ```bash
 git clone git@github.com:valkey-io/valkey-glide-docs.git
-
-# npm is fine too.
-brew install pnpm
-```
-
-Then install the dependencies
-
-```bash
 cd ./valkey-glide-docs
 pnpm install
 ```
 
 For development, run `pnpm dev`. It will spin up a hot-loading development server to serve the documentation pages.
 
-### Link Checker
+### Making Changes
+
+Page content lives under `src/content/docs/` as `.mdx` files.
+
+- **Edit a page:** Modify the corresponding `.mdx` file.
+- **Add a new page:** Create a new `.mdx` file under `src/content/docs/`. Every file requires frontmatter:
+
+  ```mdx
+  ---
+  title: Your page title
+  ---
+
+  Your content follows...
+  ```
+
+- **Update the sidebar navigation:** Add your new page to `astro.config.mjs`.
+
+For a guidelines on how to write new articles, take a look at our [Contributing](/CONTRIBUTING.md) page.
+
+## Commit Requirements
+
+All commits must include the `--signoff` flag to certify the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
+
+## Making a Pull Request
+
+Before making a pull request, make sure that you have a corresponding issue created either in this repo or the main Valkey GLIDE source repo. Each pull request should be related to an issue, unless it is a minor fix. 
+
+When making a pull request, please make sure to follow our template and complete the required sections.
+
+Importantly, ensure that your PR ha
+
+## Link Checker
 
 We use [lychee](https://github.com/lycheeverse/lychee) to check for broken links. Configuration rules (exclusions) are defined in our `lychee.toml`.
 
@@ -44,20 +76,18 @@ Then to run the build and check links:
 pnpm build:check-links
 ```
 
-## Making Content Changes
+## Code Style & Formatting
 
-In general, page contents are located under `src/content/docs`.
+The project uses [Prettier](https://prettier.io/) for general formatting and [remark](https://github.com/remarkjs/remark) for MDX/Markdown linting. Configuration is in `.prettierrc.json` and `.remarkrc.json`.
 
-- For simple content update, change the appropriate `.mdx` files in the folder structure.
-- To create a new page, add a new `.mdx` file under `src/content/docs`.
-- To change the navigation sidebar, update `astro.config.mjs`.
+Run formatting before submitting a PR:
 
-Note that all `.mdx` files requires a frontmatter.
-
+```bash
+pnpm format
 ```
----
-title: Your page title.
----
 
-Your contents follows ...
+To check formatting without modifying files:
+
+```bash
+pnpm format:check
 ```
