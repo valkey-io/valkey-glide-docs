@@ -29,7 +29,7 @@ fi
 
 ansi_color_stripped=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g')
 
-# Filtering out expected warnings related to MDX bracket syntax in Starlight's aside shorthand syntax.
+# Filtering out expected warnings; These warnings are bracket syntax warnings as a result of Starlight's aside shorthand syntax.
 filtered=$(echo "$ansi_color_stripped" | grep -v '^[0-9]*:[0-9]*-[0-9]*:[0-9]* *warning Unexpected reference to undefined definition, expected corresponding definition (`.*`) for a link or escaped opening bracket (`\\\\*\[`) for regular text *no-undefined-references *remark-lint$')
 
 unexpected_warnings=$(echo "$filtered" | grep '^[0-9]*:[0-9]*-[0-9]*:[0-9]* *warning .*')
