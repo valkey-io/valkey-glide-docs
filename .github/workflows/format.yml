@@ -33,9 +33,11 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
-      - name: Check internal
+      - name: Build (will also check for internal links)
         run: pnpm build
 
+        # We installing lychee manually because we could not get the
+        # lychee gh action to work correctly.
       - name: Check external links
         run: |
           sudo snap install lychee

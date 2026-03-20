@@ -8,3 +8,5 @@ find src/content/docs -type f \( -name '*.md' -o -name '*.mdx' \) -print0 | \
     -e 's/^\( *\)\* \\\[ ]/\1* [ ]/g' \
     -e 's/^\( *\)- \\\[ ]/\1- [ ]/g'
 find src/content/docs -type f -name '*.bak' -delete
+
+echo "✅ Finished fixing remark escapes."
