@@ -36,9 +36,8 @@ jobs:
       - name: Build (will also check for internal links)
         run: pnpm build
 
-        # We installing lychee manually because we could not get the
-        # lychee gh action to work correctly.
       - name: Check external links
-        run: |
-          sudo snap install lychee
-          lychee dist --root-dir dist
+        uses: lycheeverse/lychee-action@v2.3.0
+        with:
+          args: "dist --root-dir dist"
+          debug: true
