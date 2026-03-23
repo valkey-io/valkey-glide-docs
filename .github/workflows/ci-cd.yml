@@ -162,9 +162,8 @@ jobs:
         with:
           package-manager: pnpm@10
 
-      - name: Check Links
-        uses: lycheeverse/lychee-action@v2.7.0
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2.8.0
         with:
-          args: ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist
-          # Fail the pipeline if broken links are found
-          fail: true
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true

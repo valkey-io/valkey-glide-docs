@@ -37,7 +37,7 @@ jobs:
         run: pnpm build
 
       - name: Check external links
-        uses: lycheeverse/lychee-action@v2.3.0
+        uses: lycheeverse/lychee-action@v2.8.0
         with:
           args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
           debug: true

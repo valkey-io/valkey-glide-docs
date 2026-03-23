@@ -3,21 +3,10 @@
 max_retries = 3             
 timeout = 30
 
-# Exclude specific files from being scanned (regex)
-exclude_path = [
-    ".*404\\.html",
-    ".*/languages/java/api",
-    ".*/languages/nodejs/api",
-    ".*/languages/python/api",
-]
-
 # Exclude specific URLs/links (RegEx)
 exclude = [
     # GitHub edit links
     'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
-
-    # The repo is private so it will cause error.
-    'https://github.com/valkey-io/valkey-glide-docs',
 
     # When adding a new page, it would not be live when Lychee checks the links. 
     # It will return error, blocking both PR and deployment workflows.
@@ -29,7 +18,4 @@ exclude = [
     '.*/languages/java/api.*',
     '.*/languages/nodejs/api.*',
     '.*/languages/python/api.*',
-
-    # Dev server URLs that appear in build output
-    'http://localhost.*',
 ]
