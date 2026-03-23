@@ -1,7 +1,7 @@
 # lychee.toml
 
 max_retries = 3             
-retry_wait_time = 10       
+timeout = 30
 
 # Exclude specific files from being scanned (regex)
 exclude_path = [
