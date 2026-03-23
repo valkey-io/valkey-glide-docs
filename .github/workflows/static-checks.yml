@@ -39,5 +39,5 @@ jobs:
       - name: Check external links
         uses: lycheeverse/lychee-action@v2.3.0
         with:
-          args: "dist --root-dir dist"
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
           debug: true
