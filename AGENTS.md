@@ -10,7 +10,7 @@ Run the build command to compile the project.
 pnpm build
 ```
 
-### What It Does
+### What It Does {#what-build-does}
 
 1. Runs `astro build`, which compiles the entire Astro site into the `dist/` directory.
 
@@ -22,7 +22,7 @@ Run the link check command to verify all links in the project are valid.
 pnpm check:links
 ```
 
-### What It Does
+### What It Does {#what-check-links-does}
 
 1. Runs [Lychee](https://lychee.cli.rs/) against the built `dist/` directory to validate all links.
 2. Uses `lychee.toml` for configuration, which excludes certain paths (e.g., API docs, 404 page) and URL patterns (e.g., GitHub edit links, the live site URL) from checking.
@@ -36,7 +36,7 @@ Run the format command to apply consistent code style across the project.
 pnpm format
 ```
 
-### What It Does
+### What It Does {#what-format-does}
 
 1. Runs Prettier on all non-MDX files (JSON, JS, TS, Astro, etc.) - `pnpm format:non-mdx`.
 2. Runs Remark on all `.md` and `.mdx` files under `src/content/docs/` - `pnpm format:mdx`.
