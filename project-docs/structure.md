@@ -335,7 +335,7 @@ _All code examples in the shared documentation will remain language specific wit
 **Global Navigation:**
 
 - Persistent language selector (stored in localStorage)
-- "See this in \[Language]" links in shared content
+- "See this in [Language]" links in shared content
 - Breadcrumb navigation showing shared → specific context
 - Quick-switch between equivalent pages
 

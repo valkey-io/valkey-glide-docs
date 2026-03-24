@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM)** authentication when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
-:::caution\[GLIDE 2.2+ Required]
+:::caution[GLIDE 2.2+ Required]
 For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-using-aws-sdk) on how to configure IAM authentication using the AWS SDK.
 :::
 
@@ -15,8 +15,8 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 
 * GLIDE automatically generates **temporary authentication tokens** that are valid for **15 minutes**
 * GLIDE **refreshes the token every 5 minutes**. On failure, it retries with **exponential backoff** and keeps using the **last valid token** until refreshed
-* Each connection remains valid for up to **12 hours** before requiring **re-authentication**
-* GLIDE handles all **token management** and **refresh operations** behind the scenes
+* Each connection remains valid for up to **12 hours**. GLIDE automatically handles the **re-authentication** 
+* GLIDE handles all **token management**, **refresh operations** and **re-authentication** behind the scenes
 * Manual option available via **`refreshIamToken`**
 
 ## Required Setup
