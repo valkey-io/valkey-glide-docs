@@ -348,7 +348,7 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     // Configure the client to invoke the callback for messages published
     // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
-    StandalonesubscriptionsConfiguration subscriptionsConfig = StandalonesubscriptionsConfiguration.builder()
+    StandaloneSubscriptionConfiguration subscriptionsConfig = StandaloneSubscriptionConfiguration.builder()
                 .subscription(EXACT, "ch1")
                 .subscription(EXACT, "ch2")
                 .subscription(PATTERN, "chat*")
@@ -391,7 +391,7 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
         pubsubSubscriptions: subscriptionsConfig
     };
 
-    const listeningClient = await GlideClient.createClient(subscriptionsConfig);
+    const listeningClient = await GlideClient.createClient(config);
 
     // Do some work/wait - the callback will be invoked on incoming messages
 
@@ -440,7 +440,7 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     // Configure the client to invoke the callback for messages published
     // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
-    subscriptionsConfig := NewStandalonesubscriptionsConfig().
+    subscriptionsConfig := NewStandaloneSubscriptionConfig().
         WithSubscription(ExactChannelMode, "ch1").
         WithSubscription(ExactChannelMode, "ch2").
         WithSubscription(PatternChannelMode, "chat*").
@@ -449,7 +449,7 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
     // Create a client with subscriptions
     listeningClient, _ := NewGlideClient(NewGlideClientConfiguration().
         WithAddress(&NodeAddress{}).
-        WithsubscriptionsConfig(subscriptionsConfig))
+        WithSubscriptionConfig(subscriptionsConfig))
 
     // Do some work/wait - the callback will be invoked on incoming messages
     ```
@@ -769,7 +769,7 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 
     // Configure the client to receive messages published to 'ch1'
     // and 'ch2' and to channels matched by 'chat*' glob pattern.
-    subscriptionsConfig := NewStandalonesubscriptionsConfig().
+    subscriptionsConfig := NewStandaloneSubscriptionConfig().
         WithSubscription(ExactChannelMode, "ch1").
         WithSubscription(ExactChannelMode, "ch2").
         WithSubscription(PatternChannelMode, "chat*")
@@ -777,7 +777,7 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
     // Create a client with subscriptions
     listeningClient, _ := NewGlideClient(NewGlideClientConfiguration().
         WithAddress(&NodeAddress{}).
-        WithsubscriptionsConfig(subscriptionsConfig))
+        WithSubscriptionConfig(subscriptionsConfig))
     defer listeningClient.Close()
 
     // Get the message queue from the client
