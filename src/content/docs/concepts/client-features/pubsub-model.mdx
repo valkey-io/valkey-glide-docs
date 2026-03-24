@@ -112,6 +112,7 @@ In the case of async/polling, incoming messages will be buffered in an unbounded
 The user should ensure timely extraction of incoming messages to avoid straining the memory subsystem.
 
 Messages have three kinds based on how they were subscribed:
+
 * **Message** — from exact channel subscriptions (`SUBSCRIBE`)
 * **PMessage** — from pattern subscriptions (`PSUBSCRIBE`)
 * **SMessage** — from sharded channel subscriptions (`SSUBSCRIBE`, cluster only)

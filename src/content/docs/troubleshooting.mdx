@@ -51,6 +51,14 @@ To enable logging, you will need to set the logger from within your application.
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    Logger.SetLoggerConfig(Level.Debug);
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     use Glide\Logger;
@@ -153,6 +161,21 @@ To fix this, increase the **connection timeout** which is separate from the **re
 
     cfg.WithAdvancedConfiguration(advCfg)
     client, err := glide.NewGlideClusterClient(cfg)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithRequestTimeout(TimeSpan.FromSeconds(5))
+        .WithConnectionTimeout(TimeSpan.FromSeconds(10))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
     ```
   </TabItem>
 

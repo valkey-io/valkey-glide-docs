@@ -79,6 +79,19 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    // Old approach with custom commands (not recommended)
+    var result = await client.CustomCommandAsync(new GlideString[] {
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",
+        "mykey",
+        "myvalue"
+    });
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // PHP uses eval() method directly
@@ -154,6 +167,20 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
             Args([]string{"myvalue"}).
             Build(),
     )
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // New approach with Script class (recommended)
+    using Valkey.Glide;
+
+    using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
+    var result = await client.ScriptInvokeAsync(
+        script,
+        new ScriptOptions()
+            .WithKeys("mykey")
+            .WithArgs("myvalue"));
     ```
   </TabItem>
 
@@ -274,6 +301,23 @@ end
             Args([]string{"10", "60"}).  // 10 requests per 60 seconds
             Build(),
     )
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Read script from file
+    var rateLimit = File.ReadAllText("rate_limit.lua");
+    using var rateLimitScript = new Script(rateLimit);
+
+    // Usage
+    var result = await client.ScriptInvokeAsync(
+        rateLimitScript,
+        new ScriptOptions()
+            .WithKeys("rate_limit:user:123")
+            .WithArgs("10", "60")); // 10 requests per 60 seconds
     ```
   </TabItem>
 
@@ -460,6 +504,43 @@ end
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Read scripts from files
+    var acquireLock = File.ReadAllText("acquire_lock.lua");
+    var releaseLock = File.ReadAllText("release_lock.lua");
+
+    using var acquireLockScript = new Script(acquireLock);
+    using var releaseLockScript = new Script(releaseLock);
+
+    // Acquire lock
+    var lockAcquired = await client.ScriptInvokeAsync(
+        acquireLockScript,
+        new ScriptOptions()
+            .WithKeys("lock:resource:123")
+            .WithArgs("unique_token", "30")); // 30 second expiration
+
+    if ((bool)lockAcquired)
+    {
+        try
+        {
+            // Do work while holding lock
+        }
+        finally
+        {
+            // Release lock
+            await client.ScriptInvokeAsync(
+                releaseLockScript,
+                new ScriptOptions()
+                    .WithKeys("lock:resource:123")
+                    .WithArgs("unique_token"));
+        }
+    }
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Read scripts from files
@@ -585,6 +666,23 @@ end
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Read script from file
+    var conditionalUpdate = File.ReadAllText("conditional_update.lua");
+    using var conditionalUpdateScript = new Script(conditionalUpdate);
+
+    // Update only if current value matches expected
+    var updated = await client.ScriptInvokeAsync(
+        conditionalUpdateScript,
+        new ScriptOptions()
+            .WithKeys("user:123:status")
+            .WithArgs("pending", "active")); // Change from "pending" to "active"
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Read script from file
@@ -702,6 +800,33 @@ end
         } else {
             fmt.Printf("Script error: %v\n", err)
         }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using Valkey.Glide.Errors;
+
+    // Handle script execution errors
+    using var script = new Script("return redis.call('INCR', 'not_a_number')");
+
+    try
+    {
+        var result = await client.ScriptInvokeAsync(script);
+    }
+    catch (RequestException e)
+    {
+        var message = e.Message;
+        if (message.Contains("WRONGTYPE") || message.Contains("not an integer"))
+            Console.WriteLine("Type error in script");
+        else if (message.Contains("syntax error", StringComparison.OrdinalIgnoreCase))
+            Console.WriteLine("Lua syntax error in script");
+        else if (message.Contains("unknown command", StringComparison.OrdinalIgnoreCase))
+            Console.WriteLine("Invalid Redis command in script");
+        else
+            Console.WriteLine($"Script error: {message}");
     }
     ```
   </TabItem>
@@ -897,6 +1022,49 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using Valkey.Glide.Errors;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure client timeout for long-running scripts
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithRequestTimeout(TimeSpan.FromSeconds(30)) // 30 seconds for long scripts
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Handle long-running scripts
+    using var longScript = new Script(@"
+        local start = redis.call('TIME')[1]
+        while redis.call('TIME')[1] - start < 25 do
+            redis.call('GET', 'dummy_key')  -- Read-only operation
+        end
+        return 'Done'
+    ");
+
+    try
+    {
+        var result = await client.ScriptInvokeAsync(longScript);
+        Console.WriteLine($"Script completed: {result}");
+    }
+    catch (RequestException e)
+    {
+        var message = e.Message;
+        if (message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("Client timeout - script may still be running on server!");
+            Console.WriteLine("Consider increasing request timeout in client configuration");
+        }
+        else if (message.Contains("Script killed"))
+            Console.WriteLine("Script was killed by server (only possible for read-only scripts)");
+        else
+            Console.WriteLine($"Script error: {message}");
+    }
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     **Requirements:** PHP 8.1+
 
@@ -1008,6 +1176,26 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     )
     if err != nil && strings.Contains(err.Error(), "CROSSSLOT") {
         fmt.Println("Keys are in different slots")
+        // Use hash tags or route explicitly
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using Valkey.Glide.Errors;
+
+    // Handle cluster routing errors
+    try
+    {
+        var result = await clusterClient.ScriptInvokeAsync(script,
+            new ScriptOptions()
+                .WithKeys("key1", "key2")); // Might be in different slots
+    }
+    catch (RequestException e) when (e.Message.Contains("CROSSSLOT"))
+    {
+        Console.WriteLine("Keys are in different slots");
         // Use hash tags or route explicitly
     }
     ```
@@ -1154,6 +1342,33 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Good: Conditional update with multiple data structures
+    using var conditionalUpdate = new Script(@"
+        local current = redis.call('GET', KEYS[1])
+        local threshold = tonumber(ARGV[2])
+
+        if current and tonumber(current) >= threshold then
+            redis.call('SET', KEYS[1], ARGV[1])
+            redis.call('LPUSH', KEYS[2], ARGV[1])
+            redis.call('EXPIRE', KEYS[2], ARGV[3])
+            return 1
+        else
+            return 0
+        end
+    ");
+
+    var result = await client.ScriptInvokeAsync(
+        conditionalUpdate,
+        new ScriptOptions()
+            .WithKeys("user:score", "user:history")
+            .WithArgs("100", "50", "86400")); // new score, threshold, expire in 1 day
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Good: Conditional update with multiple data structures
@@ -1249,6 +1464,22 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Good: Proper nil handling
+    using var safeScript = new Script(@"
+        local val = redis.call('GET', KEYS[1])
+        if val then
+            return val
+        else
+            return 'default_value'
+        end
+    ");
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Good: Proper nil handling
@@ -1314,6 +1545,18 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         local value = redis.call('GET', KEYS[1])
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     `)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Good: Return appropriate types
+    using var typedScript = new Script(@"
+        local value = redis.call('GET', KEYS[1])
+        return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+    ");
     ```
   </TabItem>
 
@@ -1416,6 +1659,26 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             Args([]string{"John", "john@example.com"}).
             Build(),
     )
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Good: Use hash tags for related keys
+    using var clusterScript = new Script(@"
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('SET', KEYS[2], ARGV[2])
+        return 'OK'
+    ");
+
+    // Execute with hash tags
+    await clusterClient.ScriptInvokeAsync(
+        clusterScript,
+        new ScriptOptions()
+            .WithKeys("user:{123}:name", "user:{123}:email")
+            .WithArgs("John", "john@example.com"));
     ```
   </TabItem>
 

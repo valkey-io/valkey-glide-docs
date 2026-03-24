@@ -279,6 +279,62 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
     </details>
   </TabItem>
 
+  <TabItem label="C#">
+    <Steps>
+      1. Define the lua script
+
+         ```csharp
+         var lua = @"
+         server.call('SET', KEYS[1], ARGV[1])
+         return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+         ";
+         ```
+
+      2. Create a `Script` object with the Lua code
+
+         ```csharp
+         using var script = new Script(lua);
+         ```
+
+      3. Execute script with keys and arguments
+
+         ```csharp
+         var options = new ScriptOptions()
+             .WithKeys("username")
+             .WithArgs("John Doe");
+         var result = await client.ScriptInvokeAsync(script, options);
+         Console.WriteLine(result); // username: John Doe
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```csharp
+      using Valkey.Glide;
+      using static Valkey.Glide.ConnectionConfiguration;
+
+      var config = new StandaloneClientConfigurationBuilder()
+          .WithAddress("localhost", 6379)
+          .Build();
+      await using var client = await GlideClient.CreateClient(config);
+
+      var lua = @"
+      server.call('SET', KEYS[1], ARGV[1])
+      return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+      ";
+
+      using var script = new Script(lua);
+
+      var options = new ScriptOptions()
+          .WithKeys("username")
+          .WithArgs("John Doe");
+      var result = await client.ScriptInvokeAsync(script, options);
+      Console.WriteLine(result);
+      ```
+    </details>
+  </TabItem>
+
   <TabItem label="PHP">
     :::caution
     The `invokeScript` command is not supported in Valkey GLIDE PHP.

@@ -194,6 +194,63 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     Go strings are immutable sequences of bytes and can safely represent binary data.
   </TabItem>
 
+  <TabItem label="C#">
+    C# uses `GlideString` as a wrapper type that can hold either a UTF-8 `string` or raw `byte[]` data.
+
+    #### Usage
+
+    Commands accept `string` arguments directly. For binary data, use `GlideString`:
+
+    ```csharp
+    using Valkey.Glide;
+
+    // Using regular strings
+    await client.SetAsync("key", "value");
+    string? result = await client.GetAsync("key"); // Returns "value"
+
+    // Using GlideString for binary data
+    var binaryKey = new byte[] { 0x01, 0x02, 0x03, 0xFE }.ToGlideString();
+    var binaryValue = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF }.ToGlideString();
+    ```
+
+    #### Type Conversion
+
+    `GlideString` supports implicit conversions from `string` and `byte[]`, so you can assign them directly:
+
+    ```csharp
+    GlideString gs1 = "hello";                          // implicit string → GlideString
+    GlideString gs2 = new byte[] { 0x01, 0x02, 0x03 };  // implicit byte[] → GlideString
+    ```
+
+    To convert back from `GlideString`:
+
+    ```csharp
+    string text = gs1;   // implicit to GlideString → string
+    byte[] bytes = gs2;  // implicit to GlideString → byte[]
+    ```
+
+    It also provides `.ToGlideString()` extension methods for common types:
+
+    | Source type  | Example                     |
+    |--------------|-----------------------------|
+    | `string`     | `"text".ToGlideString()`    |
+    | `byte[]`     | `byteArray.ToGlideString()` |
+    | `int`        | `42.ToGlideString()`        |
+    | `long`       | `100L.ToGlideString()`      |
+    | `double`     | `3.14.ToGlideString()`      |
+    | `bool`       | `true.ToGlideString()`      |
+    | `ValkeyKey`  | `key.ToGlideString()`       |
+    | `ValkeyValue`| `value.ToGlideString()`     |
+
+    Batch conversions are also available:
+
+    ```csharp
+    GlideString[] arr = new[] { "a", "b" }.ToGlideStrings();   // string[] → GlideString[]
+    string[] back = arr.ToStrings();                           // GlideString[] → string[]
+    byte[][] raw = arr.ToByteArrays();                         // GlideString[] → byte[][]
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     PHP uses native `string` type for all Valkey string operations. PHP strings are binary-safe and can contain arbitrary bytes.
 

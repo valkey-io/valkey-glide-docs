@@ -78,6 +78,19 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    var cursor = ClusterScanCursor.InitialCursor();
+    
+    var allKeys = new List<ValkeyKey>();
+    while (!cursor.IsFinished)
+    {
+        (cursor, var keys) = await client.ScanAsync(cursor);
+        allKeys.AddRange(keys);
+    }
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     $cursor = new ClusterScanCursor();
@@ -183,6 +196,30 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    {
+        new("my_key1", "value1"),
+        new("my_key2", "value2"),
+        new("not_my_key", "value3"),
+        new("something_else", "value4")
+    });
+
+    var cursor = ClusterScanCursor.InitialCursor();
+    var scanOptions = new ScanOptions { MatchPattern = "*key*" };
+    
+    var matchedKeys = new List<ValkeyKey>();
+    while (!cursor.IsFinished)
+    {
+        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
+        matchedKeys.AddRange(keys);
+    }
+    
+    // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
@@ -215,7 +252,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, count=1)
-    # Returns around `count` amount of keys: [b'my_key1']
+    # Returns around `count` keys: [b'my_key1']
     ```
   </TabItem>
 
@@ -252,7 +289,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         [cursor, keys] = await client.scan(cursor, { count: 10 });
         allKeys.push(...keys);
     }
-    // Returns around `count` amount of keys per iteration
+    // Returns around `count` keys per iteration
     ```
   </TabItem>
 
@@ -278,7 +315,30 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         allKeys = append(allKeys, result.Keys...)
         cursor = result.Cursor
     }
-    // Returns around `count` amount of keys per iteration
+    // Returns around `count` keys per iteration
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    {
+        new("my_key1", "value1"),
+        new("my_key2", "value2"),
+        new("not_my_key", "value3"),
+        new("something_else", "value4")
+    });
+
+    var cursor = ClusterScanCursor.InitialCursor();
+    var scanOptions = new ScanOptions { Count = 10 };
+    
+    var allKeys = new List<ValkeyKey>();
+    while (!cursor.IsFinished)
+    {
+        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
+        allKeys.AddRange(keys);
+    }
+    
+    // Returns around `count` keys per iteration
     ```
   </TabItem>
 
@@ -288,7 +348,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     $cursor = new ClusterScanCursor();
     $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
-    // Returns around `count` amount of keys: ['my_key1']
+    // Returns around `count` keys: ['my_key1']
     ```
   </TabItem>
 </Tabs>
@@ -375,6 +435,29 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         stringKeys = append(stringKeys, result.Keys...)
         cursor = result.Cursor
     }
+    // Output: ["key1", "key2", "key3"]
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    {
+        new("key1", "value1"),
+        new("key2", "value2"),
+        new("key3", "value3")
+    });
+    await client.SetAddAsync("this_is_a_set", new ValkeyValue[] { "value4" });
+
+    var cursor = ClusterScanCursor.InitialCursor();
+    var scanOptions = new ScanOptions { Type = ValkeyType.String };
+    
+    var stringKeys = new List<ValkeyKey>();
+    while (!cursor.IsFinished)
+    {
+        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
+        stringKeys.AddRange(keys);
+    }
+    
     // Output: ["key1", "key2", "key3"]
     ```
   </TabItem>

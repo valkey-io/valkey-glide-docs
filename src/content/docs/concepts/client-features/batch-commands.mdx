@@ -84,6 +84,17 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     pipeline := pipeline.NewStandaloneBatch(false)
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide.Pipeline;
+
+    // Create an atomic batch (transaction)
+    var transaction = new Batch(true);
+    // Create a non-atomic batch (pipeline)
+    var pipeline = new Batch(false);
+    ```
+  </TabItem>
 </Tabs>
 
 :::note
@@ -137,6 +148,17 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     transaction := pipeline.NewClusterBatch(true)
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
     pipeline := pipeline.NewClusterBatch(false)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide.Pipeline;
+
+    // Create an atomic cluster batch (must use keys mapping to same slot)
+    var transaction = new ClusterBatch(true);
+    // Create a non-atomic cluster batch (pipeline may span multiple slots)
+    var pipeline = new ClusterBatch(false);
     ```
   </TabItem>
 </Tabs>
@@ -210,6 +232,18 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
     // Cluster Mode
     Exec(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool) ([]any, error)
     ExecWithOptions(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool, options pipeline.ClusterBatchOptions) ([]any, error)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Standalone Mode
+    Task<object?[]> Exec(Batch batch, bool raiseOnError);
+    Task<object?[]> Exec(Batch batch, bool raiseOnError, BatchOptions options);
+
+    // Cluster Mode
+    Task<object?[]> Exec(ClusterBatch batch, bool raiseOnError);
+    Task<object?[]> Exec(ClusterBatch batch, bool raiseOnError, ClusterBatchOptions options);
     ```
   </TabItem>
 </Tabs>
@@ -341,6 +375,42 @@ Behavior:
     // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Cluster pipeline with raiseOnError = false
+    using Valkey.Glide.Pipeline;
+
+    var batch = new ClusterBatch(false);
+    batch.Set(key, "hello");
+    batch.LPop(key);
+    batch.Del(key);
+    batch.Rename(key, key2);
+
+    var result = await client.Exec(batch, raiseOnError: false);
+    Console.WriteLine($"Result is: [{string.Join(", ", result)}]");
+    // Output: Result is: [OK, RequestException: WRONGTYPE..., 1, RequestException: no such key]
+    ```
+
+    ```csharp
+    // Transaction with raiseOnError = true
+    var batch = new Batch(true);
+    batch.Set(key, "hello");
+    batch.LPop(key);
+    batch.Del(key);
+    batch.Rename(key, key2);
+
+    try
+    {
+        await client.Exec(batch, raiseOnError: true);
+    }
+    catch (RequestException e)
+    {
+        Console.WriteLine($"Batch execution aborted: {e.Message}");
+    }
+    // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
+    ```
+  </TabItem>
 </Tabs>
 
 ### BatchOptions
@@ -386,6 +456,15 @@ Configuration for **standalone** batches.
 
     options := pipeline.NewStandaloneBatchOptions().
     	WithTimeout(2 * time.Second)  // 2-second timeout
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide.Pipeline;
+    using static Valkey.Glide.Pipeline.Options;
+
+    var options = new BatchOptions(timeout: TimeSpan.FromSeconds(2)); // 2 seconds
     ```
   </TabItem>
 </Tabs>
@@ -446,6 +525,17 @@ Defines retry behavior (only for **non-atomic** cluster batches).
     retryStrategy := pipeline.NewClusterBatchRetryStrategy().
     	WithRetryConnectionError(true).
     	WithRetryServerError(true)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using static Valkey.Glide.Pipeline.Options;
+
+    var retryStrategy = new ClusterBatchRetryStrategy(
+        retryServerError: true,
+        retryConnectionError: true
+    );
     ```
   </TabItem>
 </Tabs>
@@ -511,6 +601,22 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
     		WithRetryServerError(true)
     	).
     	WithRoute(config.RandomRoute)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.Pipeline.Options;
+
+    var options = new ClusterBatchOptions(
+        timeout: TimeSpan.FromSeconds(1),
+        retryStrategy: new ClusterBatchRetryStrategy(
+            retryServerError: true,
+            retryConnectionError: false
+        ),
+        route: new Route.RandomRoute()
+    );
     ```
   </TabItem>
 </Tabs>

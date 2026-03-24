@@ -109,6 +109,29 @@ GLIDE does not export data directly to third-party services—instead, it sends 
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    OpenTelemetry.Init(
+        OpenTelemetryConfig.CreateBuilder()
+            .WithTraces(
+                TracesConfig.CreateBuilder()
+                    .WithEndpoint("http://localhost:4318/v1/traces")
+                    .WithSamplePercentage(10) // Optional, defaults to 1. Can also be changed at runtime via SetSamplePercentage().
+                    .Build()
+            )
+            .WithMetrics(
+                MetricsConfig.CreateBuilder()
+                    .WithEndpoint("http://localhost:4318/v1/metrics")
+                    .Build()
+            )
+            .WithFlushInterval(TimeSpan.FromSeconds(1)) // Optional, defaults to 5000 ms
+            .Build()
+    );
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     use ValkeyGlide\OpenTelemetry\{OpenTelemetryConfig, TracesConfig, MetricsConfig};
