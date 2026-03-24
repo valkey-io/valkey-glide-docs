@@ -147,6 +147,34 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithAuthentication("your-username", "your-password-or-token")
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
+        .WithClientName("my-client")
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+
+    // Update password with lazy re-authentication.
+    await client.UpdateConnectionPassword("your-new-password");
+    
+    // Update password with immediate re-authentication.
+    await client.UpdateConnectionPassword("your-new-password", immediateAuth: true);
+
+    // Clear password with lazy re-authentication.
+    await client.ClearConnectionPasswordAsync();
+
+    // Clear password with immediate re-authentication.
+    await client.ClearConnectionPasswordAsync(immediateAuth: true);
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Define your server credentials
@@ -228,6 +256,15 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithAuthentication("your-password-or-token")
+        .Build();
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     $credentials = [
@@ -250,7 +287,3 @@ GLIDE's dynamic password update feature supports integration with cloud services
 * **[Google Cloud Memorystore](https://cloud.google.com/memorystore/docs/cluster/about-iam-auth?hl=en)**: Offers IAM authentication with ephemeral tokens requiring periodic renewal.
 
 In all these scenarios, frequently updating passwords or tokens is essential to maintain secure connections and handle fail-overs effectively.
-
-## Best Practices
-
-See the [security best practices for credentials](/how-to/security/best-practices/#credentials).
