@@ -84,6 +84,20 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     $addresses = [
@@ -173,6 +187,22 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithAddress("replica1.example.com", 6379)
+        .WithAddress("replica2.example.com", 6379)
+        .WithTls()
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     $addresses = [
@@ -189,20 +219,16 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
 ## Advanced TLS Configurations
 
-The `TlsAdvancedConfiguration` object provides advanced TLS settings for both standalone and cluster clients.
+### Insecure TLS Mode
+
+Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
+
+:::caution
+Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
+:::
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    ### Insecure TLS Mode
-
-    Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
-
-    :::caution
-    Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
-    :::
-
-    #### Example
-
     ```python
     from glide import (
         GlideClusterClient,
@@ -227,11 +253,58 @@ The `TlsAdvancedConfiguration` object provides advanced TLS settings for both st
 
     client = await GlideClusterClient.create(client_config)
     ```
+  </TabItem>
 
-    ### Custom Root Certificates
+  <TabItem label="Java">
+    :::note[Coming soon]
+    Insecure TLS configuration documentation for Java is coming soon.
+    :::
+  </TabItem>
 
-    You can provide custom root certificates for TLS connections. This is useful when connecting to servers with self-signed certificates or corporate certificate authorities.
+  <TabItem label="Node">
+    :::note[Coming soon]
+    Insecure TLS configuration documentation for Node.js is coming soon.
+    :::
+  </TabItem>
 
+  <TabItem label="Go">
+    :::note[Coming soon]
+    Insecure TLS configuration documentation for Go is coming soon.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithInsecureTls()
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+### Custom Root Certificates
+
+You can provide custom root certificates for TLS connections. This is useful when connecting to servers with self-signed certificates or corporate certificate authorities.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
     **Certificate Behavior:**
 
     * If `root_pem_cacerts` is `None` (default), the system's default certificate trust store is used
@@ -339,114 +412,91 @@ The `TlsAdvancedConfiguration` object provides advanced TLS settings for both st
 
     client = await GlideClusterClient.create(client_config)
     ```
-
-    #### Example - Combining Insecure Mode with Custom Certificates
-
-    ```python
-    from glide import (
-        GlideClient,
-        GlideClientConfiguration,
-        NodeAddress,
-        TlsAdvancedConfiguration,
-        AdvancedGlideClientConfiguration
-    )
-
-    with open("/path/to/ca-cert.pem", "rb") as f:
-        root_cert = f.read()
-
-    tls_config = TlsAdvancedConfiguration(
-        use_insecure_tls=True,
-        root_pem_cacerts=root_cert
-    )
-
-    advanced_config = AdvancedGlideClientConfiguration(
-        tls_config=tls_config
-    )
-
-    addresses = [NodeAddress(host="primary.example.com", port=6379)]
-    client_config = GlideClientConfiguration(
-        addresses,
-        use_tls=True,
-        advanced_configuration=advanced_config
-    )
-
-    client = await GlideClient.create(client_config)
-    ```
-
-    ### TLS Certificate Format
-
-    All certificates must be in PEM format. A PEM certificate looks like this:
-
-    ```
-    -----BEGIN CERTIFICATE-----
-    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-    ...
-    -----END CERTIFICATE-----
-    ```
-
-    ### Troubleshooting TLS Connections
-
-    **Common Issues:**
-
-    1. **Certificate Verification Failed**
-       * Ensure the certificate is valid and not expired
-       * Verify the hostname matches the certificate's Common Name (CN) or Subject Alternative Name (SAN)
-       * Check that the certificate chain is complete
-
-    2. **Connection Refused**
-       * Verify the server is configured to accept TLS connections
-       * Ensure the port number is correct (typically 6379 for TLS)
-
-    3. **Empty Certificate Error**
-       * Do not provide an empty bytes object for `root_pem_cacerts`
-       * Either provide valid certificates or leave it as `None` to use system certificates
-
-    4. **File Not Found**
-       * Verify the certificate file path is correct
-       * Ensure the file is accessible with proper read permissions
   </TabItem>
 
   <TabItem label="Java">
     :::note[Coming soon]
-    Advanced TLS configuration documentation for Java is coming soon.
+    Custom root certificate documentation for Java is coming soon.
     :::
   </TabItem>
 
   <TabItem label="Node">
     :::note[Coming soon]
-    Advanced TLS configuration documentation for Node.js is coming soon.
+    Custom root certificate documentation for Node.js is coming soon.
     :::
   </TabItem>
 
   <TabItem label="Go">
     :::note[Coming soon]
-    Advanced TLS configuration documentation for Go is coming soon.
+    Custom root certificate documentation for Go is coming soon.
     :::
   </TabItem>
 
-  <TabItem label="PHP">
-    ### Insecure TLS Mode
+  <TabItem label="C#">
+    **Certificate Behavior:**
 
-    Insecure TLS mode bypasses certificate verification. This is useful when connecting to servers using self-signed certificates or when DNS entries don't match certificate hostnames.
+    * If no trusted certificates are provided, the system's default certificate trust store is used.
+    * Empty certificate data will throw an `ArgumentException`.
+    * Certificate data exceeding 10 MB will throw an `ArgumentException`
+    * Multiple certificates can be added by calling `WithTrustedCertificate` multiple times
 
-    :::caution
-    Insecure mode is only for development and testing environments. **It is strongly discouraged in production** as it introduces security risks such as man-in-the-middle attacks.
-    :::
+    #### Example - Connecting with Custom Root Certificate from File
 
-    #### Example
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
 
-    ```php
-    $client = new ValkeyGlideCluster(
-        addresses: [['host' => 'address.example.com', 'port' => 6379]],
-        use_tls: true,
-        advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
-    );
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithTrustedCertificate("/path/to/ca-cert.pem")
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
     ```
 
-    ### Custom Root Certificates
+    #### Example - Using Certificate as Bytes
 
-    You can provide custom root certificates for TLS connections using the `advanced_config` parameter.
+    ```csharp
+    using System.Text;
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
 
+    byte[] certData = Encoding.UTF8.GetBytes(
+        "-----BEGIN CERTIFICATE-----\n"
+        + "MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+        + "...\n"
+        + "-----END CERTIFICATE-----\n"
+    );
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithTls()
+        .WithTrustedCertificate(certData)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+
+    #### Example - Multiple Certificates (Certificate Chain)
+
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithTrustedCertificate("/path/to/cert1.pem")
+        .WithTrustedCertificate("/path/to/cert2.pem")
+        .WithTrustedCertificate("/path/to/cert3.pem")
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
     #### Example - Connecting with Custom Root Certificate
 
     ```php
@@ -479,3 +529,35 @@ The `TlsAdvancedConfiguration` object provides advanced TLS settings for both st
     ```
   </TabItem>
 </Tabs>
+
+### TLS Certificate Format
+
+All certificates must be in PEM format. A PEM certificate looks like this:
+
+```
+-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+...
+-----END CERTIFICATE-----
+```
+
+### Troubleshooting TLS Connections
+
+**Common Issues:**
+
+1. **Certificate Verification Failed**
+   * Ensure the certificate is valid and not expired
+   * Verify the hostname matches the certificate's Common Name (CN) or Subject Alternative Name (SAN)
+   * Check that the certificate chain is complete
+
+2. **Connection Refused**
+   * Verify the server is configured to accept TLS connections
+   * Ensure the port number is correct (typically 6379 for TLS)
+
+3. **Empty Certificate Error**
+   * Do not provide empty certificate data
+   * Either provide valid certificates or use the default system certificates
+
+4. **File Not Found**
+   * Verify the certificate file path is correct
+   * Ensure the file is accessible with proper read permissions
