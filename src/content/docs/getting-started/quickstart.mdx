@@ -82,14 +82,16 @@ Windows support is currently available only for Valkey-GLIDE Java
 
     Add the following to your build tool. Make sure to specify your classifier for your OS.
 
+    :::tip[Uber Jar Available]
+    Starting from version 2.3.0, Java users can choose between the uber jar (no classifier needed) or a platform-specific jar with a classifier.
+    The uber jar bundles all platform binaries, so it is larger in size. If you prefer a smaller dependency, use the classifier-based jar for your specific OS.
+    :::
+
     <Tabs>
       <TabItem label="Gradle">
         ```groovy
-        plugins {
-            id "com.google.osdetector" version "1.7.3"
-        }
         dependencies {
-            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+'
         }
         ```
       </TabItem>

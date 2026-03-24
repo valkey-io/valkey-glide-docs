@@ -28,6 +28,13 @@ export const mavenExample =
     </dependency>
 </dependencies>
 
+<!-- uber jar -->
+<dependency>
+    <groupId>io.valkey</groupId>
+    <artifactId>valkey-glide</artifactId>
+    <version>${javaGlideLatest}</version>
+</dependency>
+
 <!-- osx-x86_64 -->
 <dependency>
     <groupId>io.valkey</groupId>
@@ -134,14 +141,18 @@ Windows support is currently available only for Valkey-GLIDE Java
 
     To get started, add one of the following snippet into the build file for your tool.
 
-    :::caution[Include Classifiers]
-    You must include the classifier for your OS. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) plugin to
-    detect the correct classifier for your OS.
+    :::tip[Uber Jar vs Classifier]
+    Starting from version 2.3.0, you can use the uber jar (no classifier needed), which bundles all platform binaries.
+    The uber jar is larger in size. If you prefer a smaller dependency, use a platform-specific classifier for your OS.
 
-    Otherwise, the following specifiers are supported:
+    For versions lower than 2.3.0. It is recommended to use the [OS Detector](https://github.com/google/osdetector-gradle-plugin) plugin to
+    automatically detect the correct classifier.
+
+    The following classifiers are supported:
 
     ```
     osx-x86_64
+    osx-aarch_64
     linux-aarch_64
     linux-x86_64
     linux_musl-aarch_64
@@ -162,6 +173,15 @@ Windows support is currently available only for Valkey-GLIDE Java
         }
         dependencies {
             implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+        }
+        ```
+
+        Example with uber jar:
+
+        ```groovy
+        // with osdetector
+        dependencies {
+            implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+'
         }
         ```
 
@@ -217,6 +237,10 @@ Windows support is currently available only for Valkey-GLIDE Java
 
       <TabItem label="SBT">
         ```scala
+
+        // uber jar
+        libraryDependencies += "io.valkey" % "valkey-glide" % "2.+"
+
         // osx-aarch_64
         libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
 
