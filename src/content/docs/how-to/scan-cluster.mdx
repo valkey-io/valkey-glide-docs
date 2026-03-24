@@ -81,7 +81,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   <TabItem label="C#">
     ```csharp
     var cursor = ClusterScanCursor.InitialCursor();
-    
+
     var allKeys = new List<ValkeyKey>();
     while (!cursor.IsFinished)
     {
@@ -208,14 +208,14 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     var cursor = ClusterScanCursor.InitialCursor();
     var scanOptions = new ScanOptions { MatchPattern = "*key*" };
-    
+
     var matchedKeys = new List<ValkeyKey>();
     while (!cursor.IsFinished)
     {
         (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
         matchedKeys.AddRange(keys);
     }
-    
+
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
   </TabItem>
@@ -318,6 +318,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     // Returns around `count` keys per iteration
     ```
   </TabItem>
+
   <TabItem label="C#">
     ```csharp
     await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
@@ -330,14 +331,14 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     var cursor = ClusterScanCursor.InitialCursor();
     var scanOptions = new ScanOptions { Count = 10 };
-    
+
     var allKeys = new List<ValkeyKey>();
     while (!cursor.IsFinished)
     {
         (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
         allKeys.AddRange(keys);
     }
-    
+
     // Returns around `count` keys per iteration
     ```
   </TabItem>
@@ -438,6 +439,7 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     // Output: ["key1", "key2", "key3"]
     ```
   </TabItem>
+
   <TabItem label="C#">
     ```csharp
     await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
@@ -450,14 +452,14 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     var cursor = ClusterScanCursor.InitialCursor();
     var scanOptions = new ScanOptions { Type = ValkeyType.String };
-    
+
     var stringKeys = new List<ValkeyKey>();
     while (!cursor.IsFinished)
     {
         (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
         stringKeys.AddRange(keys);
     }
-    
+
     // Output: ["key1", "key2", "key3"]
     ```
   </TabItem>
