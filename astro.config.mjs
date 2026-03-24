@@ -148,6 +148,7 @@ export default defineConfig({
                 "how-to/security/authentication",
                 "how-to/security/dynamic-authentication",
                 "how-to/security/tls",
+                "how-to/security/best-practices",
                 {
                   label: "AWS Integrations",
                   items: [

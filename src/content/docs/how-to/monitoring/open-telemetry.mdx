@@ -211,10 +211,4 @@ If using `file://` as the endpoint:
 
 ## Security
 
-When enabling OpenTelemetry, keep the following practices in mind to protect your telemetry pipeline and the data it carries.
-
-* **Use TLS for collector endpoints** — GLIDE supports `https://` and `grpc://` endpoints. Always use encrypted transport in production to prevent telemetry data from being intercepted in transit.
-* **Protect file exporter output** — When using the `file://` exporter for local development, telemetry files may contain command-level details. Restrict file permissions and avoid writing to shared or world-readable directories.
-* **Minimize sampling in production** — Trace data captures the full command lifecycle, including command names and timing. Use a low sample percentage (1–5%) to limit the volume of potentially sensitive operational data collected.
-* **Restrict collector network access** — Your OpenTelemetry Collector endpoint should not be publicly accessible. Place it behind a firewall or within a private network segment, and restrict access to only the application hosts that need to emit telemetry.
-* **Review exported data** — GLIDE traces include command names, latency measurements, and error status. While GLIDE does not include command arguments or key values in trace spans, always review what your collector pipeline forwards to third-party backends. Collector [processors](https://opentelemetry.io/docs/collector/transforming-telemetry/) can drop or redact attributes before export.
+See [security best practices for OpenTelemetry](/how-to/security/best-practices/#opentelemetry).
