@@ -1008,7 +1008,7 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // Unsubscribe from specific exact channels (lazy)
     await client.UnsubscribeLazyAsync(new[] { "alerts" });
 
-    // Unsubscribe from all exact channels
+    // Unsubscribe from all exact channels (blocking)
     await client.UnsubscribeAsync(PubSub.AllChannels, blockFor);
 
     // Unsubscribe from specific patterns (blocking)
@@ -1017,7 +1017,7 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // Unsubscribe from specific patterns (lazy)
     await client.PUnsubscribeLazyAsync(new[] { "log*" });
 
-    // Unsubscribe from all patterns
+    // Unsubscribe from all patterns (blocking)
     await client.PUnsubscribeAsync(PubSub.AllPatterns, blockFor);
 
     // Sharded unsubscribe (cluster mode only)
