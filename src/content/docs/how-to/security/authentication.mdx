@@ -226,3 +226,11 @@ Both standalone and cluster mode support authentication authentication with user
     ```
   </TabItem>
 </Tabs>
+
+## Best Practices
+
+* **Regular Credential Rotation** — Frequently update passwords and tokens using [Dynamic Authentication](/how-to/security/dynamic-authentication/) to maintain secure connections.
+* **Automate Token Refreshing** — Implement automated mechanisms to refresh IAM tokens before they expire. See [IAM Integration](/how-to/security/iam-integration/) for cloud-specific patterns.
+* **Secure Credential Storage** — Store passwords and tokens securely using environment variables or secret management tools. Never hardcode credentials in source code or configuration files checked into version control.
+* **Principle of Least Privilege** — Use [ACLs](/reference/access-control/) to assign minimal necessary permissions to users. Avoid using the default user for application connections.
+
