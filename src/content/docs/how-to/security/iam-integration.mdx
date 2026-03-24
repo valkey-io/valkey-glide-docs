@@ -34,6 +34,31 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 ## Examples
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure IAM authentication
+    // Automatically regenerates the token every 5 mins (default: 300 seconds)
+    var iamConfig = new IamAuthConfig(
+        clusterName: "clustername",
+        serviceType: ServiceType.ElastiCache, // or ServiceType.MemoryDB
+        region: "us-east-1"
+        // refreshIntervalSeconds: 100 // Optional, default is 300 seconds
+    );
+
+    var credentials = new ServerCredentials("username", iamConfig);
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("endpoint.example.com", 6379)
+        .WithCredentials(credentials)
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
   <TabItem label="Python">
     ```python
     from glide import (

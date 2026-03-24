@@ -16,7 +16,7 @@ ensuring that all logs remain synchronized and preserve the order of events.
 Currently, GLIDE does not support direct integration with third-party logging libraries. While there is interest in adding this capability,
 it has not yet been prioritized. If this functionality is critical for your use case, we encourage you to submit a feature request to the Valkey GLIDE [GitHub](https://github.com/valkey-io/valkey-glide).
 
-The logger is currently available for Python, Node, Java, and PHP clients.
+The logger is currently available for C#, Python, Node, Java, and PHP clients.
 
 ## Examples
 
@@ -67,6 +67,30 @@ The following examples show how to configure the logger in GLIDE clients.
 
     await client.ping();
 
+    ```
+
+    Refer to the API [reference]() for the full logger interface.
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure the log level and the output file name.
+    Logger.SetLoggerConfig(Level.Debug, "./glide_logs");
+
+    // Logging example
+    Logger.Log(Level.Info, "LoggingExample", "Hello World!");
+
+    // Standalone client configuration
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    // Create a standalone client
+    await using var client = await GlideClient.CreateClient(config);
+    await client.PingAsync();
     ```
 
     Refer to the API [reference]() for the full logger interface.

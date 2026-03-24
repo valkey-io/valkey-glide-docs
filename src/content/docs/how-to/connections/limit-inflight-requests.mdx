@@ -11,13 +11,16 @@ To ensure system stability and prevent out-of-memory (OOM) errors, Valkey GLIDE 
 Inflight requests limit can be configured through the general client configurations.
 
 <Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
-    ```python
-    # Limit to 1000 inflight requests per connection
-    cluster_config = GlideClusterClientConfiguration(
-        inflight_requests_limit=1000,
-    )
-    ```
+  <TabItem label="C#">
+    :::note
+    This feature is not yet available in GLIDE C#.
+    :::
+  </TabItem>
+
+  <TabItem label="Go">
+    :::note
+    This feature is not yet available in GLIDE Go.
+    :::
   </TabItem>
 
   <TabItem label="Java">
@@ -38,16 +41,19 @@ Inflight requests limit can be configured through the general client configurati
     ```
   </TabItem>
 
-  <TabItem label="Go">
-    :::note
-    This feature is not yet available in GLIDE Go.
-    :::
-  </TabItem>
-
   <TabItem label="PHP">
     :::note
     PHP GLIDE uses a synchronous blocking API, which means only one request can be in-flight at a time. Therefore, the inflight request limit configuration is not applicable and is not exposed in the PHP API.
     :::
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    # Limit to 1000 inflight requests per connection
+    cluster_config = GlideClusterClientConfiguration(
+        inflight_requests_limit=1000,
+    )
+    ```
   </TabItem>
 </Tabs>
 

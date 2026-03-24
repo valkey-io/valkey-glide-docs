@@ -132,6 +132,35 @@ Lazy connection can be configured through the client configuration object.
     ```
   </TabItem>
 
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Standalone client with lazy connect
+    var standaloneConfig = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithLazyConnect(true)
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
+        .Build();
+
+    await using var standaloneClient = await GlideClient.CreateClient(standaloneConfig);
+
+    // Cluster client with lazy connect
+    var clusterConfig = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 7000)
+        .WithAddress("localhost", 7001)
+        .WithLazyConnect(true)
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
+        .Build();
+
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    // No connection established yet - this will trigger the connection
+    var result = await standaloneClient.PingAsync();
+    ```
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Standalone client with lazy connect

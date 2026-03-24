@@ -148,7 +148,7 @@ export default defineConfig({
                 "how-to/security/authentication",
                 "how-to/security/dynamic-authentication",
                 "how-to/security/tls",
-                "how-to/security/best-practices",
+                // "how-to/security/best-practices", // TODO: page not yet created
                 {
                   label: "AWS Integrations",
                   items: [
