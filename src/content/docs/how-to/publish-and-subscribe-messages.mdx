@@ -314,7 +314,7 @@ No special configuration is needed at client creation time — you can subscribe
 
     // --- Exact channel subscriptions ---
 
-    await client.SubscribeAsync(new[] { "news", "updates" } blockFor );  // Blocking
+    await client.SubscribeAsync(new[] { "news", "updates" }, blockFor );  // Blocking
     await client.SubscribeLazyAsync(new[] { "alerts" });                 // Non-blocking (lazy)
 
     // --- Pattern subscriptions ---
