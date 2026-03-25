@@ -1,5 +1,5 @@
-site_name: Valkey GLIDE Python API References
-site_url: https://valkey.io/valkey-glide
+site_name: GLIDE for Valkey - API Documentation
+site_url: https://glide.valkey.io/languages/python/api
 repo_url: https://github.com/valkey-io/valkey-glide
 repo_name: GitHub
 docs_dir: mkdocs
