@@ -303,7 +303,7 @@ No special configuration is needed at client creation time — you can subscribe
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    var config = new ClusterlientConfigurationBuilder()
+    var config = new ClusterClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .Build();
 
