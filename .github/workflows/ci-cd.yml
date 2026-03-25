@@ -52,6 +52,10 @@ jobs:
         with:
           node-version: 20
 
+      # TODO: Remove once {@link URL|text} is fixed upstream in valkey-glide
+      - name: Fix external links in source
+        run: ./doc-gen/fix-external-links.sh
+
       - name: Generate Node Docs
         run: ./doc-gen/build-node-docs.sh
 
