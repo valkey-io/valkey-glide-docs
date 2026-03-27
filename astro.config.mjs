@@ -341,8 +341,9 @@ export default defineConfig({
                   link: "https://pkg.go.dev/github.com/valkey-io/valkey-glide/go/v2",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
+                // TODO: Remove "(Coming Soon)" when C# is GA (https://github.com/valkey-io/valkey-glide/issues/216)
                 {
-                  label: "C#",
+                  label: "C# (Coming Soon)",
                   link: "https://github.com/valkey-io/valkey-glide-csharp",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
