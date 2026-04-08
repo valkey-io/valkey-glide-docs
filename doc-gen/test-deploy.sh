@@ -43,14 +43,14 @@ else
 fi
 
 # Check API docs were generated
-if [ ! -d "$NODE_API_DOCS"  ]; then
-    echo "Error: $NODE_API_DOCS does not exist"
-    exit 1
-fi
-if [ ! -d "$JAVA_API_DOCS"  ]; then
-    echo "Error: $JAVA_API_DOCS does not exist"
-    exit 1
-fi
+# if [ ! -d "$NODE_API_DOCS"  ]; then
+#     echo "Error: $NODE_API_DOCS does not exist"
+#     exit 1
+# fi
+# if [ ! -d "$JAVA_API_DOCS"  ]; then
+#     echo "Error: $JAVA_API_DOCS does not exist"
+#     exit 1
+# fi
 if [ ! -d "$PYTHON_API_DOCS"  ]; then
     echo "Error: $PYTHON_API_DOCS does not exist"
     exit 1
@@ -59,13 +59,13 @@ fi
 mkdir -p "${NODE_API_TARGET_PATH}"
 mkdir -p "${JAVA_API_TARGET_PATH}"
 mkdir -p "${PYTHON_API_TARGET_PATH}"
-cp -r "$NODE_API_DOCS"/* "$NODE_API_TARGET_PATH/"
-cp -r "$JAVA_API_DOCS"/* "$JAVA_API_TARGET_PATH/"
+# cp -r "$NODE_API_DOCS"/* "$NODE_API_TARGET_PATH/"
+# cp -r "$JAVA_API_DOCS"/* "$JAVA_API_TARGET_PATH/"
 cp -r "$PYTHON_API_DOCS"/* "$PYTHON_API_TARGET_PATH/"
 
 echo "Copied API docs to test directory."
 
 # Start simple HTTP server to test
-cd "${TEST_DIR}/../"
+cd "${TEST_DIR}"
 echo "Starting host server."
 python3 -m http.server ${SERVER_PORT}

@@ -1,5 +1,7 @@
 mkdocs
 mkdocstrings-python>=1.18.2, <2.0.0
 pymdown-extensions
-mkdocs-breadcrumbs-plugin
 mkdocs-material
+mkdocs-gen-files
+mkdocs-literate-nav
+mkdocs-section-index
