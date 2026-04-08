@@ -1,10 +1,10 @@
-site_name: Valkey GLIDE Python API Reference
+site_name: GLIDE for Valkey - API Documentation
 site_url: https://valkey.io/valkey-glide
 repo_url: https://github.com/valkey-io/valkey-glide
 repo_name: GitHub
 docs_dir: mkdocs
 nav:
-  - API Reference: /
+  - "API Reference"
 
 theme:
   name: material
@@ -12,6 +12,7 @@ theme:
     scheme: valkey-glide
   features:
     - navigation.sections
+    - navigation.indexes
     - content.code.copy
     - navigation.path
     - navigation.footer
@@ -33,12 +34,6 @@ markdown_extensions:
       custom_checkbox: true
 plugins:
   - search
-  - gen-files:
-      scripts:
-        - gen_ref_pages.py
-  - literate-nav:
-      nav_file: SUMMARY.md
-  - section-index
   - mkdocstrings:
       handlers:
         python:
@@ -56,6 +51,18 @@ plugins:
             members_order: source
             filters:
               - "!^_"
+  - api-autonav:
+      nav_item_prefix: ""
+      modules:
+        - valkey-glide/python/glide-async/python/glide
+        - valkey-glide/python/glide-sync/glide_sync
+        - valkey-glide/python/glide-shared/glide_shared
+      # Exclude internal modules and files that are not relevant to users
+      exclude:
+        - "re:.*\\.protobuf.*"
+        - "re:.*\\.protobuf_codec$"
+        - "re:.*\\.utils$"
+      exclude_private: true
 extra:
   generator: false
 extra_css:
