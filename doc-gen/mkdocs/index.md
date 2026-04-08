@@ -10,7 +10,7 @@ Valkey General Language Independent Driver for the Enterprise (GLIDE), is an ope
 
 ## Supported Engine Versions
 
-Refer to the [Supported Engine Versions table](/valkey-glide-docs/overview#supported-engine-versions) for details.
+Refer to the [Supported Engine Versions table](/overview/#supported-engine-versions) for details.
 
 ## System Requirements
 

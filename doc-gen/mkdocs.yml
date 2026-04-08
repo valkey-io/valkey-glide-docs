@@ -1,15 +1,16 @@
-site_name: GLIDE for Valkey - API Documentation
+site_name: Valkey GLIDE Python API References
 site_url: https://valkey.io/valkey-glide
 repo_url: https://github.com/valkey-io/valkey-glide
 repo_name: GitHub
 docs_dir: mkdocs
 nav:
-  - "API Reference"
+  - Overview: /languages/api/python/
 
 theme:
   name: material
   palette:
     scheme: valkey-glide
+  favicon: valkey-favicon.svg
   features:
     - navigation.sections
     - navigation.indexes
