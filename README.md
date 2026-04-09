@@ -2,14 +2,14 @@
 
 Welcome to the Valkey GLIDE documentation repository. The site is available at https://glide.valkey.io.
 
-> **Note:** This repository contains only the documentation of Valkey GLIDE. 
+> **Note:** This repository contains only the documentation of Valkey GLIDE.
 > To contribute to the Valkey GLIDE client library itself, visit [valkey-glide](https://github.com/valkey-io/valkey-glide/).
 
 ## Overview
 
 The site is built with [Starlight](https://starlight.astro.build/), an Astro framework for building static documentation sites.
 
-The framework provides out-of-the-box features for building documentations like UI components, site search, navigation, all using a Markdown like syntax. It also leverages Astro's features to build custom dynamic components. 
+The framework provides out-of-the-box features for building documentations like UI components, site search, navigation, all using a Markdown like syntax. It also leverages Astro's features to build custom dynamic components.
 This aims to allow contributors to quickly add or edit existing pages using familiar Markdown syntax, while having the options to extend the site with modern Javascript components.
 
 ## Getting Started
@@ -51,14 +51,6 @@ For a guidelines on how to write new articles, take a look at our [Contributing]
 ## Commit Requirements
 
 All commits must include the `--signoff` flag to certify the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-
-## Making a Pull Request
-
-Before making a pull request, make sure that you have a corresponding issue created either in this repo or the main Valkey GLIDE source repo. Each pull request should be related to an issue, unless it is a minor fix. 
-
-When making a pull request, please make sure to follow our template and complete the required sections.
-
-Importantly, ensure that your PR ha
 
 ## Link Checker
 

@@ -3,6 +3,7 @@
 Thank you for your interest in contributing to the [Valkey GLIDE documentation](https://glide.valkey.io)!
 
 This guide aims to help answer more conceptual questions about writing documentations like:
+
 - What kind of documentation should I write?
 - How should I write my documentations?
 
@@ -23,6 +24,7 @@ Users reach for the documentation because they want to know "how do I do x with 
 While your how-to guides should have some conceptual explanations, it should remain focused on answering the "how do I do x" question. Having a length explanation can often distract from this. If this is required, it is best to create a separate articles in our Learn sections with the focus on teaching the reader.
 
 In general, a guide line for how-to articles would be:
+
 - The title should start with a verb. Ex: Installing GLIDE, Making Batch Commands.
 - The content is about showing the reader how to doing something. This often involves using code examples.
 - Some conceptual explanation is encouraged, but it should not be the focus.

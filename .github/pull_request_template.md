@@ -1,9 +1,3 @@
-<!--
-Thanks for contributing to Valkey GLIDE Documentation!
-
-Please make sure you are aware of our contributing guidelines .
--->
-
 ### Summary
 
 <!--
@@ -13,11 +7,9 @@ Required. Summarize your changes in a short paragraph.
 ### Issue link
 
 <!--
-Your pull request should be linked to an issue in either:
-- The Valkey GLIDE Documentation repository.
-- The Valkey GLIDE main repository.
+Link your PR to an appropriate issue here.
 
-If your pull request is a minor change, you may omit this.
+If your PR is related to a code change in Valkey GLIDE, consider linking the PR to the appropriate issue.
 -->
 
 ### Content Changes
