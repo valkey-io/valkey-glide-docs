@@ -13,7 +13,10 @@ Required. Summarize your changes in a short paragraph.
 ### Issue link
 
 <!--
-Your pull request needs to be linked to an issue either in this repo or from the main Valkey GLIDE repo.
+Your pull request should be linked to an issue in either:
+- The Valkey GLIDE Documentation repository.
+- The Valkey GLIDE main repository.
+
 If your pull request is a minor change, you may omit this.
 -->
 
