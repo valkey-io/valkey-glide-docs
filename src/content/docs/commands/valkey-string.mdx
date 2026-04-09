@@ -8,6 +8,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 Valkey strings store sequences of bytes, which may include text, serialized objects, or binary arrays. GLIDE clients provide language-specific ways to handle both UTF-8 encoded strings and binary data when passing arguments to commands or receiving responses.
 
 ## String API
+
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     Python uses `TEncodable` as a union type that accepts either:
@@ -45,6 +46,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
 
     Most commands return `bytes` by default. Use `.decode()` to convert to `str` when needed.
   </TabItem>
+
   <TabItem label="Java">
     Valkey strings can be passed and received in two ways:
 
@@ -75,6 +77,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     client.get(gs(byteKey)).get().getString();  // "GlideString value" as a String
     ```
   </TabItem>
+
   <TabItem label="Node">
     `GlideString` is a type that maps to Valkey strings and represents either:
 
@@ -95,7 +98,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     // Using Buffer for binary data
     const binaryKey = Buffer.from([0x01, 0x02, 0x03, 0xFE]);
     const binaryValue = Buffer.from([0xDE, 0xAD, 0xBE, 0xEF]);
-    
+
     await client.set(binaryKey, binaryValue);
     const value = await client.get(binaryKey);  // Returns Buffer
 
@@ -112,8 +115,8 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
 
     #### Decoder
 
-    While Node.js defaults to string responses, you have full control over the return data type. 
-    You can use the `DecoderOption` property to toggle between string and byte formats for individual commands. 
+    While Node.js defaults to string responses, you have full control over the return data type.
+    You can use the `DecoderOption` property to toggle between string and byte formats for individual commands.
 
     Additionally, you can define a global preference during client creation, which acts as the default for any command that doesn't have a specific decoder argument.
 
@@ -152,6 +155,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     );
     ```
   </TabItem>
+
   <TabItem label="Go">
     Go uses native `string` type for all Valkey string operations. Go strings can contain arbitrary bytes, including binary data.
 
@@ -172,9 +176,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     // Using binary data - convert []byte to string
     binaryKey := string([]byte{0x01, 0x02, 0x03, 0xFE})
     binaryValue := string([]byte{0xDE, 0xAD, 0xBE, 0xEF})
-    
+
     result, err := client.Set(context.Background(), binaryKey, binaryValue)
-    
+
     // Get returns string, convert back to []byte if needed
     value, err := client.Get(context.Background(), binaryKey)
     if !value.IsNil() {
@@ -188,6 +192,63 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     * `[]byte(stringVar)` - Convert `string` to `[]byte`
 
     Go strings are immutable sequences of bytes and can safely represent binary data.
+  </TabItem>
+
+  <TabItem label="C#">
+    C# uses `GlideString` as a wrapper type that can hold either a UTF-8 `string` or raw `byte[]` data.
+
+    #### Usage
+
+    Commands accept `string` arguments directly. For binary data, use `GlideString`:
+
+    ```csharp
+    using Valkey.Glide;
+
+    // Using regular strings
+    await client.SetAsync("key", "value");
+    string? result = await client.GetAsync("key"); // Returns "value"
+
+    // Using GlideString for binary data
+    var binaryKey = new byte[] { 0x01, 0x02, 0x03, 0xFE }.ToGlideString();
+    var binaryValue = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF }.ToGlideString();
+    ```
+
+    #### Type Conversion
+
+    `GlideString` supports implicit conversions from `string` and `byte[]`, so you can assign them directly:
+
+    ```csharp
+    GlideString gs1 = "hello";                          // implicit string → GlideString
+    GlideString gs2 = new byte[] { 0x01, 0x02, 0x03 };  // implicit byte[] → GlideString
+    ```
+
+    To convert back from `GlideString`:
+
+    ```csharp
+    string text = gs1;   // implicit to GlideString → string
+    byte[] bytes = gs2;  // implicit to GlideString → byte[]
+    ```
+
+    It also provides `.ToGlideString()` extension methods for common types:
+
+    | Source type  | Example                     |
+    |--------------|-----------------------------|
+    | `string`     | `"text".ToGlideString()`    |
+    | `byte[]`     | `byteArray.ToGlideString()` |
+    | `int`        | `42.ToGlideString()`        |
+    | `long`       | `100L.ToGlideString()`      |
+    | `double`     | `3.14.ToGlideString()`      |
+    | `bool`       | `true.ToGlideString()`      |
+    | `ValkeyKey`  | `key.ToGlideString()`       |
+    | `ValkeyValue`| `value.ToGlideString()`     |
+
+    Batch conversions are also available:
+
+    ```csharp
+    GlideString[] arr = new[] { "a", "b" }.ToGlideStrings();   // string[] → GlideString[]
+    string[] back = arr.ToStrings();                           // GlideString[] → string[]
+    byte[][] raw = arr.ToByteArrays();                         // GlideString[] → byte[][]
+    ```
   </TabItem>
 
   <TabItem label="PHP">
@@ -209,7 +270,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     // Using binary data - PHP strings are binary-safe
     $binaryKey = "\x01\x02\x03\xFE";
     $binaryValue = "\xDE\xAD\xBE\xEF";
-    
+
     $client->set($binaryKey, $binaryValue);
     $result = $client->get($binaryKey);  // Returns binary string
     ```

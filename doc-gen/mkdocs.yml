@@ -4,7 +4,7 @@ repo_url: https://github.com/valkey-io/valkey-glide
 repo_name: GitHub
 docs_dir: mkdocs
 nav:
-  - Glide Async:   
+  - Glide Async:
       - BaseClient: glide_async/base_client.md
       - ClusterClient: glide_async/glide_cluster_client.md
       - GlideClient: glide_async/glide_client.md
@@ -13,7 +13,7 @@ nav:
           - Cluster Commands: glide_async/cluster_commands.md
           - Standalone Commands: glide_async/standalone_commands.md
       - Logger: glide_async/logger.md
-  - Glide Sync:   
+  - Glide Sync:
       - BaseClient: glide_sync/base_client.md
       - ClusterClient: glide_sync/glide_cluster_client.md
       - GlideClient: glide_sync/glide_client.md
@@ -32,7 +32,7 @@ nav:
 
 theme:
   name: material
-  palette: 
+  palette:
     scheme: valkey-glide
   features:
     - navigation.sections
@@ -59,11 +59,12 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [
-            "valkey-glide/python/glide-shared",
-            "valkey-glide/python/glide-async/python",
-            "valkey-glide/python/glide-sync/"
-          ]
+          paths:
+            [
+              "valkey-glide/python/glide-shared",
+              "valkey-glide/python/glide-async/python",
+              "valkey-glide/python/glide-sync/",
+            ]
           options:
             show_symbol_type_heading: true
             show_symbol_type_toc: true

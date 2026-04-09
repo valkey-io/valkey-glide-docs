@@ -5,7 +5,7 @@ description: Understanding how GLIDE handles Lua scripting, caching, and atomici
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute 
+Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute
 custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
 
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
@@ -111,11 +111,32 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     fmt.Println(result)  // Hello, Valkey!
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Create a client
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Create a simple script
+    using var script = new Script("return 'Hello, Valkey!'");
+
+    // Execute the script
+    var result = await client.ScriptInvokeAsync(script);
+    Console.WriteLine(result); // Hello, Valkey!
+    ```
+  </TabItem>
 </Tabs>
 
 ## Handling Inputs with KEYS and ARGV
 
 Valkey provides `KEYS` and `ARGV` to handle input parameters:
+
 * **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
 * **ARGV**: Used for general input parameters
 
@@ -180,6 +201,19 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
     )
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    var productKey = "product:shoe:stock";
+    var buyQuantity = "3";
+
+    var options = new ScriptOptions()
+        .WithKeys(productKey)    // Maps to KEYS[1] in Lua
+        .WithArgs(buyQuantity);  // Maps to ARGV[1] in Lua
+
+    var result = await client.ScriptInvokeAsync(purchaseScript, options);
+    ```
+  </TabItem>
 </Tabs>
 
 #### Why Use KEYS and ARGV
@@ -191,12 +225,13 @@ If no `KEYS` are provided, GLIDE will route the script to a random node for exec
 Thus, hardcoding the keys will most likely lead to errors.
 
 For proper execution, make sure to:
+
 * Pass all accessed keys via the `KEYS` argument
 * Only interact with keys listed in `KEYS`
 * `KEYS` must belong to the same slot (use [hashtags](https://valkey.io/topics/cluster-spec/#hash-tags) like `user:{100}:name` if needed)
 
-Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of scripts. 
-Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing 
+Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of scripts.
+Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing
 values directly into the script would create unique scripts each time, preventing effective caching.
 
 <Tabs syncKey="progLangInExamples">
@@ -249,6 +284,21 @@ values directly into the script would create unique scripts each time, preventin
     result, err := client.InvokeScriptWithOptions(context.Background(), *goodScript, *scriptOptions)
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Bad: Creates a new hash for each quantity
+    using var badScript = new Script($"return redis.call('DECRBY', {productKey}, {buyQuantity})");
+
+    // Good: Reuses the same cached script
+    using var goodScript = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])");
+    var result = await client.ScriptInvokeAsync(
+        goodScript,
+        new ScriptOptions()
+          .WithKeys(productKey)
+          .WithArgs(buyQuantity));
+    ```
+  </TabItem>
 </Tabs>
 
 :::tip[Large Data]
@@ -292,6 +342,14 @@ GLIDE then automatically caches scripts with each `invoke_script()` call.
     fmt.Printf("Script hash: %sn", hashValue)  // SHA1 hash of the script
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using var script = new Script("return 'Hello'");
+    var hashValue = script.Hash;
+    Console.WriteLine($"Script hash: {hashValue}"); // SHA1 hash of the script
+    ```
+  </TabItem>
 </Tabs>
 
 Scripts with identical code produce identical hashes, enabling efficient caching and reuse.
@@ -328,6 +386,14 @@ Scripts with identical code produce identical hashes, enabling efficient caching
     // script1.GetHash() == script2.GetHash()  // Same hash
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using var script1 = new Script("return 'Hello'");
+    using var script2 = new Script("return 'Hello'");
+    Debug.Assert(script1.Hash == script2.Hash); // Same hash
+    ```
+  </TabItem>
 </Tabs>
 
 :::caution[Script hashing is content-sensitive]
@@ -348,7 +414,7 @@ Valkey scripts are not guaranteed to be persisted. It is the responsibility of t
 
 To learn more about script lifecycle, see Valkey's [documentation](https://valkey.io/topics/eval-intro/#script-cache).
 
-### Stop Running Script 
+### Stop Running Script
 
 A script can be safely killed if it has only performed read-only operations.
 However, once it executes any write operation, it becomes uninterruptible and must either run to completion or reach a timeout.
@@ -451,6 +517,18 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
     )
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // This works the same in cluster mode
+    using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
+    var result = await clusterClient.ScriptInvokeAsync(
+        script,
+        new ScriptOptions()
+            .WithKeys("user:1000")   // Routed based on key hash
+            .WithArgs("John"));
+    ```
+  </TabItem>
 </Tabs>
 
 ### Explicit Routing
@@ -511,6 +589,22 @@ GLIDE provide options for explicit control over script routing in cluster mode.
     clusterClient.InvokeScriptWithRoute(context.Background(), *script, route)
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Route to the node holding a specific key's slot
+    var route = new Route.SlotKeyRoute("user:1000", Route.SlotType.Primary);
+
+    // Route to all primary nodes
+    route = Route.AllPrimaries;
+
+    var result = await clusterClient.ScriptInvokeAsync(
+        script,
+        new ClusterScriptOptions().WithRoute(route));
+    ```
+  </TabItem>
 </Tabs>
 
 ### Multi-Slot Scripts
@@ -544,6 +638,13 @@ Adding a hash tag `{}` in the key allow you to specify the specific slot.
     ```go
     // Both keys hash to the same slot because of {1000}
     keys := []string{"user:{1000}:name", "user:{1000}:email"}
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Both keys hash to the same slot because of {1000}
+    var keys = new[] { "user:{1000}:name", "user:{1000}:email" };
     ```
   </TabItem>
 </Tabs>
@@ -631,9 +732,30 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     fmt.Printf("GET result: %vn", results[1])   // script-value
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide.Pipeline;
+
+    // Script with keys and arguments
+    var batch = new Batch(isAtomic: true);
+    batch.CustomCommand(new GlideString[] {
+        "EVAL",
+        "return redis.call('SET', KEYS[1], ARGV[1])",
+        "1",           // Number of keys
+        "script-key",  // Key
+        "script-value" // Argument
+    });
+    batch.Get("script-key");
+
+    var results = await client.Exec(batch);
+    Console.WriteLine($"EVAL result: {results[0]}"); // OK
+    Console.WriteLine($"GET result: {results[1]}");  // script-value
+    ```
+  </TabItem>
 </Tabs>
 
-## What's Next 
+## What's Next
 
 To learn how execute custom scripts in practice, check out the [guide](/how-to/execute-custom-scripts) on Valkey scripting.
 

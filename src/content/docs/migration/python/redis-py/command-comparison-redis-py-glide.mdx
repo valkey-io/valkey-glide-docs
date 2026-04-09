@@ -8,770 +8,827 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 :::tip
 See <a href={`/migration/python/redis-py/command-comparison-chart`}>comprehensive comparison chart</a> for common Redis commands and how they are implemented in both Jedis and Glide.
 :::
 
 ## String Operations
+
 ### SET & GET
-  The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * Note that redis-py can return strings if `decode_responses=True` is set, while Glide always returns bytes.
+The `SET` command stores a key-value pair in Valkey, while `GET` retrieves the value associated with a key.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* Note that redis-py can return strings if `decode_responses=True` is set, while Glide always returns bytes.
 
-  ```python
-  await r.set('key', 'value')
-  val = await r.get('key')  # b"value" or "value" if decode_responses=True
+**redis-py**
 
-  # With options
-  await r.set('key', 'value', ex=60)  # Set with 60 second expiry
-  ```
+```python
+await r.set('key', 'value')
+val = await r.get('key')  # b"value" or "value" if decode_responses=True
 
-  **Glide**
+# With options
+await r.set('key', 'value', ex=60)  # Set with 60 second expiry
+```
 
-  ```python
-  await client.set('key', 'value')
-  val = await client.get('key')  # b"value"
+**Glide**
 
-  # With options
-  from glide import ExpiryType
-  await client.set('key', 'value', expiry=ExpirySet(ExpiryType.SEC, 60))
-  ```
+```python
+await client.set('key', 'value')
+val = await client.get('key')  # b"value"
+
+# With options
+from glide import ExpiryType
+await client.set('key', 'value', expiry=ExpirySet(ExpiryType.SEC, 60))
+```
+
 ### SETEX (Set with Expiry)
-  The `SETEX` command sets a key with an expiration time in seconds.
 
-  * In **redis-py**, this is a dedicated function.
-  * In **Glide**, expiration is handled using the `ExpirySet` class within the `set()` command.
+The `SETEX` command sets a key with an expiration time in seconds.
 
-  **redis-py**
+* In **redis-py**, this is a dedicated function.
+* In **Glide**, expiration is handled using the `ExpirySet` class within the `set()` command.
 
-  ```python
-  await r.setex('key', 5, 'value')  # Set with 5 second expiry
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.setex('key', 5, 'value')  # Set with 5 second expiry
+```
 
-  ```python
-  from glide import ExpiryType, ExpirySet
+**Glide**
 
-  await client.set('key', 'value', expiry=ExpirySet(ExpiryType.SEC, 5))
-  ```
+```python
+from glide import ExpiryType, ExpirySet
+
+await client.set('key', 'value', expiry=ExpirySet(ExpiryType.SEC, 5))
+```
+
 ### SETNX (Set if Not Exists)
-  The `SETNX` command sets a key only if it does not already exist.
 
-  * In **redis-py**, this is a dedicated function that returns True if the key was set, False if the key already exists.
-  * In **Glide**, this is handled using the `ConditionalChange` enum within the `set()` command.
+The `SETNX` command sets a key only if it does not already exist.
 
-  **redis-py**
+* In **redis-py**, this is a dedicated function that returns True if the key was set, False if the key already exists.
+* In **Glide**, this is handled using the `ConditionalChange` enum within the `set()` command.
 
-  ```python
-  result = await r.setnx('key', 'value')  # Returns True if key was set, False if key exists
-  ```
+**redis-py**
 
-  **Glide**
+```python
+result = await r.setnx('key', 'value')  # Returns True if key was set, False if key exists
+```
 
-  ```python
-  from glide import ConditionalChange
+**Glide**
 
-  result = await client.set('key', 'value', conditional_set=ConditionalChange.ONLY_IF_DOES_NOT_EXIST)
-  # Returns "OK" if key was set, None if key exists
-  ```
+```python
+from glide import ConditionalChange
+
+result = await client.set('key', 'value', conditional_set=ConditionalChange.ONLY_IF_DOES_NOT_EXIST)
+# Returns "OK" if key was set, None if key exists
+```
+
 ### MSET & MGET (Multiple Set/Get)
-  The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
 
-  * Both **redis-py** and **Glide** support these commands in a similar way.
-  * For `mget()`, both libraries accept a list of keys.
+The `MSET` command sets multiple key-value pairs in a single operation, while `MGET` retrieves values for multiple keys.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in a similar way.
+* For `mget()`, both libraries accept a list of keys.
 
-  ```python
-  # Multiple set
-  await r.mset({'key1': 'value1', 'key2': 'value2'})
+**redis-py**
 
-  # Multiple get
-  values = await r.mget(['key1', 'key2'])  # [b'value1', b'value2'] or ["value1", "value2"] if decode_responses=True
-  ```
+```python
+# Multiple set
+await r.mset({'key1': 'value1', 'key2': 'value2'})
 
-  **Glide**
+# Multiple get
+values = await r.mget(['key1', 'key2'])  # [b'value1', b'value2'] or ["value1", "value2"] if decode_responses=True
+```
 
-  ```python
-  # Multiple set
-  await client.mset({'key1': 'value1', 'key2': 'value2'})
+**Glide**
 
-  # Multiple get
-  values = await client.mget(['key1', 'key2'])  # [b'value1', b'value2']
-  ```
+```python
+# Multiple set
+await client.mset({'key1': 'value1', 'key2': 'value2'})
+
+# Multiple get
+values = await client.mget(['key1', 'key2'])  # [b'value1', b'value2']
+```
+
 ### INCR & DECR
-  The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * The key must contain an integer value, otherwise an error will be returned.
+The `INCR` command increments the value of a key by 1, while `DECR` decrements it by 1.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* The key must contain an integer value, otherwise an error will be returned.
 
-  ```python
-  await r.incr('counter')  # counter = 1
-  await r.decr('counter')  # counter = 0
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.incr('counter')  # counter = 1
+await r.decr('counter')  # counter = 0
+```
 
-  ```python
-  await client.incr('counter')  # counter = 1
-  await client.decr('counter')  # counter = 0
-  ```
+**Glide**
+
+```python
+await client.incr('counter')  # counter = 1
+await client.decr('counter')  # counter = 0
+```
+
 ### INCRBY & DECRBY
-  The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * The key must contain an integer value, otherwise an error will be returned.
+The `INCRBY` command increases the value of a key by a specified amount, while `DECRBY` decreases it by a specified amount.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* The key must contain an integer value, otherwise an error will be returned.
 
-  ```python
-  await r.incrby('counter', 5)  # 5
-  await r.decrby('counter', 2)  # 3
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.incrby('counter', 5)  # 5
+await r.decrby('counter', 2)  # 3
+```
 
-  ```python
-  await client.incrby('counter', 5)  # 5
-  await client.decrby('counter', 2)  # 3
-  ```
+**Glide**
+
+```python
+await client.incrby('counter', 5)  # 5
+await client.decrby('counter', 2)  # 3
+```
+
 ### APPEND
-  The `APPEND` command appends a value to the end of an existing string stored at a key.
 
-  * Both **redis-py** and **Glide** support this command in the same way.
-  * Returns the length of the string after the append operation.
+The `APPEND` command appends a value to the end of an existing string stored at a key.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support this command in the same way.
+* Returns the length of the string after the append operation.
 
-  ```python
-  await r.set('greeting', 'Hello')
-  await r.append('greeting', ' World')  # Returns length: 11
-  result = await r.get('greeting')  # b"Hello World" or "Hello World" if decode_responses=True
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.set('greeting', 'Hello')
+await r.append('greeting', ' World')  # Returns length: 11
+result = await r.get('greeting')  # b"Hello World" or "Hello World" if decode_responses=True
+```
 
-  ```python
-  await client.set('greeting', 'Hello')
-  await client.append('greeting', ' World')  # Returns length: 11
-  result = await client.get('greeting')  # b"Hello World"
-  ```
+**Glide**
+
+```python
+await client.set('greeting', 'Hello')
+await client.append('greeting', ' World')  # Returns length: 11
+result = await client.get('greeting')  # b"Hello World"
+```
+
 ### GETRANGE & SETRANGE
-  The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * Note that in Glide, the method names are `getrange` and `setrange` (lowercase).
+The `GETRANGE` command retrieves a substring from a string value stored at a key, while `SETRANGE` overwrites part of a string at a key starting at a specified offset.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* Note that in Glide, the method names are `getrange` and `setrange` (lowercase).
 
-  ```python
-  await r.set('key', 'Hello World')
-  result = await r.getrange('key', 0, 4)  # b"Hello" or "Hello" if decode_responses=True
+**redis-py**
 
-  await r.setrange('key', 6, 'Redis')  # Returns length: 11
-  updated = await r.get('key')  # b"Hello Redis" or "Hello Redis" if decode_responses=True
-  ```
+```python
+await r.set('key', 'Hello World')
+result = await r.getrange('key', 0, 4)  # b"Hello" or "Hello" if decode_responses=True
 
-  **Glide**
+await r.setrange('key', 6, 'Redis')  # Returns length: 11
+updated = await r.get('key')  # b"Hello Redis" or "Hello Redis" if decode_responses=True
+```
 
-  ```python
-  await client.set('key', 'Hello World')
-  result = await client.getrange('key', 0, 4)  # b"Hello"
+**Glide**
 
-  await client.setrange('key', 6, 'Redis')  # Returns length: 11
-  updated = await client.get('key')  # b"Hello Redis"
-  ```
+```python
+await client.set('key', 'Hello World')
+result = await client.getrange('key', 0, 4)  # b"Hello"
+
+await client.setrange('key', 6, 'Redis')  # Returns length: 11
+updated = await client.get('key')  # b"Hello Redis"
+```
 
 ## Key Operations
+
 ### DEL (Delete)
-  The `DEL` command removes one or more keys from Valkey.
 
-  * In **redis-py**, `delete()` accepts multiple keys as separate arguments or as a list.
-  * In **Glide**, `del()` requires a list of keys.
+The `DEL` command removes one or more keys from Valkey.
 
-  **redis-py**
+* In **redis-py**, `delete()` accepts multiple keys as separate arguments or as a list.
+* In **Glide**, `del()` requires a list of keys.
 
-  ```python
-  await r.delete('key1', 'key2')  # 2 (number of keys deleted)
-  # or
-  await r.delete(['key1', 'key2'])  # 2 (number of keys deleted)
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.delete('key1', 'key2')  # 2 (number of keys deleted)
+# or
+await r.delete(['key1', 'key2'])  # 2 (number of keys deleted)
+```
 
-  ```python
-  await client.delete(['key1', 'key2'])  # 2 (number of keys deleted)
-  ```
+**Glide**
+
+```python
+await client.delete(['key1', 'key2'])  # 2 (number of keys deleted)
+```
+
 ### EXISTS
-  The `EXISTS` command checks if one or more keys exist in Valkey.
 
-  * In **redis-py**, `exists()` accepts multiple keys as separate arguments or as a list and returns the number of keys that exist.
-  * In **Glide**, `exists()` requires a list of keys and also returns the number of keys that exist.
+The `EXISTS` command checks if one or more keys exist in Valkey.
 
-  **redis-py**
+* In **redis-py**, `exists()` accepts multiple keys as separate arguments or as a list and returns the number of keys that exist.
+* In **Glide**, `exists()` requires a list of keys and also returns the number of keys that exist.
 
-  ```python
-  await r.exists('existKey', 'nonExistKey')  # 1 (number of keys that exist)
-  # or
-  await r.exists(['existKey', 'nonExistKey'])  # 1 (number of keys that exist)
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.exists('existKey', 'nonExistKey')  # 1 (number of keys that exist)
+# or
+await r.exists(['existKey', 'nonExistKey'])  # 1 (number of keys that exist)
+```
 
-  ```python
-  await client.exists(['existKey', 'nonExistKey'])  # 1 (number of keys that exist)
-  ```
+**Glide**
+
+```python
+await client.exists(['existKey', 'nonExistKey'])  # 1 (number of keys that exist)
+```
+
 ### EXPIRE & TTL
-  The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
 
-  * In **redis-py**, `expire()` returns True if successful, False if the key doesn't exist or couldn't be expired.
-  * In **Glide**, `expire()` returns True if successful, False otherwise.
+The `EXPIRE` command sets a time-to-live (TTL) for a key, after which it will be automatically deleted. The `TTL` command returns the remaining time-to-live for a key.
 
-  **redis-py**
+* In **redis-py**, `expire()` returns True if successful, False if the key doesn't exist or couldn't be expired.
+* In **Glide**, `expire()` returns True if successful, False otherwise.
 
-  ```python
-  await r.expire('key', 10)  # True (success)
-  ttl = await r.ttl('key')  # 10 (seconds remaining)
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.expire('key', 10)  # True (success)
+ttl = await r.ttl('key')  # 10 (seconds remaining)
+```
 
-  ```python
-  await client.expire('key', 10)  # True (success)
-  ttl = await client.ttl('key')  # 10 (seconds remaining)
-  ```
+**Glide**
+
+```python
+await client.expire('key', 10)  # True (success)
+ttl = await client.ttl('key')  # 10 (seconds remaining)
+```
+
 ### KEYS & SCAN
-  The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
 
-  * `KEYS` is not recommended for production use as it blocks the server until completion.
-  * `SCAN` is the preferred method for iterating through keys in production environments.
-  * In **Glide**, the cursor returned by `scan()` is a bytes object that needs to be converted to a string using `.decode()` or `.toString()`.
+The `KEYS` command returns all keys matching a pattern, while `SCAN` iterates through keys in a more efficient way for production use.
 
-  **redis-py**
+* `KEYS` is not recommended for production use as it blocks the server until completion.
+* `SCAN` is the preferred method for iterating through keys in production environments.
+* In **Glide**, the cursor returned by `scan()` is a bytes object that needs to be converted to a string using `.decode()` or `.toString()`.
 
-  ```python
-  # KEYS (not recommended for production)
-  all_keys = await r.keys('*')
+**redis-py**
 
-  # SCAN (recommended for production)
-  cursor = '0'
-  while cursor != 0:
-      cursor, keys = await r.scan(cursor=cursor, match='*')
-      if keys:
-          print(f'SCAN iteration: {", ".join(keys)}')
-  ```
+```python
+# KEYS (not recommended for production)
+all_keys = await r.keys('*')
 
-  **Glide**
+# SCAN (recommended for production)
+cursor = '0'
+while cursor != 0:
+    cursor, keys = await r.scan(cursor=cursor, match='*')
+    if keys:
+        print(f'SCAN iteration: {", ".join(keys)}')
+```
 
-  ```python
-  # KEYS (not recommended for production)
-  all_keys = await client.keys('*')
+**Glide**
 
-  # SCAN (recommended for production)
-  cursor = '0'
-  while cursor != '0':
-      result = await client.scan(cursor)
-      cursor = result[0].decode()  # or result[0].toString()
-      
-      keys = result[1]
-      if keys:
-          print(f'SCAN iteration: {", ".join([k.decode() for k in keys])}')
-  ```
+```python
+# KEYS (not recommended for production)
+all_keys = await client.keys('*')
+
+# SCAN (recommended for production)
+cursor = '0'
+while cursor != '0':
+    result = await client.scan(cursor)
+    cursor = result[0].decode()  # or result[0].toString()
+    
+    keys = result[1]
+    if keys:
+        print(f'SCAN iteration: {", ".join([k.decode() for k in keys])}')
+```
+
 ### RENAME & RENAMENX
-  The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
 
-  * In **redis-py**, `renamenx()` returns True if successful, False if the target key already exists.
-  * In **Glide**, `renamenx()` returns True if successful, False if the target key already exists.
+The `RENAME` command renames a key, while `RENAMENX` renames a key only if the new key does not already exist.
 
-  **redis-py**
+* In **redis-py**, `renamenx()` returns True if successful, False if the target key already exists.
+* In **Glide**, `renamenx()` returns True if successful, False if the target key already exists.
 
-  ```python
-  await r.set('oldkey', 'value')
-  await r.rename('oldkey', 'newkey')  # True
+**redis-py**
 
-  await r.set('key1', 'value1')
-  result = await r.renamenx('key1', 'key2')  # True (success)
-  ```
+```python
+await r.set('oldkey', 'value')
+await r.rename('oldkey', 'newkey')  # True
 
-  **Glide**
+await r.set('key1', 'value1')
+result = await r.renamenx('key1', 'key2')  # True (success)
+```
 
-  ```python
-  await client.set('oldkey', 'value')
-  await client.rename('oldkey', 'newkey')  # "OK"
+**Glide**
 
-  await client.set('key1', 'value1')
-  result = await client.renamenx('key1', 'key2')  # True (success)
-  ```
+```python
+await client.set('oldkey', 'value')
+await client.rename('oldkey', 'newkey')  # "OK"
+
+await client.set('key1', 'value1')
+result = await client.renamenx('key1', 'key2')  # True (success)
+```
 
 ## Hash Operations
+
 ### HSET & HGET
-  The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
 
-  * In **redis-py**, `hset()` can accept field-value pairs as separate arguments or as a mapping.
-  * In **Glide**, `hset()` accepts a key and a mapping of field-value pairs.
+The `HSET` command sets field-value pairs in a hash stored at a key, while `HGET` retrieves the value of a specific field.
 
-  **redis-py**
+* In **redis-py**, `hset()` can accept field-value pairs as separate arguments or as a mapping.
+* In **Glide**, `hset()` accepts a key and a mapping of field-value pairs.
 
-  ```python
-  # Set a single field
-  await r.hset('hash', 'key1', '1')  # 1 (field added)
+**redis-py**
 
-  # Set multiple fields
-  await r.hset('hash', mapping={'key1': '1', 'key2': '2'})  # 2 (fields added)
+```python
+# Set a single field
+await r.hset('hash', 'key1', '1')  # 1 (field added)
 
-  # Get a single field
-  value = await r.hget('hash', 'key1')  # b"1" or "1" if decode_responses=True
-  ```
+# Set multiple fields
+await r.hset('hash', mapping={'key1': '1', 'key2': '2'})  # 2 (fields added)
 
-  **Glide**
+# Get a single field
+value = await r.hget('hash', 'key1')  # b"1" or "1" if decode_responses=True
+```
 
-  ```python
-  # Set multiple fields
-  await client.hset('hash', {'key1': '1', 'key2': '2'})  # 2 (fields added)
+**Glide**
 
-  # Get a single field
-  value = await client.hget('hash', 'key1')  # b"1"
-  ```
+```python
+# Set multiple fields
+await client.hset('hash', {'key1': '1', 'key2': '2'})  # 2 (fields added)
+
+# Get a single field
+value = await client.hget('hash', 'key1')  # b"1"
+```
+
 ### HMSET & HMGET
-  The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
 
-  * In **redis-py**, `hmset()` accepts a mapping of field-value pairs.
-  * In **Glide**, there is no separate `hmset()` method; instead, `hset()` is used for setting multiple fields.
-  * For `hmget()`, both libraries require a key and a list of fields.
+The `HMSET` command sets multiple field-value pairs in a hash, while `HMGET` retrieves values for multiple fields.
 
-  **redis-py**
+* In **redis-py**, `hmset()` accepts a mapping of field-value pairs.
+* In **Glide**, there is no separate `hmset()` method; instead, `hset()` is used for setting multiple fields.
+* For `hmget()`, both libraries require a key and a list of fields.
 
-  ```python
-  # Set multiple fields
-  await r.hmset('hash', {'key1': '1', 'key2': '2'})
+**redis-py**
 
-  # Get multiple fields
-  values = await r.hmget('hash', ['key1', 'key2'])  # [b"1", b"2"] or ["1", "2"] if decode_responses=True
-  ```
+```python
+# Set multiple fields
+await r.hmset('hash', {'key1': '1', 'key2': '2'})
 
-  **Glide**
+# Get multiple fields
+values = await r.hmget('hash', ['key1', 'key2'])  # [b"1", b"2"] or ["1", "2"] if decode_responses=True
+```
 
-  ```python
-  # Set multiple fields (same as hset in Glide)
-  await client.hset('hash', {'key1': '1', 'key2': '2'})
+**Glide**
 
-  # Get multiple fields
-  values = await client.hmget('hash', ['key1', 'key2'])  # [b"1", b"2"]
-  ```
+```python
+# Set multiple fields (same as hset in Glide)
+await client.hset('hash', {'key1': '1', 'key2': '2'})
+
+# Get multiple fields
+values = await client.hmget('hash', ['key1', 'key2'])  # [b"1", b"2"]
+```
+
 ### HGETALL
-  The `HGETALL` command retrieves all field-value pairs from a hash.
 
-  * Both **redis-py** and **Glide** support this command in the same way.
-  * Returns a dictionary with field names as keys and their values.
+The `HGETALL` command retrieves all field-value pairs from a hash.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support this command in the same way.
+* Returns a dictionary with field names as keys and their values.
 
-  ```python
-  await r.hset('user', mapping={'name': 'John', 'age': '30'})
-  user = await r.hgetall('user')  # {b'name': b'John', b'age': b'30'} or {'name': 'John', 'age': '30'} if decode_responses=True
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.hset('user', mapping={'name': 'John', 'age': '30'})
+user = await r.hgetall('user')  # {b'name': b'John', b'age': b'30'} or {'name': 'John', 'age': '30'} if decode_responses=True
+```
 
-  ```python
-  await client.hset('user', {'name': 'John', 'age': '30'})
-  user = await client.hgetall('user')  # {b'name': b'John', b'age': b'30'}
-  ```
+**Glide**
+
+```python
+await client.hset('user', {'name': 'John', 'age': '30'})
+user = await client.hgetall('user')  # {b'name': b'John', b'age': b'30'}
+```
+
 ### HDEL & HEXISTS
-  The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
 
-  * In **redis-py**, `hdel()` accepts multiple fields as separate arguments or as a list and returns the number of fields removed.
-  * In **Glide**, `hdel()` requires a list of fields.
-  * For `hexists()`, both libraries return True if the field exists, False if it doesn't.
+The `HDEL` command removes one or more fields from a hash, while `HEXISTS` checks if a field exists in a hash.
 
-  **redis-py**
+* In **redis-py**, `hdel()` accepts multiple fields as separate arguments or as a list and returns the number of fields removed.
+* In **Glide**, `hdel()` requires a list of fields.
+* For `hexists()`, both libraries return True if the field exists, False if it doesn't.
 
-  ```python
-  await r.hset('hash', mapping={'key1': '1', 'key2': '2', 'key3': '3'})
-  await r.hdel('hash', 'key1', 'key2')  # 2 (fields deleted)
-  # or
-  await r.hdel('hash', ['key1', 'key2'])  # 2 (fields deleted)
+**redis-py**
 
-  exists = await r.hexists('hash', 'key3')  # True (exists)
-  not_exists = await r.hexists('hash', 'key1')  # False (doesn't exist)
-  ```
+```python
+await r.hset('hash', mapping={'key1': '1', 'key2': '2', 'key3': '3'})
+await r.hdel('hash', 'key1', 'key2')  # 2 (fields deleted)
+# or
+await r.hdel('hash', ['key1', 'key2'])  # 2 (fields deleted)
 
-  **Glide**
+exists = await r.hexists('hash', 'key3')  # True (exists)
+not_exists = await r.hexists('hash', 'key1')  # False (doesn't exist)
+```
 
-  ```python
-  await client.hset('hash', {'key1': '1', 'key2': '2', 'key3': '3'})
-  await client.hdel('hash', ['key1', 'key2'])  # 2 (fields deleted)
+**Glide**
 
-  exists = await client.hexists('hash', 'key3')  # True
-  not_exists = await client.hexists('hash', 'key1')  # False
-  ```
+```python
+await client.hset('hash', {'key1': '1', 'key2': '2', 'key3': '3'})
+await client.hdel('hash', ['key1', 'key2'])  # 2 (fields deleted)
+
+exists = await client.hexists('hash', 'key3')  # True
+not_exists = await client.hexists('hash', 'key1')  # False
+```
 
 ### List Operations
+
 ### LPUSH & RPUSH
-  The `LPUSH` command adds elements to the beginning of a list, while `RPUSH` adds elements to the end of a list.
 
-  * In **redis-py**, these commands accept multiple elements as separate arguments or as a list.
-  * In **Glide**, they require a list of elements.
-  * Both return the length of the list after the operation.
+The `LPUSH` command adds elements to the beginning of a list, while `RPUSH` adds elements to the end of a list.
 
-  **redis-py**
+* In **redis-py**, these commands accept multiple elements as separate arguments or as a list.
+* In **Glide**, they require a list of elements.
+* Both return the length of the list after the operation.
 
-  ```python
-  length_of_list = await r.lpush('list', 'a', 'b', 'c')  # length_of_list = 3
-  # or
-  length_of_list = await r.lpush('list', ['a', 'b', 'c'])  # length_of_list = 3
+**redis-py**
 
-  length_of_list = await r.rpush('list', 'd', 'e')  # length_of_list = 5
-  # or
-  length_of_list = await r.rpush('list', ['d', 'e'])  # length_of_list = 5
-  ```
+```python
+length_of_list = await r.lpush('list', 'a', 'b', 'c')  # length_of_list = 3
+# or
+length_of_list = await r.lpush('list', ['a', 'b', 'c'])  # length_of_list = 3
 
-  **Glide**
+length_of_list = await r.rpush('list', 'd', 'e')  # length_of_list = 5
+# or
+length_of_list = await r.rpush('list', ['d', 'e'])  # length_of_list = 5
+```
 
-  ```python
-  length_of_list = await client.lpush('list', ['a', 'b', 'c'])  # length_of_list = 3
-  length_of_list = await client.rpush('list', ['d', 'e'])  # length_of_list = 5
-  ```
+**Glide**
+
+```python
+length_of_list = await client.lpush('list', ['a', 'b', 'c'])  # length_of_list = 3
+length_of_list = await client.rpush('list', ['d', 'e'])  # length_of_list = 5
+```
+
 ### LPOP & RPOP
-  The `LPOP` command removes and returns the first element of a list, while `RPOP` removes and returns the last element.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * Returns None if the list doesn't exist or is empty.
+The `LPOP` command removes and returns the first element of a list, while `RPOP` removes and returns the last element.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* Returns None if the list doesn't exist or is empty.
 
-  ```python
-  await r.rpush('list', ['a', 'b', 'c'])
-  first = await r.lpop('list')  # b"a" or "a" if decode_responses=True
-  last = await r.rpop('list')  # b"c" or "c" if decode_responses=True
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.rpush('list', ['a', 'b', 'c'])
+first = await r.lpop('list')  # b"a" or "a" if decode_responses=True
+last = await r.rpop('list')  # b"c" or "c" if decode_responses=True
+```
 
-  ```python
-  await client.rpush('list', ['a', 'b', 'c'])
-  first = await client.lpop('list')  # b"a"
-  last = await client.rpop('list')  # b"c"
-  ```
+**Glide**
+
+```python
+await client.rpush('list', ['a', 'b', 'c'])
+first = await client.lpop('list')  # b"a"
+last = await client.rpop('list')  # b"c"
+```
+
 ### LRANGE
-  The `LRANGE` command retrieves a range of elements from a list.
 
-  * Both **redis-py** and **Glide** support this command in the same way.
-  * The range is specified by start and stop indices, where 0 is the first element, -1 is the last element.
+The `LRANGE` command retrieves a range of elements from a list.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support this command in the same way.
+* The range is specified by start and stop indices, where 0 is the first element, -1 is the last element.
 
-  ```python
-  await r.rpush('list', ['a', 'b', 'c', 'd', 'e'])
-  elements = await r.lrange('list', 0, 2)  # [b"a", b"b", b"c"] or ["a", "b", "c"] if decode_responses=True
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.rpush('list', ['a', 'b', 'c', 'd', 'e'])
+elements = await r.lrange('list', 0, 2)  # [b"a", b"b", b"c"] or ["a", "b", "c"] if decode_responses=True
+```
 
-  ```python
-  await client.rpush('list', ['a', 'b', 'c', 'd', 'e'])
-  elements = await client.lrange('list', 0, 2)  # [b"a", b"b", b"c"]
-  ```
+**Glide**
+
+```python
+await client.rpush('list', ['a', 'b', 'c', 'd', 'e'])
+elements = await client.lrange('list', 0, 2)  # [b"a", b"b", b"c"]
+```
 
 ## Set Operations
+
 ### SADD & SMEMBERS
-  The `SADD` command adds one or more members to a set, while `SMEMBERS` returns all members of a set.
 
-  * In **redis-py**, `sadd()` accepts multiple members as separate arguments or as a list.
-  * In **Glide**, `sadd()` requires a list of members.
-  * Both return the number of members that were added to the set (excluding members that were already present).
+The `SADD` command adds one or more members to a set, while `SMEMBERS` returns all members of a set.
 
-  **redis-py**
+* In **redis-py**, `sadd()` accepts multiple members as separate arguments or as a list.
+* In **Glide**, `sadd()` requires a list of members.
+* Both return the number of members that were added to the set (excluding members that were already present).
 
-  ```python
-  await r.sadd('set', 'a', 'b', 'c')  # 3 (members added)
-  # or
-  await r.sadd('set', ['a', 'b', 'c'])  # 3 (members added)
+**redis-py**
 
-  members = await r.smembers('set')  # {b"a", b"b", b"c"} or {"a", "b", "c"} if decode_responses=True
-  ```
+```python
+await r.sadd('set', 'a', 'b', 'c')  # 3 (members added)
+# or
+await r.sadd('set', ['a', 'b', 'c'])  # 3 (members added)
 
-  **Glide**
+members = await r.smembers('set')  # {b"a", b"b", b"c"} or {"a", "b", "c"} if decode_responses=True
+```
 
-  ```python
-  await client.sadd('set', ['a', 'b', 'c'])  # 3 (members added)
-  members = await client.smembers('set')  # {b"a", b"b", b"c"}
-  ```
+**Glide**
+
+```python
+await client.sadd('set', ['a', 'b', 'c'])  # 3 (members added)
+members = await client.smembers('set')  # {b"a", b"b", b"c"}
+```
+
 ### SREM & SISMEMBER
-  The `SREM` command removes one or more members from a set, while `SISMEMBER` checks if a value is a member of a set.
 
-  * In **redis-py**, `srem()` accepts multiple members as separate arguments or as a list and returns the number of members removed.
-  * In **Glide**, `srem()` requires a list of members.
-  * For `sismember()`, both libraries return True if the member exists, False if it doesn't.
+The `SREM` command removes one or more members from a set, while `SISMEMBER` checks if a value is a member of a set.
 
-  **redis-py**
+* In **redis-py**, `srem()` accepts multiple members as separate arguments or as a list and returns the number of members removed.
+* In **Glide**, `srem()` requires a list of members.
+* For `sismember()`, both libraries return True if the member exists, False if it doesn't.
 
-  ```python
-  await r.sadd('set', ['a', 'b', 'c'])
-  await r.srem('set', 'a', 'b')  # 2 (members removed)
-  # or
-  await r.srem('set', ['a', 'b'])  # 2 (members removed)
+**redis-py**
 
-  is_member = await r.sismember('set', 'c')  # True (is member)
-  not_member = await r.sismember('set', 'a')  # False (not member)
-  ```
+```python
+await r.sadd('set', ['a', 'b', 'c'])
+await r.srem('set', 'a', 'b')  # 2 (members removed)
+# or
+await r.srem('set', ['a', 'b'])  # 2 (members removed)
 
-  **Glide**
+is_member = await r.sismember('set', 'c')  # True (is member)
+not_member = await r.sismember('set', 'a')  # False (not member)
+```
 
-  ```python
-  await client.sadd('set', ['a', 'b', 'c'])
-  await client.srem('set', ['a', 'b'])  # 2 (members removed)
+**Glide**
 
-  is_member = await client.sismember('set', 'c')  # True
-  not_member = await client.sismember('set', 'a')  # False
-  ```
+```python
+await client.sadd('set', ['a', 'b', 'c'])
+await client.srem('set', ['a', 'b'])  # 2 (members removed)
+
+is_member = await client.sismember('set', 'c')  # True
+not_member = await client.sismember('set', 'a')  # False
+```
 
 ## Sorted Set Operations
+
 ### ZADD & ZRANGE
-  The `ZADD` command adds one or more members with scores to a sorted set, while `ZRANGE` retrieves members from a sorted set by index range.
 
-  * In **redis-py**, `zadd()` accepts score-member pairs as separate arguments or as a mapping.
-  * In **Glide**, `zadd()` requires a list of objects with score and member properties.
-  * For `zrange()` with scores, **redis-py** uses a 'withscores' parameter, while **Glide** uses an options object.
+The `ZADD` command adds one or more members with scores to a sorted set, while `ZRANGE` retrieves members from a sorted set by index range.
 
-  **redis-py**
+* In **redis-py**, `zadd()` accepts score-member pairs as separate arguments or as a mapping.
+* In **Glide**, `zadd()` requires a list of objects with score and member properties.
+* For `zrange()` with scores, **redis-py** uses a 'withscores' parameter, while **Glide** uses an options object.
 
-  ```python
-  # Using separate arguments
-  await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})  # 3 (members added)
+**redis-py**
 
-  members = await r.zrange('sortedSet', 0, -1)  # [b"one", b"two", b"three"] or ["one", "two", "three"] if decode_responses=True
+```python
+# Using separate arguments
+await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})  # 3 (members added)
 
-  # With scores
-  with_scores = await r.zrange('sortedSet', 0, -1, withscores=True)
-  # [(b"one", 1.0), (b"two", 2.0), (b"three", 3.0)] or [("one", 1.0), ("two", 2.0), ("three", 3.0)] if decode_responses=True
-  ```
+members = await r.zrange('sortedSet', 0, -1)  # [b"one", b"two", b"three"] or ["one", "two", "three"] if decode_responses=True
 
-  **Glide**
+# With scores
+with_scores = await r.zrange('sortedSet', 0, -1, withscores=True)
+# [(b"one", 1.0), (b"two", 2.0), (b"three", 3.0)] or [("one", 1.0), ("two", 2.0), ("three", 3.0)] if decode_responses=True
+```
 
-  ```python
-  await client.zadd('sortedSet', [
-    {'score': 1, 'member': 'one'},
-    {'score': 2, 'member': 'two'},
-    {'score': 3, 'member': 'three'}
-  ])  # 3 (members added)
+**Glide**
 
-  members = await client.zrange('sortedSet', 0, -1)  # [b"one", b"two", b"three"]
+```python
+await client.zadd('sortedSet', [
+  {'score': 1, 'member': 'one'},
+  {'score': 2, 'member': 'two'},
+  {'score': 3, 'member': 'three'}
+])  # 3 (members added)
 
-  # With scores
-  with_scores = await client.zrange('sortedSet', 0, -1, with_scores=True)
-  # [(b"one", 1.0), (b"two", 2.0), (b"three", 3.0)]
-  ```
+members = await client.zrange('sortedSet', 0, -1)  # [b"one", b"two", b"three"]
+
+# With scores
+with_scores = await client.zrange('sortedSet', 0, -1, with_scores=True)
+# [(b"one", 1.0), (b"two", 2.0), (b"three", 3.0)]
+```
+
 ### ZREM & ZSCORE
-  The `ZREM` command removes one or more members from a sorted set, while `ZSCORE` returns the score of a member in a sorted set.
 
-  * In **redis-py**, `zrem()` accepts multiple members as separate arguments or as a list.
-  * In **Glide**, `zrem()` requires a list of members.
-  * Both return the number of members that were removed from the sorted set.
+The `ZREM` command removes one or more members from a sorted set, while `ZSCORE` returns the score of a member in a sorted set.
 
-  **redis-py**
+* In **redis-py**, `zrem()` accepts multiple members as separate arguments or as a list.
+* In **Glide**, `zrem()` requires a list of members.
+* Both return the number of members that were removed from the sorted set.
 
-  ```python
-  await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})
-  await r.zrem('sortedSet', 'one', 'two')  # 2 (members removed)
-  # or
-  await r.zrem('sortedSet', ['one', 'two'])  # 2 (members removed)
+**redis-py**
 
-  score = await r.zscore('sortedSet', 'three')  # 3.0
-  ```
+```python
+await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})
+await r.zrem('sortedSet', 'one', 'two')  # 2 (members removed)
+# or
+await r.zrem('sortedSet', ['one', 'two'])  # 2 (members removed)
 
-  **Glide**
+score = await r.zscore('sortedSet', 'three')  # 3.0
+```
 
-  ```python
-  await client.zadd('sortedSet', [
-    {'score': 1, 'member': 'one'},
-    {'score': 2, 'member': 'two'},
-    {'score': 3, 'member': 'three'}
-  ])
-  await client.zrem('sortedSet', ['one', 'two'])  # 2 (members removed)
+**Glide**
 
-  score = await client.zscore('sortedSet', 'three')  # 3.0
-  ```
+```python
+await client.zadd('sortedSet', [
+  {'score': 1, 'member': 'one'},
+  {'score': 2, 'member': 'two'},
+  {'score': 3, 'member': 'three'}
+])
+await client.zrem('sortedSet', ['one', 'two'])  # 2 (members removed)
+
+score = await client.zscore('sortedSet', 'three')  # 3.0
+```
+
 ### ZRANK & ZREVRANK
-  The `ZRANK` command returns the rank (position) of a member in a sorted set, while `ZREVRANK` returns the rank in reverse order.
 
-  * Both **redis-py** and **Glide** support these commands in the same way.
-  * Ranks are 0-based, meaning the member with the lowest score has rank 0.
-  * `ZREVRANK` returns the rank in descending order, where the member with the highest score has rank 0.
+The `ZRANK` command returns the rank (position) of a member in a sorted set, while `ZREVRANK` returns the rank in reverse order.
 
-  **redis-py**
+* Both **redis-py** and **Glide** support these commands in the same way.
+* Ranks are 0-based, meaning the member with the lowest score has rank 0.
+* `ZREVRANK` returns the rank in descending order, where the member with the highest score has rank 0.
 
-  ```python
-  await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})
-  rank = await r.zrank('sortedSet', 'two')  # 1 (0-based index)
-  rev_rank = await r.zrevrank('sortedSet', 'two')  # 1 (0-based index from end)
-  ```
+**redis-py**
 
-  **Glide**
+```python
+await r.zadd('sortedSet', {'one': 1, 'two': 2, 'three': 3})
+rank = await r.zrank('sortedSet', 'two')  # 1 (0-based index)
+rev_rank = await r.zrevrank('sortedSet', 'two')  # 1 (0-based index from end)
+```
 
-  ```python
-  await client.zadd('sortedSet', [
-    {'score': 1, 'member': 'one'},
-    {'score': 2, 'member': 'two'},
-    {'score': 3, 'member': 'three'}
-  ])
-  rank = await client.zrank('sortedSet', 'two')  # 1 (0-based index)
-  rev_rank = await client.zrevrank('sortedSet', 'two')  # 1 (0-based index from end)
-  ```
+**Glide**
+
+```python
+await client.zadd('sortedSet', [
+  {'score': 1, 'member': 'one'},
+  {'score': 2, 'member': 'two'},
+  {'score': 3, 'member': 'three'}
+])
+rank = await client.zrank('sortedSet', 'two')  # 1 (0-based index)
+rev_rank = await client.zrevrank('sortedSet', 'two')  # 1 (0-based index from end)
+```
 
 ## Transactions
+
 ### Transactions (MULTI / EXEC)
-  The `MULTI` command starts a transaction block, while `EXEC` executes all commands issued after MULTI.
 
-  * In **redis-py**, transactions are created using `r.pipeline(transaction=True)` and executed with `execute()`.
-  * In **Glide**, transactions are created using the `Transaction` class and executed with `client.exec()`.
-  * The result format is similar: both return a list of results corresponding to each command in the transaction.
+The `MULTI` command starts a transaction block, while `EXEC` executes all commands issued after MULTI.
 
-  **redis-py**
+* In **redis-py**, transactions are created using `r.pipeline(transaction=True)` and executed with `execute()`.
+* In **Glide**, transactions are created using the `Transaction` class and executed with `client.exec()`.
+* The result format is similar: both return a list of results corresponding to each command in the transaction.
 
-  ```python
-  # Create a transaction
-  pipeline = r.pipeline(transaction=True)
-  pipeline.set("key", "value")
-  pipeline.get("key")
-  result = await pipeline.execute()  # [True, b"value"] or [True, "value"] if decode_responses=True
-  ```
+**redis-py**
 
-  **Glide**
+```python
+# Create a transaction
+pipeline = r.pipeline(transaction=True)
+pipeline.set("key", "value")
+pipeline.get("key")
+result = await pipeline.execute()  # [True, b"value"] or [True, "value"] if decode_responses=True
+```
 
-  ```python
-  from glide import Transaction
+**Glide**
 
-  # Create a transaction
-  transaction = Transaction()
-  transaction.set("key", "value")
-  transaction.get("key")
-  result = await client.exec(transaction)  # ["OK", b"value"]
-  ```
+```python
+from glide import Transaction
+
+# Create a transaction
+transaction = Transaction()
+transaction.set("key", "value")
+transaction.get("key")
+result = await client.exec(transaction)  # ["OK", b"value"]
+```
 
 ## Lua Scripts
+
 ### EVAL / EVALSHA
-  The `EVAL` command executes a Lua script on the server, while `EVALSHA` executes a script cached on the server using its SHA1 hash.
 
-  * In **redis-py**, these commands require specifying the script, the number of keys, and passing keys and arguments separately.
-  * In **Glide**, scripts are created using the `Script` class and executed with `invoke_script()`, with keys and arguments passed in separate lists.
-  * **Glide** automatically handles script caching, so there's no need for separate `EVALSHA` handling.
+The `EVAL` command executes a Lua script on the server, while `EVALSHA` executes a script cached on the server using its SHA1 hash.
 
-  **redis-py**
+* In **redis-py**, these commands require specifying the script, the number of keys, and passing keys and arguments separately.
+* In **Glide**, scripts are created using the `Script` class and executed with `invoke_script()`, with keys and arguments passed in separate lists.
+* **Glide** automatically handles script caching, so there's no need for separate `EVALSHA` handling.
 
-  ```python
-  # EVAL
-  lua_script = "return {KEYS[1], ARGV[1]}"
-  result = await r.eval(lua_script, 1, "foo", "bar")
-  print(result)  # [b'foo', b'bar'] or ['foo', 'bar'] if decode_responses=True
+**redis-py**
 
-  # EVALSHA
-  sha = await r.script_load(lua_script)
-  sha_result = await r.evalsha(sha, 1, "foo", "bar")
-  print(sha_result)  # [b'foo', b'bar'] or ['foo', 'bar'] if decode_responses=True
-  ```
+```python
+# EVAL
+lua_script = "return {KEYS[1], ARGV[1]}"
+result = await r.eval(lua_script, 1, "foo", "bar")
+print(result)  # [b'foo', b'bar'] or ['foo', 'bar'] if decode_responses=True
 
-  **Glide**
+# EVALSHA
+sha = await r.script_load(lua_script)
+sha_result = await r.evalsha(sha, 1, "foo", "bar")
+print(sha_result)  # [b'foo', b'bar'] or ['foo', 'bar'] if decode_responses=True
+```
 
-  ```python
-  from glide import Script
+**Glide**
 
-  lua_script = Script("return {KEYS[1], ARGV[1]}")
-  result = await client.invoke_script(lua_script, keys=["foo"], args=["bar"])
-  print(result)  # [b'foo', b'bar']
-  ```
+```python
+from glide import Script
+
+lua_script = Script("return {KEYS[1], ARGV[1]}")
+result = await client.invoke_script(lua_script, keys=["foo"], args=["bar"])
+print(result)  # [b'foo', b'bar']
+```
 
 ## Authentication
+
 ### AUTH
-  The `AUTH` command authenticates a client connection to the Valkey server.
 
-  * In **redis-py**, authentication is done using the `auth()` method or during client initialization.
-  * In **Glide**, authentication is handled during client initialization using `ServerCredentials`.
+The `AUTH` command authenticates a client connection to the Valkey server.
 
-  **redis-py**
+* In **redis-py**, authentication is done using the `auth()` method or during client initialization.
+* In **Glide**, authentication is handled during client initialization using `ServerCredentials`.
 
-  ```python
-  # During initialization
-  r = redis.Redis(host='localhost', port=6379, password='mypass')
+**redis-py**
 
-  # Or after initialization
-  await r.auth('mypass')  # True
-  ```
+```python
+# During initialization
+r = redis.Redis(host='localhost', port=6379, password='mypass')
 
-  **Glide**
+# Or after initialization
+await r.auth('mypass')  # True
+```
 
-  ```python
-  # During initialization
-  credentials = ServerCredentials(password="mypass")
-  client_config = GlideClientConfiguration(
-      addresses=[NodeAddress(host="localhost", port=6379)],
-      credentials=credentials
-  )
-  client = await GlideClient.create(client_config)
-  ```
+**Glide**
+
+```python
+# During initialization
+credentials = ServerCredentials(password="mypass")
+client_config = GlideClientConfiguration(
+    addresses=[NodeAddress(host="localhost", port=6379)],
+    credentials=credentials
+)
+client = await GlideClient.create(client_config)
+```
 
 ## Custom Commands
+
 ### Custom Commands
-  Both libraries provide ways to execute custom or raw Redis commands.
 
-  * In **redis-py**, you can use the `execute_command()` method.
-  * In **Glide**, you can use the `custom_command()` method.
+Both libraries provide ways to execute custom or raw Redis commands.
 
-  **redis-py**
+* In **redis-py**, you can use the `execute_command()` method.
+* In **Glide**, you can use the `custom_command()` method.
 
-  ```python
-  # Execute a raw command
-  result = await r.execute_command('SET', 'key', 'value')
-  print(result)  # True or "OK" depending on the command
+**redis-py**
 
-  # Another example
-  result = await r.execute_command('HSET', 'hash', 'field', 'value')
-  print(result)  # 1
-  ```
+```python
+# Execute a raw command
+result = await r.execute_command('SET', 'key', 'value')
+print(result)  # True or "OK" depending on the command
 
-  **Glide**
+# Another example
+result = await r.execute_command('HSET', 'hash', 'field', 'value')
+print(result)  # 1
+```
 
-  ```python
-  # Execute a raw command
-  result = await client.custom_command(['SET', 'key', 'value'])
-  print(result)  # "OK"
+**Glide**
 
-  # Another example
-  result = await client.custom_command(['HSET', 'hash', 'field', 'value'])
-  print(result)  # 1
-  ```
+```python
+# Execute a raw command
+result = await client.custom_command(['SET', 'key', 'value'])
+print(result)  # "OK"
+
+# Another example
+result = await client.custom_command(['HSET', 'hash', 'field', 'value'])
+print(result)  # 1
+```
 
 ## Connection Management
 
 ### Close / Disconnect
-  Properly closing connections is important to free up resources and avoid connection leaks.
 
-  * Both **redis-py** and **Glide** provide simple `close()` methods to close connections.
-  * In **redis-py**, you can also use connection pools which handle connection lifecycle automatically.
+Properly closing connections is important to free up resources and avoid connection leaks.
 
-  **redis-py**
+* Both **redis-py** and **Glide** provide simple `close()` methods to close connections.
+* In **redis-py**, you can also use connection pools which handle connection lifecycle automatically.
 
-  ```python
-  # Close connection
-  await r.close()
+**redis-py**
 
-  # For cluster connections
-  await rc.close()
+```python
+# Close connection
+await r.close()
 
-  # Connection pools are closed automatically when the client is closed
-  ```
+# For cluster connections
+await rc.close()
 
-  **Glide**
+# Connection pools are closed automatically when the client is closed
+```
 
-  ```python
-  # Close client (works for both standalone and cluster)
-  await client.close()
-  ```
+**Glide**
+
+```python
+# Close client (works for both standalone and cluster)
+await client.close()
+```

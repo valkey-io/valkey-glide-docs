@@ -14,12 +14,12 @@ Valkey General Language Independent Driver for the Enterprise (GLIDE) is the off
 
 ## Documentation
 
-For full ducumentations, see Valkey GLIDE main [documentation site](/valkey-glide-docs/).  
-Visit Valkey GLIDE Node.js [documentations](/valkey-glide-docs/languages/nodejs) for more examples and further details on TLS, Read strategy, Timeouts and various other topics.
+For full ducumentations, see Valkey GLIDE main [documentation site](/overview).  
+Visit Valkey GLIDE Node.js [documentations](/getting-started/quickstart?lang=node) for more examples and further details on TLS, Read strategy, Timeouts and various other topics.
 
 ## Supported Engine Versions
 
-Refer to the [Supported Engine Versions table](/valkey-glide-docs/overview/#supported-engine-versions) for details.
+Refer to the [Supported Engine Versions table](/overview#supported-engine-versions) for details.
 
 # Getting Started - Node Wrapper
 
@@ -54,7 +54,7 @@ Node.js 16 or higher.
 
 ### Building & Testing
 
-Development instructions for local building & testing the package are in the [developer instructions](/valkey-glide-docs/languages/nodejs/developer/) section.
+Development instructions for local building & testing the package are in the [developer instructions](https://github.com/valkey-io/valkey-glide/blob/main/node/DEVELOPER.md) section.
 
 # Quick Start
 
@@ -72,19 +72,19 @@ npm i @valkey/valkey-glide
 import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
 // When Valkey is in standalone mode, add address of the primary node, and any replicas you'd like to be able to read from.
 const addresses = [
-    {
-        host: "localhost",
-        port: 6379,
-    },
+  {
+    host: "localhost",
+    port: 6379,
+  },
 ];
 // Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
 const client = await GlideClient.createClient({
-    addresses: addresses,
-    // if the server uses TLS, you'll need to enable it. Otherwise, the connection attempt will time out silently.
-    // useTLS: true,
-    // It is recommended to set a timeout for your specific use case
-    requestTimeout: 500, // 500ms timeout
-    clientName: "test_standalone_client",
+  addresses: addresses,
+  // if the server uses TLS, you'll need to enable it. Otherwise, the connection attempt will time out silently.
+  // useTLS: true,
+  // It is recommended to set a timeout for your specific use case
+  requestTimeout: 500, // 500ms timeout
+  clientName: "test_standalone_client",
 });
 // The empty array signifies that there are no additional arguments.
 const pong = await client.customCommand(["PING"]);
@@ -101,19 +101,19 @@ console.log(`Get response is = ${get_response}`);
 import { GlideClient, GlideClusterClient, Logger } from "@valkey/valkey-glide";
 // When Valkey is in cluster mode, add address of any nodes, and the client will find all nodes in the cluster.
 const addresses = [
-    {
-        host: "localhost",
-        port: 6379,
-    },
+  {
+    host: "localhost",
+    port: 6379,
+  },
 ];
 // Check `GlideClientConfiguration/GlideClusterClientConfiguration` for additional options.
 const client = await GlideClusterClient.createClient({
-    addresses: addresses,
-    // if the cluster nodes use TLS, you'll need to enable it. Otherwise the connection attempt will time out silently.
-    // useTLS: true,
-    // It is recommended to set a timeout for your specific use case
-    requestTimeout: 500, // 500ms timeout
-    clientName: "test_cluster_client",
+  addresses: addresses,
+  // if the cluster nodes use TLS, you'll need to enable it. Otherwise the connection attempt will time out silently.
+  // useTLS: true,
+  // It is recommended to set a timeout for your specific use case
+  requestTimeout: 500, // 500ms timeout
+  clientName: "test_cluster_client",
 });
 // The empty array signifies that there are no additional arguments.
 const pong = await client.customCommand(["PING"], { route: "randomNode" });

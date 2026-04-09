@@ -7,11 +7,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-
-
 import { Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
-
-
 
 Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE.
 
@@ -157,7 +153,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     // Create ValkeyGlide client
     $client = new ValkeyGlide();
     $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
-    
+
     try {
         // Set a key-value pair
         $client->set('user:1000', 'john_doe');
@@ -170,6 +166,27 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     } finally {
         $client->close();
     }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Set a key-value pair
+    await client.StringSetAsync("user:1000", "john_doe");
+    Console.WriteLine("✓ Key set successfully");
+
+    // Get the value
+    ValkeyValue value = await client.StringGetAsync("user:1000");
+    Console.WriteLine($"✓ Retrieved value: {value}");
     ```
   </TabItem>
 </Tabs>
@@ -264,6 +281,24 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     echo "✓ Retrieved values: " . implode(', ', $values) . "\n";
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Set multiple keys at once
+    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    {
+        new("user:1001", "alice"),
+        new("user:1002", "bob"),
+        new("user:1003", "charlie"),
+    });
+    Console.WriteLine("✓ Multiple keys set");
+
+    // Get multiple keys at once
+    ValkeyValue[] values = await client.StringGetAsync(
+        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
+    Console.WriteLine($"✓ Retrieved values: {string.Join(", ", values)}");
+    ```
+  </TabItem>
 </Tabs>
 
 ## Removing Keys
@@ -310,6 +345,14 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
     echo "✓ Deleted {$deletedCount} keys\n";
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    long deletedCount = await client.KeyDeleteAsync(
+        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
+    Console.WriteLine($"✓ Deleted {deletedCount} keys");
+    ```
+  </TabItem>
 </Tabs>
 
 ## What's Next
@@ -317,5 +360,3 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 Now that you understand the basics, take a look at some other topics on Valkey GLIDE:
 
 <LinkCard title="GLIDE's Rust Core" href={`/concepts/architecture/rust-core-design`} description="Learn more about the underlying engine that connects GLIDE drivers." />
-
-<LinkCard title="Languages" href={`/languages`} description="For language specific instructions, take a look at our supported languages." />

@@ -8,8 +8,6 @@ sidebar:
 import { Aside, Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { javaGlideLatest } from '@data/versions';
 
-
-
 ## Quick Installation
 
 Add the following dependency to your `pom.xml` file:
@@ -17,12 +15,12 @@ Add the following dependency to your `pom.xml` file:
 <Code
   lang="xml"
   code={`
-  <dependency>
-    <groupId>io.valkey</groupId>
-    <artifactId>valkey-glide</artifactId>
-    <version>${javaGlideLatest}</version>
-  </dependency>
-  `}
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<version>${javaGlideLatest}</version>
+</dependency>
+`}
 />
 
 ## Full Installations
@@ -35,6 +33,7 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     <Aside>must include a `classifier` to specify your platform.</Aside>
 
     Example with osdector:
+
     ```groovy
     // with osdetector
     plugins {
@@ -45,7 +44,8 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     ```
 
-    Example with osx-aarch_64:
+    Example with osx-aarch\_64:
+
     ```groovy
     // osx-aarch_64
     dependencies {
@@ -53,7 +53,8 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     ```
 
-    Example with osx-x86_64:
+    Example with osx-x86\_64:
+
     ```groovy
     // osx-x86_64
     dependencies {
@@ -61,7 +62,8 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     ```
 
-    Example with linux-aarch_64:
+    Example with linux-aarch\_64:
+
     ```groovy
     // linux-aarch_64
     dependencies {
@@ -69,7 +71,8 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     ```
 
-    Example with linux-x86_64:
+    Example with linux-x86\_64:
+
     ```groovy
     // linux-x86_64
     dependencies {
@@ -77,7 +80,8 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     ```
 
-    Example with windows-x86_64:
+    Example with windows-x86\_64:
+
     ```groovy
     // windows-x86_64
     dependencies {
@@ -98,48 +102,48 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     <Code
       lang="xml"
       code={`
-  <!--osx-aarch_64-->
-  <dependency>
-      <groupId>io.valkey</groupId>
-      <artifactId>valkey-glide</artifactId>
-      <classifier>osx-aarch_64</classifier>
-      <version>${javaGlideLatest}</version>
-  </dependency>
+<!--osx-aarch_64-->
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>osx-aarch_64</classifier>
+<version>${javaGlideLatest}</version>
+</dependency>
 
-  <!--linux-aarch_64-->
-  <dependency>
-      <groupId>io.valkey</groupId>
-      <artifactId>valkey-glide</artifactId>
-      <classifier>linux-aarch_64</classifier>
-      <version>${javaGlideLatest}</version>
-  </dependency>
+<!--linux-aarch_64-->
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>linux-aarch_64</classifier>
+<version>${javaGlideLatest}</version>
+</dependency>
 
-  <!--linux-x86_64-->
-  <dependency>
-      <groupId>io.valkey</groupId>
-      <artifactId>valkey-glide</artifactId>
-      <classifier>linux-x86_64</classifier>
-      <version>${javaGlideLatest}</version>
-  </dependency>
+<!--linux-x86_64-->
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>linux-x86_64</classifier>
+<version>${javaGlideLatest}</version>
+</dependency>
 
-  <!--with os-maven-plugin-->
-  <build>
-      <extensions>
-          <extension>
-              <groupId>kr.motd.maven</groupId>
-              <artifactId>os-maven-plugin</artifactId>
-          </extension>
-      </extensions>
-  </build>
-  <dependencies>
-      <dependency>
-          <groupId>io.valkey</groupId>
-          <artifactId>valkey-glide</artifactId>
-          <classifier>\${os.detected.classifier}</classifier>
-          <version>${javaGlideLatest}</version>
-      </dependency>
-  </dependencies>`}
-  />
+<!--with os-maven-plugin-->
+<build>
+<extensions>
+<extension>
+<groupId>kr.motd.maven</groupId>
+<artifactId>os-maven-plugin</artifactId>
+</extension>
+</extensions>
+</build>
+<dependencies>
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<classifier>\${os.detected.classifier}</classifier>
+<version>${javaGlideLatest}</version>
+</dependency>
+</dependencies>`}
+    />
   </TabItem>
 
   <TabItem label="SBT">

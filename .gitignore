@@ -26,3 +26,6 @@ pnpm-debug.log*
 doc-gen/docs/
 doc-gen/test/
 doc-gen/.venv/
+
+# Kiro specs
+.kiro/specs/

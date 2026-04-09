@@ -1,61 +1,76 @@
 ---
-import { LinkCard, } from '@astrojs/starlight/components';
-import { marked } from 'marked';
-import DOMPurify from 'isomorphic-dompurify';
+import { LinkCard } from "@astrojs/starlight/components";
+import { marked } from "marked";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Props {
-  owner: string;
-  repo: string;
-  release?: string;
-  limit?: number;
+    owner: string;
+    repo: string;
+    release?: string;
+    limit?: number;
 }
 
 const { owner, repo, release, limit = 1 } = Astro.props;
 
 let releaseData: any[] = [];
 
-const token = import.meta.env.GITHUB_TOKEN || '';
+const token = import.meta.env.GITHUB_TOKEN || "";
 const headers = {
-  'Accept': 'application/vnd.github.v3+json',
-  ...(token && { 'Authorization': `token ${token}` }),
+    Accept: "application/vnd.github.v3+json",
+    ...(token && { Authorization: `token ${token}` }),
 };
 
 const baseUrl = "https://api.github.com";
-var url = ""
+var url = "";
 if (release) {
-  // Single release mode
-  url = baseUrl + `/repos/${owner}/${repo}/releases/${release}`;
+    // Single release mode
+    url = baseUrl + `/repos/${owner}/${repo}/releases/${release}`;
 } else {
-  url = baseUrl + `/repos/${owner}/${repo}/releases?per_page=${limit}`;
+    url = baseUrl + `/repos/${owner}/${repo}/releases?per_page=${limit}`;
 }
 
 const response = await fetch(url, { headers });
 if (response.ok) {
-  releaseData = await response.json();
+    releaseData = await response.json();
 } else {
-  throw new Error(`Failed to fetch release: ${response.status}`);
+    throw new Error(`Failed to fetch release: ${response.status}`);
 }
 
 // Format date safely
 function formatDate(dateString: string | null): string {
-  if (!dateString) return 'Unpublished';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Invalid date';
-  return date.toLocaleDateString();
+    if (!dateString) return "Unpublished";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    return date.toLocaleDateString();
 }
 
 // Parse and sanitize markdown body
 async function getSanitizedBody(body: string): Promise<string> {
-  if (!body) return '';
-  const rawHtml = await marked.parse(body);
-  return DOMPurify.sanitize(rawHtml);
+    if (!body) return "";
+    const rawHtml = await marked.parse(body);
+    return DOMPurify.sanitize(rawHtml);
 }
 ---
-{releaseData.map(async (release) => (
-  <h2>{release.name || release.tag_name}</h2>
-  <p>Release Date: {formatDate(release.published_at)}</p>
-  <div class="sl-markdown-content" set:html={await getSanitizedBody(release.body)} />
-  <p><b>Release: </b> <a href={release.html_url}>{release.html_url}</a></p>
-))}
 
-<LinkCard title="View on GitHub" description='See all releases on GitHub' href={`https://github.com/${owner}/${repo}/releases`} />
+{
+    releaseData.map(async (release) => (
+        <>
+            <h2>{release.name || release.tag_name}</h2>
+            <p>Release Date: {formatDate(release.published_at)}</p>
+            <div
+                class="sl-markdown-content"
+                set:html={await getSanitizedBody(release.body)}
+            />
+            <p>
+                <b>Release: </b>{" "}
+                <a href={release.html_url}>{release.html_url}</a>
+            </p>
+        </>
+    ))
+}
+
+<LinkCard
+    title="View on GitHub"
+    description="See all releases on GitHub"
+    href={`https://github.com/${owner}/${repo}/releases`}
+/>

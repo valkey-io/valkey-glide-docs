@@ -15,19 +15,19 @@ jobs:
     outputs:
       tag: ${{ steps.get-latest-tag.outputs.tag }}
     steps:
-    - name: Get Latest Valkey GLIDE Release Tag
-      id: get-latest-tag
-      run: |
-        # Fetch all tags from the repository
-        git clone --filter=blob:none --no-checkout https://github.com/valkey-io/valkey-glide.git temp-repo
-        cd temp-repo
-        git fetch --tags
+      - name: Get Latest Valkey GLIDE Release Tag
+        id: get-latest-tag
+        run: |
+          # Fetch all tags from the repository
+          git clone --filter=blob:none --no-checkout https://github.com/valkey-io/valkey-glide.git temp-repo
+          cd temp-repo
+          git fetch --tags
 
-        # Get the latest release tag that starts with v2.x.x, excluding -rc or other suffixes.
-        LATEST_TAG=$(git tag -l "v2.*.*" | grep -v -E '(rc|alpha|beta)' | sort -V | tail -n1)
+          # Get the latest release tag that starts with v2.x.x, excluding -rc or other suffixes.
+          LATEST_TAG=$(git tag -l "v2.*.*" | grep -v -E '(rc|alpha|beta)' | sort -V | tail -n1)
 
-        echo "Latest release tag: $LATEST_TAG"
-        echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest release tag: $LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
   # --- Parallel Documentation Build Jobs ---
   build-node-docs:
@@ -82,8 +82,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Generate Java Docs
         run: ./doc-gen/build-java-docs.sh
@@ -115,7 +115,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Generate Python Docs
         run: ./doc-gen/build-python-docs.sh

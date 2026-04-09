@@ -1,147 +1,184 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection } from "astro:content";
 
 // Get all Starlight documentation pages, excluding drafts and common folder
-const docPages = (await getCollection('docs')).filter(page => 
-  !page.data.draft && !page.filePath.startsWith('src/content/docs/commons')
+const docPages = (await getCollection("docs")).filter(
+    (page) =>
+        !page.data.draft &&
+        !page.filePath.startsWith("src/content/docs/commons"),
 );
 
 // 2. Get all custom .astro pages (optional)
-const customPages = import.meta.glob('./**/*.astro');
+const customPages = import.meta.glob("./**/*.astro");
 
 // Generate CSV content
 const csvContent = [
-  'URL,Approved', // Header row
-  ...docPages.map(page => {
-    const url = page.filePath
-      ?.replaceAll('src/content/docs', 'http://localhost:4321/valkey-glide-docs')
-      .replaceAll('/index','')
-      .replaceAll('.mdx','')
-      .replaceAll(' ', '-')
-      .toLowerCase();
-    return `${url},`;
-  }),
-  ...Object.keys(customPages).map(pagePath => {
-    const url = pagePath
-      .replace('./', '/')
-      .replace('index.astro', '')
-      .replace('.astro', '');
-    
-    if (url === '/all-pages') return null;
-    return `${url},`;
-  }).filter(Boolean)
-].join('\n');
+    "URL,Approved", // Header row
+    ...docPages.map((page) => {
+        const url = page.filePath
+            ?.replaceAll(
+                "src/content/docs",
+                "http://localhost:4321/valkey-glide-docs",
+            )
+            .replaceAll("/index", "")
+            .replaceAll(".mdx", "")
+            .replaceAll(" ", "-")
+            .toLowerCase();
+        return `${url},`;
+    }),
+    ...Object.keys(customPages)
+        .map((pagePath) => {
+            const url = pagePath
+                .replace("./", "/")
+                .replace("index.astro", "")
+                .replace(".astro", "");
+
+            if (url === "/all-pages") return null;
+            return `${url},`;
+        })
+        .filter(Boolean),
+].join("\n");
 ---
 
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>All Pages - CSV Export</title>
-    <style>
-      body { 
-        font-family: sans-serif; 
-        padding: 2rem; 
-        max-width: 1200px;
-        margin: 0 auto;
-      }
-      pre {
-        background: #f5f5f5;
-        padding: 1rem;
-        border-radius: 4px;
-        overflow-x: auto;
-      }
-      code {
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-      }
-      .button-group {
-        margin-top: 1rem;
-        display: flex;
-        gap: 1rem;
-      }
-      button {
-        padding: 0.5rem 1rem;
-        background: #0066cc;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #0052a3;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>All Site Pages - CSV Format</h1>
-    
-    <div class="button-group">
-      <button onclick="copyToClipboard()">Copy CSV</button>
-      <button onclick="downloadCSV()">Download CSV File</button>
-    </div>
-    
-    <pre><code id="csvContent">{csvContent}</code></pre>
+    <head>
+        <meta charset="UTF-8" />
+        <title>All Pages - CSV Export</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                padding: 2rem;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            pre {
+                background: #f5f5f5;
+                padding: 1rem;
+                border-radius: 4px;
+                overflow-x: auto;
+            }
+            code {
+                font-family: "Courier New", monospace;
+                font-size: 14px;
+            }
+            .button-group {
+                margin-top: 1rem;
+                display: flex;
+                gap: 1rem;
+            }
+            button {
+                padding: 0.5rem 1rem;
+                background: #0066cc;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #0052a3;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>All Site Pages - CSV Format</h1>
 
-    <hr style="margin: 2rem 0;" />
+        <div class="button-group">
+            <button onclick="copyToClipboard()">Copy CSV</button>
+            <button onclick="downloadCSV()">Download CSV File</button>
+        </div>
 
-    <h2>Preview (HTML Table)</h2>
-    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-      <thead>
-        <tr>
-          <th>URL</th>
-          <th>Approved</th>
-        </tr>
-      </thead>
-      <tbody>
-        {csvContent.split(`\n`).map(line => {
-          const url = line.split(',')[0]
-          return (
-            <tr>
-              <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
-              <td></td>
-            </tr>
-          );
-        })}
-        {Object.keys(customPages).map(pagePath => {
-          const url = pagePath
-            .replace('./', '/')
-            .replace('index.astro', '')
-            .replace('.astro', '');
-          
-          if (url === '/all-pages') return null;
-          
-          return (
-            <tr>
-              <td><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></td>
-              <td></td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+        <pre><code id="csvContent">{csvContent}</code></pre>
 
-    <script is:inline>
-      function copyToClipboard() {
-        const csvData = document.getElementById('csvContent').textContent;
-        navigator.clipboard.writeText(csvData).then(() => {
-          alert('CSV copied to clipboard!');
-        }).catch(err => {
-          console.error('Failed to copy:', err);
-        });
-      }
-      
-      function downloadCSV() {
-        const csvData = document.getElementById('csvContent').textContent;
-        const blob = new Blob([csvData], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'all-pages.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }
-    </script>
-  </body>
+        <hr style="margin: 2rem 0;" />
+
+        <h2>Preview (HTML Table)</h2>
+        <table
+            border="1"
+            cellpadding="8"
+            cellspacing="0"
+            style="border-collapse: collapse; width: 100%;"
+        >
+            <thead>
+                <tr>
+                    <th>URL</th>
+                    <th>Approved</th>
+                </tr>
+            </thead>
+            <tbody>
+                {
+                    csvContent.split(`\n`).map((line) => {
+                        const url = line.split(",")[0];
+                        return (
+                            <tr>
+                                <td>
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {url}
+                                    </a>
+                                </td>
+                                <td />
+                            </tr>
+                        );
+                    })
+                }
+                {
+                    Object.keys(customPages).map((pagePath) => {
+                        const url = pagePath
+                            .replace("./", "/")
+                            .replace("index.astro", "")
+                            .replace(".astro", "");
+
+                        if (url === "/all-pages") return null;
+
+                        return (
+                            <tr>
+                                <td>
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {url}
+                                    </a>
+                                </td>
+                                <td />
+                            </tr>
+                        );
+                    })
+                }
+            </tbody>
+        </table>
+
+        <script is:inline>
+            function copyToClipboard() {
+                const csvData =
+                    document.getElementById("csvContent").textContent;
+                navigator.clipboard
+                    .writeText(csvData)
+                    .then(() => {
+                        alert("CSV copied to clipboard!");
+                    })
+                    .catch((err) => {
+                        console.error("Failed to copy:", err);
+                    });
+            }
+
+            function downloadCSV() {
+                const csvData =
+                    document.getElementById("csvContent").textContent;
+                const blob = new Blob([csvData], { type: "text/csv" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "all-pages.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
 </html>

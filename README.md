@@ -29,14 +29,17 @@ pnpm install
 For development, run `pnpm dev`. It will spin up a hot-loading development server to serve the documentation pages.
 
 ### Link Checker
+
 We use [lychee](https://github.com/lycheeverse/lychee) to check for broken links. Configuration rules (exclusions) are defined in our `lychee.toml`.
 
 To start, install `lychee`.
+
 ```bash
 brew install lychee
 ```
 
 Then to run the build and check links:
+
 ```bash
 pnpm build:check-links
 ```

@@ -1,65 +1,67 @@
 ---
-title: Configure Pub/Sub
-description: See how to subscribe and publish messages with Valkey GLIDE clients.
+title: Pub/Sub Messaging
+description: Learn how to publish, subscribe, and manage Pub/Sub with Valkey GLIDE clients.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-
 Valkey GLIDE PubSub aims to unify various nuances into a coherent interface, minimizing differences between Sharded, Cluster, and Standalone configurations.
-Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues. 
+Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues.
 
-This guide will go over how to configure GLIDE pubsub system.
+This guide will go over how to configure GLIDE's PubSub system.
 
-## Use Separate Clients
+## Using Separate Clients
 
-Due to the implementation of the resubscription logic, it is recommended to use a dedicated client for PubSub subscriptions. 
-That is, the client with subscriptions should not be the same client that issues commands. 
-In case of topology changes, the internal connections might be reestablished to resubscribe to the correct servers.
+GLIDE uses the RESP3 protocol, which allows PubSub subscriptions and regular commands to coexist on the same client without issues.
+However, for high-throughput PubSub workloads, consider using a dedicated client for subscriptions to reduce latency on regular commands.
 
-## Publishing Client
+:::note
+Since GLIDE implements automatic re-connections and re-subscriptions on behalf of the user, there is a possibility of message loss during these activities.
+This is not a GLIDE-specific characteristic; similar effects will occur if the user handles such issues independently.
+Since the RESP protocol does not guarantee strong delivery semantics for PubSub functionality, GLIDE does not introduce additional constraints in this regard.
+:::
+
+## Publishing
 
 To publish a message, create a separate client to your Valkey instance. Both Standalone and Cluster are supported.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Java">
     ```java
-    // Publishing is done with a separate client
-    GlideClientConfiguration publishConfig = GlideClientConfiguration.builder()
+    GlideClientConfiguration publisherConfig = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
             .build();
-    try (var publishingClient = GlideClient.createClient(publishConfig).get()) {
-        // publish message on ch1 channel
-        publishingClient.publish("Test message", "ch1").get();
+    try (var publisher = GlideClient.createClient(publisherConfig).get()) {
+        // Publish message on 'ch1' channel
+        publisher.publish("Test message", "ch1").get();
     }
     ```
   </TabItem>
 
   <TabItem label="Node">
     ```typescript
-    // Publishing is done with a separate client
-    const publishConfig = {
+    const publisherConfig = {
         addresses: [{ host: "localhost", port: 6379 }],
     };
-    const publishingClient = await GlideClient.createClient(publishConfig);
+    const publisher = await GlideClient.createClient(publisherConfig);
 
-    // publish message on ch1 channel
-    await publishingClient.publish("Test message", "ch1");
+    // Publish message on 'ch1' channel
+    await publisher.publish("Test message", "ch1");
 
-    publishingClient.close();
+    publisher.close();
     ```
   </TabItem>
 
   <TabItem label="Python">
     ```py
-    publishing_config = GlideClientConfiguration(
+    publisher_config = GlideClientConfiguration(
         [NodeAddress("localhost", 6379)]
     )
 
-    publishing_client = await GlideClient.create(publishing_config)
+    publisher = await GlideClient.create(publisher_config)
 
-    # publish message on ch1 channel
-    await publishing_client.publish("Test message", "ch1")
+    # Publish message on 'ch1' channel
+    await publisher.publish("Test message", "ch1")
     ```
   </TabItem>
 
@@ -68,235 +70,695 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     publisher, _ := NewGlideClient(NewGlideClientConfiguration().
         WithAddress(&NodeAddress{}))
 
+    // Publish message on 'ch1' channel
     publisher.Publish("ch1", "Hello from ch1")
     ```
   </TabItem>
 
   <TabItem label="PHP">
     ```php
-    // Publisher process (separate):
-    $publishingClient = new ValkeyGlide();
-    $publishingClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
-    $publishingClient->publish('ch1', 'Test message');
+    $publisher = new ValkeyGlide();
+    $publisher->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    // Publish message on 'ch1' channel
+    $publisher->publish('ch1', 'Test message');
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var publisherConfig = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var publisher = await GlideClient.CreateClient(publisherConfig);
+
+    // Publish message on 'ch1' channel
+    await publisher.PublishAsync("ch1", "Test message");
     ```
   </TabItem>
 </Tabs>
 
-:::note
-Since GLIDE implements automatic re-connections and re-subscriptions on behalf of the user, there is a possibility of message loss during these activities. 
-This is not a GLIDE-specific characteristic; similar effects will occur if the user handles such issues independently. 
-Since the RESP protocol does not guarantee strong delivery semantics for PubSub functionality, GLIDE does not introduce additional constraints in this regard.
-:::
+## Subscribing
 
-## Subscriber Clients
+GLIDE provides two ways to subscribe to channels: **dynamic subscriptions** via API calls at runtime, and **config-based subscriptions** defined at client creation time.
 
-To subscribe to messages, use a separate client with subscriptions configured through the client's configuration object.
+### Dynamic Subscriptions (GLIDE 2.3+)
 
-### With Callback
+Starting with GLIDE 2.3, you can subscribe to channels and patterns at any point during the client's lifetime. Dynamic subscriptions come in two variants:
 
-Glide clients can register a callback method to handle subscriptions in the client configuration. 
+* **Blocking:** Waits for server confirmation before returning. Accepts a `timeout_ms` parameter (0 = wait indefinitely).
+* **Non-blocking (lazy):** Updates the desired subscription state and returns immediately. The subscription is applied asynchronously by the background [synchronizer](/concepts/client-features/pubsub-model/#pubsub-synchronizer).
+
+No special configuration is needed at client creation time — you can subscribe dynamically on any client. Messages are buffered and retrievable via polling by default. If you want callback-based delivery instead (explained [below](#callback)), provide a subscription configuration with a callback at client creation time (the initial channel set can be empty).
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Java">
     ```java
-    MessageCallback callback =
-        (msg, context) -> System.out.printf("Received %s, context %s\n", msg, context);
-
+    // Create a regular client — no subscription configuration needed
     GlideClientConfiguration config = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
             .requestTimeout(3000)
-            // subscriptions are configured here
-            .subscriptionConfiguration(StandaloneSubscriptionConfiguration.builder()
-                .subscription(EXACT, "ch1")       // Listens for messages published to 'ch1' channel, in unsharded mode
-                .subscription(EXACT, "ch2")       // Listens for messages published to 'ch2' channel, in unsharded mode
-                .subscription(PATTERN, "chat*")   // Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
-                .callback(callback)
-                .callback(callback, context)     // callback or callback with context are configured here
-                .build())
             .build();
-    try (var regularClient = GlideClient.createClient(config).get()) {
-        // Do some work/wait - the callbacks will be dispatched on incoming messages
-    } // unsubscribe happens here
+    try (var client = GlideClient.createClient(config).get()) {
+
+        // --- Exact channel subscriptions ---
+
+        // Blocking: waits up to 5000ms for server confirmation
+        client.subscribe(Set.of("news", "updates"), 5000).get();
+
+        // Non-blocking (lazy): returns immediately, subscribes in background
+        client.subscribeLazy(Set.of("alerts")).get();
+
+        // --- Pattern subscriptions ---
+
+        // Blocking
+        client.psubscribe(Set.of("chat*", "event*"), 5000).get();
+
+        // Non-blocking (lazy)
+        client.psubscribeLazy(Set.of("log*")).get();
+
+        // --- Sharded subscriptions (cluster mode only) ---
+        // var clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+        // clusterClient.ssubscribe(Set.of("shard-ch1"), 5000).get();
+        // clusterClient.ssubscribeLazy(Set.of("shard-ch2")).get();
+
+        // Retrieve messages via polling
+        PubSubMessage msg = client.getPubSubMessage().get();
+
+    } // remaining subscriptions cleaned up on close
     ```
   </TabItem>
 
   <TabItem label="Node">
     ```typescript
-    const callback = (msg: PubSubMsg, context: any) => {
-        console.log(`Received ${msg.message}, context ${context}`);
-    };
-
-    const listeningConfig = {
+    // Create a regular client — no subscription configuration needed
+    const config = {
         addresses: [{ host: "localhost", port: 6379 }],
-        // subscriptions are configured here
-        pubsubSubscriptions: {
-            channelsAndPatterns: {
-                [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),    // Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
-                [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),       // Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
-            },
-            callback: callback,
-            context: context,
-        },
     };
+    const client = await GlideClient.createClient(config);
 
-    const listeningClient = await GlideClient.createClient(listeningConfig);
+    // --- Exact channel subscriptions ---
 
-    // Do some work/wait - the callback will receive messages
+    // Blocking: waits up to 5000ms for server confirmation
+    await client.subscribe(new Set(["news", "updates"]), 5000);
 
-    listeningClient.close();    // unsubscribe happens here
+    // Non-blocking (lazy): returns immediately, subscribes in background
+    await client.subscribeLazy(new Set(["alerts"]));
+
+    // --- Pattern subscriptions ---
+
+    // Blocking
+    await client.psubscribe(new Set(["chat*", "event*"]), 5000);
+
+    // Non-blocking (lazy)
+    await client.psubscribeLazy(new Set(["log*"]));
+
+    // --- Sharded subscriptions (cluster mode only) ---
+    // await clusterClient.ssubscribe(new Set(["shard-ch1"]), 5000);
+    // await clusterClient.ssubscribeLazy(new Set(["shard-ch2"]));
+
+    // Retrieve messages via polling
+    const msg = await client.getPubSubMessage();
+
+    await client.close();
     ```
   </TabItem>
 
   <TabItem label="Python">
     ```py
-    def callback (msg: CoreCommands.PubSubMsg, context: Any):
-        print(f"Received {msg}, context {context}\n")
-
-    listening_config = GlideClientConfiguration(
+    # Create a regular client — no subscription configuration needed
+    config = GlideClientConfiguration(
         [NodeAddress("localhost", 6379)],
-        pubsub_subscriptions = GlideClientConfiguration.PubSubSubscriptions(          # subscriptions are configured here
-            channels_and_patterns={
-                GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},    # Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
-                GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"}        # Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
-            },
-            callback=callback,
-            context=context,
-        )
     )
+    client = await GlideClient.create(config)
 
-    listening_client = await GlideClient.create(listening_config)
+    # --- Exact channel subscriptions ---
 
-    # Do some work/wait - the callback will receive messages
+    # Blocking: waits up to 5000ms for server confirmation
+    await client.subscribe({"news", "updates"}, timeout_ms=5000)
 
-    await listening_client.close()    # unsubscribe happens here
+    # Non-blocking (lazy): returns immediately, subscribes in background
+    await client.subscribe_lazy({"alerts"})
+
+    # --- Pattern subscriptions ---
+
+    # Blocking
+    await client.psubscribe({"chat*", "event*"}, timeout_ms=5000)
+
+    # Non-blocking (lazy)
+    await client.psubscribe_lazy({"log*"})
+
+    # --- Sharded subscriptions (cluster mode only) ---
+    # await cluster_client.ssubscribe({"shard-ch1"}, timeout_ms=5000)
+    # await cluster_client.ssubscribe_lazy({"shard-ch2"})
+
+    # Retrieve messages via polling
+    msg = await client.get_pubsub_message()
+
+    await client.close()
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    // Create a callback and context name
-    ctx := "example"
-    callback := func(message *PubSubMessage, context any) {
-        fmt.Printf("Received %s, context %s\n", message.Message, context)
+    ctx := context.Background()
+
+    // Create a regular client — no subscription configuration needed
+    config := NewGlideClientConfiguration().
+        WithAddress(&NodeAddress{})
+    client, _ := NewGlideClient(config)
+    defer client.Close()
+
+    // --- Exact channel subscriptions ---
+
+    // Blocking: waits up to 5000ms for server confirmation
+    err := client.Subscribe(ctx, []string{"news", "updates"}, 5000)
+
+    // Non-blocking (lazy): returns immediately, subscribes in background
+    err = client.SubscribeLazy(ctx, []string{"alerts"})
+
+    // --- Pattern subscriptions ---
+
+    // Blocking
+    err = client.PSubscribe(ctx, []string{"chat*", "event*"}, 5000)
+
+    // Non-blocking (lazy)
+    err = client.PSubscribeLazy(ctx, []string{"log*"})
+
+    // --- Sharded subscriptions (cluster mode only) ---
+    // err = clusterClient.SSubscribe(ctx, []string{"shard-ch1"}, 5000)
+    // err = clusterClient.SSubscribeLazy(ctx, []string{"shard-ch2"})
+
+    // Retrieve messages via polling
+    queue, _ := client.GetQueue()
+    if msg := queue.Pop(); msg != nil {
+        fmt.Printf("Received: %s on %s\n", msg.Message, msg.Channel)
     }
-
-    // define subscriptions
-    sConfig := NewStandaloneSubscriptionConfig().
-        WithSubscription(ExactChannelMode, "ch1").
-        WithSubscription(ExactChannelMode, "ch2").
-        WithSubscription(PatternChannelMode, "chat*").
-        WithCallback(callback, ctx)
-
-        // create configuration for subscriber
-    configforsub := NewGlideClientConfiguration().
-        WithAddress(&NodeAddress{}).
-        WithSubscriptionConfig(sConfig)
-
-    // create a client with a subscription
-    NewGlideClient(configforsub)
-
-    // Do more work here
-
     ```
   </TabItem>
 
   <TabItem label="PHP">
     ```php
-    // Note: subscribe() is BLOCKING in PHP - it enters a message loop
-    // Use separate processes/threads for subscriber and publisher
-    
-    // Subscriber process:
-    $listeningClient = new ValkeyGlide();
-    $listeningClient->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+    // Note: PHP uses the PHPRedis-style API where subscribe() is BLOCKING.
+    // It enters a message loop and the callback fires for each message.
+    // Use separate processes/threads for subscriber and publisher.
 
-    // This call BLOCKS and enters message loop
-    $listeningClient->subscribe(['ch1', 'ch2'], function($client, $channel, $message) {
-        echo "Received $message on channel $channel\n";
-        
-        // To exit the loop, call unsubscribe
-        if ($message === 'exit') {
-            $client->unsubscribe(['ch1', 'ch2']);
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    // --- Exact channel subscriptions ---
+    // subscribe() blocks and enters a message loop
+    $client->subscribe(['news', 'updates'], function ($client, $channel, $message) {
+        echo "Received '$message' on '$channel'\n";
+
+        // Unsubscribe from a specific channel
+        if ($message === 'stop') {
+            $client->unsubscribe([$channel]);
         }
     });
+    // Code here runs after all channels are unsubscribed
 
-    // Code here only runs after unsubscribe
-    $listeningClient->close();
+    // --- Pattern subscriptions ---
+    $client->psubscribe(['chat*', 'event*'], function ($client, $channel, $message, $pattern) {
+        echo "[$pattern] $channel: $message\n";
+
+        // Unsubscribe from a specific pattern
+        $client->punsubscribe([$pattern]);
+    });
+
+    // Unsubscribe from all channels/patterns (from within callback):
+    // $client->unsubscribe();      // all exact channels
+    // $client->punsubscribe();     // all patterns
+
+    $client->close();
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+
+    // Wait up to 5 seconds for server confirmation.
+    var blockFor = TimeSpan.FromSeconds(5);
+
+    // --- Exact channel subscriptions ---
+
+    await client.SubscribeAsync(new[] { "news", "updates" }, blockFor );  // Blocking
+    await client.SubscribeLazyAsync(new[] { "alerts" });                 // Non-blocking (lazy)
+
+    // --- Pattern subscriptions ---
+
+    await client.PSubscribeAsync(new[] { "chat*", "event*" }, blockFor);  // Blocking
+    await client.PSubscribeLazyAsync(new[] { "log*" });                   // Non-blocking (lazy)
+
+    // --- Sharded subscriptions (cluster mode only) ---
+
+    await client.SSubscribeAsync(new[] { "shard-ch1" }, blockFor);  // Blocking
+    await client.SSubscribeLazyAsync(new[] { "shard-ch2" });        // Non-blocking (lazy)
+
+    // Retrieve messages via polling
+    var queue = client.PubSubQueue!;
+    var msg = await queue.GetMessageAsync();
     ```
   </TabItem>
 </Tabs>
 
-### Non-Callback
+### Config-Based Subscriptions (All Versions)
 
-Alternatively, GLIDE clients also provide options to use the client's native async features to handle polling for messages.
+For GLIDE versions prior to 2.3, or when your subscriptions are known at startup, you can define them in the client configuration. These subscriptions are applied immediately when the client connects.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Java">
     ```java
+    // Define callback and context
+    MessageCallback callback =
+        (msg, ctx) -> System.out.printf("Received %s, context %s\n", msg, ctx);
+    String context = "example";
+
+    // Configure the client to invoke the callback for messages published
+    // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    StandaloneSubscriptionConfiguration subscriptionConfig = StandaloneSubscriptionConfiguration.builder()
+                .subscription(EXACT, "ch1")
+                .subscription(EXACT, "ch2")
+                .subscription(PATTERN, "chat*")
+                .callback(callback, context)
+                .build()
+
     GlideClientConfiguration config = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
             .requestTimeout(3000)
-            // subscriptions are configured here
-            .subscriptionConfiguration(StandaloneSubscriptionConfiguration.builder()
-                    .subscription(EXACT, Set.of("ch1", "ch2"))   // there is option to set multiple subscriptions at a time
-                    .subscription(Map.of(PATTERN, "chat*", EXACT, Set.of("ch1", "ch2")))
-                                                                // or even all subscriptions at a time
-                    .build())                                    // no callback is configured
-            .build()
-    try (var regularClient = GlideClient.createClient(config).get()) {
-        Message msg = regularClient.tryGetPubSubMessage(); // sync, does not block
-        Message msg = regularClient.getPubSubMessage().get(); // async, waits for the next message
-    } // unsubscribe happens here
+            .subscriptionConfiguration(subscriptionConfig)
+            .build();
+
+    try (var listeningClient = GlideClient.createClient(config).get()) {
+        // Do some work/wait - the callback will be invoked on incoming messages
+    } // Unsubscribe happens here
     ```
   </TabItem>
 
   <TabItem label="Node">
     ```typescript
-    const listeningConfig = {
+    // Define callback and context
+    const callback = (msg: PubSubMsg, ctx: any) => {
+        console.log(`Received ${msg.message}, context ${ctx}`);
+    };
+    const context = "example";
+
+    // Configure the client to invoke the callback for messages published
+    // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    const subscriptionConfig = {
+        channelsAndPatterns: {
+            [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),
+            [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),
+        },
+        callback: callback,
+        context: context,
+    }
+
+    const config = {
         addresses: [{ host: "localhost", port: 6379 }],
-        // subscriptions are configured here
-        pubsubSubscriptions: {
-            channelsAndPatterns: {
-                [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),    // Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
-                [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),       // Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
-            },
-        },    // no callback is configured
+        pubsubSubscriptions: subscriptionConfig
     };
 
-    const listeningClient = await GlideClient.createClient(listeningConfig);
+    const listeningClient = await GlideClient.createClient(config);
 
-    // waits for message to arrive
-    const message = await listeningClient.getPubSubMessage();
+    // Do some work/wait - the callback will be invoked on incoming messages
 
-    // returns null if no message is available
-    const message2 = listeningClient.tryGetPubSubMessage();
-
-    listeningClient.close();    // unsubscribe happens here
+    listeningClient.close();    // Unsubscribe happens here
     ```
   </TabItem>
 
   <TabItem label="Python">
     ```py
-    listening_config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)],
-        pubsub_subscriptions = GlideClientConfiguration.PubSubSubscriptions(          # subscriptions are configured here
-            channels_and_patterns={
-                GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},    # Listens for messages published to 'ch1' and 'ch2' channel, in unsharded mode
-                GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"}        # Listens for messages published to channels matched by 'chat*' glob pattern, in unsharded mode
-            },
-            None,
-            None,
-        )
+    # Define callback and context
+    def callback(msg: CoreCommands.PubSubMsg, ctx: Any):
+        print(f"Received {msg}, context {ctx}\n")
+    context = "example"
+
+    # Configure the client to invoke the callback for messages published
+    # to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscription_config = GlideClientConfiguration.PubSubSubscriptions(
+        channels_and_patterns={
+            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
+            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"}
+        },
+        callback=callback,
+        context=context,
     )
 
-    listening_client = await GlideClient.create(listening_config)
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=subscription_config
+    )
 
-    # waits for message to arrive
-    message = await listening_client.get_pubsub_message()
+    listening_client = await GlideClient.create(config)
 
-    # returns None if no message is available
+    # Do some work/wait - the callback will be invoked on incoming messages
+
+    await listening_client.close()    # Unsubscribe happens here
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Define callback and context
+    callback := func(message *PubSubMessage, context any) {
+        fmt.Printf("Received %s, context %s\n", message.Message, context)
+    }
+    ctx := "example"
+
+    // Configure the client to invoke the callback for messages published
+    // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscriptionConfig := NewStandaloneSubscriptionConfig().
+        WithSubscription(ExactChannelMode, "ch1").
+        WithSubscription(ExactChannelMode, "ch2").
+        WithSubscription(PatternChannelMode, "chat*").
+        WithCallback(callback, ctx)
+
+    // Create a client with subscriptions
+    listeningClient, _ := NewGlideClient(NewGlideClientConfiguration().
+        WithAddress(&NodeAddress{}).
+        WithSubscriptionConfig(subscriptionConfig))
+
+    // Do some work/wait - the callback will be invoked on incoming messages
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    PHP GLIDE does not use config-based subscriptions. It uses the PHPRedis-style API where `subscribe()` and `psubscribe()` are called at runtime. See [Dynamic Subscriptions](#dynamic-subscriptions-glide-23) above.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Define callback and context
+    void PubSubCallback(PubSubMessage message, object? context)
+        => Console.WriteLine($"Received {message.Message} on {message.Channel}, context {context}");
+    var context = "example";
+
+    // Configure the client to invoke the callback for messages published
+    // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    var subscriptionConfig = new StandalonePubSubSubscriptionConfig()
+        .WithChannel("ch1")
+        .WithChannel("ch2")
+        .WithPattern("chat*")
+        .WithCallback(PubSubCallback, context);
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithPubSubSubscriptions(subscriptionConfig)
+        .Build();
+
+    await using var listeningClient = await GlideClient.CreateClient(config);
+
+    // Do some work/wait - the callback will be invoked on incoming messages
+    ```
+  </TabItem>
+</Tabs>
+
+## Receiving Messages
+
+There are two approaches: **callback-based** (messages are pushed to your function automatically) and **polling-based** (you pull messages when ready). The approach is determined by whether a callback is provided in the subscription configuration.
+
+:::caution
+When a callback is configured, all incoming messages are sent to that callback. Calls to `getPubSubMessage()` / `tryGetPubSubMessage()` are prohibited and will fail. The two modes cannot be mixed.
+:::
+
+### Callback
+
+To use callback-based delivery, provide a subscription configuration with a callback at client creation time. The callback fires for every incoming message — from both config-based and dynamic subscriptions.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    List<String> received = Collections.synchronizedList(new ArrayList<>());
+    MessageCallback callback = (msg, context) -> {
+        received.add(msg.getMessage());
+        System.out.printf("Received '%s' on '%s'\n", msg.getMessage(), msg.getChannel());
+    };
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().port(6379).build())
+            .requestTimeout(3000)
+            .subscriptionConfiguration(StandaloneSubscriptionConfiguration.builder()
+                .callback(callback)
+                .build())
+            .build();
+    try (var client = GlideClient.createClient(config).get()) {
+        // Subscribe dynamically — messages are delivered to the callback
+        client.subscribe(Set.of("news"), 5000).get();
+
+        // Publish a message (from another client)
+        publishingClient.publish("Hello!", "news").get();
+        Thread.sleep(500);
+
+        // Verify the callback received the message
+        assert received.contains("Hello!");
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const received: string[] = [];
+    const callback = (msg: PubSubMsg, context: any) => {
+        received.push(msg.message);
+        console.log(`Received '${msg.message}' on '${msg.channel}'`);
+    };
+
+    const config = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        pubsubSubscriptions: {
+            channelsAndPatterns: {},
+            callback: callback,
+            context: null,
+        },
+    };
+    const client = await GlideClient.createClient(config);
+
+    // Subscribe dynamically — messages are delivered to the callback
+    await client.subscribe(new Set(["news"]), 5000);
+
+    // Publish a message (from another client)
+    await publishingClient.publish("Hello!", "news");
+    await new Promise((r) => setTimeout(r, 500));
+
+    // Verify the callback received the message
+    console.assert(received.includes("Hello!"));
+
+    client.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```py
+    received = []
+
+    def callback(msg: CoreCommands.PubSubMsg, context: Any):
+        received.append(msg.message)
+        print(f"Received '{msg.message}' on '{msg.channel}'")
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=GlideClientConfiguration.PubSubSubscriptions(
+            channels_and_patterns={},
+            callback=callback,
+            context=None,
+        ),
+    )
+    client = await GlideClient.create(config)
+
+    # Subscribe dynamically — messages are delivered to the callback
+    await client.subscribe({"news"}, timeout_ms=5000)
+
+    # Publish a message (from another client)
+    await publishing_client.publish("Hello!", "news")
+    await asyncio.sleep(0.5)
+
+    # Verify the callback received the message
+    assert "Hello!" in received
+
+    await client.close()
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    var received []string
+    var mu sync.Mutex
+    callback := func(message *PubSubMessage, context any) {
+        mu.Lock()
+        received = append(received, message.Message)
+        mu.Unlock()
+        fmt.Printf("Received '%s' on '%s'\n", message.Message, message.Channel)
+    }
+
+    sConfig := NewStandaloneSubscriptionConfig().
+        WithCallback(callback, nil)
+    config := NewGlideClientConfiguration().
+        WithAddress(&NodeAddress{}).
+        WithSubscriptionConfig(sConfig)
+    client, _ := NewGlideClient(config)
+    defer client.Close()
+
+    // Subscribe dynamically — messages are delivered to the callback
+    ctx := context.Background()
+    _ = client.Subscribe(ctx, []string{"news"}, 5000)
+
+    // Publish a message (from another client)
+    publisher.Publish("news", "Hello!")
+    time.Sleep(500 * time.Millisecond)
+
+    // Verify the callback received the message
+    mu.Lock()
+    fmt.Println("Received messages:", received)
+    mu.Unlock()
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    PHP GLIDE uses inline callbacks with `subscribe()` / `psubscribe()`. See the [Dynamic Subscriptions](#dynamic-subscriptions-glide-23) examples above.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var received = new List<string>();
+
+    void PubSubCallback(PubSubMessage message, object? context)
+    {
+        lock (received) { received.Add(message.Message); }
+        Console.WriteLine($"Received '{message.Message}' on '{message.Channel}'");
+    }
+
+    var subscriptionConfig = new StandalonePubSubSubscriptionConfig()
+        .WithCallback(PubSubCallback);
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithPubSubSubscriptions(subscriptionConfig)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Subscribe dynamically — messages are delivered to the callback
+    await client.SubscribeAsync(new[] { "news" }, TimeSpan.FromSeconds(5));
+
+    // Publish a message (from another client)
+    await publishingClient.PublishAsync("news", "Hello!");
+    await Task.Delay(500);
+
+    // Verify the callback received the message
+    lock (received) { Debug.Assert(received.Contains("Hello!")); }
+    ```
+  </TabItem>
+</Tabs>
+
+### Polling
+
+If no callback is configured, messages are buffered in an unbounded queue. You retrieve them using:
+
+* **Async wait:** `getPubSubMessage()` / `get_pubsub_message()` — blocks until a message is available.
+* **Non-blocking poll:** `tryGetPubSubMessage()` / `try_get_pubsub_message()` — returns the next message or `null`/`None` immediately.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    // Configure the client to receive messages published to 'ch1'
+    // and 'ch2' and to channels matched by 'chat*' glob pattern.
+    StandaloneSubscriptionConfiguration subscriptionConfig = StandaloneSubscriptionConfiguration.builder()
+            .subscription(EXACT, Set.of("ch1", "ch2"))
+            .subscription(PATTERN, "chat*")
+            .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().port(6379).build())
+            .subscriptionConfiguration(subscriptionConfig)
+            .build();
+
+    try (var listeningClient = GlideClient.createClient(config).get()) {
+        
+        // Non-blocking: returns null if no message is available
+        Message msg = listeningClient.tryGetPubSubMessage();
+        
+        // Async: waits for the next message
+        Message msg = listeningClient.getPubSubMessage().get();
+    } // Unsubscribe happens here
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Configure the client to receive messages published to 'ch1'
+    // and 'ch2' and to channels matched by 'chat*' glob pattern.
+    const subscriptionConfig = {
+        channelsAndPatterns: {
+            [GlideClientConfiguration.PubSubChannelModes.Exact]: new Set(["ch1", "ch2"]),
+            [GlideClientConfiguration.PubSubChannelModes.Pattern]: new Set(["chat*"]),
+        },
+    };
+
+    const config = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        pubsubSubscriptions: subscriptionConfig,
+    };
+
+    const listeningClient = await GlideClient.createClient(config);
+
+    // Non-blocking: returns null if no message is available
+    const message2 = listeningClient.tryGetPubSubMessage();
+
+    // Async: waits for the next message
+    const message = await listeningClient.getPubSubMessage();
+
+    listeningClient.close();    // Unsubscribe happens here
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```py
+    # Configure the client to receive messages published to 'ch1'
+    # and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscriptions_config = GlideClientConfiguration.PubSubSubscriptions(
+        channels_and_patterns={
+            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
+            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"},
+        },
+    )
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=subscriptions_config,
+    )
+
+    listening_client = await GlideClient.create(config)
+
+    # Non-blocking: returns None if no message is available
     message = listening_client.try_get_pubsub_message()
 
-    await listening_client.close()    # unsubscribe happens here
+    # Async: waits for the next message
+    message = await listening_client.get_pubsub_message()
+
+    await listening_client.close()    # Unsubscribe happens here
     ```
   </TabItem>
 
@@ -305,19 +767,21 @@ Alternatively, GLIDE clients also provide options to use the client's native asy
     // Create a signal channel to receive notifications of new messages
     signalCh := make(chan struct{}, 1)
 
-    // Setup client and subscription config
-    sConfig := NewStandaloneSubscriptionConfig().
+    // Configure the client to receive messages published to 'ch1'
+    // and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscriptionConfig := NewStandaloneSubscriptionConfig().
         WithSubscription(ExactChannelMode, "ch1").
         WithSubscription(ExactChannelMode, "ch2").
         WithSubscription(PatternChannelMode, "chat*")
 
-    client, _ := NewGlideClient(NewGlideClientConfiguration().
+    // Create a client with subscriptions
+    listeningClient, _ := NewGlideClient(NewGlideClientConfiguration().
         WithAddress(&NodeAddress{}).
-        WithSubscriptionConfig(sConfig))
-    defer client.Close()
+        WithSubscriptionConfig(subscriptionConfig))
+    defer listeningClient.Close()
 
     // Get the message queue from the client
-    queue, _ := client.GetQueue()
+    queue, _ := listeningClient.GetQueue()
 
     // Register our signal channel
     queue.RegisterSignalChannel(signalCh)
@@ -350,18 +814,266 @@ Alternatively, GLIDE clients also provide options to use the client's native asy
 
     // The main application can continue running...
     // When it's time to stop, just call cancel() or close the client
-
     ```
   </TabItem>
 
   <TabItem label="PHP">
     :::caution
     GLIDE PHP does not support polling/async message retrieval.
-    Only callback-based PubSub is available. See [example](#with-callback) above for usage.
+    Only callback-based PubSub is available. See the [PHP dynamic subscriptions example](#dynamic-subscriptions-glide-23) above.
     :::
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure the client to receive messages published
+    // to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    var subscriptionConfig = new StandalonePubSubSubscriptionConfig()
+        .WithChannel("ch1")
+        .WithChannel("ch2")
+        .WithPattern("chat*");
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithPubSubSubscriptions(subscriptionConfig)
+        .Build();
+
+    await using var listeningClient = await GlideClient.CreateClient(config);
+
+    var queue = listeningClient.PubSubQueue!;
+
+    // Non-blocking: returns false if no message is available
+    if (queue.TryGetMessage(out var msg))
+    {
+        Console.WriteLine($"Received: {msg!.Message} on {msg.Channel}");
+    }
+
+    // Async: waits for the next message
+    var message = await queue.GetMessageAsync();
+    ```
+  </TabItem>
+</Tabs>
+
+## Unsubscribing (GLIDE 2.3+)
+
+Starting with GLIDE 2.3, you can unsubscribe from channels and patterns at runtime. Like subscribing, unsubscribing comes in blocking and non-blocking (lazy) variants.
+This works for both config-based and dynamically subscribed channels.
+
+To unsubscribe from **all** channels/patterns of a given type, pass `None`/`null`/empty, or use the provided constants: `ALL_CHANNELS`, `ALL_PATTERNS`, `ALL_SHARDED_CHANNELS`.
+
+:::note
+Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are removed automatically when the client is closed.
+:::
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    // Unsubscribe from specific exact channels (blocking)
+    client.unsubscribe(Set.of("news"), 5000).get();
+
+    // Unsubscribe from specific exact channels (lazy)
+    client.unsubscribeLazy(Set.of("alerts")).get();
+
+    // Unsubscribe from all exact channels
+    client.unsubscribe(PubSubBaseCommands.ALL_CHANNELS, 5000).get();
+
+    // Unsubscribe from specific patterns (blocking)
+    client.punsubscribe(Set.of("chat*"), 5000).get();
+
+    // Unsubscribe from specific patterns (lazy)
+    client.punsubscribeLazy(Set.of("log*")).get();
+
+    // Unsubscribe from all patterns
+    client.punsubscribe(PubSubBaseCommands.ALL_PATTERNS, 5000).get();
+
+    // Sharded unsubscribe (cluster mode only)
+    // clusterClient.sunsubscribe(Set.of("shard-ch1"), 5000).get();
+    // clusterClient.sunsubscribeLazy(Set.of("shard-ch2")).get();
+    // clusterClient.sunsubscribe(PubSubClusterCommands.ALL_SHARDED_CHANNELS, 5000).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Unsubscribe from specific exact channels (blocking)
+    await client.unsubscribe(new Set(["news"]), 5000);
+
+    // Unsubscribe from specific exact channels (lazy)
+    await client.unsubscribeLazy(new Set(["alerts"]));
+
+    // Unsubscribe from all exact channels
+    await client.unsubscribe(ALL_CHANNELS, 5000);
+
+    // Unsubscribe from specific patterns (blocking)
+    await client.punsubscribe(new Set(["chat*"]), 5000);
+
+    // Unsubscribe from specific patterns (lazy)
+    await client.punsubscribeLazy(new Set(["log*"]));
+
+    // Unsubscribe from all patterns
+    await client.punsubscribe(ALL_PATTERNS, 5000);
+
+    // Sharded unsubscribe (cluster mode only)
+    // await clusterClient.sunsubscribe(new Set(["shard-ch1"]), 5000);
+    // await clusterClient.sunsubscribeLazy(new Set(["shard-ch2"]));
+    // await clusterClient.sunsubscribe(ALL_SHARDED_CHANNELS, 5000);
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```py
+    # Unsubscribe from specific exact channels (blocking)
+    await client.unsubscribe({"news"}, timeout_ms=5000)
+
+    # Unsubscribe from specific exact channels (lazy)
+    await client.unsubscribe_lazy({"alerts"})
+
+    # Unsubscribe from all exact channels
+    await client.unsubscribe(ALL_CHANNELS, timeout_ms=5000)
+
+    # Unsubscribe from specific patterns (blocking)
+    await client.punsubscribe({"chat*"}, timeout_ms=5000)
+
+    # Unsubscribe from specific patterns (lazy)
+    await client.punsubscribe_lazy({"log*"})
+
+    # Unsubscribe from all patterns
+    await client.punsubscribe(ALL_PATTERNS, timeout_ms=5000)
+
+    # Sharded unsubscribe (cluster mode only)
+    # await cluster_client.sunsubscribe({"shard-ch1"}, timeout_ms=5000)
+    # await cluster_client.sunsubscribe_lazy({"shard-ch2"})
+    # await cluster_client.sunsubscribe(ALL_SHARDED_CHANNELS, timeout_ms=5000)
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Unsubscribe from specific exact channels (blocking)
+    err := client.Unsubscribe(ctx, []string{"news"}, 5000)
+
+    // Unsubscribe from specific exact channels (lazy)
+    err = client.UnsubscribeLazy(ctx, []string{"alerts"})
+
+    // Unsubscribe from all exact channels
+    err = client.Unsubscribe(ctx, AllChannels, 5000)
+
+    // Unsubscribe from specific patterns (blocking)
+    err = client.PUnsubscribe(ctx, []string{"chat*"}, 5000)
+
+    // Unsubscribe from specific patterns (lazy)
+    err = client.PUnsubscribeLazy(ctx, []string{"log*"})
+
+    // Unsubscribe from all patterns
+    err = client.PUnsubscribe(ctx, AllPatterns, 5000)
+
+    // Sharded unsubscribe (cluster mode only)
+    // err = clusterClient.SUnsubscribe(ctx, []string{"shard-ch1"}, 5000)
+    // err = clusterClient.SUnsubscribeLazy(ctx, []string{"shard-ch2"})
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // In PHP, unsubscribe is called from within the subscribe callback.
+
+    $client->subscribe(['ch1', 'ch2', 'ch3'], function ($client, $channel, $message) {
+        // Unsubscribe from a specific channel
+        $client->unsubscribe([$channel]);
+
+        // Or unsubscribe from all exact channels at once
+        // $client->unsubscribe();
+    });
+
+    $client->psubscribe(['chat*', 'log*'], function ($client, $channel, $message, $pattern) {
+        // Unsubscribe from a specific pattern
+        $client->punsubscribe([$pattern]);
+
+        // Or unsubscribe from all patterns at once
+        // $client->punsubscribe();
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    var blockFor = TimeSpan.FromSeconds(5);
+
+    // Unsubscribe from specific exact channels (blocking)
+    await client.UnsubscribeAsync(new[] { "news" }, blockFor);
+
+    // Unsubscribe from specific exact channels (lazy)
+    await client.UnsubscribeLazyAsync(new[] { "alerts" });
+
+    // Unsubscribe from all exact channels (blocking)
+    await client.UnsubscribeAsync(PubSub.AllChannels, blockFor);
+
+    // Unsubscribe from specific patterns (blocking)
+    await client.PUnsubscribeAsync(new[] { "chat*" }, blockFor);
+
+    // Unsubscribe from specific patterns (lazy)
+    await client.PUnsubscribeLazyAsync(new[] { "log*" });
+
+    // Unsubscribe from all patterns (blocking)
+    await client.PUnsubscribeAsync(PubSub.AllPatterns, blockFor);
+
+    // Sharded unsubscribe (cluster mode only)
+    await clusterClient.SUnsubscribeAsync(new[] { "shard-ch1" }, blockFor);
+    await clusterClient.SUnsubscribeLazyAsync(new[] { "shard-ch2" });
+    await clusterClient.SUnsubscribeAsync(PubSub.AllShardedChannels, blockFor);
+    ```
+  </TabItem>
+</Tabs>
+
+## Subscription State Introspection (GLIDE 2.3+)
+
+Use `get_subscriptions()` to inspect the current subscription state. It returns both the **desired** subscriptions (what you've requested) and the **actual** subscriptions (what the server has confirmed). This is useful for verifying that lazy subscriptions have been fully applied.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    PubSubState state = client.getSubscriptions().get();
+    System.out.println("Desired: " + state.getDesiredSubscriptions());
+    System.out.println("Actual: " + state.getActualSubscriptions());
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const state = await client.getSubscriptions();
+    console.log("Desired:", state.desiredSubscriptions);
+    console.log("Actual:", state.actualSubscriptions);
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```py
+    state = await client.get_subscriptions()
+    print(f"Desired: {state.desired_subscriptions}")
+    print(f"Actual: {state.actual_subscriptions}")
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    state, err := client.GetSubscriptions(ctx)
+    fmt.Println("Desired:", state.DesiredSubscriptions)
+    fmt.Println("Actual:", state.ActualSubscriptions)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    var state = await client.GetSubscriptionsAsync();
+    Console.WriteLine($"Desired: {state.Desired}");
+    Console.WriteLine($"Actual: {state.Actual}");
+    ```
   </TabItem>
 </Tabs>
 
 ## Next Steps
 
-To learn more about GLIDE's PubSub model, see our [explanation](/concepts/client-features/pubsub-model).
+To learn more about GLIDE's PubSub model and the synchronizer architecture, see our [explanation](/concepts/client-features/pubsub-model).
