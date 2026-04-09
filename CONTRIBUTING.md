@@ -2,10 +2,10 @@
 
 Thank you for your interest in contributing to the [Valkey GLIDE documentation](https://glide.valkey.io)!
 
-This guide aims to help answer more conceptual questions about writing documentations like:
+This guide covers conceptual questions about writing documentation:
 
 - What kind of documentation should I write?
-- How should I write my documentations?
+- How should I write my documentation?
 
 For more technical instructions, like how to set up the environment, see our [Readme](/README.md).
 
@@ -13,18 +13,18 @@ For more technical instructions, like how to set up the environment, see our [Re
 
 ## Language Agnostic Documentation
 
-The goal of Valkey GLIDE documentations is to be the single source of truth for the various Valkey GLIDE clients.
+The goal of Valkey GLIDE documentation is to be the single source of truth for the various Valkey GLIDE clients.
 
-When writing documentations, it should be written in considerations for all client languages. In practice, this is easier than it sounds due to the Rust core design. Because clients share the same core we expects them to behave similarly; They naturally are able share the same documentation with language specific examples included when appropriate. Often these comes as code examples.
+When writing documentation, consider all client languages. In practice, this is easier than it sounds. Because clients share the same Rust core, they behave similarly and can share documentation, with language-specific code examples included when appropriate.
 
-## Adding Documentation For A New Feature.
+## Adding Documentation For A New Feature
 
-Users reach for the documentation because they want to know "how do I do x with GLIDE". Thus when documenting a new feature, we recommend starting with a how-to guides on using such feature. This is usually simple and quicker to write, and provide immediate benefits.
+Users come to the documentation to learn how to do something with GLIDE. When documenting a new feature, we recommend starting with a how-to guide. These are simpler to write and provide immediate value.
 
-While your how-to guides should have some conceptual explanations, it should remain focused on answering the "how do I do x" question. Having a length explanation can often distract from this. If this is required, it is best to create a separate articles in our Learn sections with the focus on teaching the reader.
+How-to guides can include some conceptual explanation, but should stay focused on the "how". Lengthy explanations can be a distraction. If deeper context is needed, create a separate article in our Learn section instead.
 
-In general, a guide line for how-to articles would be:
+Guidelines for how-to articles:
 
-- The title should start with a verb. Ex: Installing GLIDE, Making Batch Commands.
-- The content is about showing the reader how to doing something. This often involves using code examples.
+- The title should be an action (e.g., "Installing GLIDE", "Making Batch Commands").
+- The content shows the reader how to do something, often with code examples.
 - Some conceptual explanation is encouraged, but it should not be the focus.
