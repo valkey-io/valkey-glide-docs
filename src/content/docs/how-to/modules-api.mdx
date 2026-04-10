@@ -1,6 +1,6 @@
 ---
-title: Using GLIDE Modules
-description: Learn how GLIDE support Valkey modules through wrapper interfaces.
+title: Using Valkey Modules with GLIDE
+description: Learn how GLIDE support Valkey modules through dedicated interfaces.
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -38,11 +38,6 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 ## Using JSON Module
 
 <Tabs syncKey="progLangInExamples">
-  <TabItem label="C#">
-    :::note
-    The Modules API is not yet available in GLIDE C#.
-    :::
-  </TabItem>
 
   <TabItem label="Java">
     ```java
@@ -103,69 +98,99 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     json.loads(str(json_get)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
     ```
   </TabItem>
-</Tabs>
 
-## Using Vector Search Module
-
-<Tabs syncKey="progLangInExamples">
   <TabItem label="C#">
     :::note
     The Modules API is not yet available in GLIDE C#.
     :::
   </TabItem>
+</Tabs>
+
+## Using Vector Search Module
+
+<Tabs syncKey="progLangInExamples">
 
   <TabItem label="Java">
+
+    :::note[Javadoc]
+    The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/models/commands/FT/package-summary.html).
+    :::
+
     ```java
+    import static glide.api.models.GlideString.gs;
     import glide.api.commands.servermodules.FT;
-    import glide.api.models.commands.FT.FTCreateOptions.FieldInfo;
+    import glide.api.models.GlideString;
     import glide.api.models.commands.FT.FTCreateOptions;
-    import glide.api.models.commands.FT.FTCreateOptions.*;
+    import glide.api.models.commands.FT.FTCreateOptions.DataType;
+    import glide.api.models.commands.FT.FTCreateOptions.DistanceMetric;
+    import glide.api.models.commands.FT.FTCreateOptions.FieldInfo;
+    import glide.api.models.commands.FT.FTCreateOptions.VectorFieldHnsw;
     import glide.api.models.commands.FT.FTSearchOptions;
+    import java.util.HashMap;
+    import java.util.Map;
 
-    try (GlideClient glideClient = GlideClient.createClient(config).get()) {
+    // FT.CREATE a Hash index with vector fields
+    String prefix = "{hash}:";
+    String index = prefix + "index";
+    FieldInfo[] fields = new FieldInfo[] {
+        new FieldInfo("vec", "VEC", VectorFieldHnsw.builder(DistanceMetric.L2, 2).build())
+    };
+    FTCreateOptions options =
+            FTCreateOptions.builder().dataType(DataType.HASH).prefixes(new String[] {prefix}).build();
+    FT.create(client, index, fields, options).get(); // returns "OK"
 
-        // FT.Create a Hash index with Hash values and FT.Search those values
-        String prefix = "{hash}:";
-        String index = prefix + "index";
-        FieldInfo[] fields = new FieldInfo[] {
-            new FieldInfo("vec", "VEC", VectorFieldHnsw.builder(DistanceMetric.L2, 2).build())
-        };
-        FTCreateOptions.builder().dataType(DataType.HASH).prefixes(new String[] {prefix}).build();
-        FT.create(client, index, fields, FTCreateOptions).get(); // returns "OK"
+    // Insert hash data with vector fields (2-dimensional float32 vectors = 8 bytes each)
+    byte[] vec0 = new byte[] {
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0
+    };
+    byte[] vec1 = new byte[] {
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+        (byte) 0, (byte) 0, (byte) 0x80, (byte) 0xBF
+    };
 
-        Map hash0 = Map.of("vec", new byte[] {
-            (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0
-        });
-        client.hset(prefix + "0", hash0).get();
-        
-        Map hash1 = Map.of("vec", new byte[] {
-            (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-            (byte) 0, (byte) 0, (byte) 0x80, (byte) 0xBF
-        });
-        client.hset(prefix + "1", hash1).get();
+    Map<GlideString, GlideString> hash0 = new HashMap<>();
+    hash0.put(gs("vec"), gs(vec0));
+    client.hset(gs(prefix + "0"), hash0).get();
 
-        Thread.sleep(1000); // let server digest the data and update index
+    Map<GlideString, GlideString> hash1 = new HashMap<>();
+    hash1.put(gs("vec"), gs(vec1));
+    client.hset(gs(prefix + "1"), hash1).get();
 
-        FTSearchOptions searchOptions = FTSearchOptions.builder()
-            .params(Map.of("query_vec", (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0)))
-            .build();
-        String query = "*=>[KNN 2 @VEC $query_vec]";
-        Object[] ftsearchResponse = FT.search(client, index, query, searchOptions).get();
-        assert ftsearchResponse[0] == 2L;
-        // ftsearchResponse[1] contains a map with "{hash}:0" and "{hash}:1" vector search results
-    }
+    Thread.sleep(1000); // let server digest the data and update index
+
+    // FT.SEARCH
+    byte[] queryVec = new byte[] {
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+        (byte) 0, (byte) 0, (byte) 0, (byte) 0
+    };
+    String query = "*=>[KNN 2 @VEC $query_vec]";
+    Map<GlideString, GlideString> params = new HashMap<>();
+    params.put(gs("query_vec"), gs(queryVec));
+    FTSearchOptions searchOptions =
+            FTSearchOptions.builder()
+                    .params(params)
+                    .build();
+    Object[] searchResponse = FT.search(client, index, query, searchOptions).get();
+    // searchResponse[0] == 2L
+    // searchResponse[1] contains a map with "{hash}:0" and "{hash}:1" vector search results
     ```
   </TabItem>
 
   <TabItem label="Node">
+
+    :::note[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/nodejs/api/modules/server-modules_GlideFt.html).
+    :::
+
     ```typescript
     import {
         GlideJson,
-        FtSearchOptions,
-        FtSearchReturnType,
         GlideClient,
         GlideFt,
-        VectorField
+        Field,
+        FtSearchOptions,
+        FtSearchReturnType,
     } from "@valkey/valkey-glide";
 
     const client = await GlideClient.createClient(config);
@@ -173,25 +198,17 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
     await GlideJson.set(client, `${prefix}1`, "$", '[{"arr": 42}, {"val": "hello"}, {"val": "world"}]');
 
-    const vectorFields: VectorField[] = [
-        {
-            type: "NUMERIC",
-            name: "$..arr",
-            alias: "arr",
-        },
-        {
-            type: "TEXT",
-            name: "$..val",
-            alias: "val",
-        },
+    // FT.CREATE
+    const fields: Field[] = [
+        { type: "NUMERIC", name: "$..arr", alias: "arr" },
+        { type: "TEXT", name: "$..val", alias: "val" },
     ];
-    await GlideFt.create(client, `${prefix}index`, vectorFields
-        {
-            dataType: "JSON",
-            prefixes: [prefix],
-        },
-    );
+    await GlideFt.create(client, `${prefix}index`, fields, {
+        dataType: "JSON",
+        prefixes: [prefix],
+    });
 
+    // FT.SEARCH
     const optionsWithLimit: FtSearchOptions = {
         returnFields: [
             { fieldIdentifier: "$..arr", alias: "myarr" },
@@ -200,18 +217,30 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
         timeout: 10000,
         limit: { offset: 0, count: 2 },
     };
-    const searchResult: FtSearchReturnType = await GlideFt.search(client, `${prefix}index`, query, optionsWithLimit);
+    const searchResult: FtSearchReturnType = await GlideFt.search(
+        client,
+        `${prefix}index`,
+        "@arr:[-inf +inf]",
+        optionsWithLimit,
+    );
     console.log(searchResult[0]); // Output: 1
-    console.log(searchResult[1]); // Output: An array with search result containing "{json}:1"
+    console.log(searchResult[1]); // Output: search result containing "{json}:1"
     ```
   </TabItem>
 
   <TabItem label="Python">
     ```python
-    from glide import (glide_json, NumericField, ReturnField, FtCreateOptions, FtSearchOptions)
+    from glide import (
+        ft,
+        glide_json,
+        DataType,
+        NumericField,
+        ReturnField,
+        FtCreateOptions,
+        FtSearchOptions,
+    )
     import json
-
-    client = await GlideClient.create(config)
+    import time
 
     prefix = "{json}:"
     json_key1 = prefix + "1"
@@ -220,19 +249,23 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     json_value2 = {"a": 22222, "b": 2, "c": 3}
     index = prefix + "index"
 
-    await ft.create(client, index, 
+    # FT.CREATE
+    await ft.create(
+        client,
+        index,
         schema=[
             NumericField("$.a", "a"),
             NumericField("$.b", "b"),
         ],
-        options=FtCreateOptions(DataType.JSON),
+        options=FtCreateOptions(data_type=DataType.JSON, prefixes=[prefix]),
     )
 
-    await GlideJson.set(client, json_key1, "$", json.dumps(json_value1))
-    await GlideJson.set(client, json_key2, "$", json.dumps(json_value2))
+    await glide_json.set(client, json_key1, "$", json.dumps(json_value1))
+    await glide_json.set(client, json_key2, "$", json.dumps(json_value2))
 
-    time.sleep(1)
+    time.sleep(1)  # let server digest the data and update index
 
+    # FT.SEARCH
     ft_search_options = FtSearchOptions(
         return_fields=[
             ReturnField(field_identifier="a", alias="a_new"),
@@ -240,11 +273,16 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
         ]
     )
 
-    # Search the index for string inputs.
-    search_result = await ft.search(client, index, "*", options=ft_search_options)
-
-    print(search_result[0]) # prints "2"
-    print(search_result[1]) # prints a search result with "{json}:1" and "{json}:2"
+    search_result = await ft.search(client, index, "@a:[-inf +inf]", options=ft_search_options)
+    # search_result[0] == 2
+    # search_result[1] contains results with "{json}:1" and "{json}:2"
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The Modules API is not yet available in GLIDE C#.
+    :::
+  </TabItem>
+
 </Tabs>
