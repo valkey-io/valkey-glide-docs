@@ -4,7 +4,7 @@ repo_url: https://github.com/valkey-io/valkey-glide
 repo_name: GitHub
 docs_dir: mkdocs
 nav:
-  - Overview: /languages/api/python/
+  - Overview: /languages/python/api/
 
 theme:
   name: material
