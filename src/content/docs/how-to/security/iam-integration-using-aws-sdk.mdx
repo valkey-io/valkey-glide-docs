@@ -347,7 +347,7 @@ Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache
 
     async function main() {
         const username = "your-username";
-        const cluster_name = "your-cluster-name";
+        const clusterName = "your-cluster-name";
         const endpoint = "example-cluster-endpoint.use1.cache.amazonaws.com";
 
         const addresses = [
@@ -359,7 +359,7 @@ Please refer to the [AWS SDK docs](https://docs.aws.amazon.com/AmazonElastiCache
 
         const provider = new ElastiCacheIAMProvider(
             username,
-            cluster_name,
+            clusterName,
             "us-east-1"
         );
 
