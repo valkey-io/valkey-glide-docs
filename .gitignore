@@ -26,6 +26,7 @@ pnpm-debug.log*
 doc-gen/docs/
 doc-gen/test/
 doc-gen/.venv/
+doc-gen/valkey-glide/
 
 # Kiro files
 .kiro/
