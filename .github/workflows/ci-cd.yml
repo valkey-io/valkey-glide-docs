@@ -175,7 +175,6 @@ jobs:
 
       - name: Check external links
         uses: lycheeverse/lychee-action@v2.8.0
-        continue-on-error: true
         with:
           args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
           debug: true
