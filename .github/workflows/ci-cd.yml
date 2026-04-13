@@ -173,6 +173,10 @@ jobs:
           path: dist
           retention-days: 1
 
+      # Once glide 2.4 is release, we need to remove the excluded links.
+      - name: Check excluded links are still present
+        run: ./scripts/check-excluded-links.sh dist
+
       - name: Check external links
         uses: lycheeverse/lychee-action@v2.8.0
         with:
