@@ -26,10 +26,10 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 2. **Required Information**:
 
 * **username**: Your ElastiCache/MemoryDB username
-* **cluster name**: Your cluster's name
+* **cluster_name**: Your cluster's name
 * **service**: Either **ElastiCache** or **MemoryDB**
 * **region**: The AWS region where your cluster runs
-* **refreshIntervalSeconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
+* **refresh_interval_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 ## Examples
 
@@ -75,7 +75,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     # Configure IAM authentication
     # Automatically regenerates the token every 5 mins (default: 300 seconds)
     iam_config = IamAuthConfig(
-        clusterName="clustername",
+        cluster_name="clustername",
         service=ServiceType.ELASTICACHE,  # or ServiceType.MEMORYDB
         region="us-east-1",
         # refresh_interval_seconds=100,  # Optional, default is 300 seconds

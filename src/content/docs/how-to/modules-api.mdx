@@ -44,20 +44,28 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     :::
 
     ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
     import glide.api.commands.servermodules.Json;
 
-    try (GlideClient glideClient = GlideClient.createClient(config).get()) {
+    // Both standalone and cluster mode are supported
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    try (GlideClient client = GlideClient.createClient(config).get()) {
         String key = "testKey";
         String path = "$";
         String jsonValue = "{\"a\": 1.0, \"b\": 2}";
 
-        CompletableFuture<String> setResponseFuture = Json.set(glideClient, key, path, jsonValue);
+        CompletableFuture<String> setResponseFuture = Json.set(client, key, path, jsonValue);
         String setResponse = setResponseFuture.get(); // "OK"
         assert setResponse.equals("OK");
 
         CompletableFuture<String> getResponseFuture = Json.get(client, key).get();
-        String getResponseFuture = setResponseFuture.get(); // jsonValue
-        assert value.equals("{\"a\": 1.0, \"b\": 2}");
+        String getResponse = getResponseFuture.get(); // jsonValue
+        assert getResponse.equals("{\"a\": 1.0, \"b\": 2}");
     }
     ```
   </TabItem>
@@ -70,14 +78,16 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     ```typescript
     import {GlideJson, GlideClient} from "@valkey/valkey-glide";
 
-    // Create the GlideClient instance
-    const client = await GlideClient.createClient(config);
+    // Both standalone and cluster mode are supported
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+    });
 
     const value = {a: 1.0, b:2};
     const jsonStr = JSON.stringify(value);
 
     // Sets the value at `doc` as a JSON object.
-    const jsonSetResponse = await GlideJson.set("doc", "$", jsonStr);
+    const jsonSetResponse = await GlideJson.set(client,"doc", "$", jsonStr);
     console.log(jsonSetResponse); // 'OK' - Indicates successful setting of the value at path '$' in the key stored at `doc`.
 
     // Gets the value at path '$' in the JSON document stored at `doc`.
@@ -92,9 +102,11 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     :::
 
     ```python
-    from glide import glide_json
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress, glide_json
     import json
 
+    # Both standalone and cluster mode are supported
+    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
     client = await GlideClient.create(config)
     value = {'a': 1.0, 'b': 2}
     json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
@@ -106,7 +118,7 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     # Gets the value at path '$' in the JSON document stored at `doc`.
     get_response = await glide_json.get(client, "doc", "$") 
     print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
-    json.loads(str(json_get)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
+    json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
     ```
   </TabItem>
 
@@ -127,6 +139,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
     ```java
     import static glide.api.models.GlideString.gs;
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
     import glide.api.commands.servermodules.FT;
     import glide.api.models.GlideString;
     import glide.api.models.commands.FT.FTCreateOptions;
@@ -137,6 +152,12 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     import glide.api.models.commands.FT.FTSearchOptions;
     import java.util.HashMap;
     import java.util.Map;
+
+    // Both standalone and cluster mode are supported
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
 
     // FT.CREATE a Hash index with vector fields
     String prefix = "{hash}:";
@@ -201,7 +222,10 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
         FtSearchReturnType,
     } from "@valkey/valkey-glide";
 
-    const client = await GlideClient.createClient(config);
+    // Both standalone and cluster mode are supported
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+    });
     const prefix = "{json}:";
 
     await GlideJson.set(client, `${prefix}1`, "$", '[{"arr": 42}, {"val": "hello"}, {"val": "world"}]');
@@ -243,6 +267,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
     ```python
     from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
         ft,
         glide_json,
         DataType,
@@ -253,6 +280,10 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     )
     import json
     import time
+
+    # Both standalone and cluster mode are supported
+    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
 
     prefix = "{json}:"
     json_key1 = prefix + "1"
