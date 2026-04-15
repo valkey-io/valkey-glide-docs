@@ -1,4 +1,4 @@
-name: Format
+name: Static Checks
 
 on:
   pull_request:
@@ -32,3 +32,12 @@ jobs:
 
       - name: Check formatting
         run: pnpm format:check
+
+      - name: Build (will also check for internal links)
+        run: pnpm build
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2.8.0
+        with:
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true

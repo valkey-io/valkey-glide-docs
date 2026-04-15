@@ -52,6 +52,10 @@ jobs:
         with:
           node-version: 20
 
+      # TODO: Remove once {@link URL|text} is fixed upstream in valkey-glide
+      - name: Fix external links in source
+        run: ./doc-gen/fix-external-links.sh
+
       - name: Generate Node Docs
         run: ./doc-gen/build-node-docs.sh
 
@@ -162,9 +166,19 @@ jobs:
         with:
           package-manager: pnpm@10
 
-      - name: Check Links
-        uses: lycheeverse/lychee-action@v2.7.0
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
         with:
-          args: ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist
-          # Fail the pipeline if broken links are found
-          fail: true
+          name: dist
+          path: dist
+          retention-days: 1
+
+      # Once glide 2.4 is release, we need to remove the excluded links.
+      - name: Check excluded links are still present
+        run: ./scripts/check-excluded-links.sh dist
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2.8.0
+        with:
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true

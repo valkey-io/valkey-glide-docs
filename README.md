@@ -35,7 +35,11 @@ We use [lychee](https://github.com/lycheeverse/lychee) to check for broken links
 To start, install `lychee`.
 
 ```bash
+# macOS
 brew install lychee
+
+# Ubuntu
+sudo snap install lychee
 ```
 
 Then to run the build and check links:

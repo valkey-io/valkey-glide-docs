@@ -28,7 +28,8 @@
     "isomorphic-dompurify": "^2.35.0",
     "marked": "^17.0.1",
     "mermaid": "^11.10.1",
-    "sharp": "^0.34.2"
+    "sharp": "^0.34.2",
+    "starlight-links-validator": "0.19.2"
   },
   "devDependencies": {
     "prettier": "3.6.2",

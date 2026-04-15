@@ -1,23 +1,12 @@
 # lychee.toml
 
 max_retries = 3             
-retry_wait_time = 10       
-
-# Exclude specific files from being scanned
-exclude_path = [
-    "dist/404.html",
-    "dist/languages/java/api",
-    "dist/languages/nodejs/api",
-    "dist/languages/python/api",
-]
+timeout = 30
 
 # Exclude specific URLs/links (RegEx)
 exclude = [
     # GitHub edit links
     'https://github\.com/valkey-io/valkey-glide-docs/edit/.*',
-
-    # The repo is private so it will cause error.
-    'https://github.com/valkey-io/valkey-glide-docs',
 
     # When adding a new page, it would not be live when Lychee checks the links. 
     # It will return error, blocking both PR and deployment workflows.
@@ -25,11 +14,16 @@ exclude = [
     # are still checked by Lychee.
     'https://glide.valkey.io/.*',
 
-    # API Documentation exclusions
-    '.*/languages/java/api',
-    '.*/languages/nodejs/api',
-    '.*/languages/python/api',
+    # API docs are deployed separately and don't exist in the build output
+    '.*/languages/java/api.*',
+    '.*/languages/nodejs/api.*',
+    '.*/languages/python/api.*',
 
-    # Specific file link exclusion
-    './dist/404.html'
+    # Broken upstream links in generated API docs (cannot fix until upstream is updated)
+    'https://valkey\.io/commands/echo/%3Evalkey\.io%3C/a%3E%20for%20details\.%3C/dd%3E%3Cdt%3E%3Cspan%20class=',
+    'https://valkey\.io/commands/echo/%3Evalkey\.io%3C/a%3E%20for%20details\.%3C/dd%3E%3C/dl%3E%3C/li%3E%3C/ul%3E%3Ca%20id=',
+    'https://valkey\.io/docs/commands/randomkey/',
+    'https://valkey\.io/docs/latest/commands/sinter/',
+    'https://valkey\.io/docs/latest/commands/function-dump/',
+    'https://valkey\.io/docs/latest/commands/function-restore/',
 ]

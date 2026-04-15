@@ -31,6 +31,9 @@ importers:
       sharp:
         specifier: ^0.34.2
         version: 0.34.3
+      starlight-links-validator:
+        specifier: 0.19.2
+        version: 0.19.2(@astrojs/starlight@0.35.2(astro@5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1)))(astro@5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1))
     devDependencies:
       prettier:
         specifier: 3.6.2
@@ -648,6 +651,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-arm64@1.2.0":
     resolution:
@@ -656,6 +660,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-arm@1.0.5":
     resolution:
@@ -664,6 +669,7 @@ packages:
       }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-arm@1.2.0":
     resolution:
@@ -672,6 +678,7 @@ packages:
       }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-ppc64@1.2.0":
     resolution:
@@ -680,6 +687,7 @@ packages:
       }
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-s390x@1.0.4":
     resolution:
@@ -688,6 +696,7 @@ packages:
       }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-s390x@1.2.0":
     resolution:
@@ -696,6 +705,7 @@ packages:
       }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-x64@1.0.4":
     resolution:
@@ -704,6 +714,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linux-x64@1.2.0":
     resolution:
@@ -712,6 +723,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-libvips-linuxmusl-arm64@1.0.4":
     resolution:
@@ -720,6 +732,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-libvips-linuxmusl-arm64@1.2.0":
     resolution:
@@ -728,6 +741,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-libvips-linuxmusl-x64@1.0.4":
     resolution:
@@ -736,6 +750,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-libvips-linuxmusl-x64@1.2.0":
     resolution:
@@ -744,6 +759,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-linux-arm64@0.33.5":
     resolution:
@@ -753,6 +769,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-arm64@0.34.3":
     resolution:
@@ -762,6 +779,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-arm@0.33.5":
     resolution:
@@ -771,6 +789,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-arm@0.34.3":
     resolution:
@@ -780,6 +799,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-ppc64@0.34.3":
     resolution:
@@ -789,6 +809,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-s390x@0.33.5":
     resolution:
@@ -798,6 +819,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-s390x@0.34.3":
     resolution:
@@ -807,6 +829,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-x64@0.33.5":
     resolution:
@@ -816,6 +839,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linux-x64@0.34.3":
     resolution:
@@ -825,6 +849,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@img/sharp-linuxmusl-arm64@0.33.5":
     resolution:
@@ -834,6 +859,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-linuxmusl-arm64@0.34.3":
     resolution:
@@ -843,6 +869,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-linuxmusl-x64@0.33.5":
     resolution:
@@ -852,6 +879,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-linuxmusl-x64@0.34.3":
     resolution:
@@ -861,6 +889,7 @@ packages:
     engines: { node: ^18.17.0 || ^20.3.0 || >=21.0.0 }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@img/sharp-wasm32@0.33.5":
     resolution:
@@ -1116,6 +1145,7 @@ packages:
       }
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-arm-musleabihf@4.46.3":
     resolution:
@@ -1124,6 +1154,7 @@ packages:
       }
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-arm64-gnu@4.46.3":
     resolution:
@@ -1132,6 +1163,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-arm64-musl@4.46.3":
     resolution:
@@ -1140,6 +1172,7 @@ packages:
       }
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-loongarch64-gnu@4.46.3":
     resolution:
@@ -1148,6 +1181,7 @@ packages:
       }
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-ppc64-gnu@4.46.3":
     resolution:
@@ -1156,6 +1190,7 @@ packages:
       }
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-riscv64-gnu@4.46.3":
     resolution:
@@ -1164,6 +1199,7 @@ packages:
       }
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-riscv64-musl@4.46.3":
     resolution:
@@ -1172,6 +1208,7 @@ packages:
       }
     cpu: [riscv64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-linux-s390x-gnu@4.46.3":
     resolution:
@@ -1180,6 +1217,7 @@ packages:
       }
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-gnu@4.46.3":
     resolution:
@@ -1188,6 +1226,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   "@rollup/rollup-linux-x64-musl@4.46.3":
     resolution:
@@ -1196,6 +1235,7 @@ packages:
       }
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   "@rollup/rollup-win32-arm64-msvc@4.46.3":
     resolution:
@@ -1551,6 +1591,12 @@ packages:
         integrity: sha512-aPTXCrfwnDLj4VvXrm+UUCQjNEvJgNA8s5F1cvwQU+3KNltTOkBm1j30uNLyqqPNe7gE3KFzImYoZEfLhp4Yow==,
       }
 
+  "@types/picomatch@3.0.2":
+    resolution:
+      {
+        integrity: sha512-n0i8TD3UDB7paoMMxA3Y65vUncFJXjcUf7lQY7YyKGl6031FNjfsLs6pdLFCy2GNFxItPJG8GvvpbZc2skH7WA==,
+      }
+
   "@types/sax@1.2.7":
     resolution:
       {
@@ -1628,6 +1674,13 @@ packages:
       {
         integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==,
       }
+
+  ansi-escapes@7.3.0:
+    resolution:
+      {
+        integrity: sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg==,
+      }
+    engines: { node: ">=18" }
 
   ansi-regex@5.0.1:
     resolution:
@@ -2508,6 +2561,13 @@ packages:
       }
     engines: { node: ">=0.12" }
 
+  environment@1.1.0:
+    resolution:
+      {
+        integrity: sha512-xUtoPkMggbz0MPyPiIWr1Kp4aeWJjDZ6SMvURhimjdZgsRuDplF5/s9hcgGhyXMhs+6vpnuoiZ2kFiu3FMnS8Q==,
+      }
+    engines: { node: ">=18" }
+
   err-code@2.0.3:
     resolution:
       {
@@ -2742,6 +2802,13 @@ packages:
       {
         integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==,
       }
+
+  has-flag@5.0.1:
+    resolution:
+      {
+        integrity: sha512-CsNUt5x9LUdx6hnk/E2SZLsDyvfqANZSUq4+D3D8RzDJ2M+HDTIkF60ibS1vHaK55vzgiZw1bEPFG9yH7l33wA==,
+      }
+    engines: { node: ">=12" }
 
   hast-util-embedded@3.0.0:
     resolution:
@@ -2978,6 +3045,13 @@ packages:
       {
         integrity: sha512-feOM6FaSr6rEABp/eDfVseKyTMDt+KGpeB35SkVn9Tyn0CqvVsY3EwI0v5i8nMHyJnzCIQf7nsy3p41TPkJZhg==,
       }
+
+  is-absolute-url@4.0.1:
+    resolution:
+      {
+        integrity: sha512-/51/TKE88Lmm7Gc4/8btclNXWS+g50wXhYJq8HWIBAGUBnoAdRu1aXeh364t/O7wXDAcTJDP8PNuNKWUDWie+A==,
+      }
+    engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
 
   is-alphabetical@2.0.1:
     resolution:
@@ -4582,6 +4656,16 @@ packages:
         integrity: sha512-4PRT4nh1EImPbt2jASOKHX7PB7I+e4IWNLvkKFDxNhJlfjbYlleYQh285Z/3mPTHSAK/AvdMmw5BNNuYH8ShgQ==,
       }
 
+  starlight-links-validator@0.19.2:
+    resolution:
+      {
+        integrity: sha512-IHeK3R78fsmv53VfRkGbXkwK1CQEUBHM9QPzBEyoAxjZ/ssi5gjV+F4oNNUppTR48iPp+lEY0MTAmvkX7yNnkw==,
+      }
+    engines: { node: ">=18.17.1" }
+    peerDependencies:
+      "@astrojs/starlight": ">=0.32.0"
+      astro: ">=5.1.5"
+
   stream-replace-string@2.0.0:
     resolution:
       {
@@ -4666,6 +4750,13 @@ packages:
         integrity: sha512-KvC8OPjzdNOe+xQ4XWJV2whQA0aM1kGVczMQ8+dStAO6KfEB140JEVQ9dE76ONZ0/Ylf67ni4tILPJB41U0eow==,
       }
 
+  supports-color@10.2.2:
+    resolution:
+      {
+        integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==,
+      }
+    engines: { node: ">=18" }
+
   supports-color@9.4.0:
     resolution:
       {
@@ -4673,11 +4764,25 @@ packages:
       }
     engines: { node: ">=12" }
 
+  supports-hyperlinks@4.4.0:
+    resolution:
+      {
+        integrity: sha512-UKbpT93hN5Nr9go5UY7bopIB9YQlMz9nm/ct4IXt/irb5YRkn9WaqrOBJGZ5Pwvsd5FQzSVeYlGdXoCAPQZrPg==,
+      }
+    engines: { node: ">=20" }
+
   symbol-tree@3.2.4:
     resolution:
       {
         integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==,
       }
+
+  terminal-link@5.0.0:
+    resolution:
+      {
+        integrity: sha512-qFAy10MTMwjzjU8U16YS4YoZD+NQLHzLssFMNqgravjbvIPNiqkGFR4yjhJfmY9R5OFU7+yHxc6y+uGHkKwLRA==,
+      }
+    engines: { node: ">=20" }
 
   text-table@0.2.0:
     resolution:
@@ -6266,6 +6371,8 @@ snapshots:
     dependencies:
       undici-types: 7.10.0
 
+  "@types/picomatch@3.0.2": {}
+
   "@types/sax@1.2.7":
     dependencies:
       "@types/node": 17.0.45
@@ -6296,6 +6403,10 @@ snapshots:
   ansi-align@3.0.1:
     dependencies:
       string-width: 4.2.3
+
+  ansi-escapes@7.3.0:
+    dependencies:
+      environment: 1.1.0
 
   ansi-regex@5.0.1: {}
 
@@ -6872,6 +6983,8 @@ snapshots:
 
   entities@6.0.1: {}
 
+  environment@1.1.0: {}
+
   err-code@2.0.3: {}
 
   error-ex@1.3.2:
@@ -7048,6 +7161,8 @@ snapshots:
       uncrypto: 0.1.3
 
   hachure-fill@0.5.2: {}
+
+  has-flag@5.0.1: {}
 
   hast-util-embedded@3.0.0:
     dependencies:
@@ -7293,6 +7408,8 @@ snapshots:
   internmap@2.0.3: {}
 
   iron-webcrypto@1.2.1: {}
+
+  is-absolute-url@4.0.1: {}
 
   is-alphabetical@2.0.1: {}
 
@@ -8736,6 +8853,24 @@ snapshots:
 
   spdx-license-ids@3.0.22: {}
 
+  starlight-links-validator@0.19.2(@astrojs/starlight@0.35.2(astro@5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1)))(astro@5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1)):
+    dependencies:
+      "@astrojs/starlight": 0.35.2(astro@5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1))
+      "@types/picomatch": 3.0.2
+      astro: 5.13.2(@types/node@24.3.0)(rollup@4.46.3)(typescript@5.9.2)(yaml@2.8.1)
+      github-slugger: 2.0.0
+      hast-util-from-html: 2.0.3
+      hast-util-has-property: 3.0.0
+      is-absolute-url: 4.0.1
+      kleur: 4.1.5
+      mdast-util-mdx-jsx: 3.2.0
+      mdast-util-to-string: 4.0.0
+      picomatch: 4.0.3
+      terminal-link: 5.0.0
+      unist-util-visit: 5.0.0
+    transitivePeerDependencies:
+      - supports-color
+
   stream-replace-string@2.0.0: {}
 
   string-width@4.2.3:
@@ -8793,9 +8928,21 @@ snapshots:
     dependencies:
       s.color: 0.0.15
 
+  supports-color@10.2.2: {}
+
   supports-color@9.4.0: {}
 
+  supports-hyperlinks@4.4.0:
+    dependencies:
+      has-flag: 5.0.1
+      supports-color: 10.2.2
+
   symbol-tree@3.2.4: {}
+
+  terminal-link@5.0.0:
+    dependencies:
+      ansi-escapes: 7.3.0
+      supports-hyperlinks: 4.4.0
 
   text-table@0.2.0: {}
 

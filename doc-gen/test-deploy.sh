@@ -66,6 +66,6 @@ cp -r "$PYTHON_API_DOCS"/* "$PYTHON_API_TARGET_PATH/"
 echo "Copied API docs to test directory."
 
 # Start simple HTTP server to test
-cd "${TEST_DIR}/../"
+cd "${TEST_DIR}"
 echo "Starting host server."
 python3 -m http.server ${SERVER_PORT}

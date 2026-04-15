@@ -25,8 +25,12 @@ Add the following dependency to your `pom.xml` file:
 
 ## Full Installations
 
-To use Valkey GLIDE, you must include a classifier to specify your platform architecture.\
 This section includes setup instructions for Gradle, Maven, and SBT, with or without OS detection tools.
+
+:::tip[Uber Jar vs Classifier]
+Starting from version 2.3.0, you can use the uber jar (no classifier needed), which bundles all platform binaries.
+The uber jar is larger in size. If you prefer a smaller dependency, use a platform-specific classifier for your OS.
+:::
 
 <Tabs>
   <TabItem label="Gradle">
@@ -41,6 +45,15 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     }
     dependencies {
         implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+', classifier: osdetector.classifier
+    }
+    ```
+
+    Example with uber jar:
+
+    ```groovy
+    // with uber jar
+    dependencies {
+        implementation group: 'io.valkey', name: 'valkey-glide', version: '2.+'
     }
     ```
 
@@ -102,6 +115,14 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     <Code
       lang="xml"
       code={`
+
+<!--uber jar-->
+<dependency>
+<groupId>io.valkey</groupId>
+<artifactId>valkey-glide</artifactId>
+<version>${javaGlideLatest}</version>
+</dependency>
+
 <!--osx-aarch_64-->
 <dependency>
 <groupId>io.valkey</groupId>
@@ -152,6 +173,9 @@ This section includes setup instructions for Gradle, Maven, and SBT, with or wit
     </Aside>
 
     ```scala
+    // uber jar
+    libraryDependencies += "io.valkey" % "valkey-glide" % "2.+"
+
     // osx-aarch_64
     libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "osx-aarch_64"
 
