@@ -2,8 +2,10 @@
 
 Thank you for your interest in contributing to the [Valkey GLIDE documentation](https://glide.valkey.io)!
 
-This guide covers conceptual questions about writing documentation:
+This guide will cover both conceptual and technical questions about writing documentation:
 
+- How to prepare the environment?
+- How do I make a first contribution?
 - What kind of documentation should I write?
 - How should I write my documentation?
 

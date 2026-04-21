@@ -46,7 +46,7 @@ Page content lives under `src/content/docs/` as `.mdx` files.
 
 - **Update the sidebar navigation:** Add your new page to `astro.config.mjs`.
 
-For a guidelines on how to write new articles, take a look at our [Contributing](/CONTRIBUTING.md) page.
+For guidelines on how to write new articles, take a look at our [Contributing](/CONTRIBUTING.md) page.
 
 ## Commit Requirements
 
