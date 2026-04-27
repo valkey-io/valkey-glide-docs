@@ -19,6 +19,9 @@ exclude = [
     '.*/languages/nodejs/api.*',
     '.*/languages/python/api.*',
 
+    # Slack invite links return 403 to automated checkers
+    'https://join\.slack\.com/.*',
+
     # Broken upstream links in generated API docs (cannot fix until upstream is updated)
     'https://valkey\.io/commands/echo/%3Evalkey\.io%3C/a%3E%20for%20details\.%3C/dd%3E%3Cdt%3E%3Cspan%20class=',
     'https://valkey\.io/commands/echo/%3Evalkey\.io%3C/a%3E%20for%20details\.%3C/dd%3E%3C/dl%3E%3C/li%3E%3C/ul%3E%3Ca%20id=',
