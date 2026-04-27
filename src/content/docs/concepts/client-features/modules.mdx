@@ -1,5 +1,5 @@
 ---
-title: Introduction
+title: Modules API
 description: Learn how GLIDE support Valkey modules through dedicated interfaces.
 ---
 
@@ -7,11 +7,8 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Valkey Modules extend Valkey's core commands and functionality. Starting in GLIDE 1.2, commonly used modules, like JSON and Vector Search, are supported through a dedicated wrapper interface.
 
-:::caution
-The Modules API interfaces are only available for Java, Node, and Python.
-Support for other languages maybe be added in the future.
-
-For modules without dedicated wrappers, you can still access any loaded module's functionality directly using the [Custom Commands API](/concepts/client-features/custom-commands/).
+:::note[Custom Modules]
+Unsupported or custom modules can still be accessed by directly making commands through the [Custom Commands API](/concepts/client-features/custom-commands/).
 :::
 
 ## General Concept
@@ -21,12 +18,7 @@ These wrappers are built on top of the Custom Command API, automatically constru
 This allows for type-safe methods, parameter validation, and IDE autocomplete support. Under the hood, each wrapper method translates your call into the
 corresponding module command and executes it via the [Custom Commands API](/concepts/client-features/custom-commands/).
 
-Currently, GLIDE supports dedicated interfaces for:
-
-* [Valkey Search](/how-to/modules-api/search-module/)
-* [Valkey JSON](/how-to/modules-api/json-module/)
-
-Visit the respective pages for command details and usage examples.
+Currently, GLIDE supports dedicated API for JSON and Search modules.
 
 ## Requirements
 
@@ -36,3 +28,19 @@ See [Modules Introduction](https://valkey.io/topics/modules-intro/) on how to lo
 :::tip
 Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modules.
 :::
+
+### GLIDE Version Requirements
+
+Below is the minimum GLIDE version that support module APIs:
+
+| Module     | Python | Node | Java | Go   | C#   | PHP |
+| ---------- | ------ | ---- | ---- | ---- | ---- | --- |
+| **JSON**   | 0.3+   | 1.2+ | 1.2+ | 2.4+ | 1.0+ | N/A |
+| **SEARCH** | 1.2+   | 1.2+ | 1.2+ | 2.4+ | 1.0+ | N/A |
+
+## What's Next
+
+For examples on how to use the support modules, check out the following pages:
+
+* [Working with JSON Data](/how-to/modules-api/json-module/)
+* [Working with Valkey Search](/how-to/modules-api/search-module/)

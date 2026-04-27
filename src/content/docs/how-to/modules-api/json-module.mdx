@@ -1,11 +1,23 @@
 ---
-title: JSON Module
-description: Learn how to use the JSON module with GLIDE.
+title: Working With JSON Data
+description: Learn how to use the Valkey JSON module with GLIDE.
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-For more details on the JSON module, see the [Valkey JSON topic](https://valkey.io/topics/valkey-json/) and the [JSON commands reference](https://valkey.io/commands/#json).
+The Valkey JSON module provides an efficient way to store and manipulate structured data. With GLIDE, Valkey modules are supported
+as built-in APIs, allowing you to interact with JSON module commands through dedicated client methods.
+
+## Requirements
+
+Before using a module, including the supported modules, it will need to be loaded into Valkey.
+See [Modules Introduction](https://valkey.io/topics/modules-intro/) on how to load modules into your Valkey service.
+
+For more on version requirements, see our introduction on [Modules API](/concepts/client-features/modules/).
+
+:::tip[Check Loaded Modules]
+Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modules.
+:::
 
 ## Examples
 
@@ -147,3 +159,6 @@ For more details on the JSON module, see the [Valkey JSON topic](https://valkey.
     :::
   </TabItem>
 </Tabs>
+
+## What's Next
+For more details on the JSON module, see the [Valkey JSON topic](https://valkey.io/topics/valkey-json/).

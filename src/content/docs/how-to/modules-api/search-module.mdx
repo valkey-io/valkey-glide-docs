@@ -1,11 +1,24 @@
 ---
-title: Search Module
-description: Learn how to use the Vector Search module with GLIDE.
+title: Work with Valkey Search 
+description: Learn how to use the high-performance Valkey Search module with GLIDE.
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-For more details on the Search module, see the [Valkey Search topic](https://valkey.io/topics/search/) and the [Search commands reference](https://valkey.io/commands/#search).
+Valkey-Search (BSD-3-Clause), provided as a Valkey module, is a high-performance Search engine optimized for AI-driven / Search / Analytics / Recommendation System related workloads.
+
+Valkey GLIDE support Search as a built-in module API, allowing you to interact with Search module commands through dedicated client methods.
+
+## Requirements
+
+Before using a module, including the supported modules, it will need to be loaded into Valkey.
+See [Modules Introduction](https://valkey.io/topics/modules-intro/) on how to load modules into your Valkey service.
+
+For more on version requirements, see our introduction on [Modules API](/concepts/client-features/modules/).
+
+:::tip[Check Loaded Modules]
+Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modules.
+:::
 
 ## Examples
 
@@ -295,3 +308,6 @@ For more details on the Search module, see the [Valkey Search topic](https://val
     :::
   </TabItem>
 </Tabs>
+
+## What's Next
+For more details on the Search module, see the [Valkey Search topic](https://valkey.io/topics/search/).

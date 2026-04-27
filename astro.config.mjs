@@ -154,14 +154,6 @@ export default defineConfig({
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
             {
-              label: "Valkey Modules with GLIDE",
-              items: [
-                "how-to/modules-api",
-                "how-to/modules-api/json-module",
-                "how-to/modules-api/search-module",
-              ],
-            },
-            {
               label: "Security",
               items: [
                 "how-to/security/authentication",
@@ -198,6 +190,13 @@ export default defineConfig({
                 "how-to/monitoring/logging",
                 "how-to/monitoring/open-telemetry",
                 "how-to/monitoring/tracking-resources",
+              ],
+            },
+          {
+              label: "Modules API",
+              items: [
+                "how-to/modules-api/json-module",
+                "how-to/modules-api/search-module",
               ],
             },
           ],
