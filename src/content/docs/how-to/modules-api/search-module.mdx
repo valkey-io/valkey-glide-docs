@@ -1,135 +1,13 @@
 ---
-title: Using Valkey Modules with GLIDE
-description: Learn how GLIDE support Valkey modules through dedicated interfaces.
+title: Search Module
+description: Learn how to use the Vector Search module with GLIDE.
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Valkey Modules extend Valkey's core commands and functionality. Starting in GLIDE 1.2, commonly used modules, like JSON and Vector Search, are supported through a dedicated wrapper interface.
+For more details on the Search module, see the [Valkey Search topic](https://valkey.io/topics/search/) and the [Search commands reference](https://valkey.io/commands/#search).
 
-:::caution
-The Modules API interfaces are only available for Java, Node, and Python.
-Support for other languages maybe be added in the future.
-
-For modules without dedicated wrappers, you can still access any loaded module's functionality directly using the [Custom Commands API](/concepts/client-features/custom-commands/).
-:::
-
-## General Concept
-
-The Modules API provides convenient wrapper methods for commonly used Valkey modules.
-These wrappers are built on top of the Custom Command API, automatically constructing and executing the appropriate module commands.
-This allows for type-safe methods, parameter validation, and IDE autocomplete support. Under the hood, each wrapper method translates your call into the
-corresponding module command and executes it via the [Custom Commands API](/concepts/client-features/custom-commands/).
-
-Currently, GLIDE supports dedicated interfaces for:
-
-* [Amazon MemoryDB Vector search commands](https://docs.aws.amazon.com/memorydb/latest/devguide/vector-search-commands.html)
-* [Amazon ElastiCache JSON commands](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/json-list-commands.html)
-
-## Requirements
-
-Before using a module, including the supported modules, it will need to be loaded into Valkey.
-See [Modules Introduction](https://valkey.io/topics/modules-intro/) on how to load modules into your Valkey service.
-
-:::tip
-Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modules.
-:::
-
-## Using JSON Module
-
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
-    :::tip[API Reference]
-    The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/Json.html).
-    :::
-
-    ```java
-    import glide.api.GlideClient;
-    import glide.api.models.configuration.GlideClientConfiguration;
-    import glide.api.models.configuration.NodeAddress;
-    import glide.api.commands.servermodules.Json;
-
-    // Both standalone and cluster mode are supported
-    GlideClientConfiguration config = GlideClientConfiguration.builder()
-        .address(NodeAddress.builder().host("localhost").port(6379).build())
-        .build();
-
-    try (GlideClient client = GlideClient.createClient(config).get()) {
-        String key = "testKey";
-        String path = "$";
-        String jsonValue = "{\"a\": 1.0, \"b\": 2}";
-
-        CompletableFuture<String> setResponseFuture = Json.set(client, key, path, jsonValue);
-        String setResponse = setResponseFuture.get(); // "OK"
-        assert setResponse.equals("OK");
-
-        CompletableFuture<String> getResponseFuture = Json.get(client, key).get();
-        String getResponse = getResponseFuture.get(); // jsonValue
-        assert getResponse.equals("{\"a\": 1.0, \"b\": 2}");
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="Node">
-    :::tip[API Reference]
-    The API reference can be found [here](https://glide.valkey.io/languages/nodejs/api/modules/server-modules_GlideJson.html).
-    :::
-
-    ```typescript
-    import {GlideJson, GlideClient} from "@valkey/valkey-glide";
-
-    // Both standalone and cluster mode are supported
-    const client = await GlideClient.createClient({
-        addresses: [{ host: "localhost", port: 6379 }],
-    });
-
-    const value = {a: 1.0, b:2};
-    const jsonStr = JSON.stringify(value);
-
-    // Sets the value at `doc` as a JSON object.
-    const jsonSetResponse = await GlideJson.set(client,"doc", "$", jsonStr);
-    console.log(jsonSetResponse); // 'OK' - Indicates successful setting of the value at path '$' in the key stored at `doc`.
-
-    // Gets the value at path '$' in the JSON document stored at `doc`.
-    const jsonGetResponse = await GlideJson.get(client, "doc", {path: "$"});
-    console.log(JSON.stringify(jsonGetResponse)); //  [{"a": 1.0, "b": 2}] # JSON object retrieved from the key `doc`
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    :::tip[API Reference]
-    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/glide_json/).
-    :::
-
-    ```python
-    from glide import GlideClient, GlideClientConfiguration, NodeAddress, glide_json
-    import json
-
-    # Both standalone and cluster mode are supported
-    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
-    client = await GlideClient.create(config)
-    value = {'a': 1.0, 'b': 2}
-    json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
-
-    # Sets the value at `doc` as a JSON object.
-    set_response = await glide_json.set(client, "doc", "$", json_str)
-    print(set_response) # "OK" - Indicates successful setting of the value at path '$' in the key stored at `doc`.
-
-    # Gets the value at path '$' in the JSON document stored at `doc`.
-    get_response = await glide_json.get(client, "doc", "$") 
-    print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
-    json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
-    ```
-  </TabItem>
-
-  <TabItem label="C#">
-    :::note
-    The Modules API is not yet available in GLIDE C#.
-    :::
-  </TabItem>
-</Tabs>
-
-## Using Vector Search Module
+## Examples
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Java">
@@ -319,6 +197,95 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     search_result = await ft.search(client, index, "@a:[-inf +inf]", options=ft_search_options)
     # search_result[0] == 2
     # search_result[1] contains results with "{json}:1" and "{json}:2"
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+        "time"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        "github.com/valkey-io/valkey-glide/go/v2/constants"
+        "github.com/valkey-io/valkey-glide/go/v2/options"
+    )
+
+    // Both standalone and cluster mode are supported
+    cfg := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    client, err := glide.NewClient(cfg)
+
+    ctx := context.Background()
+    prefix := "{hash}:"
+    index := prefix + "index"
+    ft := client.FT()
+
+    // FT.CREATE a Hash index with a vector field
+    _, err = ft.Create(ctx, index,
+        []options.Field{
+            options.NewVectorFieldHNSW("vec", constants.DistanceMetricL2, 2).SetAlias("VEC"),
+        },
+        &options.FtCreateOptions{
+            DataType: constants.IndexDataTypeHash,
+            Prefixes: []string{prefix},
+        },
+    )
+
+    // Insert hash data with vector fields (2-dimensional float32 vectors)
+    vec0 := string([]byte{0, 0, 0, 0, 0, 0, 0, 0})
+    vec1 := string([]byte{0, 0, 0, 0, 0, 0, 0x80, 0xBF})
+    client.HSet(ctx, prefix+"0", map[string]string{"vec": vec0})
+    client.HSet(ctx, prefix+"1", map[string]string{"vec": vec1})
+    time.Sleep(time.Second) // let server digest the data and update index
+
+    // FT.SEARCH
+    result, err := ft.Search(ctx, index, "*=>[KNN 2 @VEC $query_vec]",
+        &options.FtSearchOptions{
+            Params:       []options.FtSearchParam{{Key: "query_vec", Value: vec0}},
+            ReturnFields: []options.FtSearchReturnField{{FieldIdentifier: "vec"}},
+        })
+    // result.TotalResults == 2
+    // result.Documents contains "{hash}:0" and "{hash}:1" with their vector values
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    use ValkeyGlide\Search\{FtCreateBuilder, FtVectorField, FtSearchBuilder};
+
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    $prefix = '{hash}:';
+    $index = $prefix . 'index';
+
+    // FT.CREATE a Hash index with a vector field
+    $client->ftCreate(
+        (new FtCreateBuilder())
+            ->index($index)
+            ->on('HASH')
+            ->prefix([$prefix])
+            ->addField(FtVectorField::hnsw('vec', 2, 'L2'))
+    );
+
+    // Insert hash data with vector fields (2-dimensional float32 vectors)
+    $vec0 = str_repeat("\x00", 8);
+    $vec1 = "\x00\x00\x00\x00\x00\x00\x80\xBF";
+    $client->hSet($prefix . '0', 'vec', $vec0);
+    $client->hSet($prefix . '1', 'vec', $vec1);
+    usleep(1000000); // let server digest the data and update index
+
+    // FT.SEARCH
+    $result = $client->ftSearch(
+        (new FtSearchBuilder())
+            ->index($index)
+            ->query('*=>[KNN 2 @VEC $query_vec]')
+            ->params(['query_vec' => $vec0])
+            ->returnFields(['vec'])
+    );
+    // $result[0] == 2
+    // $result[1] contains "{hash}:0" and "{hash}:1" with their vector values
     ```
   </TabItem>
 

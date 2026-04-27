@@ -1,0 +1,149 @@
+---
+title: JSON Module
+description: Learn how to use the JSON module with GLIDE.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+For more details on the JSON module, see the [Valkey JSON topic](https://valkey.io/topics/valkey-json/) and the [JSON commands reference](https://valkey.io/commands/#json).
+
+## Examples
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    :::tip[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/Json.html).
+    :::
+
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.commands.servermodules.Json;
+
+    // Both standalone and cluster mode are supported
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    try (GlideClient client = GlideClient.createClient(config).get()) {
+        String key = "testKey";
+        String path = "$";
+        String jsonValue = "{\"a\": 1.0, \"b\": 2}";
+
+        CompletableFuture<String> setResponseFuture = Json.set(client, key, path, jsonValue);
+        String setResponse = setResponseFuture.get(); // "OK"
+        assert setResponse.equals("OK");
+
+        CompletableFuture<String> getResponseFuture = Json.get(client, key).get();
+        String getResponse = getResponseFuture.get(); // jsonValue
+        assert getResponse.equals("{\"a\": 1.0, \"b\": 2}");
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    :::tip[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/nodejs/api/modules/server-modules_GlideJson.html).
+    :::
+
+    ```typescript
+    import {GlideJson, GlideClient} from "@valkey/valkey-glide";
+
+    // Both standalone and cluster mode are supported
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+    });
+
+    const value = {a: 1.0, b:2};
+    const jsonStr = JSON.stringify(value);
+
+    // Sets the value at `doc` as a JSON object.
+    const jsonSetResponse = await GlideJson.set(client,"doc", "$", jsonStr);
+    console.log(jsonSetResponse); // 'OK' - Indicates successful setting of the value at path '$' in the key stored at `doc`.
+
+    // Gets the value at path '$' in the JSON document stored at `doc`.
+    const jsonGetResponse = await GlideJson.get(client, "doc", {path: "$"});
+    console.log(JSON.stringify(jsonGetResponse)); //  [{"a": 1.0, "b": 2}] # JSON object retrieved from the key `doc`
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    :::tip[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/glide_json/).
+    :::
+
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress, glide_json
+    import json
+
+    # Both standalone and cluster mode are supported
+    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+    value = {'a': 1.0, 'b': 2}
+    json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
+
+    # Sets the value at `doc` as a JSON object.
+    set_response = await glide_json.set(client, "doc", "$", json_str)
+    print(set_response) # "OK" - Indicates successful setting of the value at path '$' in the key stored at `doc`.
+
+    # Gets the value at path '$' in the JSON document stored at `doc`.
+    get_response = await glide_json.get(client, "doc", "$") 
+    print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
+    json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        "github.com/valkey-io/valkey-glide/go/v2/servermodules/glidejson"
+    )
+
+    // Both standalone and cluster mode are supported
+    cfg := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+    client, err := glide.NewClient(cfg)
+
+    ctx := context.Background()
+    key := "testKey"
+    path := "$"
+    jsonValue := `{"a": 1.0, "b": 2}`
+
+    // JSON.SET
+    setResponse, err := glidejson.JsonSet(client, ctx, key, path, jsonValue)
+    // setResponse == "OK"
+
+    // JSON.GET
+    getResponse, err := glidejson.JsonGet(client, ctx, key)
+    // getResponse contains {"a":1.0,"b":2}
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
+    $key = "testKey";
+    $path = "$";
+    $jsonValue = '{"a": 1.0, "b": 2}';
+
+    // JSON.SET
+    $client->jsonSet($key, $path, $jsonValue); // true
+
+    // JSON.GET
+    $result = $client->jsonGet($key); // '[{"a":1.0,"b":2}]'
+    $decoded = json_decode($result, true);
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The Modules API is not yet available in GLIDE C#.
+    :::
+  </TabItem>
+</Tabs>
