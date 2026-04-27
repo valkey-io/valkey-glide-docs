@@ -1,0 +1,397 @@
+---
+title: "Client-Side Caching"
+description: Learn about Valkey GLIDE's TTL-based client-side caching feature.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
+
+<Aside type="caution" title="TTL-Only Caching">
+  The current implementation uses **TTL-based expiration only**. There is no server-side invalidation — cached entries may become stale before their TTL expires if the underlying data changes on the server. Server-side tracking-based invalidation will be added in a future release.
+</Aside>
+
+## How It Works
+
+1. When a cacheable read command is executed, GLIDE first checks the local cache.
+2. On a **cache miss**, the command is sent to the server, and the response is stored locally.
+3. On a **cache hit**, the cached value is returned immediately without a network call.
+4. Entries expire based on their configured TTL. Expiration is **lazy** — entries are removed when accessed after their TTL has elapsed, not proactively in the background.
+5. When the cache reaches its memory limit, entries are evicted according to the configured eviction policy.
+
+### Cached Commands
+
+Only the following read commands are cached:
+
+| Command      | Description                        |
+| ------------ | ---------------------------------- |
+| `GET`        | Retrieve a string value            |
+| `HGETALL`    | Retrieve all fields from a hash    |
+| `SMEMBERS`   | Retrieve all members from a set    |
+
+All other commands bypass the cache entirely. Write commands (`SET`, `HSET`, `SADD`, etc.) are never cached.
+
+### What Is Not Cached
+
+* **NIL responses** — If a key does not exist, the `nil` response is not stored in the cache.
+* **Entries larger than the cache** — If a single entry exceeds `maxCacheKb`, it is silently skipped.
+
+## Configuration
+
+To enable client-side caching, pass a `ClientSideCache` configuration when creating a client.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        ClientSideCache,
+        EvictionPolicy,
+        NodeAddress,
+    )
+
+    # Create a cache configuration
+    cache = ClientSideCache.create(
+        max_cache_kb=1024,         # 1 MB maximum cache size
+        entry_ttl_ms=60_000,       # 60 second TTL per entry (0 = no expiration)
+        eviction_policy=EvictionPolicy.LRU,  # LRU or LFU
+        enable_metrics=True,       # Enable hit/miss tracking
+    )
+
+    # Standalone client
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        client_side_cache=cache,
+    )
+    client = await GlideClient.create(config)
+
+    # Cluster client
+    cluster_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        client_side_cache=cache,
+    )
+    cluster_client = await GlideClusterClient.create(cluster_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.ClientSideCache;
+    import glide.api.models.EvictionPolicy;
+    import glide.api.models.configuration.NodeAddress;
+
+    // Create a cache configuration
+    ClientSideCache cache = ClientSideCache.builder()
+        .maxCacheKb(1024)                    // 1 MB maximum cache size
+        .entryTtlMs(60_000)                  // 60 second TTL per entry (0 = no expiration)
+        .evictionPolicy(EvictionPolicy.LRU)  // LRU or LFU
+        .enableMetrics(true)                 // Enable hit/miss tracking
+        .build();
+
+    // Standalone client
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .clientSideCache(cache)
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
+
+    // Cluster client
+    GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .clientSideCache(cache)
+        .build();
+    GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {
+        GlideClient,
+        GlideClusterClient,
+        ClientSideCache,
+        EvictionPolicy,
+    } from "@valkey/valkey-glide";
+
+    // Create a cache configuration
+    const cache = ClientSideCache.create(
+        1024,    // maxCacheKb: 1 MB maximum cache size
+        60000,   // entryTtlMs: 60 second TTL (0 = no expiration)
+        {
+            evictionPolicy: EvictionPolicy.LRU,  // LRU or LFU
+            enableMetrics: true,                 // Enable hit/miss tracking
+        }
+    );
+
+    // Standalone client
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+
+    // Cluster client
+    const clusterClient = await GlideClusterClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    // Create a cache configuration
+    cache := config.NewClientSideCache(1024, 60000). // maxCacheKb, entryTtlMs
+        WithEvictionPolicy(config.LRU).              // LRU or LFU
+        WithMetrics(true)                            // Enable hit/miss tracking
+
+    // Standalone client
+    clientConfig := config.NewGlideClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientSideCache(cache)
+    client, err := glide.NewGlideClient(clientConfig)
+
+    // Cluster client
+    clusterConfig := config.NewGlideClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientSideCache(cache)
+    clusterClient, err := glide.NewGlideClusterClient(clusterConfig)
+    ```
+  </TabItem>
+</Tabs>
+
+### Configuration Options
+
+| Option             | Type              | Default | Description                                                                                       |
+| ------------------ | ----------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `maxCacheKb`       | integer           | —       | Maximum cache size in kilobytes. Required.                                                        |
+| `entryTtlMs`      | integer           | —       | Time-to-live per entry in milliseconds. Use `0` to disable TTL (entries persist until evicted).   |
+| `evictionPolicy`   | `LRU` or `LFU`   | `LRU`   | Policy for removing entries when the cache is full.                                               |
+| `enableMetrics`    | boolean           | `false` | When `true`, enables collection of hit/miss/eviction/expiration counters.                         |
+
+## Eviction Policies
+
+When the cache reaches its configured memory limit, it must remove entries to make room for new ones.
+
+| Policy | Name                     | Behavior                                                                                                  |
+| ------ | ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `LRU`  | Least Recently Used      | Evicts the entry that has not been accessed for the longest time. Best for workloads with temporal locality. |
+| `LFU`  | Least Frequently Used    | Evicts the entry with the lowest access count. Ties are broken by oldest access time. Best for workloads where popular items should stay cached. |
+
+## Cache Metrics
+
+When `enableMetrics` is set to `true`, you can query cache performance statistics at runtime.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Get metrics
+    hit_rate = await client.get_cache_hit_rate()         # float 0.0–1.0
+    miss_rate = await client.get_cache_miss_rate()       # float 0.0–1.0
+    entry_count = await client.get_cache_entry_count()   # int
+    evictions = await client.get_cache_evictions()       # int
+    expirations = await client.get_cache_expirations()   # int
+    total = await client.get_cache_total_lookups()       # int
+
+    print(f"Hit rate: {hit_rate:.2%}")
+    print(f"Entries: {entry_count}, Evictions: {evictions}, Expirations: {expirations}")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Get metrics
+    double hitRate = client.getCacheHitRate().get();         // 0.0–1.0
+    double missRate = client.getCacheMissRate().get();       // 0.0–1.0
+    long entryCount = client.getCacheEntryCount().get();
+    long evictions = client.getCacheEvictions().get();
+    long expirations = client.getCacheExpirations().get();
+
+    System.out.printf("Hit rate: %.2f%%%n", hitRate * 100);
+    System.out.printf("Entries: %d, Evictions: %d, Expirations: %d%n",
+        entryCount, evictions, expirations);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Get metrics
+    const hitRate = await client.getCacheHitRate();         // number 0.0–1.0
+    const missRate = await client.getCacheMissRate();       // number 0.0–1.0
+    const entryCount = await client.getCacheEntryCount();   // number
+    const evictions = await client.getCacheEvictions();     // number
+    const expirations = await client.getCacheExpirations(); // number
+    const total = await client.getCacheTotalLookups();      // number
+
+    console.log(`Hit rate: ${(hitRate * 100).toFixed(2)}%`);
+    console.log(`Entries: ${entryCount}, Evictions: ${evictions}, Expirations: ${expirations}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Get metrics
+    hitRate, err := client.GetCacheHitRate()         // float64 0.0–1.0
+    missRate, err := client.GetCacheMissRate()       // float64 0.0–1.0
+    entryCount, err := client.GetCacheEntryCount()   // int64
+    evictions, err := client.GetCacheEvictions()     // int64
+    expirations, err := client.GetCacheExpirations() // int64
+
+    fmt.Printf("Hit rate: %.2f%%\n", hitRate*100)
+    fmt.Printf("Entries: %d, Evictions: %d, Expirations: %d\n",
+        entryCount, evictions, expirations)
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+  Calling any metrics method when caching is disabled or when `enableMetrics` is `false` will raise an error. The `getCacheEntryCount` method works regardless of the metrics flag as long as caching is enabled.
+</Aside>
+
+## Shared Cache
+
+Multiple clients can share the same cache instance by passing the same `ClientSideCache` object to each client. This is useful when you want several connections to benefit from a single pool of cached data.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Both clients share the same cache
+    cache = ClientSideCache.create(max_cache_kb=1024, entry_ttl_ms=60_000)
+
+    client1 = await GlideClient.create(
+        GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)],
+            client_side_cache=cache,
+        )
+    )
+    client2 = await GlideClient.create(
+        GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)],
+            client_side_cache=cache,
+        )
+    )
+
+    # client1 populates the cache
+    await client1.set("key", "value")
+    await client1.get("key")  # Cache miss — fetches from server
+
+    # client2 gets a cache hit without contacting the server
+    result = await client2.get("key")  # Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Both clients share the same cache
+    const cache = ClientSideCache.create(1024, 60000);
+
+    const client1 = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+    const client2 = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+
+    // client1 populates the cache
+    await client1.set("key", "value");
+    await client1.get("key");  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    const result = await client2.get("key");  // Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Both clients share the same cache
+    ClientSideCache cache = ClientSideCache.builder()
+        .maxCacheKb(1024)
+        .entryTtlMs(60_000)
+        .build();
+
+    GlideClient client1 = GlideClient.createClient(
+        GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .clientSideCache(cache)
+            .build()
+    ).get();
+
+    GlideClient client2 = GlideClient.createClient(
+        GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .clientSideCache(cache)
+            .build()
+    ).get();
+
+    // client1 populates the cache
+    client1.set("key", "value").get();
+    client1.get("key").get();  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    String result = client2.get("key").get();  // Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Both clients share the same cache
+    cache := config.NewClientSideCache(1024, 60000)
+
+    client1Config := config.NewGlideClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientSideCache(cache)
+    client1, _ := glide.NewGlideClient(client1Config)
+
+    client2Config := config.NewGlideClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientSideCache(cache)
+    client2, _ := glide.NewGlideClient(client2Config)
+
+    // client1 populates the cache
+    client1.Set("key", "value")
+    client1.Get("key")  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    result, _ := client2.Get("key")  // Cache hit
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  When sharing a cache, keep in mind:
+
+  * Clients connected to **different databases** should not share the same cache (keys may collide).
+  * Clients using **different ACL users** with different permissions should not share the same cache.
+  * Metrics (hit rate, miss rate, etc.) are shared across all clients using the same cache instance.
+</Aside>
+
+## Limitations
+
+| Limitation | Details |
+| --- | --- |
+| **TTL-only expiration** | No server-side invalidation. Cached values may become stale if the key is modified on the server before the TTL expires. |
+| **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
+| **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
+| **NIL not cached** | If a key does not exist, the nil response is not stored. |
+| **No invalidation on writes** | Writing to a key (e.g., `SET`) does not automatically invalidate the local cache entry for that key. |
+
+## Best Practices
+
+* **Set an appropriate TTL** — Choose a TTL that balances freshness with cache effectiveness. Shorter TTLs reduce staleness risk; longer TTLs improve hit rates.
+* **Size the cache appropriately** — Monitor eviction counts. High eviction rates indicate the cache is too small for the working set.
+* **Use metrics to tune** — Enable metrics during development and load testing to understand cache behavior and optimize configuration.
+* **Consider data volatility** — Client-side caching works best for data that changes infrequently relative to how often it is read. Rapidly changing data will produce stale reads.
+* **Avoid sharing caches across databases** — Keys in different databases may have the same name but different values.
