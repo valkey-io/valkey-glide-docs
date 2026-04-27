@@ -192,7 +192,7 @@ export default defineConfig({
                 "how-to/monitoring/tracking-resources",
               ],
             },
-          {
+            {
               label: "Modules API",
               items: [
                 "how-to/modules-api/json-module",
