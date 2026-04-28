@@ -1,47 +1,19 @@
-<!--
-Thanks for contributing to Valkey GLIDE Documentation!
-
-Please make sure you are aware of our contributing guidelines [available
-here](https://github.com/valkey-io/valkey-glide/blob/main/CONTRIBUTING.md)
-
--->
-
-### Summary
+## Summary
 
 <!--
-Add a summary describing the changes
+Required. Summarize your changes in a short paragraph.
 -->
 
-### Issue link
-
-This Pull Request is linked to issue (URL): [REPLACE ME]
-
-### Content Changes
+### Related Issue
 
 <!--
-Outline the documentation updates, new pages, or content modifications included in this PR
+Link your PR to an appropriate issue here.
+
+If your PR is related to a code change in Valkey GLIDE, consider linking the PR to the appropriate issue.
 -->
 
-### Implementation
+## Changes
 
 <!--
-Describe the implementation details. Highlight key content changes and call out any areas where you want reviewers to pay extra attention
+Required. Please list the changes you have made, preferrably in bullet point forms.
 -->
-
-### Testing
-
-<!--
-Describe what tests have been conducted (e.g., build verification, link checking, visual review)
--->
-
-### Checklist
-
-Before submitting the PR make sure the following are checked:
-
-- [ ] This Pull Request is related to one issue.
-- [ ] Commit message has a detailed description of what changed and why.
-- [ ] All commits are signed off with `--signoff` flag.
-- [ ] `pnpm build` runs successfully.
-- [ ] Links have been checked for validity.
-- [ ] Destination branch is correct - main or release
-- [ ] Create merge commit if merging release branch into main, squash otherwise.
