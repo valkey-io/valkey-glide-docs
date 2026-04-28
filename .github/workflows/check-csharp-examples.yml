@@ -13,7 +13,7 @@ jobs:
     env:
       GLIDE_DLL: Valkey.Glide.dll
       VALIDATOR_SCRIPT: validate_examples.py
-    
+
     steps:
       - name: Checkout Docs Repository
         uses: actions/checkout@v4

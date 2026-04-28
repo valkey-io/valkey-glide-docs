@@ -315,31 +315,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
   <TabItem label="C#">
     <Steps>
-      1. Define the lua script.
-
-         ```csharp
-         var luaCode = @"#!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
-         end)
-         ";
-         ```
-
-      2. Load the function to Valkey.
-
-         ```csharp
-         await client.FunctionLoadAsync(luaCode, replace: true);
-         ```
-
-      3. Call the function.
-
-         ```csharp
-         await client.StringSetAsync("page:home:visits", "0");
-         var result = await client.FCallAsync("set_then_get",
-             ["page:home:visits"], ["1"]);
-         Console.WriteLine(result); // 1
-         ```
+      1. Define the Lua script as a string.
+      2. Load the function to Valkey using `FunctionLoadAsync`.
+      3. Call the function using `FCallAsync`.
     </Steps>
 
     <details>
@@ -354,6 +332,9 @@ The following example shows a simple example of loading and executing a Valkey F
           .Build();
       await using var client = await GlideClient.CreateClient(config);
 
+      await client.SetAsync("page:home:visits", "0");
+
+      // 1. Define the Lua script as a string.
       // lua code that updates a key and returns its new value
       var luaCode = @"#!lua name=page_visits
       server.register_function('update_visits', function(visits)
@@ -362,13 +343,11 @@ The following example shows a simple example of loading and executing a Valkey F
       end)
       ";
 
-      // loading the function to valkey
+      // 2. Load the function to Valkey using `FunctionLoadAsync`.
       await client.FunctionLoadAsync(luaCode, replace: true);
 
-      await client.StringSetAsync("page:home:visits", "0");
-      // calling the previously loaded function
-      var result = await client.FCallAsync("update_visits",
-          ["page:home:visits"], []);
+      // 3. Call the function using `FCallAsync`.
+      var result = await client.FCallAsync("update_visits", ["page:home:visits"], []);
       Console.WriteLine(result); // 1
       ```
     </details>
@@ -522,20 +501,27 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
     var result = await client.FCallReadOnlyAsync("get_value", ["mykey"], []);
     ```
 
     **With Routing (Cluster Mode)**
 
     ```csharp
-    // Route to all nodes
-    var allNodesResult = await client.FCallReadOnlyAsync("get_value", Route.AllNodes);
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
 
-    // Route to all primary nodes
-    var allPrimariesResult = await client.FCallReadOnlyAsync("get_value", Route.AllPrimaries);
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
-    // Route to a random node
-    var randomResult = await client.FCallReadOnlyAsync("get_value", Route.Random);
+    var allNodesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllNodes);
+    var allPrimariesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllPrimaries);
+    var randomResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.Random);
     ```
   </TabItem>
 

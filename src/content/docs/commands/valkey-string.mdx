@@ -203,10 +203,14 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
 
     ```csharp
     using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
 
     // Using regular strings
     await client.SetAsync("key", "value");
-    string? result = await client.GetAsync("key"); // Returns "value"
+    var value = await client.GetAsync("key"); // Returns "value"
 
     // Using GlideString for binary data
     var binaryKey = new byte[] { 0x01, 0x02, 0x03, 0xFE }.ToGlideString();
@@ -225,8 +229,10 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     To convert back from `GlideString`:
 
     ```csharp
-    string text = gs1;   // implicit to GlideString → string
-    byte[] bytes = gs2;  // implicit to GlideString → byte[]
+    GlideString gs1 = "hello";
+    GlideString gs2 = new byte[] { 0x01, 0x02, 0x03 };
+    string text = gs1;   // implicit from GlideString → string
+    byte[] bytes = gs2;  // implicit from GlideString → byte[]
     ```
 
     It also provides `.ToGlideString()` extension methods for common types:
