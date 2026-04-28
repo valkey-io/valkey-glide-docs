@@ -1,0 +1,45 @@
+name: Check C# Examples
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-csharp-examples:
+    runs-on: ubuntu-latest
+    env:
+      GLIDE_DLL: Valkey.Glide.dll
+      VALIDATOR_SCRIPT: validate_examples.py
+    
+    steps:
+      - name: Checkout Docs Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download Valkey.Glide DLL from NuGet
+        run: |
+          sudo apt-get install -y nuget
+          nuget install Valkey.Glide -OutputDirectory nuget_packages
+          cp nuget_packages/Valkey.Glide.*/lib/net8.0/Valkey.Glide.dll ${{ env.GLIDE_DLL }}
+
+      - name: Download validator script
+        run: |
+          curl -sL https://raw.githubusercontent.com/valkey-io/valkey-glide-csharp/main/scripts/validate_examples.py -o ${{ env.VALIDATOR_SCRIPT }}
+
+      - name: Run C# Example Validation
+        run: |
+          python scripts/check_csharp_examples.py \
+            --validator ${{ env.VALIDATOR_SCRIPT }} \
+            --glide-dll ${{ env.GLIDE_DLL }}
