@@ -124,7 +124,7 @@ def main() -> None:
 
     try:
         with tmp_file as fh:
-            json.dump(examples, fh, indent=2)
+            json.dump(examples, fh, indent=2, sort_keys=True)
 
         result = subprocess.run(
             [
