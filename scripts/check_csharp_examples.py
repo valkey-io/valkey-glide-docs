@@ -36,30 +36,27 @@ _CSHARP_BLOCK_RE = re.compile(
 )
 
 
-def extract_from_file(filepath: str) -> dict[str, str]:
-    """Extract all C# fenced code blocks from a single MDX file.
-
-    Returns a dict mapping "<filepath>:<line_number>" to the code string.
-    """
-    with open(filepath, encoding="utf-8") as fh:
-        content = fh.read()
-
-    examples: dict[str, str] = {}
-    for match in _CSHARP_BLOCK_RE.finditer(content):
-        line_number = content[: match.start()].count("\n") + 1
-        examples[f"{filepath}:{line_number}"] = match.group(1)
-
-    return examples
-
-
 def extract_all(docs_dir: str) -> dict[str, str]:
-    """Recursively walk directory for .mdx files and extract C# blocks."""
+    """Recursively walk docs_dir for .mdx files and extract C# blocks.
+
+    Returns a dict mapping "<repo_relative_path>:<line_number>" to the
+    code string.
+    """
     examples: dict[str, str] = {}
 
     for root, _dirs, files in os.walk(docs_dir):
         for fname in sorted(files):
-            if fname.endswith(".mdx"):
-                examples.update(extract_from_file(os.path.join(root, fname)))
+            if not fname.endswith(".mdx"):
+                continue
+            
+            filepath = os.path.join(root, fname)
+            with open(filepath, encoding="utf-8") as fh:
+                content = fh.read()
+
+            for match in _CSHARP_BLOCK_RE.finditer(content):
+                key_path = os.path.relpath(filepath, _REPO_ROOT)
+                line_number = content[: match.start()].count("\n") + 1
+                examples[f"{key_path}:{line_number}"] = match.group(1)
 
     return examples
 
