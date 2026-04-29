@@ -112,11 +112,18 @@ def main() -> None:
     if not examples:
         sys.exit(0)
 
-    # Step 2: Write to temp file and validate
-    tmp_path = os.path.join(tempfile.gettempdir(), f"csharp_examples_{os.getpid()}.json")
+    # Step 2: Write to temp file and validate.
+    tmp_file = tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        prefix="csharp_examples_",
+        suffix=".json",
+        delete=False,
+    )
+    tmp_path = tmp_file.name
 
     try:
-        with open(tmp_path, "w", encoding="utf-8") as fh:
+        with tmp_file as fh:
             json.dump(examples, fh, indent=2)
 
         result = subprocess.run(
@@ -129,6 +136,7 @@ def main() -> None:
             check=False,
         )
         sys.exit(result.returncode)
+    
     finally:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
