@@ -14,8 +14,8 @@ If you are coming from other Valkey or Redis clients (such as Jedis, redis-py, o
 
 For most workloads, **use a single GLIDE client instance for the best performance**. Connection pooling is not needed.
 
-This is because GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) to send multiple requests over this connection without waiting for individual responses.
-A single GLIDE client can efficiently handle high amount of throughput from different threads.
+This is because GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities. It can efficiently handles large amounts of requests, even 
+from multiple threads, over a single connection.
 
 For more on GLIDE's multiplex architecture, take a look at [Asynchronous Execution](/concepts/architecture/async-execution/).
 
