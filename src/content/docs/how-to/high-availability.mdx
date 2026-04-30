@@ -1,0 +1,220 @@
+---
+title: High Availability Configurations
+description: Learn how to configure Valkey GLIDE for High Availability using cluster mode, automatic failover, read strategies, and reconnection tuning.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Valkey GLIDE automatically supports high-availability features out of the box. Only minimal configurations are needed.
+
+This guide will go over what's supported and what's needed to configure for high availability.
+
+## Available HA Features
+
+GLIDE comes with many HA features out of the box. This includes:
+- Automatic topology updates.
+- Connection timeout and exponential backoff for reconnecting.
+- Command routing.
+- Read strategies (Requires changing to read from replicas).
+
+#### Example Configuration
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        BackoffStrategy,
+        ReadFrom
+    )
+
+    config = GlideClusterClientConfiguration(
+        addresses=[
+            NodeAddress("node1.example.com", 6379),
+            NodeAddress("node2.example.com", 6379),
+            NodeAddress("node3.example.com", 6379),
+        ],
+        # Read from replicas in the same AZ to reduce latency
+        read_from=ReadFrom.AZ_AFFINITY,
+        client_az="us-east-1a",
+        # Allow more time for commands during failover
+        request_timeout=1000,
+        # Reconnect with exponential backoff
+        reconnect_strategy=BackoffStrategy(
+            num_of_retries=5,
+            factor=2,
+            exponent_base=2,
+        ),
+    )
+
+    client = await GlideClusterClient.create(config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.BackoffStrategy;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.ReadFrom;
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("node1.example.com").port(6379).build())
+        .address(NodeAddress.builder().host("node2.example.com").port(6379).build())
+        .address(NodeAddress.builder().host("node3.example.com").port(6379).build())
+        // Read from replicas in the same AZ to reduce latency
+        .readFrom(ReadFrom.AZ_AFFINITY)
+        .clientAZ("us-east-1a")
+        // Allow more time for commands during failover
+        .requestTimeout(1000)
+        // Reconnect with exponential backoff
+        .reconnectStrategy(BackoffStrategy.builder()
+            .numOfRetries(5)
+            .factor(2)
+            .exponentBase(2)
+            .build())
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {GlideClusterClient} from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [
+            {host: "node1.example.com", port: 6379},
+            {host: "node2.example.com", port: 6379},
+            {host: "node3.example.com", port: 6379},
+        ],
+        // Read from replicas in the same AZ to reduce latency
+        readFrom: "AZAffinity",
+        clientAz: "us-east-1a",
+        // Allow more time for commands during failover
+        requestTimeout: 1000,
+        // Reconnect with exponential backoff
+        reconnectStrategy: {
+            numOfRetries: 5,
+            factor: 2,
+            exponentBase: 2,
+        },
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func CreateHAClient() (*glide.ClusterClient, error) {
+        cfg := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "node1.example.com", Port: 6379}).
+            WithAddress(&config.NodeAddress{Host: "node2.example.com", Port: 6379}).
+            WithAddress(&config.NodeAddress{Host: "node3.example.com", Port: 6379}).
+            // Read from replicas in the same AZ to reduce latency
+            WithReadFrom(config.AzAffinity).
+            WithClientAZ("us-east-1a").
+            // Allow more time for commands during failover
+            WithRequestTimeout(1000).
+            // Reconnect with exponential backoff
+            WithReconnectStrategy(config.BackoffStrategy{
+                NumOfRetries: 5,
+                Factor:       2,
+                ExponentBase: 2,
+            })
+
+        return glide.NewClusterClient(cfg)
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("node1.example.com", 6379)
+        .WithAddress("node2.example.com", 6379)
+        .WithAddress("node3.example.com", 6379)
+        // Read from replicas in the same AZ to reduce latency
+        .WithReadFrom(new ReadFrom(ReadFromStrategy.AzAffinity, "us-east-1a"))
+        // Allow more time for commands during failover
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(1000))
+        // Reconnect with exponential backoff
+        .WithConnectionRetryStrategy(
+            numberOfRetries: 5,
+            factor: 2,
+            exponentBase: 2)
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [
+            ['host' => 'node1.example.com', 'port' => 6379],
+            ['host' => 'node2.example.com', 'port' => 6379],
+            ['host' => 'node3.example.com', 'port' => 6379],
+        ],
+        // Read from replicas in the same AZ to reduce latency
+        read_from: ValkeyGlide::READ_FROM_AZ_AFFINITY,
+        client_az: 'us-east-1a',
+        // Allow more time for commands during failover
+        request_timeout: 1000,
+        // Reconnect with exponential backoff
+        reconnect_strategy: [
+            'num_of_retries' => 5,
+            'factor' => 2,
+            'exponent_base' => 2,
+        ],
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+### Topology Updates
+
+GLIDE automatically refreshes its view of the cluster when it receives `MOVED` or `ASK` redirections from the server. 
+No configuration is needed. When a shard's primary changes due to failover, GLIDE detects the change on the next command and updates its routing table.
+
+### Request Timeout
+
+By default, GLIDE has a request timeout of 250ms. This controls how long GLIDE waits for a command to complete, including any reconnection attempts. 
+
+During failover, commands may take longer to complete due to retries. Increasing the timeout (e.g., to 1000ms) reduces the chance of false timeouts during brief disruptions.
+
+### Reconnect Strategy
+
+By default, GLIDE uses exponential backoff reconnect strategy. This controls how GLIDE attempts to reconnect to nodes.
+
+For production, configure the number of retries and backoff parameters to match your failover timing. 
+For more on configuring reconnect strategies, see our [guide](/how-to/connections/timeouts-and-reconnect-strategy/).
+
+### Read Strategy
+
+Configuring clients to read from replicas is important for high availability.
+
+By default, GLIDE clients read and write from the primary node. Changing this to read from replicas provides 
+two benefits: reads can continue while a primary is down and it distributes load away from primaries.
+
+For more on configuring read strategies, see our [guide](/how-to/connections/read-strategy/).
+
+## What Happens During Failover
+
+When a primary node fails, Valkey promotes a replica to primary. GLIDE will detects this and update its topology mapping accordingly.
+
+During the failover window (typically a few seconds), commands targeting the affected shard may fail with timeout errors. Commands targeting other shards are unaffected.
+
+Your application should handle these transient errors with retry logic. GLIDE's [reconnect strategy](/how-to/connections/timeouts-and-reconnect-strategy/) handles reconnection at the connection level, 
+but application-level retries may still be needed for commands that fail during the transition.
