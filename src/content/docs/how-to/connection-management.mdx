@@ -3,29 +3,25 @@ title: Connection Management
 description: Understand GLIDE's asynchronous API, multiplexed connections, and when to create multiple clients for optimal performance.
 ---
 
-GLIDE is an asynchronous client and uses a multiplex connection to interact with Valkey.
-This means <u>all requests are sent through a single connection</u>. The Rust core takes advantage of Valkey's pipelining capabilities to improve performance.
+GLIDE is an asynchronous client and uses a multiplex connection to interact with Valkey, taking advantage of Valkey's pipelining capabilities to improve performance.
 
-This guide will go over how to manage your GLIDE clients for the optimal performance.
+This guide will go over how to manage your GLIDE clients for optimal performance.
 
 ## Connection Pooling
 
 If you are coming from other Valkey or Redis clients (such as Jedis, redis-py, or go-redis), you may expect a connection pool approach. GLIDE handles this differently.
 
-For most workloads, **use a single GLIDE client instance for the best performance**. Connection pooling is not needed.
+For most workloads, **use a single GLIDE client instance for the best performance**.
 
-This is because GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities. It can efficiently handles large amounts of requests, even 
-from multiple threads, over a single connection.
-
+GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities to efficiently handle large amounts of requests, even from multiple threads, using a single connection.
 For more on GLIDE's multiplex architecture, take a look at [Asynchronous Execution](/concepts/architecture/async-execution/).
 
 ## When to Use Multiple Clients
 
-Conditional commands or large value operations should use their own connection to avoid blocking the other commands. The following are situations where opening multiple clients can be beneficial.
+Due to the multiplex design, a single connection becomes a bottleneck when executing commands that can block the connection. Currently, it is recommended
+to use separate clients in these situations.
 
-:::note
-Be aware that opening multiple clients means multiple connections to the server, which can lead to increased resource usage and potential performance degradation if not managed properly.
-:::
+Be aware that in cluster mode, GLIDE maintains a connection to each node in the cluster; it is not scalable to open a large number of clients.
 
 ### Reading and Writing Large Values
 
