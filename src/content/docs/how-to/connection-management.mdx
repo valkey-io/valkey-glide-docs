@@ -36,6 +36,12 @@ Opening a new client for each blocking command is recommended to avoid blocking 
 Blocking commands, such as [BLPOP](https://valkey.io/commands/blpop/), block the connection until a condition is met (e.g., the list is not empty for BLPOP).
 Using a blocking command will prevent all subsequent commands on the pipeline from executing until the block is lifted.
 
+### Pub/Sub Commands
+
+Pub/Sub commands like `SUBSCRIBE`, `PSUBSCRIBE`, and `SSUBSCRIBE` can block the connection and prevent other commands from executing.
+
+For more details on configuring Pub/Sub with GLIDE, see [Pub/Sub Messaging](/how-to/publish-and-subscribe-messages/).
+
 ### WATCH/UNWATCH Commands
 
 Commands like `WATCH`, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
