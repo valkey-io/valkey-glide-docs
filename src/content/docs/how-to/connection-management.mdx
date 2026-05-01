@@ -38,7 +38,7 @@ Using a blocking command will prevent all subsequent commands on the pipeline fr
 
 ### Pub/Sub Commands
 
-Pub/Sub commands like `SUBSCRIBE`, `PSUBSCRIBE`, and `SSUBSCRIBE` can block the connection and prevent other commands from executing.
+Pub/Sub commands like `SUBSCRIBE`, `PSUBSCRIBE`, and `SSUBSCRIBE` can block the connection and decrease the througput. Consider using separate clients for Pub/Sub for the best performance.
 
 For more details on configuring Pub/Sub with GLIDE, see [Pub/Sub Messaging](/how-to/publish-and-subscribe-messages/).
 
