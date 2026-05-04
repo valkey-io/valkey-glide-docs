@@ -14,72 +14,19 @@ This aims to allow contributors to quickly add or edit existing pages using fami
 
 ## Getting Started
 
-You'll need the following installed:
-
-- [Node.js](https://nodejs.org/) v20+
-- [pnpm](https://pnpm.io/) v10+ (`brew install pnpm` or `npm install -g pnpm`)
-
-Then clone the repo and install dependencies:
+Clone the repo and install dependencies with npm:
 
 ```bash
 git clone git@github.com:valkey-io/valkey-glide-docs.git
 cd ./valkey-glide-docs
 pnpm install
+
+# Start a hot-loading dev server.
+pnpm dev
 ```
 
-For development, run `pnpm dev`. It will spin up a hot-loading development server to serve the documentation pages.
+See [DEVELOPER](DEVELOPER.md) for the full developer instructions.
 
-### Making Changes
+## Making Changes
 
-Page content lives under `src/content/docs/` as `.mdx` files.
-
-- **Edit a page:** Modify the corresponding `.mdx` file.
-- **Add a new page:** Create a new `.mdx` file under `src/content/docs/`. Every file requires frontmatter:
-
-  ```mdx
-  ---
-  title: Your page title
-  ---
-
-  Your content follows...
-  ```
-
-- **Update the sidebar navigation:** Add your new page to `astro.config.mjs`.
-
-For guidelines on how to write new articles, take a look at our [Contributing](/CONTRIBUTING.md) page.
-
-## Commit Requirements
-
-All commits must include the `--signoff` flag to certify the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-
-## Link Checker
-
-We use [lychee](https://github.com/lycheeverse/lychee) to check for broken links. Configuration rules (exclusions) are defined in our `lychee.toml`.
-
-To start, install `lychee`.
-
-```bash
-brew install lychee
-```
-
-Then to run the build and check links:
-
-```bash
-pnpm build:check-links
-```
-
-## Code Style & Formatting
-
-The project uses [Prettier](https://prettier.io/) for general formatting and [remark](https://github.com/remarkjs/remark) for MDX/Markdown linting. Configuration is in `.prettierrc.json` and `.remarkrc.json`.
-
-Run formatting before submitting a PR:
-
-```bash
-pnpm format
-```
-
-To check formatting without modifying files:
-
-```bash
-pnpm format:check
-```
+For more on making your first contribution, see our [CONTRIBUTING](CONTRIBUTING.md) page.
