@@ -177,3 +177,37 @@ To prevent large files, log files are rotated hourly.
 
 Since logs are outputted from the Rust layer, it contains ANSI color code for console outputs. These codes may appear in log files as unknown characters or character codes.
 To disable these color codes, you can set the environment variable `NO_COLOR=1` before starting the logger.
+
+## Recommended Configuration
+
+For development and debugging, use `DEBUG` level to see all internal operations including connection management, topology refreshes, and command routing.
+
+For production, use `WARN` level with file output. This captures connectivity issues, timeouts, and performance degradation without the overhead of verbose logging.
+
+Refer to the [examples](#examples) above for language-specific configuration.
+
+## Understanding Log Output
+
+GLIDE log messages follow this format:
+
+```
+<timestamp> <LEVEL> <component> - <message>
+```
+
+For example:
+
+```
+2026-05-01T19:14:23.081Z  WARN logger_core: cluster - disconnected from "172.30.0.11:6379"
+```
+
+Key components you may see in logs:
+
+| Component | Description |
+|---|---|
+| `cluster` | Cluster connection management, routing errors, disconnections |
+| `pipeline` | Command pipeline send/receive, backpressure warnings |
+| `connections_logic` | Connection health checks and reconnection |
+| `moved_error` | Slot map changes and MOVED/ASK redirect handling |
+| `inflight` | Inflight request tracking and limit enforcement |
+| `AsyncRegistry` | Java-side future tracking and timeout delivery |
+| `jni_command` | JNI layer command dispatch timing |
