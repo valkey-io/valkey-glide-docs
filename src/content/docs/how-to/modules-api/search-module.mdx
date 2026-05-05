@@ -308,7 +308,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     using Valkey.Glide.ServerModules;
 
     // Both standalone and cluster mode are supported
-    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder().Build();
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
     await using var client = await GlideClient.CreateClient(config);
 
     var prefix = "{hash}:";
@@ -335,11 +337,11 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     // Insert hash data with vector fields (2-dimensional float32 vectors = 8 bytes each)
     var vec0 = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
     var vec1 = new byte[] { 0, 0, 0, 0, 0, 0, 0x80, 0xBF };
-    await client.HashSetAsync($"{prefix}0", [new("vec", vec0)]);
-    await client.HashSetAsync($"{prefix}1", [new("vec", vec1)]);
+    await client.HashSetAsync($"{prefix}0", "vec", vec0);
+    await client.HashSetAsync($"{prefix}1", "vec", vec1);
 
     // Let server digest the data and update index
-    await Task.Delay(TimeSpan.Seconds(1));
+    await Task.Delay(TimeSpan.FromSeconds(1));
 
     // FT.SEARCH
     var query = "*=>[KNN 2 @VEC $query_vec]";
@@ -351,9 +353,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
         },
     };
     var result = await Ft.SearchAsync(client, index, query, searchOptions);
-    var vectors = result.Documents.Select(d => Convert.ToHexString(d.Fields["vec"].ToByteArray()));
-    
-    Console.WriteLine("$Total results: {result.TotalResults}");     // Total results: 2
+    var vectors = result.Documents.Select(d => Convert.ToHexString((byte[])d.Fields["vec"]));
+
+    Console.WriteLine($"Total results: {result.TotalResults}");     // Total results: 2
     Console.WriteLine($"Vectors: [{string.Join(", ", vectors)}]");  // Vectors: [0000000000000000, 00000000000080BF]
     ```
   </TabItem>

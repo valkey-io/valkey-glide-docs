@@ -159,7 +159,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     using Valkey.Glide.ServerModules;
 
     // Both standalone and cluster mode are supported
-    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder().Build();
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
     await using var client = await GlideClient.CreateClient(config);
 
     var key = "testKey";
