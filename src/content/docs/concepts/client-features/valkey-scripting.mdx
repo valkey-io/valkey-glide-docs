@@ -360,9 +360,10 @@ GLIDE then automatically caches scripts with each `invoke_script()` call.
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+
     using var script = new Script("return 'Hello'");
-    var hashValue = script.Hash;
-    Console.WriteLine($"Script hash: {hashValue}"); // SHA1 hash of the script
+    Console.WriteLine($"Script hash: {script.Hash}"); // SHA1 hash of the script
     ```
   </TabItem>
 </Tabs>
@@ -404,6 +405,8 @@ Scripts with identical code produce identical hashes, enabling efficient caching
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+
     using var script1 = new Script("return 'Hello'");
     using var script2 = new Script("return 'Hello'");
     System.Diagnostics.Debug.Assert(script1.Hash == script2.Hash); // Same hash
