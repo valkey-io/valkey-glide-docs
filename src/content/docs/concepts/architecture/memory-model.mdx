@@ -52,6 +52,10 @@ Under steady load, the Rust core also holds:
 
 * Serialized requests in flight and deserialized responses on the return path.
 * Cluster topology and slot map (cluster mode only).
+* Pub/Sub messages queued in an unbounded push notification channel
+  (`tokio::sync::mpsc::unbounded_channel`). These accumulate depending on
+  publisher rate and the number of subscribed channels — if the application
+  consumes messages slower than they arrive, this buffer grows without limit.
 
 ## Language-Specific Notes
 
@@ -59,7 +63,8 @@ Under steady load, the Rust core also holds:
   <TabItem label="Java">
     GLIDE's Java client does **not** use JVM NIO direct (off-heap) buffers for
     network I/O. All socket reads and writes are performed in the Rust core;
-    responses cross the JNI boundary as byte arrays allocated on the JVM heap.
+    responses are passed as a native pointer across JNI and converted into JVM
+    heap objects (Strings, byte arrays, maps) on the Java side.
 
     Practical consequence: you do not need to tune `-XX:MaxDirectMemorySize` for
     GLIDE. The JVM's direct-buffer pool stays effectively empty regardless of
@@ -68,7 +73,7 @@ Under steady load, the Rust core also holds:
     writes.
 
     The default JVM heap size is usually adequate. Large values and high
-    concurrency pressure the heap through allocation of response byte arrays —
+    concurrency pressure the heap through allocation of response objects —
     the `-Xmx` you would use for any similar workload is the right starting
     point.
   </TabItem>
@@ -92,9 +97,10 @@ Under steady load, the Rust core also holds:
   </TabItem>
 
   <TabItem label="Go">
-    The Rust core is invoked through CGo. Go's runtime reports the native side
-    as "off-heap" in `runtime.MemStats.Sys` minus `HeapSys`. Container sizing
-    should be based on OS-reported RSS.
+    The Rust core is invoked through CGo. Memory allocated by the Rust core
+    (via its own allocator) is **not** visible in `runtime.MemStats` — those
+    stats only track Go's own runtime allocations. Container sizing should be
+    based on OS-reported RSS, not `MemStats.Sys`.
   </TabItem>
 
   <TabItem label="C#">
@@ -104,8 +110,21 @@ Under steady load, the Rust core also holds:
   </TabItem>
 
   <TabItem label="PHP">
-    GLIDE PHP uses a synchronous blocking API with at most one in-flight
-    request per client at a time, which bounds per-client Rust-side buffer use.
+    GLIDE PHP is a C extension built against the Zend Engine (PHP's runtime).
+    PHP objects — including associative arrays returned by commands — are
+    allocated via PHP's internal allocator (`emalloc`), while the Rust core
+    uses its own allocator. Both reside in native (process) memory; there is
+    no separate managed heap. However, `memory_get_usage()` only reports
+    `emalloc`-tracked allocations and does **not** include the Rust core's
+    memory. Use `memory_get_usage(true)` or process-level RSS for total
+    memory sizing.
+
+    The synchronous blocking API (`ClientType::SyncClient`) means at most one
+    command is in flight per client at a time, which bounds per-client
+    Rust-side buffer use. However, Pub/Sub messages are received asynchronously
+    by the Rust core's push notification handler and queued into an unbounded
+    linked list on the C side. If the PHP process does not consume messages
+    promptly, this queue grows without limit.
   </TabItem>
 </Tabs>
 
@@ -192,6 +211,17 @@ expected.
     long rss = Process.GetCurrentProcess().WorkingSet64;
     ```
   </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // emalloc-tracked memory only (excludes Rust core)
+    $phpMemory = memory_get_usage();
+    // Real allocated pages (closer to RSS, includes Rust core)
+    $realMemory = memory_get_usage(true);
+    // Peak real allocation
+    $peakMemory = memory_get_peak_usage(true);
+    ```
+  </TabItem>
 </Tabs>
 
 **From the OS:** on Linux, `cat /proc/$PID/status | grep VmRSS` gives the
@@ -211,8 +241,81 @@ A safe starting point:
    container limit — the Rust core needs space too.
 
 Then measure in your environment (peak RSS over representative traffic) and
-tighten from there. For language-specific diagnostic flags, see the
-[Troubleshooting](/troubleshooting/) guide.
+tighten from there.
+
+## Heap vs. Native Split
+
+Because GLIDE's Rust core allocates outside the language runtime's managed heap,
+you need to leave enough container memory for native allocations. Setting the
+heap limit too high starves the Rust core; setting it too low wastes capacity.
+
+### Observed ratio (Java)
+
+In a long-running test with **10 concurrent `GlideClient` instances** performing
+continuous `GET` and `SET` operations against a cluster, steady-state memory
+settled at approximately a **50/50 split** between JVM heap and native (Rust
+core + JNI overhead + TCP buffers):
+
+| Region | Approximate share |
+|--------|-------------------|
+| JVM heap (response objects, application state) | ~50% of RSS |
+| Native (Rust runtime, connection buffers, inflight requests) | ~50% of RSS |
+
+### Sizing guidance
+
+| Scenario | Suggested `-Xmx` | Native headroom | Notes |
+|----------|-------------------|-----------------|-------|
+| 1–2 clients, light traffic | 70% of container | 30% | Minimal Rust footprint |
+| Multiple clients, moderate traffic | 60% of container | 40% | More connections and inflight buffers |
+| Many clients (10+), sustained high TPS | 50% of container | 50% | Matches observed steady-state ratio |
+
+**Key points:**
+
+* The native share scales with the number of clients (each adds connections and
+  inflight tracking) and with value sizes (larger payloads mean larger native
+  buffers in transit).
+* Pub/Sub subscriptions add unbounded queue memory on the native side — factor
+  this in if you have high-volume subscriptions.
+* These ratios are starting points. Profile your workload with
+  `-XX:NativeMemoryTracking=summary` and compare `jcmd VM.native_memory` against
+  heap usage to find the right balance for your scenario.
+
+## Heap vs. Native Split
+
+Because GLIDE's Rust core allocates outside the language runtime's managed heap,
+you need to leave enough container memory for native allocations. Setting the
+heap limit too high starves the Rust core; setting it too low wastes capacity.
+
+### Observed ratio (Java)
+
+In a long-running test with **10 concurrent `GlideClient` instances** performing
+continuous `GET` and `SET` operations against a cluster, steady-state memory
+settled at approximately a **50/50 split** between JVM heap and native (Rust
+core + JNI overhead + TCP buffers):
+
+| Region | Approximate share |
+|--------|-------------------|
+| JVM heap (response objects, application state) | ~50% of RSS |
+| Native (Rust runtime, connection buffers, inflight requests) | ~50% of RSS |
+
+### Sizing guidance
+
+| Scenario | Suggested `-Xmx` | Native headroom | Notes |
+|----------|-------------------|-----------------|-------|
+| 1–2 clients, light traffic | 70% of container | 30% | Minimal Rust footprint |
+| Multiple clients, moderate traffic | 60% of container | 40% | More connections and inflight buffers |
+| Many clients (10+), sustained high TPS | 50% of container | 50% | Matches observed steady-state ratio |
+
+**Key points:**
+
+* The native share scales with the number of clients (each adds connections and
+  inflight tracking) and with value sizes (larger payloads mean larger native
+  buffers in transit).
+* Pub/Sub subscriptions add unbounded queue memory on the native side — factor
+  this in if you have high-volume subscriptions.
+* These ratios are starting points. Profile your workload with
+  `-XX:NativeMemoryTracking=summary` and compare `jcmd VM.native_memory` against
+  heap usage to find the right balance for your scenario.
 
 ## Related
 
