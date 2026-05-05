@@ -218,10 +218,12 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     import (
         "context"
         "time"
+
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
         "github.com/valkey-io/valkey-glide/go/v2/constants"
         "github.com/valkey-io/valkey-glide/go/v2/options"
+        "github.com/valkey-io/valkey-glide/go/v2/servermodules/glideft"
     )
 
     // Both standalone and cluster mode are supported
@@ -232,10 +234,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     ctx := context.Background()
     prefix := "{hash}:"
     index := prefix + "index"
-    ft := client.FT()
 
     // FT.CREATE a Hash index with a vector field
-    _, err = ft.Create(ctx, index,
+    _, err = glideft.FtCreate(ctx, client, index,
         []options.Field{
             options.NewVectorFieldHNSW("vec", constants.DistanceMetricL2, 2).SetAlias("VEC"),
         },
@@ -253,7 +254,7 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     time.Sleep(time.Second) // let server digest the data and update index
 
     // FT.SEARCH
-    result, err := ft.Search(ctx, index, "*=>[KNN 2 @VEC $query_vec]",
+    result, err := glideft.FtSearch(ctx, client, index, "*=>[KNN 2 @VEC $query_vec]",
         &options.FtSearchOptions{
             Params:       []options.FtSearchParam{{Key: "query_vec", Value: vec0}},
             ReturnFields: []options.FtSearchReturnField{{FieldIdentifier: "vec"}},
