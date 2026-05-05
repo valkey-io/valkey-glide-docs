@@ -10,13 +10,16 @@ permissions:
 jobs:
   check-csharp-examples:
     runs-on: ubuntu-latest
-    env:
-      GLIDE_DLL: Valkey.Glide.dll
-      VALIDATOR_SCRIPT: validate_examples.py
 
     steps:
-      - name: Checkout Docs Repository
+      - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
+
+      - name: Checkout valkey-glide-csharp
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide-csharp
+          path: valkey-glide-csharp
 
       - name: Setup .NET 8.0 SDK
         uses: actions/setup-dotnet@v4
@@ -28,18 +31,17 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Download Valkey.Glide DLL from NuGet
-        run: |
-          sudo apt-get install -y nuget
-          nuget install Valkey.Glide -OutputDirectory nuget_packages
-          cp nuget_packages/Valkey.Glide.*/lib/net8.0/Valkey.Glide.dll ${{ env.GLIDE_DLL }}
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
 
-      - name: Download validator script
-        run: |
-          curl -sL https://raw.githubusercontent.com/valkey-io/valkey-glide-csharp/main/scripts/validate_examples.py -o ${{ env.VALIDATOR_SCRIPT }}
+      - name: Build Valkey.Glide DLL
+        working-directory: valkey-glide-csharp
+        run: task build target=lib
 
       - name: Run C# Example Validation
         run: |
           python scripts/check_csharp_examples.py \
-            --validator ${{ env.VALIDATOR_SCRIPT }} \
-            --glide-dll ${{ env.GLIDE_DLL }}
+            --validator valkey-glide-csharp/scripts/validate_examples.py \
+            --glide-dll valkey-glide-csharp/sources/Valkey.Glide/bin/Release/net8.0/Valkey.Glide.dll

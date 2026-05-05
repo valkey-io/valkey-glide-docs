@@ -252,7 +252,7 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     using Valkey.Glide;
 
     // To GlideString[]
-    GlideString[] gsArr1 = new string[] { "a", "b" }.ToGlideStrings();                              // from string[]
+    GlideString[] gsArr1 = new string[] { "a", "b" }.ToGlideStrings();                       // from string[]
     GlideString[] gsArr2 = new[] { new byte[] {0x01}, new byte[] {0x02} }.ToGlideStrings();  // from byte[][]
 
     // From GlideString[]
