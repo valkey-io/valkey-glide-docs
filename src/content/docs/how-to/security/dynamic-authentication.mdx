@@ -162,10 +162,10 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     await using var client = await GlideClusterClient.CreateClient(config);
 
     // Update password with lazy re-authentication.
-    await client.UpdateConnectionPassword("your-new-password");
+    await client.UpdateConnectionPasswordAsync("your-new-password");
 
     // Update password with immediate re-authentication.
-    await client.UpdateConnectionPassword("your-new-password", immediateAuth: true);
+    await client.UpdateConnectionPasswordAsync("your-new-password", immediateAuth: true);
 
     // Clear password with lazy re-authentication.
     await client.ClearConnectionPasswordAsync();
@@ -258,6 +258,8 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
 
   <TabItem label="C#">
     ```csharp
+    using static Valkey.Glide.ConnectionConfiguration;
+
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("address.example.com", 6379)
         .WithAuthentication("your-password-or-token")

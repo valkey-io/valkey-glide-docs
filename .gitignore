@@ -30,3 +30,7 @@ doc-gen/valkey-glide/
 
 # Kiro files
 .kiro/
+
+# Python bytecode
+__pycache__/
+*.pyc
