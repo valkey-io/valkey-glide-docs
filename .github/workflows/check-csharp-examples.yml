@@ -15,6 +15,8 @@ jobs:
       - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
 
+      # Skip checking out the 'valkey-glide' submodule
+      # because it is not needed to validate the examples.
       - name: Checkout valkey-glide-csharp
         uses: actions/checkout@v4
         with:
@@ -31,9 +33,14 @@ jobs:
         with:
           python-version: "3.x"
 
+      # Skip building Rust core ('SkipCargo') because we only need
+      # the managed C# assembly as a reference for syntax validation.
       - name: Build Valkey.Glide DLL
         working-directory: valkey-glide-csharp
-        run: dotnet build sources/Valkey.Glide/ --configuration Release /p:SkipCargo=true
+        run: |
+          dotnet build sources/Valkey.Glide/ \
+            --configuration Release \
+            /p:SkipCargo=true
 
       - name: Run C# Example Validation
         run: |
