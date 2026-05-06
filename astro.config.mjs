@@ -109,6 +109,7 @@ export default defineConfig({
               items: [
                 "concepts/architecture/rust-core-design",
                 "concepts/architecture/async-execution",
+                "concepts/architecture/memory-model",
               ],
             },
             {
