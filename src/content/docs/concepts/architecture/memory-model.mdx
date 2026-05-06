@@ -1,0 +1,272 @@
+---
+title: Memory Model
+sidebar:
+  order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE clients have a memory profile shaped by the [shared Rust core](/concepts/architecture/rust-core-design/)
+that sits underneath every language binding. This page describes where that memory
+lives, what is (and is not) configurable, and how to size your process and container
+accordingly.
+
+## Where GLIDE Memory Lives
+
+A GLIDE process has three memory regions that contribute to its overall footprint:
+
+| Region | Owner | Typical contents |
+| --- | --- | --- |
+| **Language runtime** | JVM heap / Python interpreter / V8 heap / Go runtime / etc. | Request and response objects, your application code, client wrapper state |
+| **Rust core** | Rust allocator, reported as native/off-heap by the language runtime | Tokio runtime, connection buffers, cluster topology, in-flight command state |
+| **OS / shared libraries** | Kernel + loader | Thread stacks, loaded native libraries (glide-core, OpenSSL, etc.), TCP kernel buffers |
+
+All three show up in the operating system's **resident set size (RSS)** for the
+process. In a container, RSS is what counts toward your memory limit — not just the
+language-runtime heap.
+
+<Aside type="tip">
+  **Size your container memory for RSS, not just for `-Xmx` / `--max-old-space-size` / etc.**
+  The Rust core and native libraries cost memory that a heap-only budget does not cover.
+  A few tens of megabytes of headroom above peak runtime heap is typical and safe to
+  start with; measure your own workload with the tools below to refine.
+</Aside>
+
+## What the Rust Core Costs
+
+The Rust core is **shared across every GLIDE client in the same process** — it is
+initialised lazily on the first client creation and re-used for every subsequent
+client. Opening a second `GlideClient` in the same JVM/interpreter does not multiply
+the Rust-runtime cost.
+
+What the core contains at idle:
+
+* A single **Tokio async runtime** with a small default worker pool (see below) and
+  2 MB thread stacks.
+* One TCP connection per Valkey node — cluster-mode-disabled setups use a single
+  connection; cluster-mode-enabled scales with shard count.
+* A small native buffer registry that grows on demand when commands carry large
+  payloads, and shrinks when those buffers are released.
+
+Under steady load, the Rust core also holds:
+
+* Serialized requests in flight and deserialized responses on the return path.
+* Cluster topology and slot map (cluster mode only).
+* Pub/Sub messages queued in an unbounded push notification channel
+  (`tokio::sync::mpsc::unbounded_channel`). These accumulate depending on
+  publisher rate and the number of subscribed channels — if the application
+  consumes messages slower than they arrive, this buffer grows without limit.
+
+## Language-Specific Notes
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    GLIDE's Java client does **not** use JVM NIO direct (off-heap) buffers for
+    network I/O. All socket reads and writes are performed in the Rust core;
+    responses are passed as a native pointer across JNI and converted into JVM
+    heap objects (Strings, byte arrays, maps) on the Java side.
+
+    Practical consequence: you do not need to tune `-XX:MaxDirectMemorySize` for
+    GLIDE. The JVM's direct-buffer pool stays effectively empty regardless of
+    concurrency or payload size. This contrasts with Netty-based clients
+    (e.g. Lettuce), which reserve direct buffers per channel for reads and
+    writes.
+
+    The default JVM heap size is usually adequate. Large values and high
+    concurrency pressure the heap through allocation of response objects —
+    the `-Xmx` you would use for any similar workload is the right starting
+    point.
+  </TabItem>
+
+  <TabItem label="Python">
+    The Rust core's native memory is visible in process RSS but **not** reported
+    by `sys.getsizeof` or the `tracemalloc` module — those inspect Python
+    objects only. To observe total footprint use OS-level tools (`ps`,
+    `/proc/self/status`, container memory metrics, or `psutil`).
+
+    Python response objects (`bytes`, `str`, lists for multi-value replies) live
+    on the CPython heap and are subject to normal reference-counted reclamation.
+  </TabItem>
+
+  <TabItem label="Node">
+    The Rust core allocates outside the V8 heap; V8's `process.memoryUsage()`
+    reports `rss` (which includes the native side) and `heapUsed` (which does
+    not). Use `rss` when budgeting for a container. The Node client uses
+    [N-API](https://nodejs.org/api/n-api.html) to cross the boundary; JavaScript
+    response objects live in the V8 heap and are GC-managed.
+  </TabItem>
+
+  <TabItem label="Go">
+    The Rust core is invoked through CGo. Memory allocated by the Rust core
+    (via its own allocator) is **not** visible in `runtime.MemStats` — those
+    stats only track Go's own runtime allocations. Container sizing should be
+    based on OS-reported RSS, not `MemStats.Sys`.
+  </TabItem>
+
+  <TabItem label="C#">
+    The Rust core's allocations are outside the managed heap and will not be
+    reported by `GC.GetTotalMemory`. Process-level counters
+    (`Process.WorkingSet64`, OS-level RSS) reflect the true footprint.
+  </TabItem>
+
+  <TabItem label="PHP">
+    GLIDE PHP is a C extension built against the Zend Engine (PHP's runtime).
+    PHP objects — including associative arrays returned by commands — are
+    allocated via PHP's internal allocator (`emalloc`), while the Rust core
+    uses its own allocator. Both reside in native (process) memory; there is
+    no separate managed heap. However, `memory_get_usage()` only reports
+    `emalloc`-tracked allocations and does **not** include the Rust core's
+    memory. Use `memory_get_usage(true)` or process-level RSS for total
+    memory sizing.
+
+    The synchronous blocking API (`ClientType::SyncClient`) means at most one
+    command is in flight per client at a time, which bounds per-client
+    Rust-side buffer use. However, Pub/Sub messages are received asynchronously
+    by the Rust core's push notification handler and queued into an unbounded
+    linked list on the C side. If the PHP process does not consume messages
+    promptly, this queue grows without limit.
+  </TabItem>
+</Tabs>
+
+## Tuning Knobs
+
+GLIDE deliberately exposes a small set of memory-relevant configuration, keeping
+defaults that suit a wide range of workloads.
+
+### Exposed in every binding
+
+* **[`inflightRequestsLimit`](/how-to/connections/limit-inflight-requests/)** —
+  maximum concurrent in-flight requests per client. The cap exists precisely to
+  bound queuing memory. Default is 1000.
+* **`requestTimeout`** — caps how long commands (and their associated buffers)
+  can sit in flight before being released with an error.
+
+### Not exposed (intentionally)
+
+GLIDE does not surface configuration for the Rust runtime's thread pool, the
+connection pool size (there is one connection per node — managed by the core),
+or internal buffer sizes. These are tuned for the general case in the Rust core
+and are not user-facing knobs.
+
+<Aside type="caution">
+  An undocumented environment variable, `GLIDE_TOKIO_WORKER_THREADS`, overrides
+  the Rust runtime's Tokio worker-thread count (default 1). It is not part of the
+  stable configuration surface and is not recommended for normal use — the
+  default is appropriate for typical client workloads. If you believe you need
+  to change it, please [file an issue](https://github.com/valkey-io/valkey-glide/issues/new?template=inquiry.yml)
+  describing your scenario first.
+</Aside>
+
+## Observing Memory Usage
+
+GLIDE exposes one in-process statistic and relies on your runtime / OS for the
+rest.
+
+**From the client:** use
+[`getStatistics()`](/how-to/monitoring/tracking-resources/) to read the
+number of active connections and clients — useful for confirming that multiple
+`GlideClient` instances in the same process are sharing the Rust runtime as
+expected.
+
+**From the runtime:**
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    // JVM heap
+    Runtime.getRuntime().totalMemory();
+    // Direct buffer pool (empty for GLIDE)
+    for (BufferPoolMXBean b :
+        ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class)) {
+        System.out.println(b.getName() + ": " + b.getMemoryUsed());
+    }
+    // Enable NMT at startup with -XX:NativeMemoryTracking=summary
+    // then: jcmd <pid> VM.native_memory summary
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    import psutil, os
+    rss_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```javascript
+    const { rss, heapUsed, external } = process.memoryUsage();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    var m runtime.MemStats
+    runtime.ReadMemStats(&m)
+    // native side ≈ m.Sys - m.HeapSys (rough, includes Go runtime overhead too)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    long rss = Process.GetCurrentProcess().WorkingSet64;
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // emalloc-tracked memory only (excludes Rust core)
+    $phpMemory = memory_get_usage();
+    // Real allocated pages (closer to RSS, includes Rust core)
+    $realMemory = memory_get_usage(true);
+    // Peak real allocation
+    $peakMemory = memory_get_peak_usage(true);
+    ```
+  </TabItem>
+</Tabs>
+
+**From the OS:** on Linux, `cat /proc/$PID/status | grep VmRSS` gives the
+authoritative resident set size. In Kubernetes / ECS / Fargate, the container
+runtime reports this as the memory metric your limits apply to.
+
+## Container Sizing Recommendation
+
+A safe starting point:
+
+1. Measure peak runtime heap under your expected workload.
+2. Add headroom for the Rust core. **A few tens of megabytes** is typical for
+   single-shard workloads; cluster mode adds roughly one connection's worth per
+   shard.
+3. Leave kernel / TCP buffer headroom (a few MB).
+4. Set the container limit above the sum. Don't set `-Xmx` to the full
+   container limit — the Rust core needs space too.
+
+Then measure in your environment (peak RSS over representative traffic) and
+tighten from there.
+
+## Heap vs. Native Split
+
+Because GLIDE's Rust core allocates outside the language runtime's managed heap,
+you need to leave enough container memory for native allocations. Setting the
+heap limit too high starves the Rust core; setting it too low wastes capacity.
+
+**Key points:**
+
+* The native share scales with the number of clients (each adds connections and
+  inflight tracking) and with value sizes (larger payloads mean larger native
+  buffers in transit).
+* Pub/Sub subscriptions add unbounded queue memory on the native side — factor
+  this in if you have high-volume subscriptions.
+* These ratios are starting points. Profile your workload with
+  `-XX:NativeMemoryTracking=summary` and compare `jcmd VM.native_memory` against
+  heap usage to find the right balance for your scenario.
+
+## Related
+
+* [Connection Management](/how-to/connection-management/) — when to use one
+  client vs many.
+* [Limit In-Flight Requests](/how-to/connections/limit-inflight-requests/) —
+  the primary knob for bounding queued memory.
+* [Tracking Resources](/how-to/monitoring/tracking-resources/) — the
+  `getStatistics()` API.
+* [The Rust Core](/concepts/architecture/rust-core-design/) — architectural
+  context for the regions described above.
