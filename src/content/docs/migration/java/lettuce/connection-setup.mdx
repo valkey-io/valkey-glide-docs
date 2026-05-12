@@ -202,7 +202,7 @@ The table below compares **Lettuce constructors** with **Glide configuration par
 | `withTimeout(Duration.ofMillis(500))` | `requestTimeout(500)` |
 | `ReadFrom.REPLICA` | `readFrom(ReadFrom.REPLICA)` / `readFrom(ReadFrom.PREFER_REPLICA)` / `readFrom(ReadFrom.AZ_AFFINITY)` / `readFrom(ReadFrom.AZ_AFFINITY_REPLICAS_AND_PRIMARY)` [Read about AZ affinity](https://valkey.io/blog/az-affinity-strategy/) |
 | `SocketOptions.builder().connectTimeout()` | `connectionBackoff(ConnectionBackoffStrategy.builder().numberOfRetries(retries).build())` |
-| `lazyConnect: boolean` | Not suppoerted yet |
+| `lazyConnect: boolean` | `lazyConnect(true)` — see [Configure Lazy Connection](/how-to/connections/configure-lazy-connection/) for usage and trade-offs. |
 
 **Advanced configuration**
 

@@ -154,9 +154,27 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
   </TabItem>
 
   <TabItem label="C#">
-    :::note
-    The Modules API is not yet available in GLIDE C#.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using Valkey.Glide.ServerModules;
+
+    // Both standalone and cluster mode are supported
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    var key = "testKey";
+    var path = "$";
+    var jsonValue = """{"a": 1.0, "b": 2}""";
+
+    // JSON.SET
+    await GlideJson.SetAsync(client, key, path, jsonValue);
+
+    // JSON.GET
+    var response = await GlideJson.GetAsync(client, key);
+    Console.WriteLine($"Output: {response}");  // Output: {"a":1.0,"b":2}
+    ```
   </TabItem>
 </Tabs>
 

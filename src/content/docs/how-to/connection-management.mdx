@@ -3,37 +3,51 @@ title: Connection Management
 description: Understand GLIDE's asynchronous API, multiplexed connections, and when to create multiple clients for optimal performance.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+GLIDE is an asynchronous client and uses a multiplex connection to interact with Valkey, taking advantage of Valkey's pipelining capabilities to improve performance.
 
-GLIDE's API is [asynchronous](/concepts/architecture/async-execution) and uses a multiplex connection to interact with Valkey.
-This means <u>all requests are sent through a single connection</u> as the Rust core takes advantage of Valkey's pipelining capabilities to improve performance.
+This guide will go over how to manage your GLIDE clients for optimal performance.
 
-:::tip
-**Pipelining** is a technique that enhances performance by issuing multiple commands at once without waiting for individual responses.
-:::
+## Connection Pooling
 
-Using a single connection is the recommended method to optimize performance with Valkey. However, in some scenarios, opening multiple connections can be more beneficial.
-To open a new connection, a new GLIDE client object should be created, as each GLIDE client maintains a single connection per node.
+If you are coming from other Valkey or Redis clients (such as Jedis, redis-py, or go-redis), you may expect a connection pool approach. GLIDE handles this differently.
 
-You should open a new client for the following use cases:
+For most workloads, **use a single GLIDE client instance for the best performance**.
 
-## Blocking Commands
+GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities to efficiently handle large amounts of requests, even from multiple threads, using a single connection.
+For more on GLIDE's multiplex architecture, take a look at [Asynchronous Execution](/concepts/architecture/async-execution/).
 
-Blocking commands, such as [BLPOP](https://valkey.io/commands/blpop/), block the connection until a condition is met (e.g., the list is not empty for BLPOP).
-Using a blocking command will prevent all subsequent commands from executing until the block is lifted.
-Therefore, opening a new client for each blocking command is required to avoid undesired blocking of other commands.
+## When to Use Multiple Clients
 
-## WATCH/UNWATCH Commands
+Due to the multiplex design, a single connection becomes a bottleneck when executing commands that can block the connection. Currently, it is recommended
+to use separate clients in these situations.
 
-Commands like WATCH, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
-When these commands are executed, they can lead to interactions between threads sharing the same client, since each client utilizes a single multiplexed connection per cluster node.
-Consequently, threads will share the same connection, and any modifications to its state will impact how subsequent commands are processed.
-For example, executing WATCH on one thread will cause other threads to watch the same keys, and executing MULTI/EXEC on one thread will UNWATCH the keys for other threads as well.
-To prevent any issues and ensure the isolation of transactions and watched keys, it is required to create separate clients for these commands.
+Be aware that in cluster mode, GLIDE maintains a connection to each node in the cluster; it is not scalable to open a large number of clients.
 
-## Reading and Writing Large Values
+### Reading and Writing Large Values
 
-Valkey has a fairness mechanism to ensure minimal impact on other clients when handling large values.
-With a multiplex connection, requests are processed sequentially.
+GLIDE's multiplex connection means that requests are processed sequentially.
 Thus, large requests can delay the processing of subsequent smaller requests.
 When dealing with large values or transactions, it is advisable to use a separate client to prevent delays for other requests.
+
+### Blocking Commands
+
+Opening a new client for each blocking command is recommended to avoid blocking the connection.
+
+Blocking commands, such as [BLPOP](https://valkey.io/commands/blpop/), block the connection until a condition is met (e.g., the list is not empty for BLPOP).
+Using a blocking command will prevent all subsequent commands on the pipeline from executing until the block is lifted.
+
+### Pub/Sub Commands
+
+High-throughput Pub/Sub workloads can decrease overall throughput on a shared connection. Consider using a dedicated client for Pub/Sub for the best performance.
+
+For more details on configuring Pub/Sub with GLIDE, see [Pub/Sub Messaging](/how-to/publish-and-subscribe-messages/).
+
+### WATCH/UNWATCH Commands
+
+Commands like `WATCH`, which are used to monitor changes to keys in conjunction with transaction commands, affect the state of the connection.
+
+When these commands are executed, they can lead to interactions between threads sharing the same client, since each client utilizes a single multiplexed connection per cluster node.
+Consequently, threads will share the same connection, and any modifications to its state will impact how subsequent commands are processed.
+
+For example, executing `WATCH` on one thread will cause other threads to watch the same keys, and executing `MULTI`/`EXEC` on one thread will `UNWATCH` the keys for other threads as well.
+To prevent any issues and ensure the isolation of transactions and watched keys, it is required to create separate clients for these commands.

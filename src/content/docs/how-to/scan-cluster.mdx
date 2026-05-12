@@ -80,13 +80,15 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
   <TabItem label="C#">
     ```csharp
-    var cursor = ClusterScanCursor.InitialCursor();
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
 
-    var allKeys = new List<ValkeyKey>();
-    while (!cursor.IsFinished)
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    await foreach (var key in clusterClient.ScanAsync())
     {
-        (cursor, var keys) = await client.ScanAsync(cursor);
-        allKeys.AddRange(keys);
+        Console.WriteLine($"Key: {key}");
     }
     ```
   </TabItem>
@@ -198,7 +200,14 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
   <TabItem label="C#">
     ```csharp
-    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    using Valkey.Glide;
+    using Valkey.Glide.Commands.Options;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
         new("my_key1", "value1"),
         new("my_key2", "value2"),
@@ -206,14 +215,10 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         new("something_else", "value4")
     });
 
-    var cursor = ClusterScanCursor.InitialCursor();
-    var scanOptions = new ScanOptions { MatchPattern = "*key*" };
-
-    var matchedKeys = new List<ValkeyKey>();
-    while (!cursor.IsFinished)
+    var options = new ScanOptions { MatchPattern = "*key*" };
+    await foreach (var key in clusterClient.ScanAsync(options))
     {
-        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
-        matchedKeys.AddRange(keys);
+        Console.WriteLine($"Matching key: {key}");
     }
 
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
@@ -321,7 +326,14 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
   <TabItem label="C#">
     ```csharp
-    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    using Valkey.Glide;
+    using Valkey.Glide.Commands.Options;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
         new("my_key1", "value1"),
         new("my_key2", "value2"),
@@ -329,14 +341,10 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         new("something_else", "value4")
     });
 
-    var cursor = ClusterScanCursor.InitialCursor();
-    var scanOptions = new ScanOptions { Count = 10 };
-
-    var allKeys = new List<ValkeyKey>();
-    while (!cursor.IsFinished)
+    var options = new ScanOptions { Count = 10 };
+    await foreach (var key in clusterClient.ScanAsync(options))
     {
-        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
-        allKeys.AddRange(keys);
+        Console.WriteLine($"Key: {key}");
     }
 
     // Returns around `count` keys per iteration
@@ -442,25 +450,28 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
   <TabItem label="C#">
     ```csharp
-    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    using Valkey.Glide;
+    using Valkey.Glide.Commands.Options;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
         new("key1", "value1"),
         new("key2", "value2"),
         new("key3", "value3")
     });
-    await client.SetAddAsync("this_is_a_set", new ValkeyValue[] { "value4" });
+    await clusterClient.SetAddAsync("this_is_a_set", new ValkeyValue[] { "value4" });
 
-    var cursor = ClusterScanCursor.InitialCursor();
-    var scanOptions = new ScanOptions { Type = ValkeyType.String };
-
-    var stringKeys = new List<ValkeyKey>();
-    while (!cursor.IsFinished)
+    var options = new ScanOptions { Type = ValkeyType.String };
+    await foreach (var key in clusterClient.ScanAsync(options))
     {
-        (cursor, var keys) = await client.ScanAsync(cursor, scanOptions);
-        stringKeys.AddRange(keys);
+        Console.WriteLine($"String key: {key}");
     }
 
-    // Output: ["key1", "key2", "key3"]
+    // keys: ["key1", "key2", "key3"]
     ```
   </TabItem>
 

@@ -462,7 +462,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    byte[] certData = Encoding.UTF8.GetBytes(
+    var certData = Encoding.UTF8.GetBytes(
         "-----BEGIN CERTIFICATE-----\n"
         + "MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
         + "...\n"
@@ -470,7 +470,6 @@ You can provide custom root certificates for TLS connections. This is useful whe
     );
 
     var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("primary.example.com", 6379)
         .WithTls()
         .WithTrustedCertificate(certData)
         .Build();
