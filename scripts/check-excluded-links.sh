@@ -6,12 +6,7 @@ set -euo pipefail
 
 DIST_DIR="${1:-dist}"
 
-LINKS=(
-  "https://valkey.io/docs/commands/randomkey/"
-  "https://valkey.io/docs/latest/commands/sinter/"
-  "https://valkey.io/docs/latest/commands/function-dump/"
-  "https://valkey.io/docs/latest/commands/function-restore/"
-)
+LINKS=()
 
 removed=()
 
