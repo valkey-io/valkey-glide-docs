@@ -9,7 +9,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 Compression was added in Valkey 2.4.0 and is currently an experimental feature. The API may change in future releases.
 :::
 
-Valkey GLIDE supports compressing string values, reducing memory usage and network bandwidth. 
+Valkey GLIDE supports compressing string values, reducing memory usage and network bandwidth.
 When enabled, values are transparently compressed before being sent to the server and decompressed on retrieval.
 
 ## Usage
@@ -149,18 +149,21 @@ If your application uses server-side string manipulation on the same keys (appen
 | `maxDecompressedSize` | 512 MB                          | Maximum decompressed size; protects against decompression bombs   |
 
 ## Supported commands
-The following commands are enabled when compression is configured: 
-- `SET`, `GET`
-- `MGET`, `MSET`
-- `GETEX`, `GETDEL`
-- `SETEX`, `PSETEX`, `SETNX`
+
+The following commands are enabled when compression is configured:
+
+* `SET`, `GET`
+* `MGET`, `MSET`
+* `GETEX`, `GETDEL`
+* `SETEX`, `PSETEX`, `SETNX`
 
 ## Incompatible commands
 
 The following commands are not supported and will return an error while compression is enabled:
-- String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
-- Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
-- Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
+
+* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
+* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
+* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
 
 ## Learn more
 

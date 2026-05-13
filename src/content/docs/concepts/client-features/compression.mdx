@@ -7,7 +7,7 @@ description: Learn how GLIDE data compression works.
 Compression was added in Valkey 2.4.0 and is currently an experimental feature. The API may change in future releases.
 :::
 
-Working with large string values can affect both bandwidth, memory, and cost on every round trip to the server. 
+Working with large string values can affect both bandwidth, memory, and cost on every round trip to the server.
 GLIDE's compression feature shrinks those values before they leave the client and expands them again on read, reducing the cost of large commands.
 
 **Compression is a client side feature.** The server simply stores compressed data as raw bytes from GLIDE.
@@ -52,15 +52,15 @@ Only specific commands support compressions.
 
 These commands work transparently with compressed values:
 
-- `SET`, `GET`, `MGET`, `MSET`
-- `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
+* `SET`, `GET`, `MGET`, `MSET`
+* `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
 
 ### Incompatible commands
 
 The server doesn't know about compression, so commands that transform string data server-side will operate on raw compressed bytes. These are disabled when compression is enabled:
 
-- String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
-- Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
-- Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
+* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
+* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
+* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
 
 The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed, operations like `APPEND` would concatenate raw compressed data, and `STRLEN` would return the compressed length rather than the original length.
