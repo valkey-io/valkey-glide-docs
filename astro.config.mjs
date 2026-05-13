@@ -154,6 +154,7 @@ export default defineConfig({
             "how-to/execute-custom-scripts",
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
+            "how-to/compressing-data",
             {
               label: "Security",
               items: [
