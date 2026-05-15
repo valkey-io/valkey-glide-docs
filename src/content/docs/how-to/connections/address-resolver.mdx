@@ -1,0 +1,167 @@
+---
+title: Custom Address Resolution
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+
+GLIDE supports **custom address resolution**, allowing you to provide a callback that translates configured addresses to actual connection endpoints before connections are made. This is useful for custom DNS resolution, proxy address translation, and dynamic endpoint resolution in cloud environments.
+
+## Use Cases
+
+* **Custom DNS resolution** for service discovery systems
+* **Address translation** for proxy or NAT setups
+* **Dynamic endpoint resolution** for cloud environments (e.g., AWS ElastiCache behind NLBs)
+* **Connecting through firewalls** where the server URL can't be resolved by default DNS
+
+## Configuring
+
+The address resolver is a callback that receives a `(host, port)` pair and returns the resolved `(host, port)` to use for the connection. It is invoked:
+
+* During initial connection establishment for every configured address
+* During cluster topology refreshes when new node addresses are discovered
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Define a resolver that translates addresses
+    const addressResolver = (host: string, port: number): [string, number] => {
+        if (host === "internal-service") {
+            return ["10.0.0.5", 6379];
+        }
+        return [host, port];
+    };
+
+    // Standalone client with address resolver
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "internal-service", port: 9999 }],
+        addressResolver: addressResolver,
+    });
+
+    // Cluster client with address resolver
+    const clusterClient = await GlideClusterClient.createClient({
+        addresses: [{ host: "internal-service", port: 9999 }],
+        addressResolver: addressResolver,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+    )
+
+    # Define a resolver that translates addresses
+    def my_resolver(host: str, port: int) -> tuple[str, int]:
+        if host == "internal-service":
+            return ("10.0.0.5", 6379)
+        return (host, port)
+
+    # Standalone client with address resolver
+    standalone_config = GlideClientConfiguration(
+        addresses=[NodeAddress("internal-service", 9999)],
+        address_resolver=my_resolver,
+    )
+    client = await GlideClient.create(standalone_config)
+
+    # Cluster client with address resolver
+    cluster_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("internal-service", 9999)],
+        address_resolver=my_resolver,
+    )
+    cluster_client = await GlideClusterClient.create(cluster_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AddressResolver;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.ResolvedAddress;
+
+    // Define a resolver that translates addresses
+    AddressResolver resolver = (host, port) -> {
+        if ("internal-service".equals(host)) {
+            return new ResolvedAddress("10.0.0.5", 6379);
+        }
+        return new ResolvedAddress(host, port);
+    };
+
+    // Standalone client with address resolver
+    GlideClient client = GlideClient.createClient(
+        GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("internal-service").port(9999).build())
+            .addressResolver(resolver)
+            .build()
+    ).get();
+
+    // Cluster client with address resolver
+    GlideClusterClient clusterClient = GlideClusterClient.createClient(
+        GlideClusterClientConfiguration.builder()
+            .address(NodeAddress.builder().host("internal-service").port(9999).build())
+            .addressResolver(resolver)
+            .build()
+    ).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/glide/api"
+        "github.com/valkey-io/valkey-glide/go/glide/config"
+    )
+
+    // Define a resolver that translates addresses
+    resolver := func(host string, port int) (string, int) {
+        if host == "internal-service" {
+            return "10.0.0.5", 6379
+        }
+        return host, port
+    }
+
+    // Standalone client with address resolver
+    standaloneConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "internal-service", Port: 9999}).
+        WithAddressResolver(resolver)
+
+    client, err := api.NewClient(standaloneConfig)
+
+    // Cluster client with address resolver
+    clusterConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "internal-service", Port: 9999}).
+        WithAddressResolver(resolver)
+
+    clusterClient, err := api.NewClusterClient(clusterConfig)
+    ```
+  </TabItem>
+</Tabs>
+
+## Fallback Behavior
+
+The address resolver is designed to be fault-tolerant. If the resolver encounters an error, the client falls back to using the original address — the connection is never blocked by a misbehaving resolver.
+
+Fallback occurs when:
+
+* The resolver throws an exception or panics
+* The resolver returns `null` or an invalid value
+* The resolver returns an empty host or port 0 (Go)
+
+This ensures that a faulty resolver does not prevent the client from connecting when the original address is valid.
+
+## Important Considerations
+
+* **Synchronous execution**: The resolver callback must be synchronous. Async resolvers are not supported.
+* **Thread safety**: The resolver may be called from multiple threads concurrently. Ensure your implementation is thread-safe.
+* **Performance**: The resolver is called during connection establishment and cluster topology refreshes. Avoid long-running operations that could delay connections.
+* **Cluster mode**: In cluster mode, the resolver is also invoked for new node addresses discovered during topology refreshes, not just the initially configured addresses.
