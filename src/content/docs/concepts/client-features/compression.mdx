@@ -1,10 +1,10 @@
 ---
 title: Data Compression
-description: Learn how GLIDE data compression works.
+description: Learn how Valkey data compression works.
 ---
 
 :::caution[Experimental Feature]
-Compression was added in Valkey 2.4.0 and is currently an experimental feature. The API may change in future releases.
+Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
 :::
 
 Working with large string values can affect both bandwidth, memory, and cost on every round trip to the server.
@@ -52,8 +52,7 @@ Only specific commands support compressions.
 
 These commands work transparently with compressed values:
 
-* `SET`, `GET`, `MGET`, `MSET`
-* `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
+* `SET`, `GET`, `MGET`, `MSET`, `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
 
 ### Incompatible commands
 
