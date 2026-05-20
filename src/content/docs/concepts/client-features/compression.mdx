@@ -1,0 +1,65 @@
+---
+title: Data Compression
+description: Learn how Valkey data compression works.
+---
+
+:::caution[Experimental Feature]
+Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
+:::
+
+Working with large string values can affect both bandwidth, memory, and cost on every round trip to the server.
+GLIDE's compression feature shrinks those values before they leave the client and expands them again on read, reducing the cost of large commands.
+
+**Compression is a client side feature.** The server simply stores compressed data as raw bytes from GLIDE.
+
+For setup instructions and code examples, see our section on [Compressing Data](/how-to/compressing-data/).
+
+## How it works
+
+Compression runs in GLIDE's Rust core layer, sitting between your application code and the network.
+
+### Write path
+
+When you issue a command like `SET`:
+
+1. The client checks whether the value exceeds `minCompressionSize` (default: 64 bytes). Small values are sent as-is because the compression overhead would make them larger.
+2. If the value is large enough, the client compresses it with the configured backend (ZSTD or LZ4).
+3. A short magic header is prepended to identify the data as compressed and record which backend was used.
+4. The server receives and stores the compressed payload without modification.
+
+### Read path
+
+When a response comes back from a command like `GET`:
+
+1. The client checks the first bytes for the magic header.
+2. If present, it decompresses and returns the plain value.
+3. If absent, it returns the value unchanged.
+
+Compressed and uncompressed values can coexist in the same database. The client handles both.
+
+### Compression backends
+
+| Backend | Characteristics |
+|---------|----------------|
+| ZSTD | Better compression ratio, more CPU. Good default for most workloads. |
+| LZ4 | Faster but compresses less. Better when latency matters more than size. |
+
+## Compatibility
+
+Only specific commands support compressions.
+
+### Supported commands
+
+These commands work transparently with compressed values:
+
+* `SET`, `GET`, `MGET`, `MSET`, `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
+
+### Incompatible commands
+
+The server doesn't know about compression, so commands that transform string data server-side will operate on raw compressed bytes. These are disabled when compression is enabled:
+
+* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
+* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
+* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
+
+The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed, operations like `APPEND` would concatenate raw compressed data, and `STRLEN` would return the compressed length rather than the original length.

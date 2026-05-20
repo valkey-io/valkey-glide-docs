@@ -203,24 +203,22 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.Pipeline.Options;
 
-    // Create client configuration
-    var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
-        .Build();
-
+    // Create client
+    var config = new StandaloneClientConfigurationBuilder().Build();
     await using var client = await GlideClient.CreateClient(config);
 
     // Configure batch options
     var options = new BatchOptions(timeout: 2000);
 
     // Create atomic batch (true indicates atomic/transaction mode)
-    var atomicBatch = new Batch(isAtomic: true);
-    atomicBatch.StringSetAsync("account:source", "100");
-    atomicBatch.StringSetAsync("account:dest", "0");
-    atomicBatch.StringIncrementAsync("account:dest", 50);
-    atomicBatch.StringDecrementAsync("account:source", 50);
-    atomicBatch.StringGetAsync("account:source");
+    var atomicBatch = new Batch(isAtomic: true)
+        .SetAsync("account:source", "100")
+        .SetAsync("account:dest", "0")
+        .IncrementAsync("account:dest", 50)
+        .DecrementAsync("account:source", 50)
+        .GetAsync("account:source");
 
     // Execute with raiseOnError = true
     var results = await client.Exec(atomicBatch, raiseOnError: true, options);
@@ -412,6 +410,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.Pipeline.Options;
 
     // Create client configuration
     var config = new ClusterClientConfigurationBuilder()
@@ -424,10 +423,10 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     var options = new ClusterBatchOptions(timeout: 3000);
 
     // Create atomic cluster batch (all keys map to same slot)
-    var atomicBatch = new ClusterBatch(isAtomic: true);
-    atomicBatch.StringSetAsync("user:100:visits", "1");
-    atomicBatch.StringIncrementAsync("user:100:visits", 5);
-    atomicBatch.StringGetAsync("user:100:visits");
+    var atomicBatch = new ClusterBatch(isAtomic: true)
+        .SetAsync("user:100:visits", "1")
+        .IncrementAsync("user:100:visits", 5)
+        .GetAsync("user:100:visits");
 
     var results = await client.Exec(atomicBatch, raiseOnError: true, options);
     Console.WriteLine($"Atomic Cluster Batch: {string.Join(", ", results!)}");
@@ -604,6 +603,7 @@ Pipelining is a group of commands sent in a single request that does not guarant
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.Pipeline.Options;
 
     // Create client configuration
     var config = new StandaloneClientConfigurationBuilder()
@@ -616,11 +616,11 @@ Pipelining is a group of commands sent in a single request that does not guarant
     var options = new BatchOptions(timeout: 2000);
 
     // Create non-atomic batch (false indicates pipeline mode)
-    var pipeline = new Batch(isAtomic: false);
-    pipeline.StringSetAsync("temp:key1", "value1");
-    pipeline.StringSetAsync("temp:key2", "value2");
-    pipeline.StringGetAsync("temp:key1");
-    pipeline.StringGetAsync("temp:key2");
+    var pipeline = new Batch(isAtomic: false)
+        .SetAsync("temp:key1", "value1")
+        .SetAsync("temp:key2", "value2")
+        .GetAsync("temp:key1")
+        .GetAsync("temp:key2");
 
     var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Results: {string.Join(", ", results!)}");
@@ -836,6 +836,7 @@ Pipelining is a group of commands sent in a single request that does not guarant
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.Pipeline.Options;
 
     // Create client configuration
     var config = new ClusterClientConfigurationBuilder()
@@ -852,13 +853,13 @@ Pipelining is a group of commands sent in a single request that does not guarant
             retryConnectionError: true));
 
     // Create pipeline spanning multiple slots
-    var pipeline = new ClusterBatch(isAtomic: false);
-    pipeline.StringSetAsync("page:home:views", "100");
-    pipeline.StringIncrementAsync("page:home:views", 25);
-    pipeline.StringGetAsync("page:home:views");
-    pipeline.ListLeftPush("recent:logins", "user1");
-    pipeline.ListLeftPush("recent:logins", "user2");
-    pipeline.ListRange("recent:logins", 0, 1);
+    var pipeline = new ClusterBatch(isAtomic: false)
+        .SetAsync("page:home:views", "100")
+        .IncrementAsync("page:home:views", 25)
+        .GetAsync("page:home:views")
+        .ListLeftPush("recent:logins", "user1")
+        .ListLeftPush("recent:logins", "user2")
+        .ListRange("recent:logins", 0, 1);
 
     var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Cluster Results: {string.Join(", ", results!)}");

@@ -1,0 +1,170 @@
+---
+title: Compressing Data
+description: Learn how to enable and configure GLIDE's compression feature.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+:::caution[Experimental Feature]
+Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
+:::
+
+Valkey GLIDE supports compressing string values, reducing memory usage and network bandwidth.
+When enabled, values are transparently compressed before being sent to the server and decompressed on retrieval.
+
+## Usage
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        CompressionConfiguration,
+        CompressionBackend,
+        NodeAddress,
+    )
+
+    compression = CompressionConfiguration(
+        enabled=True,
+        backend=CompressionBackend.ZSTD,
+        compression_level=3,
+        min_compression_size=128,
+    )
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        compression=compression,
+    )
+    client = await GlideClient.create(config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.*;
+
+    CompressionConfiguration compression = CompressionConfiguration.builder()
+        .enabled(true)
+        .backend(CompressionBackend.ZSTD)
+        .compressionLevel(3)
+        .minCompressionSize(128)
+        .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .compressionConfiguration(compression)
+        .build();
+
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, CompressionBackend } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        compression: {
+            enabled: true,
+            backend: CompressionBackend.ZSTD,
+            compressionLevel: 3,
+            minCompressionSize: 128,
+        },
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    compression := config.NewCompressionConfiguration().
+        WithBackend(config.ZSTD).
+        WithCompressionLevel(3).
+        WithMinCompressionSize(128)
+
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithCompressionConfiguration(compression)
+
+    client, err := glide.NewClient(clientConfig)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var compression = CompressionConfig.Zstd(
+        compressionLevel: 3,
+        minCompressionSize: 128
+    );
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithCompression(compression)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        compression: [
+            'enabled' => true,
+            'backend' => ValkeyGlide::COMPRESSION_BACKEND_ZSTD,
+            'compression_level' => 3,
+            'min_compression_size' => 128,
+        ],
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+## When to use compression
+
+Compression works well when you primarily use basic read/write commands (`SET`/`GET` and variants) with large string values.
+
+If your application uses server-side string manipulation on the same keys (append, increment, bit operations), don't compress those keys. The server would operate on compressed bytes and produce garbage. Handle compression at the application level for those cases.
+
+## Configuration options
+
+| Option                | Default                         | Description                                                       |
+| --------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| `enabled`             | `false`                         | Toggle compression on/off                                         |
+| `backend`             | `ZSTD`                          | Compression algorithm: `ZSTD` or `LZ4`                            |
+| `compressionLevel`    | Backend default (ZSTD=3, LZ4=0) | Compression level; valid ranges are backend-specific              |
+| `minCompressionSize`  | 64 bytes                        | Values below this threshold are not compressed (minimum: 6 bytes) |
+| `maxDecompressedSize` | 512 MB                          | Maximum decompressed size; protects against decompression bombs   |
+
+## Supported commands
+
+The following commands are enabled when compression is configured:
+
+* `SET`, `GET`
+* `MGET`, `MSET`
+* `GETEX`, `GETDEL`
+* `SETEX`, `PSETEX`, `SETNX`
+
+## Incompatible commands
+
+The following commands are not supported and will return an error while compression is enabled:
+
+* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
+* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
+* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
+
+## Learn more
+
+To understand how compression works under the hood, see our section on [Data Compression](/concepts/client-features/compression/).

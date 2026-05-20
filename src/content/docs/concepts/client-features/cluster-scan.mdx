@@ -42,7 +42,16 @@ To start iterating, create a `ClusterScanCursor`:
 
   <TabItem label="C#">
     ```csharp
-    var cursor = ClusterScanCursor.InitialCursor();
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(config);
+
+    await foreach (var key in clusterClient.ScanAsync())
+    {
+        Console.WriteLine($"Key: {key}");
+    }
     ```
   </TabItem>
 

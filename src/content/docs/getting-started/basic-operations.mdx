@@ -174,18 +174,15 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
-        .Build();
-
+    var config = new StandaloneClientConfigurationBuilder().Build();
     await using var client = await GlideClient.CreateClient(config);
 
     // Set a key-value pair
-    await client.StringSetAsync("user:1000", "john_doe");
+    await client.SetAsync("user:1000", "john_doe");
     Console.WriteLine("✓ Key set successfully");
 
     // Get the value
-    ValkeyValue value = await client.StringGetAsync("user:1000");
+    ValkeyValue value = await client.GetAsync("user:1000");
     Console.WriteLine($"✓ Retrieved value: {value}");
     ```
   </TabItem>
@@ -284,8 +281,14 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
     // Set multiple keys at once
-    await client.StringSetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
+    await client.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
         new("user:1001", "alice"),
         new("user:1002", "bob"),
@@ -294,8 +297,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     Console.WriteLine("✓ Multiple keys set");
 
     // Get multiple keys at once
-    ValkeyValue[] values = await client.StringGetAsync(
-        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
+    var values = await client.GetAsync(["user:1001", "user:1002", "user:1003"]);
     Console.WriteLine($"✓ Retrieved values: {string.Join(", ", values)}");
     ```
   </TabItem>
@@ -348,9 +350,14 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 
   <TabItem label="C#">
     ```csharp
-    long deletedCount = await client.KeyDeleteAsync(
-        new ValkeyKey[] { "user:1001", "user:1002", "user:1003" });
-    Console.WriteLine($"✓ Deleted {deletedCount} keys");
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    var count = await client.DeleteAsync(["user:1001", "user:1002", "user:1003"]);
+    Console.WriteLine($"✓ Deleted {count} keys");
     ```
   </TabItem>
 </Tabs>

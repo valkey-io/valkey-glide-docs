@@ -118,10 +118,10 @@ Valkey GLIDE provides support for the following read strategies, allowing you to
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    await client.StringSetAsync("key1", "val1");
+    await client.SetAsync("key1", "val1");
 
-    // StringGetAsync will read from one of the replicas
-    await client.StringGetAsync("key1");
+    // GetAsync will read from one of the replicas
+    await client.GetAsync("key1");
     ```
   </TabItem>
 
@@ -248,10 +248,10 @@ When using the AZ Affinity read strategy, the `clientAz` setting is required to 
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    await client.StringSetAsync("key1", "val1");
+    await client.SetAsync("key1", "val1");
 
-    // StringGetAsync will read from one of the replicas in the same client's availability zone if they exist
-    await client.StringGetAsync("key1");
+    // GetAsync will read from one of the replicas in the same client's availability zone if they exist
+    await client.GetAsync("key1");
     ```
   </TabItem>
 
@@ -379,10 +379,10 @@ When using the AZ Affinity Replicas and Primary read strategy, the `clientAz` se
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    await client.StringSetAsync("key1", "val1");
+    await client.SetAsync("key1", "val1");
 
-    // StringGetAsync will read from one of the replicas or the primary in the same client's availability zone if they exist
-    await client.StringGetAsync("key1");
+    // GetAsync will read from one of the replicas or the primary in the same client's availability zone if they exist
+    await client.GetAsync("key1");
     ```
   </TabItem>
 

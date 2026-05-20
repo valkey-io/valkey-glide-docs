@@ -314,18 +314,18 @@ No special configuration is needed at client creation time — you can subscribe
 
     // --- Exact channel subscriptions ---
 
-    await client.SubscribeAsync(new[] { "news", "updates" }, blockFor );  // Blocking
-    await client.SubscribeLazyAsync(new[] { "alerts" });                 // Non-blocking (lazy)
+    await client.SubscribeAsync(["news", "updates"], blockFor );  // Blocking
+    await client.SubscribeLazyAsync("alerts");                    // Non-blocking (lazy)
 
     // --- Pattern subscriptions ---
 
-    await client.PSubscribeAsync(new[] { "chat*", "event*" }, blockFor);  // Blocking
-    await client.PSubscribeLazyAsync(new[] { "log*" });                   // Non-blocking (lazy)
+    await client.PSubscribeAsync(["chat*", "event*"], blockFor);  // Blocking
+    await client.PSubscribeLazyAsync("log*");                     // Non-blocking (lazy)
 
     // --- Sharded subscriptions (cluster mode only) ---
 
-    await client.SSubscribeAsync(new[] { "shard-ch1" }, blockFor);  // Blocking
-    await client.SSubscribeLazyAsync(new[] { "shard-ch2" });        // Non-blocking (lazy)
+    await client.SSubscribeAsync("shard-ch1", blockFor);  // Blocking
+    await client.SSubscribeLazyAsync("shard-ch2");        // Non-blocking (lazy)
 
     // Retrieve messages via polling
     var queue = client.PubSubQueue!;
@@ -653,22 +653,26 @@ To use callback-based delivery, provide a subscription configuration with a call
     var subscriptionConfig = new StandalonePubSubSubscriptionConfig()
         .WithCallback(PubSubCallback);
 
-    var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
+    var subscriberConfig = new StandaloneClientConfigurationBuilder()
         .WithPubSubSubscriptions(subscriptionConfig)
         .Build();
-
-    await using var client = await GlideClient.CreateClient(config);
+    await using var subscriber = await GlideClient.CreateClient(subscriberConfig);
 
     // Subscribe dynamically — messages are delivered to the callback
-    await client.SubscribeAsync(new[] { "news" }, TimeSpan.FromSeconds(5));
+    await subscriber.SubscribeAsync("news", TimeSpan.FromSeconds(5));
 
     // Publish a message (from another client)
+    var publisherConfig = new StandaloneClientConfigurationBuilder().Build();
+    await using var publishingClient = await GlideClient.CreateClient(publisherConfig);
+
     await publishingClient.PublishAsync("news", "Hello!");
     await Task.Delay(500);
 
     // Verify the callback received the message
-    lock (received) { Debug.Assert(received.Contains("Hello!")); }
+    lock (received)
+    { 
+      System.Diagnostics.Debug.Assert(received.Contains("Hello!"));
+    }
     ```
   </TabItem>
 </Tabs>
@@ -1000,30 +1004,39 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
     var blockFor = TimeSpan.FromSeconds(5);
 
     // Unsubscribe from specific exact channels (blocking)
-    await client.UnsubscribeAsync(new[] { "news" }, blockFor);
+    await client.UnsubscribeAsync("news", blockFor);
 
     // Unsubscribe from specific exact channels (lazy)
-    await client.UnsubscribeLazyAsync(new[] { "alerts" });
+    await client.UnsubscribeLazyAsync("alerts");
 
     // Unsubscribe from all exact channels (blocking)
-    await client.UnsubscribeAsync(PubSub.AllChannels, blockFor);
+    await client.UnsubscribeAsync(blockFor);
 
     // Unsubscribe from specific patterns (blocking)
-    await client.PUnsubscribeAsync(new[] { "chat*" }, blockFor);
+    await client.PUnsubscribeAsync("chat*", blockFor);
 
     // Unsubscribe from specific patterns (lazy)
-    await client.PUnsubscribeLazyAsync(new[] { "log*" });
+    await client.PUnsubscribeLazyAsync("log*");
 
     // Unsubscribe from all patterns (blocking)
-    await client.PUnsubscribeAsync(PubSub.AllPatterns, blockFor);
+    await client.PUnsubscribeAsync(blockFor);
 
     // Sharded unsubscribe (cluster mode only)
-    await clusterClient.SUnsubscribeAsync(new[] { "shard-ch1" }, blockFor);
-    await clusterClient.SUnsubscribeLazyAsync(new[] { "shard-ch2" });
-    await clusterClient.SUnsubscribeAsync(PubSub.AllShardedChannels, blockFor);
+    await clusterClient.SUnsubscribeAsync("shard-ch1", blockFor);
+    await clusterClient.SUnsubscribeLazyAsync("shard-ch2");
+    await clusterClient.SUnsubscribeAsync(blockFor);
     ```
   </TabItem>
 </Tabs>
@@ -1067,6 +1080,12 @@ Use `get_subscriptions()` to inspect the current subscription state. It returns 
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
     var state = await client.GetSubscriptionsAsync();
     Console.WriteLine($"Desired: {state.Desired}");
     Console.WriteLine($"Actual: {state.Actual}");
