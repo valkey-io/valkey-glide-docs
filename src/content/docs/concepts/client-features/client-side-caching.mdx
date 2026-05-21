@@ -390,7 +390,7 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
 ### Compatibility with managed services
 
-When server-driven invalidation lands in a future GLIDE release, it will rely on Valkey's [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) subcommand. Not every deployment exposes that command. The table below summarizes where the feature will be available once it ships:
+GLIDE does not currently support the `CLIENT TRACKING` command. When server-driven invalidation lands in a future release, it will rely on Valkey's [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) subcommand. Not every deployment exposes that command. The table below summarizes where the feature will be available once it ships:
 
 | Deployment                                                          | Exposes `CLIENT TRACKING`? | Notes                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
