@@ -173,7 +173,23 @@ jobs:
           path: dist
           retention-days: 1
 
-      - name: Check external links
+      - name: Check external links (attempt 1/2)
+        id: lychee-attempt-1
+        uses: lycheeverse/lychee-action@v2.8.0
+        continue-on-error: true
+        with:
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true
+
+      - name: Wait before link check retry
+        if: steps.lychee-attempt-1.outcome == 'failure'
+        run: |
+          echo "First lychee attempt failed (likely a transient network/TLS error against an external site)."
+          echo "Waiting 30s before retry to let the upstream issue clear."
+          sleep 30
+
+      - name: Check external links (attempt 2/2)
+        if: steps.lychee-attempt-1.outcome == 'failure'
         uses: lycheeverse/lychee-action@v2.8.0
         with:
           args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
