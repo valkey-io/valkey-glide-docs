@@ -1,0 +1,49 @@
+name: Check C# Examples
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-csharp-examples:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout valkey-glide-docs
+        uses: actions/checkout@v4
+
+      # Skip checking out the 'valkey-glide' submodule
+      # because it is not needed to validate the examples.
+      - name: Checkout valkey-glide-csharp
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide-csharp
+          path: valkey-glide-csharp
+
+      - name: Setup .NET 8.0 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Skip building Rust core ('SkipCargo') because we only need
+      # the managed C# assembly as a reference for syntax validation.
+      - name: Build Valkey.Glide DLL
+        working-directory: valkey-glide-csharp
+        run: |
+          dotnet build sources/Valkey.Glide/ \
+            --configuration Release \
+            /p:SkipCargo=true
+
+      - name: Run C# Example Validation
+        run: |
+          python scripts/check_csharp_examples.py \
+            --validator valkey-glide-csharp/scripts/validate_examples.py \
+            --glide-dll valkey-glide-csharp/sources/Valkey.Glide/bin/Release/net8.0/Valkey.Glide.dll

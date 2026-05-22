@@ -6,8 +6,8 @@
 set -e
 
 echo "Installing system dependencies..."
-sudo apt-get update -y
-sudo apt-get install -y git gcc pkg-config openssl libssl-dev unzip cmake python3 python3-pip
+sudo apt-get update -y -o Acquire::Retries=3
+sudo apt-get install -y -o Acquire::Retries=3 git gcc pkg-config openssl libssl-dev unzip cmake python3 python3-pip
 
 echo "Installing Rust..."
 # -y flag added for non-interactive installation
@@ -17,7 +17,7 @@ curl --proto '=https' --tlsv1.2 -sSf --retry 3 --retry-delay 2 https://sh.rustup
 source "$HOME/.cargo/env"
 
 echo "Installing Zig and Cargo Zigbuild..."
-pip3 install ziglang
+pip3 install --retries 5 --timeout 120 ziglang
 cargo install --locked cargo-zigbuild
 
 echo "Installing Protoc 29.1..."

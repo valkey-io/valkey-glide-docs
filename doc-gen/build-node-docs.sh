@@ -20,7 +20,7 @@ if [ ! -d "$NODE_CLIENT_DIR" ]; then
 fi
 
 cd "$NODE_CLIENT_DIR"
-npm install typedoc
+npm install --fetch-retries=5 --fetch-retry-maxtimeout=120000 typedoc
 npm run build
 npx typedoc --options $SCRIPT_DIR/typedoc.json --out $OUT_LOCATION
 

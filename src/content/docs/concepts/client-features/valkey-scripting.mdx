@@ -204,14 +204,19 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
 
   <TabItem label="C#">
     ```csharp
-    var productKey = "product:shoe:stock";
-    var buyQuantity = "3";
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
 
     var options = new ScriptOptions()
-        .WithKeys(productKey)    // Maps to KEYS[1] in Lua
-        .WithArgs(buyQuantity);  // Maps to ARGV[1] in Lua
+      .WithKeys("mykey")     // Maps to KEYS[1] in Lua
+      .WithArgs("myvalue"); // Maps to ARGV[1] in Lua
 
-    var result = await client.ScriptInvokeAsync(purchaseScript, options);
+    var result = await client.ScriptInvokeAsync(script, options);
     ```
   </TabItem>
 </Tabs>
@@ -287,16 +292,26 @@ values directly into the script would create unique scripts each time, preventin
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    var productKey = "product:shoe:stock";
+    var buyQuantity = "3";
+
     // Bad: Creates a new hash for each quantity
     using var badScript = new Script($"return redis.call('DECRBY', {productKey}, {buyQuantity})");
 
     // Good: Reuses the same cached script
     using var goodScript = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])");
-    var result = await client.ScriptInvokeAsync(
-        goodScript,
-        new ScriptOptions()
-          .WithKeys(productKey)
-          .WithArgs(buyQuantity));
+
+    var options = new ScriptOptions()
+      .WithKeys(productKey)
+      .WithArgs(buyQuantity);
+
+    var result = await client.ScriptInvokeAsync(goodScript, options);
     ```
   </TabItem>
 </Tabs>
@@ -345,9 +360,10 @@ GLIDE then automatically caches scripts with each `invoke_script()` call.
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+
     using var script = new Script("return 'Hello'");
-    var hashValue = script.Hash;
-    Console.WriteLine($"Script hash: {hashValue}"); // SHA1 hash of the script
+    Console.WriteLine($"Script hash: {script.Hash}"); // SHA1 hash of the script
     ```
   </TabItem>
 </Tabs>
@@ -389,9 +405,11 @@ Scripts with identical code produce identical hashes, enabling efficient caching
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+
     using var script1 = new Script("return 'Hello'");
     using var script2 = new Script("return 'Hello'");
-    Debug.Assert(script1.Hash == script2.Hash); // Same hash
+    System.Diagnostics.Debug.Assert(script1.Hash == script2.Hash); // Same hash
     ```
   </TabItem>
 </Tabs>
@@ -520,6 +538,12 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
     // This works the same in cluster mode
     using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
     var result = await clusterClient.ScriptInvokeAsync(
@@ -593,16 +617,21 @@ GLIDE provide options for explicit control over script routing in cluster mode.
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    using var script = new Script("return 'Hello'");
 
     // Route to the node holding a specific key's slot
-    var route = new Route.SlotKeyRoute("user:1000", Route.SlotType.Primary);
+    var slotRoute = new Route.SlotKeyRoute("user:1000", Route.SlotType.Primary);
+    var slotRouteOptions = new ClusterScriptOptions().WithRoute(slotRoute);
+    var slotResult = await clusterClient.ScriptInvokeAsync(script, slotRouteOptions);
 
     // Route to all primary nodes
-    route = Route.AllPrimaries;
-
-    var result = await clusterClient.ScriptInvokeAsync(
-        script,
-        new ClusterScriptOptions().WithRoute(route));
+    var allRouteOptions = new ClusterScriptOptions().WithRoute(Route.AllPrimaries);
+    var allResult = await clusterClient.ScriptInvokeAsync(script, allRouteOptions);
     ```
   </TabItem>
 </Tabs>
@@ -735,7 +764,12 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
     using Valkey.Glide.Pipeline;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder().Build();
+    await using var client = await GlideClient.CreateClient(config);
 
     // Script with keys and arguments
     var batch = new Batch(isAtomic: true);
@@ -746,10 +780,10 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
         "script-key",  // Key
         "script-value" // Argument
     });
-    batch.Get("script-key");
+    batch.GetAsync("script-key");
 
-    var results = await client.Exec(batch);
-    Console.WriteLine($"EVAL result: {results[0]}"); // OK
+    var results = await client.Exec(batch, raiseOnError: true);
+    Console.WriteLine($"EVAL result: {results![0]}"); // OK
     Console.WriteLine($"GET result: {results[1]}");  // script-value
     ```
   </TabItem>

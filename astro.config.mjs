@@ -109,6 +109,7 @@ export default defineConfig({
               items: [
                 "concepts/architecture/rust-core-design",
                 "concepts/architecture/async-execution",
+                "concepts/architecture/memory-model",
               ],
             },
             {
@@ -153,6 +154,7 @@ export default defineConfig({
             "how-to/execute-custom-scripts",
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
+            "how-to/compressing-data",
             {
               label: "Security",
               items: [

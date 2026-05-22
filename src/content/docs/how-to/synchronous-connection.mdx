@@ -10,14 +10,15 @@ The synchronous client is Python only. Support for other languages may be added 
 :::
 
 Starting with version 2.1, Glide introduces a new synchronous Python client, alongside the existing default asynchronous client.
-Currently the sync client does not yet support the following features:
 
-* Pub/Sub
-* Cluster scan
-* Configuring an In-flight request limit
-* OpenTelemetry integration
+The following features were added to the sync client in subsequent releases:
 
-Support for these features is on our roadmap and they are planned to be added in the next releases.
+| Feature                 | Version                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| Cluster Scan            | [v2.2.0](https://github.com/valkey-io/valkey-glide/releases/tag/v2.2.0) |
+| In-flight Request Limit | [v2.3.0](https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0) |
+| OpenTelemetry           | [v2.3.0](https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0) |
+| PubSub                  | [v2.3.0](https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0) |
 
 ## Installing
 
