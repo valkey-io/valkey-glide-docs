@@ -1,0 +1,42 @@
+---
+title: High-Availability
+description: Learn how Valkey GLIDE supports high-availability features.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey GLIDE supports high-availability features out of the box. Only minimal configurations are needed.
+
+## Available HA Features
+
+- Automatic topology updates.
+- Connection timeout and exponential backoff for reconnecting.
+- Command routing.
+- Read strategies (Requires changing to read from replicas).
+
+### Automatic Topology Updates
+
+GLIDE maintains a map of the cluster and automatically updates it when changes occur. For example, if a primary node fails and a replica is promoted, GLIDE detects this change and updates its topology mapping. 
+No additional configuration is required.
+
+### Request Timeout
+
+By default, GLIDE has a request timeout of 250ms. This controls how long GLIDE waits for a command to complete, including any reconnection attempts. 
+
+During failover, commands may take longer to complete due to retries. Increasing the timeout (e.g., to 1000ms) reduces the chance of false timeouts during brief disruptions.
+
+### Reconnect Strategy
+
+By default, GLIDE uses exponential backoff reconnect strategy. This controls how GLIDE attempts to reconnect to nodes.
+
+For production, configure the number of retries and backoff parameters to match your failover timing. 
+For more on configuring reconnect strategies, see our [guide](/how-to/connections/timeouts-and-reconnect-strategy/).
+
+### Read Strategy
+
+Configuring clients to read from replicas is important for high availability.
+
+By default, GLIDE clients read and write from the primary node. Changing this to read from replicas provides 
+two benefits: reads can continue while a primary is down and it distributes load away from primaries.
+
+For more on configuring read strategies, see our [guide](/how-to/connections/read-strategy/).

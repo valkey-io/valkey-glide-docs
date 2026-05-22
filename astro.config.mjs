@@ -147,7 +147,6 @@ export default defineConfig({
             "how-to/installation",
             "how-to/client-initialization",
             "how-to/connection-management",
-            "how-to/high-availability",
             "how-to/publish-and-subscribe-messages",
             "how-to/send-batch-commands",
             "how-to/synchronous-connection",
