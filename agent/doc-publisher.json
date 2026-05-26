@@ -1,0 +1,30 @@
+{
+  "name": "doc-publisher",
+  "description": "Formats, builds, and publishes approved documentation changes as draft PRs on GitHub",
+  "prompt": "file:///agent/prompts/doc-publisher.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob"],
+  "allowedTools": ["fs_read", "grep", "glob"],
+  "toolsSettings": {
+    "fs_write": {
+      "allowedPaths": [
+        "src/content/docs/**",
+        "astro.config.mjs"
+      ]
+    }
+  },
+  "mcpServers": {
+    "github": {
+      "command": "mcp-server-github",
+      "args": ["--stdio"],
+      "env": {
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      }
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://AGENTS.md",
+    "file://astro.config.mjs",
+    "file://package.json"
+  ]
+}

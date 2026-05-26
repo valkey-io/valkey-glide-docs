@@ -1,0 +1,20 @@
+{
+  "name": "doc-researcher",
+  "description": "Gathers context from valkey-glide commits and existing docs to produce a structured brief for the writer",
+  "prompt": "file:///agent/prompts/doc-researcher.md",
+  "tools": ["fs_read", "grep", "glob", "web_fetch"],
+  "allowedTools": ["fs_read", "grep", "glob", "web_fetch"],
+  "mcpServers": {
+    "github": {
+      "command": "mcp-server-github",
+      "args": ["--stdio"],
+      "env": {
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      }
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://AGENT.md"
+  ]
+}

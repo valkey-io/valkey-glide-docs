@@ -1,0 +1,16 @@
+{
+  "name": "Valkey GLIDE Documentation Agent",
+  "description": "An agent that write Valkey GLIDE documentations.",
+  "prompt": "file:///agent/prompts/doc-leader.md",
+  "tools": ["fs_read", "grep", "glob"],
+  "allowedTools": ["fs_read", "grep", "glob"],
+  "toolsSettings": {
+    "crew": {
+      "availableAgents": ["doc-researcher", "doc-writer"]
+    }
+  },
+  "resources": [
+    "file://AGENT.md"
+  ],
+  "welcomeMessage": "Hello. Provide a commit SHA or range from valkey-io/valkey-glide and I will propose documentation changes."
+}

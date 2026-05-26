@@ -1,0 +1,17 @@
+{
+  "name": "doc-writer",
+  "description": "Writes and revises .mdx documentation pages based on research briefs and reviewer feedback",
+  "prompt": "file:///agent/prompts/doc-writer.md",
+  "tools": ["fs_read", "fs_write", "grep", "glob"],
+  "allowedTools": ["fs_read", "grep", "glob"],
+  "toolsSettings": {
+    "fs_write": {
+      "allowedPaths": ["src/content/docs/**"]
+    }
+  },
+  "resources": [
+    "file://README.md",
+    "file://astro.config.mjs",
+    "file://AGENT.md"
+  ]
+}

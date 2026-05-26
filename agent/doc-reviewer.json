@@ -1,0 +1,11 @@
+{
+  "name": "doc-reviewer",
+  "description": "Reviews documentation drafts for accuracy, completeness, style, and valid MDX structure",
+  "prompt": "file:///agent/prompts/doc-reviewer.md",
+  "tools": ["fs_read", "grep", "glob"],
+  "allowedTools": ["fs_read", "grep", "glob"],
+  "resources": [
+    "file://README.md",
+    "file://AGENT.md"
+  ]
+}
