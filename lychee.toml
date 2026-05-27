@@ -1,7 +1,23 @@
 # lychee.toml
 
-max_retries = 3             
-timeout = 30
+# Network-resilience tuning. The link checker has historically failed CI on
+# transient TLS / DNS / connection blips against well-known live sites
+# (e.g. https://opentelemetry.io/ — a TLS handshake failure took down the
+# build-site job in https://github.com/valkey-io/valkey-glide-docs/actions/runs/26177649882).
+#
+#   max_retries     — how many times lychee retries a single URL on a network error.
+#   retry_wait_time — seconds to wait between those retries (default is 1s, which
+#                     is too aggressive when an upstream TLS endpoint is briefly
+#                     misbehaving).
+#   timeout         — per-request network timeout in seconds.
+#
+# With these values lychee will spend up to ~7 minutes retrying a single URL
+# before giving up, instead of giving up after ~93 seconds. The CI workflow
+# *also* retries the whole step once on top of this, so a real broken link
+# still fails the build promptly while a transient network issue doesn't.
+max_retries     = 6
+retry_wait_time = 10
+timeout         = 60
 
 # Exclude specific URLs/links (RegEx)
 exclude = [
