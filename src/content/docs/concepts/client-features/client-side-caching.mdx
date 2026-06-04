@@ -169,6 +169,34 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
     clusterClient, err := glide.NewGlideClusterClient(clusterConfig)
     ```
   </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    use ValkeyGlide\Cache\ClientSideCache;
+
+    // Create a cache configuration
+    $cache = ClientSideCache::builder()
+        ->maxCacheKb(1024)                               // 1 MB maximum cache size
+        ->entryTtlMs(60000)                              // 60 second TTL per entry (0 = no expiration)
+        ->evictionPolicy(ClientSideCache::EVICTION_LRU)  // EVICTION_LRU or EVICTION_LFU
+        ->enableMetrics(true)                            // Enable hit/miss tracking
+        ->build();
+
+    // Standalone client
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        client_side_cache: $cache->toArray(),
+    );
+
+    // Cluster client
+    $clusterClient = new ValkeyGlideCluster();
+    $clusterClient->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        client_side_cache: $cache->toArray(),
+    );
+    ```
+  </TabItem>
 </Tabs>
 
 ### Configuration Options
@@ -251,6 +279,22 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     fmt.Printf("Hit rate: %.2f%%\n", hitRate*100)
     fmt.Printf("Entries: %d, Evictions: %d, Expirations: %d\n",
         entryCount, evictions, expirations)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Get metrics
+    $hitRate = $client->getCacheHitRate();         // float 0.0–1.0
+    $missRate = $client->getCacheMissRate();       // float 0.0–1.0
+    $entryCount = $client->getCacheEntryCount();   // int
+    $evictions = $client->getCacheEvictions();     // int
+    $expirations = $client->getCacheExpirations(); // int
+    $total = $client->getCacheTotalLookups();      // int
+
+    printf("Hit rate: %.2f%%\n", $hitRate * 100);
+    printf("Entries: %d, Evictions: %d, Expirations: %d\n",
+        $entryCount, $evictions, $expirations);
     ```
   </TabItem>
 </Tabs>
@@ -366,6 +410,35 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
     // client2 gets a cache hit without contacting the server
     result, _ := client2.Get("key")  // Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Both clients share the same cache
+    $cache = ClientSideCache::builder()
+        ->maxCacheKb(1024)
+        ->entryTtlMs(60000)
+        ->build();
+
+    $client1 = new ValkeyGlide();
+    $client1->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        client_side_cache: $cache->toArray(),
+    );
+
+    $client2 = new ValkeyGlide();
+    $client2->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        client_side_cache: $cache->toArray(),
+    );
+
+    // client1 populates the cache
+    $client1->set('key', 'value');
+    $client1->get('key');  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    $result = $client2->get('key');  // Cache hit
     ```
   </TabItem>
 </Tabs>
