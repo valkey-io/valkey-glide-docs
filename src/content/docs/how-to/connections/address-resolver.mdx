@@ -1,0 +1,54 @@
+---
+title: Custom Address Resolution
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+
+GLIDE supports **custom address resolution**, which allows you to provide a callback that intercepts and rewrites server host/port pairs before the client establishes connections. This is useful for routing through proxies, custom DNS resolution, or NAT traversal scenarios where the addresses known to the client differ from those used to reach the server.
+
+## Configuring
+
+Custom address resolution can be configured through the client configuration builder using the `WithAddressResolver` method. The resolver receives the original host and port, and returns the resolved host and port to connect to.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Define a resolver that routes connections through a proxy
+    (string host, ushort port) ProxyResolver(string host, ushort port)
+    {
+        // Route all connections through a local proxy
+        return ("proxy.internal", 6380);
+    }
+
+    // Standalone client with address resolver
+    var standaloneConfig = new StandaloneClientConfigurationBuilder()
+        .WithAddress("valkey-node-1", 6379)
+        .WithAddressResolver(ProxyResolver)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(standaloneConfig);
+
+    // Cluster client with address resolver
+    var clusterConfig = new ClusterClientConfigurationBuilder()
+        .WithAddress("valkey-node-1", 7000)
+        .WithAddress("valkey-node-2", 7001)
+        .WithAddressResolver(ProxyResolver)
+        .Build();
+
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+    ```
+  </TabItem>
+</Tabs>
+
+## Fallback Behavior
+
+If the address resolver throws an exception or returns invalid values (such as an empty host, port 0, or a hostname exceeding 1024 bytes), the client falls back to the original address and logs an error. This ensures that a faulty resolver does not prevent the client from connecting.
+
+## Important Considerations
+
+* **Thread Safety**: The resolver may be called from multiple threads concurrently and must be thread-safe. Avoid blocking operations within the resolver.
+* **Called Once at Connection Time**: The resolver is invoked once per address during initial connection establishment. It is NOT called on subsequent reconnection attempts.
+* **Max Hostname Length**: The resolved hostname must not exceed 1024 bytes. Values exceeding this limit are treated as invalid and trigger fallback behavior.
