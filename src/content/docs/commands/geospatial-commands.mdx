@@ -1,0 +1,231 @@
+---
+title: Geospatial Commands
+description: Learn how to use geospatial commands with Valkey GLIDE C# client.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Valkey geospatial commands allow you to store geographic coordinates (longitude/latitude) associated with members in a sorted set, then query by radius or bounding box. This is useful for building location-aware features like nearby searches, distance calculations, and spatial indexing.
+
+This page documents the GLIDE-native C# geospatial API available on `IBaseClient`.
+
+## GEOADD
+
+Adds one or more geospatial members (longitude, latitude, name) to a sorted set key. See [GEOADD on valkey.io](https://valkey.io/commands/geoadd/) for full details.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    #### Signatures
+
+    ```csharp
+    // Single member — returns true if the member was added (new)
+    Task<bool> GeoAddAsync(ValkeyKey key, ValkeyValue member, GeoPosition position, GeoAddOptions options = default)
+
+    // Multiple members — returns number of members added
+    Task<long> GeoAddAsync(ValkeyKey key, IDictionary<ValkeyValue, GeoPosition> members, GeoAddOptions options = default)
+    ```
+
+    #### Options
+
+    `GeoAddOptions` struct:
+
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `Condition` | `GeoAddCondition` | `Always` (default), `OnlyIfNotExists` (NX), `OnlyIfExists` (XX) |
+    | `Changed` | `bool` | When true, counts changed (updated) elements in addition to new ones (CH flag) |
+
+    #### Examples
+
+    ```csharp
+    // Add a single member
+    bool added = await client.GeoAddAsync(
+        "restaurants",
+        "pizza-place",
+        new GeoPosition(Longitude: -122.4194, Latitude: 37.7749)
+    );
+    // added == true (new member)
+
+    // Add multiple members
+    long count = await client.GeoAddAsync("restaurants", new Dictionary<ValkeyValue, GeoPosition>
+    {
+        ["burger-joint"] = new(-122.4089, 37.7835),
+        ["sushi-bar"] = new(-122.4103, 37.7820),
+    });
+    // count == 2
+
+    // Only add if not already existing (NX)
+    bool addedNx = await client.GeoAddAsync(
+        "restaurants",
+        "pizza-place",
+        new GeoPosition(-122.4194, 37.7749),
+        new GeoAddOptions { Condition = GeoAddCondition.OnlyIfNotExists }
+    );
+    // addedNx == false (already exists)
+    ```
+  </TabItem>
+</Tabs>
+
+## GEODIST
+
+Returns the distance between two members in the geospatial index. See [GEODIST on valkey.io](https://valkey.io/commands/geodist/).
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    #### Signature
+
+    ```csharp
+    Task<double?> GeoDistanceAsync(ValkeyKey key, ValkeyValue member1, ValkeyValue member2, GeoUnit unit = GeoUnit.Meters)
+    ```
+
+    Returns `null` if one or both members do not exist in the key.
+
+    #### GeoUnit Enum
+
+    | Value | Description |
+    |-------|-------------|
+    | `GeoUnit.Meters` | Distance in meters (default) |
+    | `GeoUnit.Kilometers` | Distance in kilometers |
+    | `GeoUnit.Miles` | Distance in miles |
+    | `GeoUnit.Feet` | Distance in feet |
+
+    #### Examples
+
+    ```csharp
+    // Distance in meters (default)
+    double? dist = await client.GeoDistanceAsync("restaurants", "pizza-place", "burger-joint");
+    // dist == 1045.3 (example value in meters)
+
+    // Distance in kilometers
+    double? distKm = await client.GeoDistanceAsync(
+        "restaurants", "pizza-place", "burger-joint", GeoUnit.Kilometers
+    );
+
+    // Returns null if a member doesn't exist
+    double? missing = await client.GeoDistanceAsync("restaurants", "pizza-place", "nonexistent");
+    // missing == null
+    ```
+  </TabItem>
+</Tabs>
+
+## GEOSEARCH
+
+Searches for members within a geographic area (circle or box) from a given origin. See [GEOSEARCH on valkey.io](https://valkey.io/commands/geosearch/).
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    #### Signatures
+
+    ```csharp
+    // Search from an existing member
+    Task<GeoSearchResult[]> GeoSearchAsync(ValkeyKey key, ValkeyValue from, GeoSearchShape shape, GeoSearchOptions options = default)
+
+    // Search from a longitude/latitude position
+    Task<GeoSearchResult[]> GeoSearchAsync(ValkeyKey key, GeoPosition from, GeoSearchShape shape, GeoSearchOptions options = default)
+    ```
+
+    #### Shape Types
+
+    | Type | Description |
+    |------|-------------|
+    | `GeoSearchCircle(double radius, GeoUnit unit = GeoUnit.Meters)` | Circular area (BYRADIUS) |
+    | `GeoSearchBox(double height, double width, GeoUnit unit = GeoUnit.Meters)` | Rectangular area (BYBOX) |
+
+    #### GeoSearchOptions
+
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `Order` | `Order?` | Sort order — `Order.Ascending` (ASC) or `Order.Descending` (DESC) |
+    | `Count` | `long?` | Maximum number of results (COUNT) |
+    | `Any` | `bool` | When true with Count, allows non-closest matches (ANY flag) |
+    | `WithPosition` | `bool` | Include coordinates in results (WITHCOORD) |
+    | `WithDistance` | `bool` | Include distance from origin (WITHDIST) |
+    | `WithHash` | `bool` | Include geohash integer (WITHHASH) |
+
+    #### GeoSearchResult
+
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `Member` | `ValkeyValue` | The member name |
+    | `Position` | `GeoPosition?` | Coordinates (when `WithPosition` requested) |
+    | `Distance` | `double?` | Distance from origin (when `WithDistance` requested) |
+    | `Hash` | `long?` | Geohash integer (when `WithHash` requested) |
+
+    #### Examples
+
+    ```csharp
+    // Search within 5km of an existing member, sorted by distance
+    GeoSearchResult[] results = await client.GeoSearchAsync(
+        "restaurants",
+        "pizza-place",
+        new GeoSearchCircle(5, GeoUnit.Kilometers),
+        new GeoSearchOptions { Order = Order.Ascending, WithDistance = true }
+    );
+
+    foreach (var r in results)
+        Console.WriteLine($"{r.Member}: {r.Distance}km away");
+
+    // Search within a box from a specific coordinate, with positions
+    GeoSearchResult[] boxResults = await client.GeoSearchAsync(
+        "restaurants",
+        new GeoPosition(-122.41, 37.78),
+        new GeoSearchBox(height: 2, width: 2, GeoUnit.Kilometers),
+        new GeoSearchOptions { WithPosition = true, Count = 10 }
+    );
+
+    foreach (var r in boxResults)
+        Console.WriteLine($"{r.Member} at ({r.Position?.Longitude}, {r.Position?.Latitude})");
+    ```
+  </TabItem>
+</Tabs>
+
+## GEOSEARCHSTORE
+
+Searches for members within a geographic area and stores the results in a destination key. See [GEOSEARCHSTORE on valkey.io](https://valkey.io/commands/geosearchstore/).
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    #### Signatures
+
+    ```csharp
+    // Search from an existing member and store results
+    Task<long> GeoSearchAndStoreAsync(ValkeyKey source, ValkeyKey destination, ValkeyValue from, GeoSearchShape shape, GeoSearchStoreOptions options = default)
+
+    // Search from a position and store results
+    Task<long> GeoSearchAndStoreAsync(ValkeyKey source, ValkeyKey destination, GeoPosition from, GeoSearchShape shape, GeoSearchStoreOptions options = default)
+    ```
+
+    Returns the number of elements stored in the destination key.
+
+    #### GeoSearchStoreOptions
+
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `Order` | `Order?` | Sort order (ASC/DESC) |
+    | `Count` | `long?` | Maximum number of results |
+    | `Any` | `bool` | Allow non-closest matches (requires Count) |
+    | `StoreDistances` | `bool` | Store distances as scores instead of geohash values (STOREDIST) |
+
+    #### Examples
+
+    ```csharp
+    // Store nearby restaurants into a new key
+    long stored = await client.GeoSearchAndStoreAsync(
+        "restaurants",
+        "nearby-results",
+        "pizza-place",
+        new GeoSearchCircle(10, GeoUnit.Kilometers),
+        new GeoSearchStoreOptions { Order = Order.Ascending, Count = 50 }
+    );
+    // stored == number of members written to "nearby-results"
+
+    // Store with distances as scores (STOREDIST)
+    long storedDist = await client.GeoSearchAndStoreAsync(
+        "restaurants",
+        "nearby-with-distances",
+        new GeoPosition(-122.41, 37.78),
+        new GeoSearchCircle(5, GeoUnit.Kilometers),
+        new GeoSearchStoreOptions { StoreDistances = true }
+    );
+    ```
+  </TabItem>
+</Tabs>
