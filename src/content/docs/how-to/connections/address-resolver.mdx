@@ -41,6 +41,33 @@ Custom address resolution can be configured through the client configuration bui
     await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
     ```
   </TabItem>
+  <TabItem label="PHP">
+    ```php
+    <?php
+
+    // Define a resolver that routes connections through a proxy
+    $resolver = function (string $host, int $port): array {
+        // Route all connections through a local proxy
+        return ['host' => 'proxy.internal', 'port' => 6380];
+    };
+
+    // Standalone client with address resolver
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'valkey-node-1', 'port' => 6379]],
+        address_resolver: $resolver,
+    );
+
+    // Cluster client with address resolver
+    $clusterClient = new ValkeyGlideCluster(
+        addresses: [
+            ['host' => 'valkey-node-1', 'port' => 7000],
+            ['host' => 'valkey-node-2', 'port' => 7001],
+        ],
+        address_resolver: $resolver,
+    );
+    ```
+  </TabItem>
 </Tabs>
 
 ## Fallback Behavior
