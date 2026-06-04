@@ -1,3 +1,74 @@
+# Valkey GLIDE Documentation
+
+This is the documentation site for [Valkey GLIDE](https://github.com/valkey-io/valkey-glide), an open-source multi-language client library for [Valkey](https://valkey.io/) (a Redis-compatible in-memory data store). The site is live at https://glide.valkey.io.
+
+## Supported Languages
+
+GLIDE provides client implementations in multiple languages, all sharing a common Rust core:
+
+| Language | Source Repository                                          |
+| -------- | ---------------------------------------------------------- |
+| Java     | https://github.com/valkey-io/valkey-glide/tree/main/java   |
+| Python   | https://github.com/valkey-io/valkey-glide/tree/main/python |
+| Node.js  | https://github.com/valkey-io/valkey-glide/tree/main/node   |
+| Go       | https://github.com/valkey-io/valkey-glide/tree/main/go     |
+| C#       | https://github.com/valkey-io/valkey-glide-csharp           |
+| PHP      | https://github.com/valkey-io/valkey-glide-php              |
+
+The core Rust engine lives at https://github.com/valkey-io/valkey-glide/tree/main/glide-core and provides the shared connection management, routing, and protocol logic that all language clients wrap.
+
+## Project Overview
+
+- **Framework**: Astro 5 + Starlight (documentation theme)
+- **Package manager**: pnpm
+- **Content**: MDX files in `src/content/docs/`
+- **Build output**: `dist/`
+- **Sidebar/navigation**: Defined in `astro.config.mjs`
+
+## Documentation Framework (Diátaxis)
+
+This documentation follows the [Diátaxis framework](https://diataxis.fr/), which organizes content into four distinct types based on user needs:
+
+| Type              | Purpose                                                            | Writing style                                          | Maps to      |
+| ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------ | ------------ |
+| **Tutorials**     | Learning-oriented — guide a beginner through a complete experience | Step-by-step, hand-holding, focused on doing           | `tutorials/` |
+| **How-To Guides** | Task-oriented — help a practitioner accomplish a specific goal     | Practical steps, assumes knowledge, focused on results | `how-to/`    |
+| **Concepts**      | Understanding-oriented — explain how and why things work           | Discursive, clarifying, focused on thinking            | `concepts/`  |
+| **Reference**     | Information-oriented — describe the machinery precisely            | Austere, accurate, focused on completeness             | `reference/` |
+
+When writing or editing content, place it in the correct category:
+
+- **Don't** mix explanation into a how-to guide — link to a concept page instead
+- **Don't** turn a tutorial into a reference by listing all options — keep it focused on one learning path
+- **Don't** put procedural steps in a concept page — move them to a how-to guide
+- A tutorial says "do this, then this" and the reader learns by completing it
+- A how-to guide says "to achieve X, do Y" and the reader already knows what they want
+- A concept page says "X works this way because..." and the reader gains understanding
+- A reference page says "X accepts these parameters..." and the reader looks up specifics
+
+## Content Structure
+
+- `src/content/docs/` — all documentation pages (MDX)
+  - `getting-started/` — quickstart and basic operations (tutorials)
+  - `concepts/` — architecture (Rust core, async, memory model) and client features (explanation)
+  - `how-to/` — guides for installation, connections, security, monitoring, modules (how-to)
+  - `migration/` — migration guides from other clients (how-to)
+  - `tutorials/` — TLS, Lua scripting, Pub/Sub (tutorials)
+  - `reference/` — access control, scripting, client comparisons, connection options, known issues (reference)
+- `public/` — static assets (favicons, CNAME)
+- `src/assets/` — logos and images
+- `src/components/` — custom Astro components
+- `src/styles/` — custom CSS
+- `doc-gen/` — scripts to generate API docs from the main valkey-glide repo
+- `plugins/` — custom Astro/Starlight plugins
+
+## Content Guidelines
+
+- Each MDX page should have frontmatter with `title` and `description` fields
+- The `description` field is used for SEO and should be a concise summary of the page content
+- Internal links are validated at build time by `starlight-links-validator`
+- Use relative links for internal pages, not absolute URLs
+
 # Commands
 
 Useful commands for this project.
