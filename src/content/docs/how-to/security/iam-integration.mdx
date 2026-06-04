@@ -210,6 +210,9 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     $client->set('key', 'value');
     $value = $client->get('key');
 
+    // You can manually refresh the token too
+    $client->refreshIamToken();
+
     $client->close();
     ...
     ```
