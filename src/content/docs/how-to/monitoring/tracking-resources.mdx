@@ -82,9 +82,24 @@ This is not supported by the Go client.
   </TabItem>
 
   <TabItem label="C#">
-    :::note[Coming soon]
-    Statistics API documentation for C# is coming soon.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(500))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+
+    // Retrieve statistics
+    var stats = BaseClient.GetStatistics();
+
+    // Example: Accessing and printing statistics
+    Console.WriteLine($"Total Connections: {stats.TotalConnections}");
+    Console.WriteLine($"Total Clients: {stats.TotalClients}");
+    ```
   </TabItem>
 
   <TabItem label="PHP">
