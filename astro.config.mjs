@@ -225,7 +225,6 @@ export default defineConfig({
                         "migration/java/jedis/jedis-compatibility-layer/instructions",
                         "migration/java/jedis/jedis-compatibility-layer/supported-features",
                         "migration/java/jedis/jedis-compatibility-layer/configurations-mapping",
-                        "migration/java/jedis/jedis-compatibility-layer/getting-help",
                       ],
                     },
                     {
