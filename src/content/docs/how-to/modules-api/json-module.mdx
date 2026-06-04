@@ -140,49 +140,16 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     $client = new ValkeyGlide();
     $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
 
-    $key = "doc";
-    $jsonValue = '{"name": "Alice", "age": 30, "scores": [10, 20, 30], "active": true}';
+    $key = "testKey";
+    $path = "$";
+    $jsonValue = '{"a": 1.0, "b": 2}';
 
-    // JSON.SET / JSON.GET
-    $client->jsonSet($key, "$", $jsonValue); // true
-    $result = $client->jsonGet($key); // full document
+    // JSON.SET
+    $client->jsonSet($key, $path, $jsonValue); // true
 
-    // JSON.DEL — delete a path
-    $client->jsonDel($key, '$.scores[0]'); // 1
-
-    // JSON.TYPE — get the type at a path
-    $client->jsonType($key, '$.age'); // ['integer']
-
-    // JSON.NUMINCRBY — increment a number
-    $client->jsonNumIncrBy($key, '$.age', 5); // '[35]'
-
-    // JSON.TOGGLE — toggle a boolean
-    $client->jsonToggle($key, '$.active'); // [false]
-
-    // JSON.STRAPPEND — append to a string
-    $client->jsonStrAppend($key, '$.name', '" Smith"'); // [11]
-
-    // JSON.STRLEN — get string length
-    $client->jsonStrLen($key, '$.name'); // [11]
-
-    // JSON.ARRAPPEND — append to an array
-    $client->jsonArrAppend($key, '$.scores', '40', '50'); // [4]
-
-    // JSON.ARRLEN — get array length
-    $client->jsonArrLen($key, '$.scores'); // [4]
-
-    // JSON.OBJKEYS — get object keys
-    $client->jsonObjKeys($key); // ['name', 'age', 'scores', 'active']
-
-    // JSON.OBJLEN — get number of keys
-    $client->jsonObjLen($key); // 4
-
-    // JSON.MGET — get values from multiple keys
-    $client->jsonSet('doc2', '$', '{"age": 25}');
-    $client->jsonMGet(['doc', 'doc2'], '$.age'); // ['[35]', '[25]']
-
-    // JSON.CLEAR — clear arrays/objects at path
-    $client->jsonClear($key, '$.scores'); // 1
+    // JSON.GET
+    $result = $client->jsonGet($key); // '[{"a":1.0,"b":2}]'
+    $decoded = json_decode($result, true);
     ```
   </TabItem>
 
