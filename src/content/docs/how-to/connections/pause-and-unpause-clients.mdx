@@ -1,0 +1,186 @@
+---
+title: Pause and Unpause Clients
+description: Suspend client connections for maintenance operations using CLIENT PAUSE and CLIENT UNPAUSE
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+[`CLIENT PAUSE`](https://valkey.io/commands/client-pause/) suspends all clients connected to a Valkey server for a specified timeout in milliseconds. [`CLIENT UNPAUSE`](https://valkey.io/commands/client-unpause/) resumes normal operation immediately. These commands are useful during maintenance operations like failovers or upgrades where you need to briefly stop client traffic.
+
+## Pause Modes
+
+`CLIENT PAUSE` supports two modes:
+
+- **ALL** (default) — pauses all client commands (reads and writes)
+- **WRITE** — pauses only write commands; read commands continue to work
+
+## Basic Usage
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+        "time"
+        "github.com/valkey-io/valkey-glide/go/glide/api/options"
+    )
+
+    ctx := context.Background()
+
+    // Pause all clients for 1000ms
+    result, err := client.ClientPause(ctx, 1000*time.Millisecond)
+    // result: "OK"
+
+    // Pause only write commands for 2000ms
+    mode := options.ClientPauseModeWrite
+    result, err = client.ClientPauseWithMode(ctx, 2000*time.Millisecond, mode)
+    // result: "OK"
+
+    // Resume all clients immediately
+    result, err = client.ClientUnpause(ctx)
+    // result: "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.commands.ClientPauseMode;
+
+    // Pause all clients for 1000ms
+    String result = client.clientPause(1000L).get();
+    // result: "OK"
+
+    // Pause only write commands for 2000ms
+    String result = client.clientPause(2000L, ClientPauseMode.WRITE).get();
+    // result: "OK"
+
+    // Resume all clients immediately
+    String result = client.clientUnpause().get();
+    // result: "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { ClientPauseMode } from "@valkey/valkey-glide";
+
+    // Pause all clients for 1000ms
+    const result = await client.clientPause(1000);
+    // result: "OK"
+
+    // Pause only write commands for 2000ms
+    const result = await client.clientPause(2000, ClientPauseMode.WRITE);
+    // result: "OK"
+
+    // Resume all clients immediately
+    const result = await client.clientUnpause();
+    // result: "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    from glide import ClientPauseMode
+
+    # Pause all clients for 1000ms
+    result = await client.client_pause(1000)
+    # result: "OK"
+
+    # Pause only write commands for 2000ms
+    result = await client.client_pause(2000, mode=ClientPauseMode.WRITE)
+    # result: "OK"
+
+    # Resume all clients immediately
+    result = await client.client_unpause()
+    # result: "OK"
+    ```
+  </TabItem>
+</Tabs>
+
+## Cluster Mode
+
+In cluster mode, `CLIENT PAUSE` and `CLIENT UNPAUSE` are broadcast to all primary nodes by default. You can optionally specify a route to target specific nodes.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+        "time"
+        "github.com/valkey-io/valkey-glide/go/glide/api/options"
+    )
+
+    ctx := context.Background()
+
+    // Pause all nodes (default routing)
+    result, err := clusterClient.ClientPause(ctx, 1000*time.Millisecond)
+
+    // Pause with mode and specific route
+    mode := options.ClientPauseModeWrite
+    opts := options.ClientPauseClusterOptions{
+        Mode:        &mode,
+        RouteOption: options.RouteOption{Route: options.AllPrimaries},
+    }
+    result, err = clusterClient.ClientPauseWithOptions(ctx, 2000*time.Millisecond, opts)
+
+    // Unpause with specific route
+    result, err = clusterClient.ClientUnpauseWithOptions(ctx, options.RouteOption{
+        Route: options.AllPrimaries,
+    })
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.commands.ClientPauseMode;
+    import glide.api.models.configuration.Route;
+
+    // Pause all nodes (default routing)
+    String result = clusterClient.clientPause(1000L).get();
+
+    // Pause with mode and specific route
+    String result = clusterClient.clientPause(2000L, ClientPauseMode.WRITE, Route.ALL_PRIMARIES).get();
+
+    // Unpause with specific route
+    String result = clusterClient.clientUnpause(Route.ALL_PRIMARIES).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { ClientPauseMode } from "@valkey/valkey-glide";
+
+    // Pause all nodes (default routing)
+    const result = await clusterClient.clientPause(1000);
+
+    // Pause with mode and route option
+    const result = await clusterClient.clientPause(2000, ClientPauseMode.WRITE, {
+        route: "allPrimaries",
+    });
+
+    // Unpause with route option
+    const result = await clusterClient.clientUnpause({ route: "allPrimaries" });
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    from glide import ClientPauseMode, AllPrimaries
+
+    # Pause all nodes (default routing)
+    result = await cluster_client.client_pause(1000)
+
+    # Pause with mode and specific route
+    result = await cluster_client.client_pause(2000, mode=ClientPauseMode.WRITE, route=AllPrimaries())
+
+    # Unpause with specific route
+    result = await cluster_client.client_unpause(route=AllPrimaries())
+    ```
+  </TabItem>
+</Tabs>
+
+## Use Cases
+
+- **Controlled failover**: Pause writes before promoting a replica to prevent data loss during the switchover
+- **Maintenance upgrades**: Pause all clients while performing server upgrades, then unpause when complete
+- **Graceful shutdown**: Pause clients to drain in-flight requests before shutting down a node
