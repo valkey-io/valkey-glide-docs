@@ -363,26 +363,54 @@ if ($client->get('nonexistent') === false) {
 
 ### 5. Configuration
 
-Configuration is done through the `connect()` method:
+Valkey GLIDE PHP supports `setOption()` and `getOption()` for runtime options, similar to PHPRedis.
+
+#### Supported Options
+
+| Option | Constant | Description |
+| --- | --- | --- |
+| Reply Literal | `ValkeyGlide::OPT_REPLY_LITERAL` | When enabled, commands that return "+OK" from Valkey return the string `"OK"` instead of `true` |
 
 <Tabs>
   <TabItem label="PHPRedis">
     ```php
-    $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_JSON);
-    $redis->setOption(Redis::OPT_PREFIX, 'myapp:');
+    $redis->setOption(Redis::OPT_REPLY_LITERAL, true);
+    $result = $redis->set('key', 'value'); // Returns "OK" instead of true
     ```
   </TabItem>
 
   <TabItem label="Valkey GLIDE">
     ```php
-    $client->connect(
-        addresses: [['host' => '127.0.0.1', 'port' => 6379]],
-        request_timeout: 5000,
-        client_name: 'myapp'
-    );
+    $client->setOption(ValkeyGlide::OPT_REPLY_LITERAL, true);
+    $result = $client->set('key', 'value'); // Returns "OK" instead of true
+
+    // Check current setting
+    $enabled = $client->getOption(ValkeyGlide::OPT_REPLY_LITERAL); // true
+
+    // Disable it
+    $client->setOption(ValkeyGlide::OPT_REPLY_LITERAL, false);
+    $result = $client->set('key', 'value'); // Returns true (default)
     ```
   </TabItem>
 </Tabs>
+
+<Aside type="note">
+  `OPT_REPLY_LITERAL` affects these commands: `SET`, `MSET`, `SETEX`, `PSETEX`, `SELECT`, `FLUSHDB`, `FLUSHALL`, `RENAME`, `RESTORE`, `CONFIG SET`, `LSET`, `LTRIM`, and `HMSET`.
+</Aside>
+
+<Aside type="caution">
+  PHPRedis options such as `OPT_SERIALIZER`, `OPT_PREFIX`, `OPT_SCAN`, and `OPT_COMPRESSION` are not currently supported. Use application-level serialization and key prefixing instead.
+</Aside>
+
+Connection configuration is done through `connect()` parameters:
+
+```php
+$client->connect(
+    addresses: [['host' => '127.0.0.1', 'port' => 6379]],
+    request_timeout: 5000,
+    client_name: 'myapp'
+);
+```
 
 ## Advanced Features
 
