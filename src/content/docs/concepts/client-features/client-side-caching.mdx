@@ -201,7 +201,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.ConnectionConfiguration;
 
     // Create a cache configuration
     var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60))
@@ -213,14 +213,14 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         .WithAddress("localhost", 6379)
         .WithClientSideCache(cache)
         .Build();
-    var client = await GlideClient.CreateClientAsync(config);
+    var client = await GlideClient.CreateClient(config);
 
     // Cluster client
     var clusterConfig = new ClusterClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .WithClientSideCache(cache)
         .Build();
-    var clusterClient = await GlideClusterClient.CreateClientAsync(clusterConfig);
+    var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
     ```
   </TabItem>
 </Tabs>
@@ -492,13 +492,13 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
         .WithAddress("localhost", 6379)
         .WithClientSideCache(cache)
         .Build();
-    var client1 = await GlideClient.CreateClientAsync(config1);
+    var client1 = await GlideClient.CreateClient(config1);
 
     var config2 = new StandaloneClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .WithClientSideCache(cache)
         .Build();
-    var client2 = await GlideClient.CreateClientAsync(config2);
+    var client2 = await GlideClient.CreateClient(config2);
 
     // client1 populates the cache
     await client1.SetAsync("key", "value");
