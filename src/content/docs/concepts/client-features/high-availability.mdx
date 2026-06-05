@@ -38,3 +38,11 @@ two benefits: reads can continue while a primary is down and it distributes load
 GLIDE also supports AZ-affinity routing, which directs reads to replicas in the same availability zone as the client, reducing cross-AZ latency.
 
 For more on configuring read strategies, see our [guide](/how-to/connections/read-strategy/).
+
+### Lazy Connection
+
+Lazy connection mode defers physical connections to Valkey until the first command is executed. This allows applications to start up even when nodes are temporarily unreachable — useful during rolling deployments or when startup ordering isn't guaranteed.
+
+Once the first command is issued, GLIDE establishes connections and proceeds normally. If the server is unavailable at that point, errors surface at command time rather than during client creation.
+
+For more on configuring lazy connections, see our [guide](/how-to/connections/configure-lazy-connection/).
