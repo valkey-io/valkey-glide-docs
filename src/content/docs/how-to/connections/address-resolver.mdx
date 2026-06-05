@@ -1,0 +1,401 @@
+---
+title: Address Resolver
+description: Intercept host/port resolution at connection time using a custom callback
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+
+The **address resolver** is a callback that intercepts host/port resolution when a GLIDE client connects to Valkey. It's useful for DNS overrides, service mesh scenarios, or testing with fake addresses.
+
+:::note
+The address resolver is available in the Node.js, Python, Java, Go, C#, and PHP clients. In Python it is provided by the async client.
+:::
+
+## Basic Usage
+
+Pass a callable to the address resolver parameter. The callable receives the original host and port, and returns the resolved address.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    real_host = "127.0.0.1"
+    real_port = 6379
+
+    # The resolver receives the configured host/port and returns the address to use
+    def resolver(host: str, port: int) -> tuple[str, int]:
+        return (real_host, real_port)
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("host.unreachable", 9999)],
+        address_resolver=resolver,
+    )
+    client = await GlideClient.create(config)
+
+    # Client is now connected to 127.0.0.1:6379
+    await client.set("key", "value")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.AddressResolver;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.ResolvedAddress;
+
+    String realHost = "127.0.0.1";
+    int realPort = 6379;
+
+    // The resolver receives the configured host/port and returns the address to use
+    AddressResolver resolver = (host, port) -> new ResolvedAddress(realHost, realPort);
+
+    GlideClient client =
+        GlideClient.createClient(
+                GlideClientConfiguration.builder()
+                    .address(NodeAddress.builder().host("host.unreachable").port(9999).build())
+                    .addressResolver(resolver)
+                    .build())
+            .get();
+
+    // Client is now connected to 127.0.0.1:6379
+    client.set("key", "value").get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const realHost = "127.0.0.1";
+    const realPort = 6379;
+
+    // The resolver receives the configured host/port and returns the address to use
+    const resolver = (host: string, port: number): [string, number] => {
+        return [realHost, realPort];
+    };
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "host.unreachable", port: 9999 }],
+        addressResolver: resolver,
+    });
+
+    // Client is now connected to 127.0.0.1:6379
+    await client.set("key", "value");
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    realHost := "127.0.0.1"
+    realPort := 6379
+
+    // The resolver receives the configured host/port and returns the address to use
+    resolver := func(host string, port int) (string, int) {
+        return realHost, realPort
+    }
+
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "host.unreachable", Port: 9999}).
+        WithAddressResolver(resolver)
+
+    client, err := glide.NewClient(clientConfig)
+    if err != nil {
+        // Handle error
+    }
+    defer client.Close()
+
+    // Client is now connected to 127.0.0.1:6379
+    client.Set(context.Background(), "key", "value")
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    var realHost = "127.0.0.1";
+    ushort realPort = 6379;
+
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("host.unreachable", 9999)
+        .WithAddressResolver((host, port) => (realHost, realPort))
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Client is now connected to 127.0.0.1:6379
+    await client.SetAsync("key", "value");
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $realHost = '127.0.0.1';
+    $realPort = 6379;
+
+    $resolver = function (string $host, int $port) use ($realHost, $realPort): array {
+        return ['host' => $realHost, 'port' => $realPort];
+    };
+
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'host.unreachable', 'port' => 9999]],
+        address_resolver: $resolver,
+    );
+
+    // Client is now connected to 127.0.0.1:6379
+    $client->set('key', 'value');
+    ```
+  </TabItem>
+</Tabs>
+
+## Fallback Behavior
+
+If the resolver throws an exception or returns invalid data, the client falls back to the original address.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    # This resolver throws — the client will use the original address.
+    # Returning None or an invalid value triggers the same fallback.
+    def resolver(host: str, port: int) -> tuple[str, int]:
+        raise RuntimeError("Resolution failed")
+
+    client = await GlideClient.create(
+        GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)],
+            address_resolver=resolver,
+        )
+    )
+
+    # Still connects to localhost:6379
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.AddressResolver;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    // This resolver throws — the client will use the original address
+    AddressResolver resolver =
+        (host, port) -> {
+            throw new RuntimeException("Resolution failed");
+        };
+
+    GlideClient client =
+        GlideClient.createClient(
+                GlideClientConfiguration.builder()
+                    .address(NodeAddress.builder().host("localhost").port(6379).build())
+                    .addressResolver(resolver)
+                    .build())
+            .get();
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    // This resolver throws — the client will use the original address
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        addressResolver: (host: string, port: number): [string, number] => {
+            throw new Error("Resolution failed");
+        },
+    });
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    // This resolver panics — the client will use the original address.
+    // Returning an empty host or an out-of-range port triggers the same fallback.
+    resolver := func(host string, port int) (string, int) {
+        panic("Resolution failed")
+    }
+
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithAddressResolver(resolver)
+
+    client, err := glide.NewClient(clientConfig)
+    if err != nil {
+        // Handle error
+    }
+    defer client.Close()
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // This resolver throws — the client will use the original address
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithAddressResolver((host, port) => throw new InvalidOperationException("Resolution failed!"))
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // This resolver throws — the client will use the original address
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        address_resolver: function (string $host, int $port): array {
+            throw new \RuntimeException('Resolution failed');
+        },
+    );
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+</Tabs>
+
+## Cluster Client
+
+The cluster client supports the same resolver signature.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClusterClient, GlideClusterClientConfiguration, NodeAddress
+
+    def resolver(host: str, port: int) -> tuple[str, int]:
+        return (get_actual_host(host), port)
+
+    client = await GlideClusterClient.create(
+        GlideClusterClientConfiguration(
+            addresses=[NodeAddress("internal-dns.service", 7000)],
+            address_resolver=resolver,
+        )
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AddressResolver;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.ResolvedAddress;
+
+    AddressResolver resolver = (host, port) -> new ResolvedAddress(getActualHost(host), port);
+
+    GlideClusterClient client =
+        GlideClusterClient.createClient(
+                GlideClusterClientConfiguration.builder()
+                    .address(NodeAddress.builder().host("internal-dns.service").port(7000).build())
+                    .addressResolver(resolver)
+                    .build())
+            .get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "internal-dns.service", port: 7000 }],
+        addressResolver: (host: string, port: number): [string, number] => {
+            return [getActualHost(host), port];
+        },
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    resolver := func(host string, port int) (string, int) {
+        return getActualHost(host), port
+    }
+
+    clientConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "internal-dns.service", Port: 7000}).
+        WithAddressResolver(resolver)
+
+    client, err := glide.NewClusterClient(clientConfig)
+    if err != nil {
+        // Handle error
+    }
+    defer client.Close()
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Your custom host resolution logic
+    string GetActualHost(string host) => host;
+
+    var config = new ConnectionConfiguration.ClusterClientConfigurationBuilder()
+        .WithAddress("internal-dns.service", 7000)
+        .WithAddressResolver((host, port) => (GetActualHost(host), port))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $cluster = new ValkeyGlideCluster(
+        addresses: [['host' => 'internal-dns.service', 'port' => 7000]],
+        address_resolver: function (string $host, int $port): array {
+            return ['host' => getActualHost($host), 'port' => $port];
+        },
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+## Notes
+
+* Each client instance maintains its own resolver — multiple clients can use different resolvers without interfering with each other.
+* The resolver is called synchronously during connection establishment and during cluster topology refreshes, so it must be fast and avoid blocking operations.
+* **Node.js / Python / Java**: If the resolver throws, the client falls back to the original address.
+* **Python**: Returning `None` or an otherwise invalid value triggers fallback to the original address. Address resolver support is provided by the async client.
+* **Java**: The resolver must be thread-safe.
+* **Go**: The resolver may be called from multiple goroutines and must be safe for concurrent use. Returning an empty host, a port outside the range 1–65535, or panicking triggers fallback to the original address.
+* **PHP**: Resolver state is cleared on PHP module shutdown (MSHUTDOWN) and request shutdown (RSHUTDOWN).
+* **C#**: The resolver delegate must be thread-safe. The maximum resolved hostname length is 1024 bytes — if exceeded, the client falls back to the original address. The delegate's GC pin is handled internally by the client.
