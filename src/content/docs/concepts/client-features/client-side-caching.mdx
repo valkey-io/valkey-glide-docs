@@ -326,6 +326,15 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60)).WithMetrics(true))
+        .Build();
+    var client = await GlideClient.CreateClient(config);
+
     // Get metrics
     double hitRate = await client.GetCacheHitRateAsync();       // 0.0–1.0
     double missRate = await client.GetCacheMissRateAsync();     // 0.0–1.0
@@ -485,6 +494,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
   <TabItem label="C#">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
     // Both clients share the same cache
     var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60));
 
