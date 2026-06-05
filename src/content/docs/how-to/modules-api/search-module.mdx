@@ -305,12 +305,11 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
   <TabItem label="C#">
     ```csharp
-    using System.Text;
     using Valkey.Glide;
-    using Valkey.Glide.Commands.Options;
+    using Valkey.Glide.ServerModules;
 
     // Both standalone and cluster mode are supported
-    var config = new StandaloneClientConfigurationBuilder()
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
         .WithAddress("localhost", 6379)
         .Build();
     await using var client = await GlideClient.CreateClient(config);
@@ -318,38 +317,47 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     var prefix = "{hash}:";
     var index = prefix + "index";
 
-    // FT.CREATE a Hash index with a HNSW vector field
-    var vecField = new VectorFieldHnsw("vec", DistanceMetric.L2, 2) { Alias = "VEC" };
-    var schema = new IField[] { vecField };
-    var createOptions = new FtCreateOptions
+    // FT.CREATE a Hash index with a vector field
+    var fields = new Ft.CreateField[]
     {
-        DataType = IndexDataType.Hash,
-        Prefixes = new ValkeyValue[] { prefix },
+        new Ft.CreateVectorFieldHnsw
+        {
+            Identifier = "vec",
+            Alias = "VEC",
+            Dimensions = 2,
+            DistanceMetric = Ft.DistanceMetric.Euclidean,
+        },
     };
-    await client.FtCreateAsync(index, schema, createOptions);
+    var createOptions = new Ft.CreateOptions
+    {
+        DataType = Ft.DataType.Hash,
+        Prefixes = [prefix],
+    };
+    await Ft.CreateAsync(client, index, fields, createOptions);
 
     // Insert hash data with vector fields (2-dimensional float32 vectors = 8 bytes each)
     var vec0 = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
     var vec1 = new byte[] { 0, 0, 0, 0, 0, 0, 0x80, 0xBF };
-    await client.HSetAsync($"{prefix}0", new Dictionary<string, string> { ["vec"] = Encoding.Latin1.GetString(vec0) });
-    await client.HSetAsync($"{prefix}1", new Dictionary<string, string> { ["vec"] = Encoding.Latin1.GetString(vec1) });
+    await client.HashSetAsync($"{prefix}0", "vec", vec0);
+    await client.HashSetAsync($"{prefix}1", "vec", vec1);
 
     // Let server digest the data and update index
     await Task.Delay(TimeSpan.FromSeconds(1));
 
     // FT.SEARCH
     var query = "*=>[KNN 2 @VEC $query_vec]";
-    var searchOptions = new FtSearchOptions
+    var searchOptions = new Ft.SearchOptions
     {
-        Params = new[] { new FtSearchParam("query_vec", Encoding.Latin1.GetString(vec0)) },
+        Params = new Dictionary<ValkeyValue, ValkeyValue>
+        {
+            ["query_vec"] = vec0,
+        },
     };
-    var result = await client.FtSearchAsync(index, query, searchOptions);
+    var result = await Ft.SearchAsync(client, index, query, searchOptions);
+    var vectors = result.Documents.Select(d => Convert.ToHexString((byte[])d.Fields["vec"]));
 
     Console.WriteLine($"Total results: {result.TotalResults}");     // Total results: 2
-    foreach (var doc in result.Documents)
-    {
-        Console.WriteLine($"Key: {doc.Key}, vec: {Convert.ToHexString(Encoding.Latin1.GetBytes(doc.Fields["vec"]))}");
-    }
+    Console.WriteLine($"Vectors: [{string.Join(", ", vectors)}]");  // Vectors: [0000000000000000, 00000000000080BF]
     ```
   </TabItem>
 </Tabs>
