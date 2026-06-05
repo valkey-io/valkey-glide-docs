@@ -28,6 +28,12 @@ GLIDE provides three configurable settings for resilience during failures:
 
 For more on configuring these, see our [timeouts and reconnect strategy guide](/how-to/connections/timeouts-and-reconnect-strategy/).
 
+### Command Re-Routing
+
+When a cluster node goes down or slots are migrated, GLIDE automatically handles MOVED and ASK redirects from the server. Commands sent to the wrong node are transparently re-routed to the correct one without application intervention. This includes updating the internal topology map so subsequent commands go directly to the right node.
+
+For more on how GLIDE routes commands, see our [command routing](/concepts/client-features/command-routing/) page.
+
 ### Read Strategy
 
 Configuring read strategies is important for high availability and latency optimization.
