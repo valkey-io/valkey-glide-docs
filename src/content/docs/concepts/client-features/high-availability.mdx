@@ -23,7 +23,7 @@ No additional configuration is required.
 GLIDE provides three configurable settings for resilience during failures:
 
 - **Request timeout** (default 250ms) — how long a command can take to complete, including retries. Consider increasing this to 1000ms to give commands time to succeed while nodes recover.
-- **Connection timeout** (default 2000ms) — how long to wait for a TCP/TLS connection to establish. Applies during during initial connection and re-connections.
+- **Connection timeout** (default 2000ms) — how long to wait for a TCP/TLS connection to establish. Applies during initial connection and re-connections.
 - **Reconnect strategy** (exponential backoff) — To avoid retry storms, GLIDE uses an exponential backoff strategy for reconnection attempts.
 
 For more on configuring these, see our [timeouts and reconnect strategy guide](/how-to/connections/timeouts-and-reconnect-strategy/).
