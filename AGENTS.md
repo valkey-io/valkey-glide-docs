@@ -57,10 +57,14 @@ When writing or editing content, place it in the correct category:
   - `reference/` — access control, scripting, client comparisons, connection options, known issues (reference)
 - `public/` — static assets (favicons, CNAME)
 - `src/assets/` — logos and images
-- `src/components/` — custom Astro components
+- `src/components/` — custom Astro component- `src/data/` — JSON data files
 - `src/styles/` — custom CSS
 - `doc-gen/` — scripts to generate API docs from the main valkey-glide repo
 - `plugins/` — custom Astro/Starlight plugins
+
+## Supported Commands Page
+
+The supported commands page is **reference** content showing which Valkey commands each GLIDE client language supports. It is rendered by `src/components/CommandMatrix.astro` which reads `src/data/supported-commands.json` at build time. To update command support status, edit the JSON file — the component handles all rendering. Status values are `"supported"`, `"not_started"`, or `"wont_do"`.
 
 ## Content Guidelines
 
