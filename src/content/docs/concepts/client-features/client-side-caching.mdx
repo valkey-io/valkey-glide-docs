@@ -197,6 +197,32 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
     );
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Create a cache configuration
+    var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60))
+        .WithEvictionPolicy(EvictionPolicy.LRU)   // LRU or LFU
+        .WithMetrics(true);                       // Enable hit/miss tracking
+
+    // Standalone client
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var client = await GlideClient.CreateClient(config);
+
+    // Cluster client
+    var clusterConfig = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+    ```
+  </TabItem>
 </Tabs>
 
 ### Configuration Options
@@ -295,6 +321,30 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     printf("Hit rate: %.2f%%\n", $hitRate * 100);
     printf("Entries: %d, Evictions: %d, Expirations: %d\n",
         $entryCount, $evictions, $expirations);
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60)).WithMetrics(true))
+        .Build();
+    var client = await GlideClient.CreateClient(config);
+
+    // Get metrics
+    double hitRate = await client.GetCacheHitRateAsync();       // 0.0–1.0
+    double missRate = await client.GetCacheMissRateAsync();     // 0.0–1.0
+    long entryCount = await client.GetCacheEntryCountAsync();
+    long evictions = await client.GetCacheEvictionsAsync();
+    long expirations = await client.GetCacheExpirationsAsync();
+    long total = await client.GetCacheTotalLookupsAsync();
+
+    Console.WriteLine($"Hit rate: {hitRate:P2}");
+    Console.WriteLine($"Entries: {entryCount}, Evictions: {evictions}, Expirations: {expirations}");
     ```
   </TabItem>
 </Tabs>
@@ -439,6 +489,35 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
     // client2 gets a cache hit without contacting the server
     $result = $client2->get('key');  // Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Both clients share the same cache
+    var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60));
+
+    var config1 = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var client1 = await GlideClient.CreateClient(config1);
+
+    var config2 = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var client2 = await GlideClient.CreateClient(config2);
+
+    // client1 populates the cache
+    await client1.SetAsync("key", "value");
+    await client1.GetAsync("key");  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    var result = await client2.GetAsync("key");  // Cache hit
     ```
   </TabItem>
 </Tabs>
