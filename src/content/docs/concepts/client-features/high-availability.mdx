@@ -7,24 +7,24 @@ Valkey GLIDE supports high-availability features out of the box. Only minimal co
 
 ## Available HA Features
 
-- Automatic topology updates.
-- Configurable timeout and reconnect strategies.
-- Automatic command re-routing during failover.
-- Specifying a read strategy controlling how reads are distributed across the cluster.
-- Available lazy connection to nodes.
+* Automatic topology updates.
+* Configurable timeout and reconnect strategies.
+* Automatic command re-routing during failover.
+* Specifying a read strategy controlling how reads are distributed across the cluster.
+* Available lazy connection to nodes.
 
 ### Automatic Topology Updates
 
-GLIDE maintains a map of the cluster and automatically updates it when changes occur. For example, if a primary node fails and a replica is promoted, GLIDE detects this change and updates its topology mapping. 
+GLIDE maintains a map of the cluster and automatically updates it when changes occur. For example, if a primary node fails and a replica is promoted, GLIDE detects this change and updates its topology mapping.
 No additional configuration is required.
 
 ### Timeout and Reconnect Strategy
 
 GLIDE provides three configurable settings for resilience during failures:
 
-- **Request timeout** (default 250ms) — how long a command can take to complete, including retries. Consider increasing this to 1000ms to give commands time to succeed while nodes recover.
-- **Connection timeout** (default 2000ms) — how long to wait for a TCP/TLS connection to establish. Applies during initial connection and re-connections.
-- **Reconnect strategy** (exponential backoff) — To avoid retry storms, GLIDE uses an exponential backoff strategy for reconnection attempts.
+* **Request timeout** (default 250ms) — how long a command can take to complete, including retries. Consider increasing this to 1000ms to give commands time to succeed while nodes recover.
+* **Connection timeout** (default 2000ms) — how long to wait for a TCP/TLS connection to establish. Applies during initial connection and re-connections.
+* **Reconnect strategy** (exponential backoff) — To avoid retry storms, GLIDE uses an exponential backoff strategy for reconnection attempts.
 
 For more on configuring these, see our [timeouts and reconnect strategy guide](/how-to/connections/timeouts-and-reconnect-strategy/).
 
@@ -38,7 +38,7 @@ For more on how GLIDE routes commands, see our [command routing](/concepts/clien
 
 Configuring read strategies is important for high availability and latency optimization.
 
-By default, GLIDE clients read and write from the primary node. Reading from replicas provides 
+By default, GLIDE clients read and write from the primary node. Reading from replicas provides
 two benefits: reads can continue while a primary is down and it distributes load away from primaries.
 
 GLIDE also supports AZ-affinity routing, which directs reads to replicas in the same availability zone as the client, reducing cross-AZ latency.
