@@ -3,7 +3,7 @@ title: Custom Command
 description: Learn how to execute commands where the standard client API does not have an interface.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 The `custom_command` function is designed to execute a single command without checking inputs. It serves as a flexible tool for scenarios where the standard client API does not provide a suitable interface for a specific command.
 
@@ -16,3 +16,49 @@ In PHP, this method is called `rawcommand()` instead of `custom_command`.
 * **Single-Response Commands Only**: This function is intended for use with commands that return a single response. Commands that do not return a response (such as SUBSCRIBE), those that potentially return multiple responses (such as XREAD), or those that alter the client's behavior (such as entering pub/sub mode on RESP2 connections) should not be executed using this function.
 
 * **Key-Based Command Limitation**: Key-based commands should not be used with multi-node routing. Ensure that key-based commands are routed to a single node to maintain consistency and avoid unexpected behavior.
+
+#### Example
+
+Pass the command and its arguments as an array. The example below runs the administrative
+[`DEBUG OBJECT`](https://valkey.io/commands/debug/) command, which GLIDE does not expose as a
+typed method:
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    info = await client.custom_command(["DEBUG", "OBJECT", "mykey"])
+    print(info)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    Object info = client.customCommand(new String[]{"DEBUG", "OBJECT", "mykey"}).get();
+    System.out.println(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const info = await client.customCommand(["DEBUG", "OBJECT", "mykey"]);
+    console.log(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    info, err := client.CustomCommand(context.Background(), []string{"DEBUG", "OBJECT", "mykey"})
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(info)
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution
+Internal and administrative commands such as [`DEBUG`](/concepts/client-features/debug-command/)
+are intentionally **not** exposed as typed GLIDE methods. Some of their sub-commands can crash
+or disrupt a server, and they are disabled on managed services such as AWS ElastiCache. See the
+[DEBUG Command](/concepts/client-features/debug-command/) page for details and safety guidance.
+:::

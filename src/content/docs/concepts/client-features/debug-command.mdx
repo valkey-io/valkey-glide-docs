@@ -1,0 +1,116 @@
+---
+title: DEBUG Command
+description: Why Valkey GLIDE doesn't expose DEBUG as a typed API, and how to run DEBUG safely via custom commands.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+[`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command tagged
+`@admin @dangerous @slow`. Valkey itself describes it as *"an internal command meant for
+developing and testing Valkey."* Its sub-commands range from harmless introspection to actions
+that crash or corrupt a running server.
+
+Valkey GLIDE does **not** expose `DEBUG` as a typed, first-class client method (there is no
+`client.debug(...)`), and there are no plans to add one. If you need it, run it through the
+[custom command](/concepts/client-features/custom-commands/) (raw command) API described below.
+
+## Why DEBUG isn't a first-class GLIDE API
+
+* **Dangerous surface area** — sub-commands such as `DEBUG SEGFAULT`, `DEBUG SLEEP`, and
+  `DEBUG CHANGE-REPL-ID` can crash, hang, or disrupt a production server. A typed
+  `client.debug(...)` method would make these destructive operations look like ordinary,
+  supported API calls.
+* **Blocked on managed cloud** — managed services such as AWS ElastiCache disable `DEBUG`
+  entirely. A first-class method would silently fail for a large portion of production users.
+* **No unique value** — the only sub-command with practical application-developer value,
+  `DEBUG OBJECT`, is already reachable through the existing custom command API. Adding a typed
+  wrapper would not unlock anything new.
+* **Ecosystem precedent** — jedis implemented `DebugParams` in 3.x, then deprecated and
+  removed it entirely in 4.x, citing the command's dangerous and internal nature.
+
+A representative sample of sub-commands and their risk:
+
+| Sub-command          | Risk                                                       |
+| -------------------- | ---------------------------------------------------------- |
+| `SEGFAULT`           | Crashes the server immediately                             |
+| `SLEEP <seconds>`    | Blocks the server event loop for N seconds                 |
+| `RELOAD`             | Forces a full RDB dump + reload                            |
+| `CHANGE-REPL-ID`     | Breaks replication                                         |
+| `OBJECT <key>`       | Returns encoding, refcount, serialized-length — safe       |
+| `SET-ACTIVE-EXPIRE`  | Controls lazy expiry behavior                              |
+
+## Running DEBUG via custom commands
+
+Pass the command and its arguments as an array to the custom command API. The example below
+runs the safe `DEBUG OBJECT` sub-command, which reports a key's internal encoding, reference
+count, and serialized length.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Assumes an initialized `client`
+    await client.set("mykey", "hello")
+
+    # DEBUG is not exposed as a typed method — use the raw command API
+    info = await client.custom_command(["DEBUG", "OBJECT", "mykey"])
+    print(info)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Assumes an initialized `client`
+    client.set("mykey", "hello").get();
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    Object info = client.customCommand(new String[]{"DEBUG", "OBJECT", "mykey"}).get();
+    System.out.println(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Assumes an initialized `client`
+    await client.set("mykey", "hello");
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    const info = await client.customCommand(["DEBUG", "OBJECT", "mykey"]);
+    console.log(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Assumes an initialized `client`
+    client.Set(context.Background(), "mykey", "hello")
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    info, err := client.CustomCommand(context.Background(), []string{"DEBUG", "OBJECT", "mykey"})
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(info)
+    ```
+  </TabItem>
+</Tabs>
+
+:::caution
+Sub-commands such as `DEBUG SEGFAULT`, `DEBUG SLEEP`, and `DEBUG CHANGE-REPL-ID` can crash,
+hang, or corrupt your Valkey server. Only use them in controlled, non-production environments.
+Managed services such as AWS ElastiCache disable `DEBUG` altogether, so these calls will fail
+there regardless.
+:::
+
+## Using DEBUG in test environments
+
+`DEBUG` is most often useful in test setups — for example `DEBUG SET-ACTIVE-EXPIRE` to control
+lazy key expiry, or `DEBUG SLEEP` to simulate latency. Because these belong to controlled
+test infrastructure rather than application code, the custom command API is the right tool and
+no typed public method is needed. See [Custom Command](/concepts/client-features/custom-commands/)
+for the general usage rules (single-response commands only, key-based routing constraints).
+
+## References
+
+* [Valkey `DEBUG` command documentation](https://valkey.io/commands/debug/)
+* [Custom Command](/concepts/client-features/custom-commands/)
+* jedis `DebugParams` removal: [redis/jedis#3803](https://github.com/redis/jedis/pull/3803)
