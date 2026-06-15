@@ -12,79 +12,74 @@ This guide covers configuration and operational practices that help Valkey GLIDE
 A resilient client combines request timeout, inflight limiting, and the circuit breaker:
 
 <Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        ClientCircuitBreakerConfiguration,
+        NodeAddress,
+    )
 
-```python
-from glide import (
-    GlideClusterClient,
-    GlideClusterClientConfiguration,
-    ClientCircuitBreakerConfiguration,
-    NodeAddress,
-)
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="localhost", port=6379)],
+        request_timeout=500,
+        inflight_requests_limit=1000,
+        client_circuit_breaker=ClientCircuitBreakerConfiguration(),
+    )
+    client = await GlideClusterClient.create(config)
+    ```
+  </TabItem>
 
-config = GlideClusterClientConfiguration(
-    addresses=[NodeAddress(host="localhost", port=6379)],
-    request_timeout=500,
-    inflight_requests_limit=1000,
-    client_circuit_breaker=ClientCircuitBreakerConfiguration(),
-)
-client = await GlideClusterClient.create(config)
-```
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
+    import glide.api.models.configuration.NodeAddress;
 
-</TabItem>
-<TabItem label="Java">
+    GlideClusterClient client = GlideClusterClient.createClient(
+        GlideClusterClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .requestTimeout(500)
+            .inflightRequestsLimit(1000)
+            .clientCircuitBreakerConfiguration(
+                ClientCircuitBreakerConfiguration.builder().build())
+            .build()
+    ).get();
+    ```
+  </TabItem>
 
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
-import glide.api.models.configuration.NodeAddress;
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
 
-GlideClusterClient client = GlideClusterClient.createClient(
-    GlideClusterClientConfiguration.builder()
-        .address(NodeAddress.builder().host("localhost").port(6379).build())
-        .requestTimeout(500)
-        .inflightRequestsLimit(1000)
-        .clientCircuitBreakerConfiguration(
-            ClientCircuitBreakerConfiguration.builder().build())
-        .build()
-).get();
-```
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        requestTimeout: 500,
+        inflightRequestsLimit: 1000,
+        clientCircuitBreaker: {},
+    });
+    ```
+  </TabItem>
 
-</TabItem>
-<TabItem label="Node">
+  <TabItem label="Go">
+    ```go
+    import (
+        "time"
 
-```typescript
-import { GlideClusterClient } from "@valkey/valkey-glide";
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
 
-const client = await GlideClusterClient.createClient({
-    addresses: [{ host: "localhost", port: 6379 }],
-    requestTimeout: 500,
-    inflightRequestsLimit: 1000,
-    clientCircuitBreaker: {},
-});
-```
+    clientConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithRequestTimeout(500 * time.Millisecond).
+        WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
 
-</TabItem>
-<TabItem label="Go">
-
-```go
-import (
-    "time"
-
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
-
-clientConfig := config.NewClusterClientConfiguration().
-    WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-    WithRequestTimeout(500 * time.Millisecond).
-    WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
-
-client, err := glide.NewClusterClient(clientConfig)
-```
-
-</TabItem>
+    client, err := glide.NewClusterClient(clientConfig)
+    ```
+  </TabItem>
 </Tabs>
 
 ## Single Client Instance
@@ -99,8 +94,8 @@ For sync APIs with blocking commands (e.g., `BLPOP` with long timeout), the call
 
 Set `requestTimeout` based on your expected latency plus a buffer. See [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) for configuration details.
 
-- Too tight (e.g., 50ms when p99 is 40ms): causes false-positive timeouts under minor latency spikes, unnecessary retries, and wasted inflight slots. If the circuit breaker is enabled, frequent timeouts can also trip it unnecessarily.
-- Too loose (e.g., 5s): delays failure detection. Threads block longer before learning a node is unresponsive.
+* Too tight (e.g., 50ms when p99 is 40ms): causes false-positive timeouts under minor latency spikes, unnecessary retries, and wasted inflight slots. If the circuit breaker is enabled, frequent timeouts can also trip it unnecessarily.
+* Too loose (e.g., 5s): delays failure detection. Threads block longer before learning a node is unresponsive.
 
 A good starting point is 2-3x your observed p99 latency. The default of 250ms works well for most workloads with sub-millisecond latency. The examples above use 500ms (2x default) to provide headroom for occasional latency spikes.
 
@@ -110,22 +105,22 @@ The `inflightRequestsLimit` controls how many concurrent requests a single clien
 
 **Key points:**
 
-- The inflight limit should accommodate your expected concurrency: at throughput `T` ops/s with average latency `L` seconds, you need roughly `T × L` inflight slots (e.g., 50k ops/s at 1ms = ~50 slots, 50k ops/s at 10ms = ~500 slots).
-- When the limit is reached, new requests block until a slot frees up. The circuit breaker (if enabled) rejects before this blocking occurs.
-- If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
-- If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
-- Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
-- Note: The Go client does not yet expose `inflightRequestsLimit` configuration; the default is used.
+* The inflight limit should accommodate your expected concurrency: at throughput `T` ops/s with average latency `L` seconds, you need roughly `T × L` inflight slots (e.g., 50k ops/s at 1ms = ~50 slots, 50k ops/s at 10ms = ~500 slots).
+* When the limit is reached, new requests block until a slot frees up. The circuit breaker (if enabled) rejects before this blocking occurs.
+* If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
+* If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
+* Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
+* Note: The Go client does not yet expose `inflightRequestsLimit` configuration; the default is used.
 
 ## Thread Pool Sizing (Java)
 
 For Java applications using `ForkJoinPool`:
 
-- `ForkJoinPool` parallelism, inflight limit, and request timeout are interconnected under load.
-- Calling `.get()` on a `CompletableFuture` inside a `ForkJoinPool` triggers `managedBlock()` (a JVM mechanism that creates additional threads to compensate for blocked ones).
-- If `requestTimeout` is long (e.g., 1s) and inflight is high (e.g., 1000), a stalled server can cause up to 1000 blocked threads before timeouts fire.
-- Where possible, use `.thenApply()` / `.thenAccept()` to chain async continuations instead of blocking with `.get()`.
-- Mitigation: use the circuit breaker (rejects before threads block) and keep request timeouts tight.
+* `ForkJoinPool` parallelism, inflight limit, and request timeout are interconnected under load.
+* Calling `.get()` on a `CompletableFuture` inside a `ForkJoinPool` triggers `managedBlock()` (a JVM mechanism that creates additional threads to compensate for blocked ones).
+* If `requestTimeout` is long (e.g., 1s) and inflight is high (e.g., 1000), a stalled server can cause up to 1000 blocked threads before timeouts fire.
+* Where possible, use `.thenApply()` / `.thenAccept()` to chain async continuations instead of blocking with `.get()`.
+* Mitigation: use the circuit breaker (rejects before threads block) and keep request timeouts tight.
 
 ## Enhanced Logging
 
@@ -168,25 +163,27 @@ See the dedicated [Circuit Breaker guide](/how-to/connections/circuit-breaker) f
 
 **Key points:**
 
-- Enable CB for workloads where thread exhaustion is a concern during outages.
-- The CB rejects before the request reaches the network, so rejections are near-zero-cost.
-- Enable the `countTimeouts` option (Java: `countTimeouts(true)`, Python: `count_timeouts=True`, Node/Go: `countTimeouts: true`) if your timeout configuration is tight and timeouts reliably indicate a backend issue.
-- Recovery is optimistic (allows requests through to test if the server has recovered) with guards against premature closing.
-- When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
+* Enable CB for workloads where thread exhaustion is a concern during outages.
+* The CB rejects before the request reaches the network, so rejections are near-zero-cost.
+* Enable the `countTimeouts` option (Java: `countTimeouts(true)`, Python: `count_timeouts=True`, Node/Go: `countTimeouts: true`) if your timeout configuration is tight and timeouts reliably indicate a backend issue.
+* Recovery is optimistic (allows requests through to test if the server has recovered) with guards against premature closing.
+* When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
 
 ## Standalone vs Cluster
 
 Both standalone and cluster clients benefit from:
-- Timeout watchdog (independent OS thread, fires timeouts reliably even under heavy load)
-- Inflight request limiting
-- Client-wide circuit breaker
-- Automatic reconnection with exponential backoff (see [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) to customize)
-- Automatic IAM token refresh (when configured)
+
+* Timeout watchdog (independent OS thread, fires timeouts reliably even under heavy load)
+* Inflight request limiting
+* Client-wide circuit breaker
+* Automatic reconnection with exponential backoff (see [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) to customize)
+* Automatic IAM token refresh (when configured)
 
 Cluster clients additionally benefit from:
-- Per-node routing (commands to healthy nodes are unaffected by one bad node)
-- Topology refresh and failover detection (periodic, enabled by default)
-- Automatic MOVED/ASK redirect handling
-- `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
+
+* Per-node routing (commands to healthy nodes are unaffected by one bad node)
+* Topology refresh and failover detection (periodic, enabled by default)
+* Automatic MOVED/ASK redirect handling
+* `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
 
 For standalone deployments, the client-wide circuit breaker is the primary protection against a single unresponsive server causing thread pile-up.

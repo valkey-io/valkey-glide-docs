@@ -1,0 +1,96 @@
+---
+title: Working with the DEBUG Command
+description: Why Valkey GLIDE doesn't expose DEBUG as a typed API, and how to run DEBUG safely via custom commands.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+[`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command. Valkey GLIDE clients does not expose `DEBUG` as a
+first-class client method as it is an internal command meant for developing and testing Valkey. However, it can be executed
+via the [custom command](/concepts/client-features/custom-commands/) API.
+
+The following are some of the reasons why `DEBUG` is not exposed:
+
+* **Dangerous commands** — commands like `DEBUG SEGFAULT`, `DEBUG SLEEP`, and
+  `DEBUG CHANGE-REPL-ID` can crash or hang a server and should not be used in production.
+* **Blocked on managed cloud** — managed services such as AWS ElastiCache disable `DEBUG`
+  entirely, so a typed method would silently fail for many production users.
+* **Ecosystem precedent** — jedis implemented `DebugParams`, then deprecated and removed it
+  entirely in 4.x.
+
+A representative sample of `DEBUG` sub-commands and their risk:
+
+| Sub-command       | Risk                                       |
+| ----------------- | ------------------------------------------ |
+| `SEGFAULT`        | Crashes the server immediately             |
+| `SLEEP <seconds>` | Blocks the server event loop for N seconds |
+| `RELOAD`          | Forces a full RDB dump and reload          |
+| `CHANGE-REPL-ID`  | Breaks replication                         |
+
+## When to use `DEBUG`
+
+`DEBUG` commands are still useful during development. For example, in test setups
+`DEBUG SET-ACTIVE-EXPIRE` can control lazy key expiry, or `DEBUG SLEEP` can simulate latency.
+
+To execute `DEBUG` commands, use the custom command API. The example below passes the
+`DEBUG OBJECT` command and its arguments as an array. The command reports a key's internal
+encoding, reference count, and serialized length.
+
+:::caution
+Do not use `DEBUG` in production systems. Some `DEBUG` commands can crash Valkey, and it is
+disabled in managed services like AWS ElastiCache.
+:::
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Assumes an initialized `client`
+    await client.set("mykey", "hello")
+
+    # DEBUG is not exposed as a typed method — use the raw command API
+    info = await client.custom_command(["DEBUG", "OBJECT", "mykey"])
+    print(info)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Assumes an initialized `client`
+    client.set("mykey", "hello").get();
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    Object info = client.customCommand(new String[]{"DEBUG", "OBJECT", "mykey"}).get();
+    System.out.println(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Assumes an initialized `client`
+    await client.set("mykey", "hello");
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    const info = await client.customCommand(["DEBUG", "OBJECT", "mykey"]);
+    console.log(info);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Assumes an initialized `client`
+    client.Set(context.Background(), "mykey", "hello")
+
+    // DEBUG is not exposed as a typed method — use the raw command API
+    info, err := client.CustomCommand(context.Background(), []string{"DEBUG", "OBJECT", "mykey"})
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(info)
+    ```
+  </TabItem>
+</Tabs>
+
+## References
+
+* [Valkey `DEBUG` command documentation](https://valkey.io/commands/debug/)
+* [Custom Command](/concepts/client-features/custom-commands/)
