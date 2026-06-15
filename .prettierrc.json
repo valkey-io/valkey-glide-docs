@@ -11,7 +11,7 @@
     {
       "files": "src/data/*.json",
       "options": {
-        "printWidth": 300,
+        "printWidth": 1000,
         "objectWrap": "collapse"
       }
     }
