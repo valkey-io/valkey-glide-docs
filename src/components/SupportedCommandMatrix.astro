@@ -62,10 +62,6 @@ function getHref(cmd: any, lang: string): string | null {
 
     {
         commandData.map((group) => {
-            const groupId = group.group
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/(^-|-$)/g, "");
             return (
                 <details class="command-group" open>
                     <summary>{group.group}</summary>
