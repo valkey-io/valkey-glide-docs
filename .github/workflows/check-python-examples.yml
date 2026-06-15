@@ -1,0 +1,68 @@
+name: Check Python Examples
+
+# Validates that the Python code examples in the docs compile.
+#
+# Mirrors the C# check: this repo extracts the snippets (scripts/check_examples.py)
+# and the upstream Python client provides dev/scripts/validate_examples.py to
+# wrap + compile them. Until that upstream validator exists, the "Probe" step
+# skips this check (a green run with a notice). See scripts/README.md.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UPSTREAM_REPO: valkey-io/valkey-glide
+  # Expected location of the validator, relative to the upstream repo root.
+  VALIDATOR_REPO_PATH: python/dev/scripts/validate_examples.py
+
+jobs:
+  check-python-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout valkey-glide-docs
+        uses: actions/checkout@v4
+
+      - name: Probe for upstream validator
+        id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${UPSTREAM_REPO}/contents/${VALIDATOR_REPO_PATH}" --silent 2>/dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Upstream Python example validator not found at ${UPSTREAM_REPO}/${VALIDATOR_REPO_PATH}. Skipping Python example validation until it lands upstream (see scripts/README.md)."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------------------------------------------------------------------
+      # The steps below run only once the upstream validator exists. Finalize
+      # the install/build and artifact argument when that lands.
+      # ---------------------------------------------------------------------
+      - name: Checkout valkey-glide
+        if: steps.probe.outputs.present == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UPSTREAM_REPO }}
+          path: valkey-glide
+
+      - name: Setup Python
+        if: steps.probe.outputs.present == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install valkey-glide
+        if: steps.probe.outputs.present == 'true'
+        run: pip install valkey-glide
+
+      - name: Run Python example validation
+        if: steps.probe.outputs.present == 'true'
+        run: |
+          python scripts/check_examples.py \
+            --language python \
+            --validator "valkey-glide/${VALIDATOR_REPO_PATH}"
