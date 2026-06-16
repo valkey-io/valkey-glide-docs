@@ -31,7 +31,7 @@ The following commands are planned for a future GLIDE release:
 ## Internal Commands
 
 The following commands are used internally by GLIDE clients during connection setup, reconnection, and session management.
-They are not exposed as standalone methods but are automatically handled by the clients.
+They are not supported as first-class methods but are instead automatically handled by the clients.
 
 **Connection & authentication**
 
@@ -44,14 +44,9 @@ They are not exposed as standalone methods but are automatically handled by the 
 * `CLIENT SETINFO` — Automatically sets library name and version on every connection
 * `CLIENT SETNAME` — Used internally to name management connections
 
-**Incompatible with multiplexed connections**
-
-* `CLIENT REPLY` — Would break the multiplexed response protocol
-* `CLIENT UNBLOCK` — Requires internal connection/client IDs not exposed to users
-
 **Replication protocol**
 
-* `PSYNC`, `REPLCONF` — Internal replication commands; not applicable to client usage
+* `REPLCONF` — Internal replication commands; not applicable to client usage
 
 ## Tracked or Known Command Gaps
 
@@ -96,27 +91,27 @@ The Bloom filter module is a known gap and is currently tracked in issue [#4649]
 
 Deprecated Valkey commands may not be supported by GLIDE's clients. Where a command has been deprecated by Valkey, GLIDE generally does not expose it as a first-class client method and instead recommends its successor. The table below lists these commands and their replacements.
 
-| Deprecated Command     | Deprecated In | Recommended Alternative       |
-| ---------------------- | ------------- | ----------------------------- |
-| `HMSET`                | 4.0.0         | `HSET`                        |
-| `SLAVEOF`              | 5.0.0         | `REPLICAOF`                   |
-| `GEORADIUS`            | 6.2.0         | `GEOSEARCH`                   |
-| `GEORADIUSBYMEMBER`    | 6.2.0         | `GEOSEARCH`                   |
-| `GEORADIUS_RO`         | 6.2.0         | `GEOSEARCH`                   |
-| `GEORADIUSBYMEMBER_RO` | 6.2.0         | `GEOSEARCH`                   |
-| `RPOPLPUSH`            | 6.2.0         | `LMOVE`                       |
-| `BRPOPLPUSH`           | 6.2.0         | `BLMOVE`                      |
-| `PSETEX`               | —             | `SET` with the `PX` option    |
-| `CLUSTER SLAVES`       | —             | `CLUSTER REPLICAS`            |
-| `CLUSTER SLOTS`        | —             | `CLUSTER SHARDS`              |
-| `QUIT`                 | —             | Close the connection / client |
-| `SYNC`                 | —             | `PSYNC`                       |
+| Deprecated Command     | Recommended Alternative       |
+| ---------------------- | ----------------------------- |
+| `HMSET`                | `HSET`                        |
+| `SLAVEOF`              | `REPLICAOF`                   |
+| `GEORADIUS`            | `GEOSEARCH`                   |
+| `GEORADIUSBYMEMBER`    | `GEOSEARCH`                   |
+| `GEORADIUS_RO`         | `GEOSEARCH`                   |
+| `GEORADIUSBYMEMBER_RO` | `GEOSEARCH`                   |
+| `RPOPLPUSH`            | `LMOVE`                       |
+| `BRPOPLPUSH`           | `BLMOVE`                      |
+| `PSETEX`               | `SET` with the `PX` option    |
+| `CLUSTER SLAVES`       | `CLUSTER REPLICAS`            |
+| `CLUSTER SLOTS`        | `CLUSTER SHARDS`              |
+| `QUIT`                 | Close the connection / client |
+| `SYNC`                 | `PSYNC`                       |
 
 If you rely on a deprecated command, please check the [Valkey documentation](https://valkey.dev/docs/commands) for the latest information on command deprecations and alternatives.
 
 ## Commands Available Through Options
 
-Some commands are not exposed as standalone methods because their behavior is fully covered by options on a more general command. Instead of a dedicated method, use the alternative shown below.
+Some commands are not exposed as client methods because their behavior is fully covered by options on a more general command. Instead of a dedicated method, use the alternative shown below.
 
 | Command  | Use Instead                                    |
 | -------- | ---------------------------------------------- |
@@ -125,19 +120,10 @@ Some commands are not exposed as standalone methods because their behavior is fu
 | `SETNX`  | `SET` with the `NX` (not-exists) option        |
 | `SUBSTR` | `GETRANGE`                                     |
 
-## Administrative and Operational Commands
+## Incompatible Commands
 
-Some administrative, introspection, and debugging commands are generally not exposed as first-class client methods. Many are server-management operations whose behavior is better handled by operators or the deployment platform.
-
-Where access is needed, use the [`execute_command`](/how-to/execute-custom-commands) method.
-
-This includes command families such as:
-
-* **Cluster management** — `CLUSTER ADDSLOTS`, `CLUSTER FORGET`, `CLUSTER MEET`, `CLUSTER SETSLOT`, and related slot/node-management subcommands
-* **Server memory** — `MEMORY`, `MEMORY DOCTOR`, `MEMORY PURGE`, `MEMORY STATS`, `MEMORY USAGE`, `MEMORY MALLOC-STATS`
-* **Introspection & logs** — `COMMAND` (and `COUNT`/`INFO`/`GETKEYS`/`DOCS`/`LIST`), `SLOWLOG`, `LATENCY`
-* **Server modules** — `MODULE`, `MODULE LIST`, `MODULE LOAD`, `MODULE UNLOAD`
-* **Debugging** — `DEBUG`, `JSON.DEBUG`, `FT._DEBUG`, `SCRIPT DEBUG`
-* **Other operational** — `SHUTDOWN`, `MONITOR`, `ACL`, `REPLICAOF`, `FAILOVER`
-
-Some of these are actively being added to individual clients; check the matrix for the current per-language status.
+* `DEBUG`: Not supported.
+* `PSYNC`: Incompatible with GLIDE's multiplexed connection model (server enters replication stream mode after `+FULLRESYNC`, corrupting subsequent requests)
+* `SHUTDOWN`: Only available for on-premise Valkey, and is a dangerous command if not use correctly. We do not plan to support this command unless there's a strong use case for it. 
+* `CLIENT REPLY` — Would break the multiplexed response protocol.
+* `CLIENT UNBLOCK` — Requires internal connection/client IDs not exposed to users.
