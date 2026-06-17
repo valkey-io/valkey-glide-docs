@@ -215,3 +215,54 @@ If using `file://` as the endpoint:
 * **Protect file exporter output** — When using the `file://` exporter for local development, telemetry files may contain command-level details. Restrict file permissions and avoid writing to shared or world-readable directories.
 * **Minimize sampling in production** — Use a low sample percentage (1–5%) to limit the volume of potentially sensitive operational data collected.
 * **Review exported data** — GLIDE traces include command names, latency measurements, and error status. While GLIDE does not include command arguments or key values in trace spans, always review what your collector pipeline forwards to third-party backends.
+
+## Trace Context Propagation (Go)
+
+GLIDE can attach its command spans as children of your application's existing OpenTelemetry trace, giving end-to-end visibility from your application code through to Valkey operations—without GLIDE depending on `go.opentelemetry.io/otel`.
+
+This is achieved by registering a **span context extractor** function that bridges your application's trace context into GLIDE's internal tracing:
+
+```go
+import (
+	"context"
+
+	"github.com/valkey-io/valkey-glide/go/v2"
+	"go.opentelemetry.io/otel/trace"
+)
+
+glide.GetOtelInstance().SetSpanContextExtractor(func(ctx context.Context) (glide.SpanContext, bool) {
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		return glide.SpanContext{}, false
+	}
+
+	return glide.SpanContext{
+		TraceID:    spanContext.TraceID().String(),
+		SpanID:     spanContext.SpanID().String(),
+		TraceFlags: byte(spanContext.TraceFlags()),
+		TraceState: spanContext.TraceState().String(),
+	}, true
+})
+```
+
+The `SpanContext` struct is a dependency-free representation of an OTel span context with fields `TraceID` (32 hex chars), `SpanID` (16 hex chars), `TraceFlags` (byte), and `TraceState` (string).
+
+:::note
+**Parent span priority order:**
+1. External span context extractor (registered via `SetSpanContextExtractor`)
+2. Existing GLIDE span pointer from `SpanFromContext`
+3. Standalone span (no parent)
+:::
+
+:::tip
+**Usage notes:**
+- The extractor is called synchronously before each sampled command/batch span
+- If the extractor returns `false` or panics, GLIDE falls back to the `SpanFromContext` span-pointer mechanism
+- Pass `nil` to `SetSpanContextExtractor` to clear the extractor
+- `TraceID` must be 32 hex characters, `SpanID` must be 16 hex characters
+- The extractor function must be thread-safe
+:::
+
+:::note
+This feature is currently Go-only. Other language clients use their native OpenTelemetry SDKs for context propagation.
+:::
