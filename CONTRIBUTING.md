@@ -10,9 +10,10 @@ Thank you for your interest in contributing to the Valkey GLIDE documentation!
 | `public` | Production — deploys the live site at [glide.valkey.io](https://glide.valkey.io) |
 
 In general:
+
 - Open all PRs against `main`.
 - On release day, `main` is merged onto `public` triggering a deployment.
-- Only urgent fixes are accepted directly into `public`. 
+- Only urgent fixes are accepted directly into `public`.
 
 ## Getting Started
 
