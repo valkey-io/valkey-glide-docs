@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - public
 
 jobs:
   # Call the CI/CD workflow to build the site
@@ -16,7 +16,7 @@ jobs:
   # Deploy to GitHub Pages
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/public'
     runs-on: ubuntu-latest
     permissions:
       contents: read

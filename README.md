@@ -1,6 +1,6 @@
 # Valkey GLIDE Documentation
 
-This repository host the source for the Valkey GLIDE documentation [site](https://glide.valkey.io).
+This repository hosts the source for the Valkey GLIDE documentation [site](https://glide.valkey.io).
 
 ## Technology
 
@@ -65,3 +65,8 @@ title: Your page title.
 
 Your contents follows ...
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide. Key points:
+Use [AGENTS.md](./AGENTS.md) for AI agent context.
