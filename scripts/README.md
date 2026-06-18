@@ -1,33 +1,80 @@
 # Documentation example validation
 
 These scripts check that the code examples embedded in the docs
-(`src/content/docs/**/*.mdx`) actually compile, so a broken snippet is
-caught in CI instead of by a reader.
+(`src/content/docs/**/*.mdx`) are valid, so a broken snippet is caught in CI
+instead of by a reader. There is one check per client language, run by its own
+GitHub workflow (`.github/workflows/check-<language>-examples.yml`).
 
-The work is split in two, exactly as it was first built for C#:
+## How it works
 
-| Half                      | Lives in               | Responsibility                                                               |
-| ------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
-| **Extraction + plumbing** | this repo (`scripts/`) | Pull the fenced code blocks for a language out of the MDX and hand them off. |
-| **Wrapping + compiling**  | each client's own repo | Wrap each snippet, compile it against the real client build, report errors.  |
+````
+extract_examples.py   pull ```<lang> blocks from the MDX -> { "<file>:<line>": code }
+        |
+        v
+check_examples.py     orchestrator: extract for one language, write a temp JSON,
+        |             run that language's validator, propagate its exit code
+        v
+validators/<lang>.py  validate each snippet (and report failures by "<file>:<line>")
+````
 
-This repo owns only the first half. Each language is validated by a
-`validate_examples.py` script that lives in that language's client
-repository, because that repo is the one that knows how to wrap a snippet
-and build the client. The C# validator already exists in
-[`valkey-glide-csharp`](https://github.com/valkey-io/valkey-glide-csharp);
-the other languages activate automatically once their upstream validator
-lands (see [Status](#per-language-status)).
+| Script                     | Role                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `extract_examples.py`      | Shared extractor (library + CLI).                                                        |
+| `check_examples.py`        | Generic orchestrator. `--validator` defaults to `scripts/validators/<language>.py`.      |
+| `validators/<lang>.py`     | Bundled per-language validators + `_common.py` harness and `ts_syntax_check.mjs` helper. |
+| `check_csharp_examples.py` | Thin wrapper kept so the existing C# workflow is unchanged (see [C#](#c) below).         |
 
-## Scripts
+## What is validated: syntax
 
-| Script                     | What it does                                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `extract_examples.py`      | Shared extractor. Walks the docs and returns `{ "<file>:<line>": "<code>" }` for one language. Library **and** CLI.            |
-| `check_examples.py`        | Generic orchestrator. Extracts a language's examples, writes them to a temp JSON file, and runs the upstream validator.        |
-| `check_csharp_examples.py` | Thin backwards-compatible wrapper around `check_examples.py --language csharp`, kept so the existing C# workflow is unchanged. |
+Most snippets in the docs are **fragments** — they reference an undefined
+`client`, omit imports, and are not standalone programs. So the bundled
+validators check **syntax / parse validity**, not full compilation against the
+client library. This catches the breakage that actually happens when examples
+are edited (typos, unbalanced braces, bad indentation, missing semicolons)
+without false-failing on undefined symbols or unresolved imports.
 
-### Local usage
+| Language | Validator                                    | Tool needed          | Check                                                          |
+| -------- | -------------------------------------------- | -------------------- | -------------------------------------------------------------- |
+| Python   | `validators/python.py`                       | `python`             | `compile()` (snippet wrapped in an `async def`)                |
+| Node     | `validators/node.py` + `ts_syntax_check.mjs` | `node`, `typescript` | TypeScript `transpileModule` (syntactic diagnostics only)      |
+| Go       | `validators/go.py`                           | `gofmt`              | `gofmt -e` parse (snippet wrapped into a complete file)        |
+| Java     | `validators/java.py`                         | `javac`              | `javac`, treating only syntax-category diagnostics as failures |
+| PHP      | `validators/php.py`                          | `php`                | `php -l` lint                                                  |
+
+### C\#
+
+C# is the exception. Its docs snippets are written self-contained, and a
+**full-compilation** validator already exists upstream in
+[`valkey-glide-csharp`](https://github.com/valkey-io/valkey-glide-csharp)
+(`dev/scripts/validate_examples.py`), which compiles each snippet against the
+real `Valkey.Glide.dll`. The C# workflow keeps using that upstream validator
+via `check_csharp_examples.py`, so C# gets a stronger guarantee than the
+syntax-only checks above.
+
+## Opting a block out of validation
+
+Only blocks fenced with the **bare language token** (e.g. ` ```python `) are
+extracted and validated. A snippet that is intentionally not runnable — an
+API-signature illustration, for example — opts out simply by **not** using a
+language fence. The convention in these docs is to fence such blocks as
+` ```text ` (this is how the C# signature examples already do it):
+
+````markdown
+```text
+// Standalone Mode
+public async exec(batch: Batch, raiseOnError: boolean)
+```
+````
+
+> A block whose info string carries any meta (e.g. ` ```python title="..." `)
+> is likewise not matched, so be aware that adding a title to a **runnable**
+> example silently excludes it from validation.
+
+For an example that is real code but shows omitted sections, write the
+omission as a comment (`// ...` / `# ...`) instead of a bare `...`, so the
+snippet stays valid and keeps getting checked.
+
+## Local usage
 
 ```bash
 # List the languages and the Markdown fences each one matches.
@@ -36,101 +83,44 @@ python scripts/extract_examples.py --list-languages
 # Dump the extracted examples for a language (debugging).
 python scripts/extract_examples.py --language go --out /tmp/go.json
 
-# Run a language's validator (requires a checkout of that client repo
-# and a build of its artifact):
+# Run a language's check (needs that language's toolchain on PATH).
+python scripts/check_examples.py --language python
+python scripts/check_examples.py --language node     # needs `typescript` resolvable
+python scripts/check_examples.py --language go       # needs gofmt
+python scripts/check_examples.py --language java     # needs a JDK (javac)
+python scripts/check_examples.py --language php      # needs php
+
+# C# (needs a checkout + build of the client repo):
 python scripts/check_examples.py \
     --language csharp \
     --validator ../valkey-glide-csharp/dev/scripts/validate_examples.py \
     -- --glide-dll ../valkey-glide-csharp/sources/Valkey.Glide/bin/Release/net8.0/Valkey.Glide.dll
 ```
 
-Everything after `--` is forwarded verbatim to the validator, so each
-language passes whatever artifact reference it needs.
-
 ## The validator contract
 
-To enable validation for a language, add a `validate_examples.py` to that
-language's client repository that honors this contract. The docs-side
-orchestrator (`check_examples.py`) invokes it as:
+`check_examples.py` invokes any validator the same way (the convention comes
+from the upstream C# validator):
 
 ```bash
-python <validator> --examples <examples.json> [language-specific args...]
+python <validator> --examples <examples.json> [extra args...]
 ```
 
-**Input** — `--examples` points at a JSON object mapping a source location
-to a code snippet:
+- `<examples.json>` maps `"<repo-relative path>:<line of the opening fence>"`
+  to the snippet's raw text.
+- Anything after `--` on the `check_examples.py` command line is forwarded
+  verbatim (e.g. `--glide-dll` for C#).
+- Exit `0` when every example is valid, non-zero when any fails or a required
+  tool is missing.
 
-```json
-{
-  "src/content/docs/getting-started/quickstart.mdx:342": "using Valkey.Glide;\n// ...\n",
-  "src/content/docs/how-to/security/tls.mdx:445": "// ...\n"
-}
-```
+The bundled validators dedent each snippet and ignore unknown forwarded
+arguments, so they share this signature.
 
-The key is `"<repo-relative path>:<line of the opening fence>"`; the value
-is the snippet's raw text.
+## Adding / changing a language
 
-**Responsibilities of the validator:**
-
-1. **Normalize indentation.** Snippets nested inside MDX `<TabItem>`
-   components carry leading indentation. Dedent before compiling
-   (whitespace-insensitive languages like C# can ignore this; Python, Go,
-   etc. must dedent).
-2. **Wrap each snippet** into a compilable unit — e.g. hoist `import`/`using`
-   directives, then place the remaining statements inside a function/method
-   body. The C# validator wraps each snippet in a `Run()` method on a
-   uniquely-named class and injects common client imports.
-3. **Compile** against the real client build (the artifact passed via the
-   language-specific argument), not just a syntax check.
-4. **Report failures** mapped back to the original `"<file>:<line>"` key so a
-   reader can find the broken snippet.
-
-**Exit code:** `0` when every example compiles, non-zero when any example
-fails or a required input is missing.
-
-**Recommended artifact arguments** (the orchestrator forwards these
-verbatim; the exact flag is up to each validator):
-
-| Language | Artifact passed to the validator                                            |
-| -------- | --------------------------------------------------------------------------- |
-| C#       | `--glide-dll <Valkey.Glide.dll>` (already implemented)                      |
-| Java     | `--glide-jar <glide.jar>`                                                   |
-| Go       | resolved via the module (`go.mod`); no artifact path needed                 |
-| Node     | resolved from `node_modules` after `npm install`; no artifact path needed   |
-| Python   | resolved from the installed `valkey-glide` package; no artifact path needed |
-| PHP      | the loaded `valkey_glide` extension; lint-level only (`php -l`)             |
-
-## Per-language status
-
-| Language | Fences matched                         | Upstream validator                                             | Status                 |
-| -------- | -------------------------------------- | -------------------------------------------------------------- | ---------------------- |
-| C#       | `csharp`                               | `valkey-glide-csharp/dev/scripts/validate_examples.py`         | **Live**               |
-| Java     | `java`                                 | `valkey-glide/java/dev/scripts/validate_examples.py` _(TBD)_   | Skipped until upstream |
-| Python   | `python`, `py`                         | `valkey-glide/python/dev/scripts/validate_examples.py` _(TBD)_ | Skipped until upstream |
-| Go       | `go`                                   | `valkey-glide/go/dev/scripts/validate_examples.py` _(TBD)_     | Skipped until upstream |
-| Node     | `typescript`, `javascript`, `ts`, `js` | `valkey-glide/node/dev/scripts/validate_examples.py` _(TBD)_   | Skipped until upstream |
-| PHP      | `php`                                  | `valkey-glide-php/dev/scripts/validate_examples.py` _(TBD)_    | Skipped until upstream |
-
-The upstream paths above are the **expected convention** (mirroring C#'s
-`dev/scripts/` location); confirm and adjust the path in the matching
-workflow when the validator lands. The CI workflows for not-yet-supported
-languages probe for the validator and skip cleanly (a green check with a
-notice) until it exists, then start enforcing automatically.
-
-## Adding / enabling a language
-
-1. Confirm the language's fences are listed in `LANGUAGE_FENCES` in
-   `extract_examples.py` (add aliases if the docs use new ones).
-2. Implement `validate_examples.py` in that language's client repo per the
-   [contract](#the-validator-contract) above.
-3. Nothing else is required to activate it. Each
-   `.github/workflows/check-<language>-examples.yml` probes the upstream repo
-   for the validator on every run: once it exists, the probe passes and the
-   gated build + validation steps run automatically. Just confirm the
-   workflow's `VALIDATOR_REPO_PATH`, build steps, and artifact argument match
-   what the validator actually expects.
-
-> The orchestrator also accepts a `--skip-if-no-validator` flag (used for
-> local runs) that turns a missing validator into a notice + exit 0 instead
-> of an error. The CI workflows rely on the probe step instead, so they don't
-> spin up a build runner until the validator exists.
+1. Make sure the language's fences are listed in `LANGUAGE_FENCES` in
+   `extract_examples.py` (add aliases if the docs start using new ones).
+2. Add `scripts/validators/<language>.py` using the `_common.run(...)` harness,
+   or point the workflow at an external validator with `--validator`.
+3. Add `.github/workflows/check-<language>-examples.yml` that sets up the
+   toolchain and runs `python scripts/check_examples.py --language <language>`.

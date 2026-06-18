@@ -56,7 +56,8 @@ def _parse_args(argv: list[str]) -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
         description=(
             "Extract code examples for a language from the MDX docs and "
-            "validate them with the language's upstream validate_examples.py."
+            "validate them with that language's validate_examples.py "
+            "(the bundled scripts/validators/<language>.py by default)."
         )
     )
     parser.add_argument(
@@ -67,8 +68,11 @@ def _parse_args(argv: list[str]) -> tuple[argparse.Namespace, list[str]]:
     )
     parser.add_argument(
         "--validator",
-        required=True,
-        help="Path to the upstream validate_examples.py script.",
+        default=None,
+        help=(
+            "Path to the validate_examples.py script to run. Defaults to the "
+            "bundled validator at scripts/validators/<language>.py."
+        ),
     )
     parser.add_argument(
         "--skip-if-no-validator",
@@ -92,7 +96,15 @@ def main(argv: list[str] | None = None) -> int:
     if validator_args and validator_args[0] == "--":
         validator_args = validator_args[1:]
 
-    validator_path = os.path.abspath(args.validator)
+    # Default to the bundled syntax validator for this language.
+    validator = args.validator
+    if validator is None:
+        validator = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "validators",
+            f"{args.language}.py",
+        )
+    validator_path = os.path.abspath(validator)
 
     # The validator may not exist yet for this language.
     if not os.path.isfile(validator_path):

@@ -1,13 +1,8 @@
 name: Check PHP Examples
 
-# Validates the PHP code examples in the docs.
-#
-# Mirrors the C# check: this repo extracts the snippets (scripts/check_examples.py)
-# and the upstream PHP client provides dev/scripts/validate_examples.py. Because
-# the PHP client is a native (C) extension, the validator is expected to perform
-# lint-level validation (`php -l`) rather than full compilation. Until that
-# upstream validator exists, the "Probe" step skips this check (a green run with
-# a notice). See scripts/README.md.
+# Syntax-validates the PHP code examples in the docs. Extraction lives in
+# scripts/check_examples.py; the bundled validator (scripts/validators/php.py)
+# lints each snippet with `php -l` (syntax only). See scripts/README.md.
 
 on:
   pull_request:
@@ -17,11 +12,6 @@ on:
 permissions:
   contents: read
 
-env:
-  UPSTREAM_REPO: valkey-io/valkey-glide-php
-  # Expected location of the validator, relative to the upstream repo root.
-  VALIDATOR_REPO_PATH: dev/scripts/validate_examples.py
-
 jobs:
   check-php-examples:
     runs-on: ubuntu-latest
@@ -29,43 +19,15 @@ jobs:
       - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
 
-      - name: Probe for upstream validator
-        id: probe
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/${UPSTREAM_REPO}/contents/${VALIDATOR_REPO_PATH}" --silent 2>/dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::Upstream PHP example validator not found at ${UPSTREAM_REPO}/${VALIDATOR_REPO_PATH}. Skipping PHP example validation until it lands upstream (see scripts/README.md)."
-            echo "present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ---------------------------------------------------------------------
-      # The steps below run only once the upstream validator exists.
-      # ---------------------------------------------------------------------
-      - name: Checkout valkey-glide-php
-        if: steps.probe.outputs.present == 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.UPSTREAM_REPO }}
-          path: valkey-glide-php
-
       - name: Setup PHP
-        if: steps.probe.outputs.present == 'true'
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
 
       - name: Setup Python
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Run PHP example validation
-        if: steps.probe.outputs.present == 'true'
-        run: |
-          python scripts/check_examples.py \
-            --language php \
-            --validator "valkey-glide-php/${VALIDATOR_REPO_PATH}"
+      - name: Validate PHP examples
+        run: python scripts/check_examples.py --language php

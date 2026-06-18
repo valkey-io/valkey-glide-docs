@@ -78,9 +78,7 @@ def _block_regex(fences: list[str]) -> "re.Pattern[str]":
     )
 
 
-def extract_examples(
-    language: str, docs_dir: str = DOCS_DIR
-) -> dict[str, str]:
+def extract_examples(language: str, docs_dir: str = DOCS_DIR) -> dict[str, str]:
     """Extract every code block for ``language`` from ``docs_dir``.
 
     Returns a dict mapping ``"<repo_relative_path>:<line_number>"`` to the
@@ -89,6 +87,11 @@ def extract_examples(
     MDX source (e.g. when nested inside ``<TabItem>``); the language's
     validator is responsible for normalizing indentation (dedent) before
     wrapping and compiling, exactly as the C# validator does today.
+
+    Only blocks fenced with the bare language token (e.g. ` ```python `) are
+    extracted. A block fenced as ` ```text ` or with any info-string meta
+    (e.g. a ``title="..."``) is not matched, which is how non-runnable
+    snippets such as API-signature illustrations opt out of validation.
     """
     if language not in LANGUAGE_FENCES:
         known = ", ".join(sorted(LANGUAGE_FENCES))

@@ -56,7 +56,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
         results = await client.exec(atomic_batch, raise_on_error=True, options=options)
         print("Atomic Batch Results:", results)
         # Expected output: Atomic Batch Results: ['OK', 'OK', 50, 50, '50']
-     except RequestError as e:
+    except RequestError as e:
         print(f"Batch failed:", e)
     ```
   </TabItem>

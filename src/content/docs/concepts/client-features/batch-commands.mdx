@@ -175,7 +175,7 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    ```python
+    ```text
     # Standalone Mode
     async def exec(
         self,
@@ -195,7 +195,7 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
   </TabItem>
 
   <TabItem label="Java">
-    ```java
+    ```text
     // Standalone Mode
     CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError);
     CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError, BatchOptions options);
@@ -206,7 +206,7 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
   </TabItem>
 
   <TabItem label="Node">
-    ```typescript
+    ```text
     // Standalone Mode
     public async exec(
         batch: Batch,
@@ -224,7 +224,7 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
   </TabItem>
 
   <TabItem label="Go">
-    ```go
+    ```text
     // Standalone Mode
     Exec(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool) ([]any, error)
     ExecWithOptions(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool, options pipeline.StandaloneBatchOptions) ([]any, error)
@@ -611,8 +611,7 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
     	WithTimeout(1 * time.Second).  // 1-second timeout
     	WithRetryStrategy(pipeline.NewClusterBatchRetryStrategy().
     		WithRetryConnectionError(true).
-    		WithRetryServerError(true)
-    	).
+    		WithRetryServerError(true)).
     	WithRoute(config.RandomRoute)
     ```
   </TabItem>

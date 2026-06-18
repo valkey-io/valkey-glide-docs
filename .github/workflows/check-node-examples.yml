@@ -1,12 +1,9 @@
 name: Check Node Examples
 
-# Validates that the Node.js code examples in the docs compile (TypeScript and
-# JavaScript fences).
-#
-# Mirrors the C# check: this repo extracts the snippets (scripts/check_examples.py)
-# and the upstream Node client provides dev/scripts/validate_examples.py to wrap +
-# type-check them with tsc. Until that upstream validator exists, the "Probe" step
-# skips this check (a green run with a notice). See scripts/README.md.
+# Syntax-validates the Node.js (TypeScript / JavaScript) code examples in the
+# docs. Extraction lives in scripts/check_examples.py; the bundled validator
+# (scripts/validators/node.py) checks each snippet with the TypeScript
+# compiler's transpileModule (syntax only). See scripts/README.md.
 
 on:
   pull_request:
@@ -16,11 +13,6 @@ on:
 permissions:
   contents: read
 
-env:
-  UPSTREAM_REPO: valkey-io/valkey-glide
-  # Expected location of the validator, relative to the upstream repo root.
-  VALIDATOR_REPO_PATH: node/dev/scripts/validate_examples.py
-
 jobs:
   check-node-examples:
     runs-on: ubuntu-latest
@@ -28,49 +20,22 @@ jobs:
       - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
 
-      - name: Probe for upstream validator
-        id: probe
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/${UPSTREAM_REPO}/contents/${VALIDATOR_REPO_PATH}" --silent 2>/dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::Upstream Node example validator not found at ${UPSTREAM_REPO}/${VALIDATOR_REPO_PATH}. Skipping Node example validation until it lands upstream (see scripts/README.md)."
-            echo "present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ---------------------------------------------------------------------
-      # The steps below run only once the upstream validator exists. The
-      # validator resolves the client from node_modules after `npm install`, so
-      # no built artifact path needs to be passed.
-      # ---------------------------------------------------------------------
-      - name: Checkout valkey-glide
-        if: steps.probe.outputs.present == 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.UPSTREAM_REPO }}
-          path: valkey-glide
-
       - name: Setup Node.js
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install client and TypeScript
-        if: steps.probe.outputs.present == 'true'
-        run: npm install @valkey/valkey-glide typescript
+      - name: Install TypeScript
+        # Installed to a separate prefix and exposed via NODE_PATH so it does
+        # not interfere with the repo's pnpm-managed node_modules.
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tsdeps" typescript
+          echo "NODE_PATH=$RUNNER_TEMP/tsdeps/node_modules" >> "$GITHUB_ENV"
 
       - name: Setup Python
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Run Node example validation
-        if: steps.probe.outputs.present == 'true'
-        run: |
-          python scripts/check_examples.py \
-            --language node \
-            --validator "valkey-glide/${VALIDATOR_REPO_PATH}"
+      - name: Validate Node examples
+        run: python scripts/check_examples.py --language node

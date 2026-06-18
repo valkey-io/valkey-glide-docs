@@ -1,12 +1,9 @@
 name: Check Java Examples
 
-# Validates that the Java code examples in the docs compile.
-#
-# Mirrors the C# check: this repo extracts the snippets (scripts/check_examples.py)
-# and the upstream Java client provides dev/scripts/validate_examples.py to wrap +
-# compile them with javac against the client jar. Until that upstream validator
-# exists, the "Probe" step skips this check (a green run with a notice). See
-# scripts/README.md.
+# Syntax-validates the Java code examples in the docs. Extraction lives in
+# scripts/check_examples.py; the bundled validator (scripts/validators/java.py)
+# compiles each snippet with `javac` and treats only syntax-category
+# diagnostics as failures. See scripts/README.md.
 
 on:
   pull_request:
@@ -16,11 +13,6 @@ on:
 permissions:
   contents: read
 
-env:
-  UPSTREAM_REPO: valkey-io/valkey-glide
-  # Expected location of the validator, relative to the upstream repo root.
-  VALIDATOR_REPO_PATH: java/dev/scripts/validate_examples.py
-
 jobs:
   check-java-examples:
     runs-on: ubuntu-latest
@@ -28,53 +20,16 @@ jobs:
       - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
 
-      - name: Probe for upstream validator
-        id: probe
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/${UPSTREAM_REPO}/contents/${VALIDATOR_REPO_PATH}" --silent 2>/dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::Upstream Java example validator not found at ${UPSTREAM_REPO}/${VALIDATOR_REPO_PATH}. Skipping Java example validation until it lands upstream (see scripts/README.md)."
-            echo "present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ---------------------------------------------------------------------
-      # The steps below run only once the upstream validator exists. Finalize
-      # the jar build path / artifact argument when that lands (only the Java
-      # classes are needed for javac, so the native core can be skipped).
-      # ---------------------------------------------------------------------
-      - name: Checkout valkey-glide
-        if: steps.probe.outputs.present == 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.UPSTREAM_REPO }}
-          path: valkey-glide
-
       - name: Setup Java
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Setup Python
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Build Java client jar
-        if: steps.probe.outputs.present == 'true'
-        working-directory: valkey-glide/java
-        run: ./gradlew :client:jar
-
-      - name: Run Java example validation
-        if: steps.probe.outputs.present == 'true'
-        run: |
-          JAR="$(find valkey-glide/java/client/build/libs -name '*.jar' | head -n1)"
-          python scripts/check_examples.py \
-            --language java \
-            --validator "valkey-glide/${VALIDATOR_REPO_PATH}" \
-            -- --glide-jar "${JAR}"
+      - name: Validate Java examples
+        run: python scripts/check_examples.py --language java

@@ -98,7 +98,6 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 
   <TabItem label="Java">
     ```java
-
       import java.util.Collections;
       import java.util.List;
 
@@ -107,7 +106,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
       import glide.api.models.configuration.AwsIamConfig.ServiceType;
       import glide.api.models.configuration.GlideClusterClientConfiguration;
       import glide.api.models.configuration.NodeAddress;
-      ...
+      // ...
 
       List<NodeAddress> nodeList =
                   Collections.singletonList(
@@ -130,7 +129,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
                       .build();
 
       GlideClusterClient client = GlideClusterClient.createClient(config).get();
-    ...
+      // ...
     ```
   </TabItem>
 
@@ -162,7 +161,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     	"github.com/valkey-io/valkey-glide/go/glide/api"
     	"github.com/valkey-io/valkey-glide/go/glide/config"
     )
-    ...
+    // ...
 
     // Configure IAM authentication
     // Automatically regenerates the token every 5 mins (default: 300 seconds)
@@ -183,7 +182,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     }
 
     client, err := api.NewGlideClusterClient(&clientConfig)
-    ...
+    // ...
     ```
   </TabItem>
 
@@ -211,7 +210,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
     $value = $client->get('key');
 
     $client->close();
-    ...
+    // ...
     ```
   </TabItem>
 </Tabs>

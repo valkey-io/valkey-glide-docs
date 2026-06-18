@@ -1,11 +1,8 @@
 name: Check Go Examples
 
-# Validates that the Go code examples in the docs compile.
-#
-# Mirrors the C# check: this repo extracts the snippets (scripts/check_examples.py)
-# and the upstream Go client provides dev/scripts/validate_examples.py to wrap +
-# compile them. Until that upstream validator exists, the "Probe" step skips this
-# check (a green run with a notice). See scripts/README.md.
+# Syntax-validates the Go code examples in the docs. Extraction lives in
+# scripts/check_examples.py; the bundled validator (scripts/validators/go.py)
+# parses each snippet with `gofmt -e` (syntax only). See scripts/README.md.
 
 on:
   pull_request:
@@ -15,11 +12,6 @@ on:
 permissions:
   contents: read
 
-env:
-  UPSTREAM_REPO: valkey-io/valkey-glide
-  # Expected location of the validator, relative to the upstream repo root.
-  VALIDATOR_REPO_PATH: go/dev/scripts/validate_examples.py
-
 jobs:
   check-go-examples:
     runs-on: ubuntu-latest
@@ -27,45 +19,15 @@ jobs:
       - name: Checkout valkey-glide-docs
         uses: actions/checkout@v4
 
-      - name: Probe for upstream validator
-        id: probe
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/${UPSTREAM_REPO}/contents/${VALIDATOR_REPO_PATH}" --silent 2>/dev/null; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::Upstream Go example validator not found at ${UPSTREAM_REPO}/${VALIDATOR_REPO_PATH}. Skipping Go example validation until it lands upstream (see scripts/README.md)."
-            echo "present=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ---------------------------------------------------------------------
-      # The steps below run only once the upstream validator exists. The
-      # validator resolves the client via the Go module system (go.mod), so no
-      # built artifact needs to be passed.
-      # ---------------------------------------------------------------------
-      - name: Checkout valkey-glide
-        if: steps.probe.outputs.present == 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.UPSTREAM_REPO }}
-          path: valkey-glide
-
       - name: Setup Go
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: "stable"
 
       - name: Setup Python
-        if: steps.probe.outputs.present == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Run Go example validation
-        if: steps.probe.outputs.present == 'true'
-        run: |
-          python scripts/check_examples.py \
-            --language go \
-            --validator "valkey-glide/${VALIDATOR_REPO_PATH}"
+      - name: Validate Go examples
+        run: python scripts/check_examples.py --language go

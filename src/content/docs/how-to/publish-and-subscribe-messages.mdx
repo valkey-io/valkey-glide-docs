@@ -353,7 +353,7 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
                 .subscription(EXACT, "ch2")
                 .subscription(PATTERN, "chat*")
                 .callback(callback, context)
-                .build()
+                .build();
 
     GlideClientConfiguration config = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
