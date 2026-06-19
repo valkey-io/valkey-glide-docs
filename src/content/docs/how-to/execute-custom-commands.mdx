@@ -132,6 +132,25 @@ Pass the command name and arguments as an array of strings:
     echo $result; // hello
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Execute a SET command
+    await client.CustomCommand(["SET", "mykey", "hello"]);
+
+    // Execute a GET command
+    var result = await client.CustomCommand(["GET", "mykey"]);
+    Console.WriteLine(result); // hello
+    ```
+  </TabItem>
 </Tabs>
 
 ## Limitations
