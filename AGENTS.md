@@ -102,6 +102,7 @@ Commands are grouped by category. Each command has per-language status and optio
 ### Command Support Audit (`command-support-audit/`)
 
 Contains the automated audit of command implementations across all clients:
+
 - `inventories/<lang>.json` — method-level inventory per language
 - `final/<lang>.json` — final verdicts per command/language
 - `audit-corrections.json` — manual corrections to audit findings
