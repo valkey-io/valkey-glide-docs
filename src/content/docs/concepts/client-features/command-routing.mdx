@@ -29,6 +29,38 @@ To optimize read performance and distribute the load, GLIDE clients support diff
 | `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                      |
 | `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
 
+## Automatic Redirect Handling (MOVED and ASK)
+
+In a Valkey cluster, slots can move between nodes during failovers, scaling operations, or rebalancing. When a command is sent to a node that no longer owns the target slot, the server responds with a redirect error rather than executing the command. GLIDE handles these redirects automatically.
+
+### MOVED Redirects
+
+A `MOVED` error indicates that a slot has been permanently reassigned to a different node. When GLIDE receives a MOVED response:
+
+1. The command is re-sent to the node specified in the redirect.
+2. GLIDE updates its internal topology map so future commands for that slot go directly to the new owner.
+3. A full topology refresh may be triggered to capture any other slot changes.
+
+This commonly occurs during failovers (a replica is promoted to primary) or when the cluster is rebalanced.
+
+### ASK Redirects
+
+An `ASK` error indicates that a slot is in the process of migrating to another node but the migration is not yet complete. When GLIDE receives an ASK response:
+
+1. GLIDE sends an `ASKING` command to the target node (required by the Valkey protocol to access a migrating slot).
+2. The original command is then re-sent to that node.
+3. The topology map is **not** updated, since the migration may not be finalized.
+
+Once the migration completes, subsequent requests will receive a `MOVED` redirect, at which point GLIDE updates its map permanently.
+
+### Circular Redirect Protection
+
+GLIDE detects circular MOVED redirects — cases where a redirect points back to the same node (e.g., due to DNS resolution or stale routing). When detected, GLIDE triggers a topology refresh rather than retrying indefinitely.
+
+:::note
+All redirect handling is transparent to the application. No special error handling or retry logic is needed in your code.
+:::
+
 ## Multi-Slot Commands
 
 In Valkey or Redis Cluster mode, certain commands can operate on multiple keys that may be spread across different hash slots.

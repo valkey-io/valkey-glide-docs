@@ -73,6 +73,10 @@ The supported commands page is **reference** content showing which Valkey comman
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
 
+## Commit Requirements
+
+- All commits must include `--signoff` (`git commit --signoff -m "message"`) for DCO compliance
+
 # Commands
 
 Useful commands for this project.

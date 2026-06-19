@@ -361,28 +361,25 @@ if ($client->get('nonexistent') === false) {
 }
 ```
 
-### 5. Configuration
+### 5. Configuration Options
 
-Configuration is done through the `connect()` method:
+PHPRedis options such as `OPT_SERIALIZER`, `OPT_PREFIX`, `OPT_SCAN`, and `OPT_COMPRESSION` are not currently supported. Use application-level serialization and key prefixing instead.
 
-<Tabs>
-  <TabItem label="PHPRedis">
-    ```php
-    $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_JSON);
-    $redis->setOption(Redis::OPT_PREFIX, 'myapp:');
-    ```
-  </TabItem>
+#### `OPT_REPLY_LITERAL` Support
 
-  <TabItem label="Valkey GLIDE">
-    ```php
-    $client->connect(
-        addresses: [['host' => '127.0.0.1', 'port' => 6379]],
-        request_timeout: 5000,
-        client_name: 'myapp'
-    );
-    ```
-  </TabItem>
-</Tabs>
+The compatibility layer supports `OPT_REPLY_LITERAL` option. When enabled, commands that return "+OK" from Valkey return the string `"OK"` instead of `true`.
+
+```php
+$client->setOption(ValkeyGlide::OPT_REPLY_LITERAL, true);
+$result = $client->set('key', 'value'); // Returns "OK" instead of true
+
+$client->setOption(ValkeyGlide::OPT_REPLY_LITERAL, false);
+$result = $client->set('key', 'value'); // Returns true (default)
+```
+
+<Aside type="note">
+  `OPT_REPLY_LITERAL` affects: `SET`, `MSET`, `SETEX`, `PSETEX`, `SELECT`, `FLUSHDB`, `FLUSHALL`, `RENAME`, `RESTORE`, `CONFIG SET`, `LSET`, `LTRIM`, and `HMSET`.
+</Aside>
 
 ## Advanced Features
 

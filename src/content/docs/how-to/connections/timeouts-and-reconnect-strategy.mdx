@@ -12,6 +12,7 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 | Configuration Setting | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **Default Value**   |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | Request Timeout       | This specified timeout duration represents the period during which the client will await the completion of a request. This includes the process of sending the request, waiting for a response from the node(s), and any necessary reconnection or retry attempts. If a pending request exceeds the specified timeout, it will trigger a timeout error. If no timeout value is explicitly set, a default value will be employed. | 250 milliseconds    |
+| Connection Timeout    | The duration in milliseconds to wait for a TCP/TLS connection to complete. This applies both during initial client creation and any reconnection that may occur during request processing. A high connection timeout may lead to prolonged blocking of the entire command pipeline. This is configured via the advanced client configuration. | 2000 milliseconds   |
 | Reconnect Strategy    | The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures.                                                                                                                                                                                                                                                                                                                                                  | Exponential backoff |
 
 ## Setting Request Timeout for Long-Running Commands
@@ -105,6 +106,107 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("address.example.com", 6379)
         .WithRequestTimeout(TimeSpan.FromMilliseconds(500))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+</Tabs>
+
+## Setting Connection Timeout
+
+The connection timeout controls how long the client waits for a TCP/TLS connection to establish. This is separate from the request timeout and is configured via the advanced configuration.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        AdvancedGlideClusterClientConfiguration,
+        NodeAddress
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(
+        addresses,
+        advanced_configuration=AdvancedGlideClusterClientConfiguration(
+            connection_timeout=5000
+        )
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("address.example.com")
+            .port(6379).build())
+        .advancedConfiguration(AdvancedGlideClusterClientConfiguration.builder()
+            .connectionTimeout(5000)
+            .build())
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {GlideClusterClient} from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{host: "address.example.com", port: 6379}],
+        advancedConfiguration: {
+            connectionTimeout: 5000
+        }
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithConnectionTimeout() {
+        myConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithAdvancedConfiguration(config.NewAdvancedClusterClientConfiguration().
+                WithConnectionTimeout(5 * time.Second))
+
+        client, err := glide.NewClusterClient(myConfig)
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        advanced_config: ['connection_timeout' => 5000]
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithConnectionTimeout(TimeSpan.FromMilliseconds(5000))
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
