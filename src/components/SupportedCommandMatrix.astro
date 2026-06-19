@@ -19,18 +19,12 @@ const languageLabels: Record<string, string> = {
 
 const statusIcons: Record<string, string> = {
     available: "✅",
-    not_available: "❌",
-    attention: "⚠️",
-    planned: "☑️",
-    tracked: "📋",
+    not_available: "➖",
 };
 
 const statusLabels: Record<string, string> = {
     available: "Available",
     not_available: "Not Available",
-    attention: "Attention",
-    planned: "Planned",
-    tracked: "Tracked",
 };
 
 function getStatus(cmd: any, lang: string): string {
@@ -45,10 +39,7 @@ function getHref(cmd: any, lang: string): string | null {
 <div class="command-matrix">
     <div class="legend">
         <span class="legend-item">✅ Available</span>
-        <span class="legend-item">⚠️ Attention</span>
-        <span class="legend-item">☑️ Planned</span>
-        <span class="legend-item">📋 Tracked</span>
-        <span class="legend-item">❌ Not Available</span>
+        <span class="legend-item">➖ Not Available</span>
     </div>
 
     <div class="command-search">
