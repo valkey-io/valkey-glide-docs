@@ -8,6 +8,10 @@ import { Aside } from '@astrojs/starlight/components';
 
 GLIDE's `custom_command` method lets you execute any Valkey command directly, allowing you to execute custom commands, custom modules, and commands not yet supported by clients' API.
 
+:::note
+Some unsupported commands will not work even with `custom_command`. These are either incompatible OR has the potential the break GLIDE's connection. See [Unsupported Commands](/commands/supported-commands#incompatible-commands) for details.
+:::
+
 ## Execute a Custom Command
 
 Pass the command name and arguments as an array of strings:
