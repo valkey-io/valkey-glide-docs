@@ -155,13 +155,10 @@ Pass the command name and arguments as an array of strings:
 
 ## Limitations
 
-<Aside type="caution">
-  Keep these constraints in mind when using custom commands:
-</Aside>
-
-* **Single-response commands only** — Do not use for commands that return multiple responses (e.g., `XREAD`) or commands that alter client state (e.g., `SUBSCRIBE` on RESP2).
+Keep these constraints in mind when using custom commands:
+* **Do not use for commands that alter connection state** — e.g., `SUBSCRIBE` on RESP2.
+* **Single-response commands only** — Do not use for commands that return multiple responses (e.g., `XREAD`).
 * **Key-based routing** — In cluster mode, key-based commands are routed by the first key. Do not use multi-key commands that span different hash slots.
-* **No input validation** — Arguments are passed as-is to the server. Ensure correctness before calling.
 
 ## Related
 
