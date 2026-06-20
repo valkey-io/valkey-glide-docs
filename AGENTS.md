@@ -57,10 +57,70 @@ When writing or editing content, place it in the correct category:
   - `reference/` — access control, scripting, client comparisons, connection options, known issues (reference)
 - `public/` — static assets (favicons, CNAME)
 - `src/assets/` — logos and images
-- `src/components/` — custom Astro components
+- `src/components/` — custom Astro component- `src/data/` — JSON data files
 - `src/styles/` — custom CSS
 - `doc-gen/` — scripts to generate API docs from the main valkey-glide repo
 - `plugins/` — custom Astro/Starlight plugins
+
+## Supported Commands Page
+
+The supported commands page is **reference** content showing which Valkey commands each GLIDE client language supports. It is rendered by `src/components/SupportedCommandMatrix.astro` which reads `src/data/available-commands.json` at build time.
+
+### Data Format (`src/data/available-commands.json`)
+
+Commands are grouped by category. Each command has per-language status and optional hrefs:
+
+```json
+{
+  "command": "BITFIELD",
+  "valkey-io": "/commands/bitfield",
+  "python": "available",
+  "node": "available",
+  "java": "available",
+  "go": "available",
+  "csharp": "available",
+  "php": "not_available",
+  "php-href": "https://github.com/valkey-io/valkey-glide-php/issues/225"
+}
+```
+
+- **Status values**: `"available"` or `"not_available"`
+- **Available** means: command implemented as a first-class client method OR could be used through some kind of feature.
+- **Not Available** means: users cannot use the command (no dedicated method, not accessible through any feature)
+- **`href`**: shared link for all languages (used when all are not_available)
+- **`<lang>-href`**: per-language link (used when only some languages are not_available)
+- Hrefs point to GitHub issues tracking implementation, or to page anchors (`#deprecated-commands`, `#incompatible-commands`, `#not-applicable`)
+
+### Page Sections (`src/content/docs/commands/supported-commands.mdx`)
+
+- **Available Commands** — rendered by `SupportedCommandMatrix.astro` from the JSON
+- **Unsupported Commands** — three sub-sections:
+  - **Deprecated Commands** — deprecated by Valkey, alternatives listed
+  - **Incompatible Commands** — incompatible with GLIDE's architecture (CLIENT REPLY, PSYNC, DISCARD, etc.)
+  - **Not Applicable** — container/parent commands and HELP subcommands
+
+### Command Support Audit (`command-support-audit/`)
+
+Contains the automated audit of command implementations across all clients:
+
+- `inventories/<lang>.json` — method-level inventory per language
+- `final/<lang>.json` — final verdicts per command/language
+- `audit-corrections.json` — manual corrections to audit findings
+- `issues-cache.json` — cached GitHub issues for cross-referencing
+
+### Issue Creation Workflow
+
+- `issues-to-create.json` — commands needing implementation tickets (machine-readable)
+- `create-parity-issues.sh` — batch script to create GitHub issues via `gh` CLI
+- `update-command-hrefs.sh` — updates `available-commands.json` with issue URLs after creation
+- `ISSUE_CREATION_PLAN.md` — full plan for the issue creation workflow
+- Repos: `valkey-io/valkey-glide` (python/node/java/go), `valkey-io/valkey-glide-php`, `valkey-io/valkey-glide-csharp`
+
+### Local Source Repos (for verification)
+
+- Main (Python, Node.js, Java, Go): `../valkey-glide`
+- PHP: `../valkey-glide-php`
+- C#: `../valkey-glide-csharp`
 
 ## Content Guidelines
 

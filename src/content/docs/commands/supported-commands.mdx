@@ -1,0 +1,63 @@
+---
+title: "Supported Valkey Commands"
+description: See which Valkey commands are supported by GLIDE's clients.
+---
+
+import SupportedCommands from '../../../components/SupportedCommandMatrix.astro';
+
+GLIDE supports a wide range of Valkey commands as first-class client methods. Below is a list of Valkey commands that are currently supported by GLIDE's clients.
+
+:::note
+Unsupported commands can still be executed using the [`execute_command`](/how-to/execute-custom-commands) method.
+:::
+
+## Available Commands
+
+<SupportedCommands />
+
+## Unsupported Commands
+
+The following commands are not supported by GLIDE either because they are deprecated or incompatible with GLIDE's architecture.
+
+:::note
+Unsupported commands can still be executed using the [`execute_command`](/how-to/execute-custom-commands) method.
+:::
+
+### Deprecated Commands
+
+The following commands are deprecated by Valkey and are not planned for implementation in GLIDE. Consider using their recommended alternatives instead.
+
+| Command                | Alternative                   |
+| ---------------------- | ----------------------------- |
+| `BRPOPLPUSH`           | `BLMOVE`                      |
+| `CLUSTER SLAVES`       | `CLUSTER REPLICAS`            |
+| `CLUSTER SLOTS`        | `CLUSTER SHARDS`              |
+| `GEORADIUS`            | `GEOSEARCH`                   |
+| `GEORADIUSBYMEMBER`    | `GEOSEARCH`                   |
+| `GEORADIUSBYMEMBER_RO` | `GEOSEARCH`                   |
+| `GEORADIUS_RO`         | `GEOSEARCH`                   |
+| `HMSET`                | `HSET`                        |
+| `QUIT`                 | Close the connection / client |
+| `RPOPLPUSH`            | `LMOVE`                       |
+| `SLAVEOF`              | `REPLICAOF`                   |
+| `SYNC`                 | `PSYNC`                       |
+
+### Incompatible Commands
+
+These commands are incompatible with GLIDE's current architecture and are currently not supported. If you have a strong use case, please make an issue on our [Github](https://github.com/valkey-io/valkey-glide) to start a discussion.
+
+| Command          | Reason                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `CLIENT REPLY`   | Would break the multiplexed response protocol                                                                 |
+| `CLIENT UNBLOCK` | Requires internal connection/client IDs not exposed to users                                                  |
+| `DEBUG`          | Admin/developer debugging command; will not be exposed                                                        |
+| `DISCARD`        | Not compatible with GLIDE's [transaction model](/concepts/client-features/batch-commands/).                   |
+| `PSYNC`          | Server-to-server replication protocol; puts the connection into streaming mode incompatible with client usage |
+| `SHUTDOWN`       | Dangerous admin command; no plan to support unless strong use case                                            |
+
+### Not Applicable
+
+These commands exist in Valkey's command registry but are not meaningful to implement as client methods.
+
+* Parent commands (e.g. `CLUSTER`, `CLIENT`, `PUBSUB`, etc.) act as namespaces and have no functionality on their own.
+* Any `* HELP` commands (e.g. `ACL HELP`, `CLIENT HELP`, `CLUSTER HELP`, etc.) returns usage information texts.

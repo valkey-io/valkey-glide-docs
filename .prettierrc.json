@@ -7,6 +7,13 @@
         "parser": "astro",
         "tabWidth": 4
       }
+    },
+    {
+      "files": "src/data/*.json",
+      "options": {
+        "printWidth": 1000,
+        "objectWrap": "collapse"
+      }
     }
   ]
 }

@@ -1,0 +1,298 @@
+---
+/**
+ * CommandMatrix - Renders the available commands matrix from JSON data.
+ *
+ * Displays commands grouped by category with per-language support status.
+ * Includes a search filter.
+ */
+import commandData from "../data/available-commands.json";
+
+const languages = ["python", "node", "java", "go", "csharp", "php"] as const;
+const languageLabels: Record<string, string> = {
+    python: "Python",
+    node: "Node.js",
+    java: "Java",
+    go: "Go",
+    csharp: "C#",
+    php: "PHP",
+};
+
+const statusIcons: Record<string, string> = {
+    available: "✅",
+    not_available: "➖",
+};
+
+const statusLabels: Record<string, string> = {
+    available: "Available",
+    not_available: "Not Available",
+};
+
+function getStatus(cmd: any, lang: string): string {
+    return cmd[lang] || "not_available";
+}
+
+function getHref(cmd: any, lang: string): string | null {
+    return cmd[`${lang}-href`] || cmd["href"] || null;
+}
+---
+
+<div class="command-matrix">
+    <div class="legend">
+        <span class="legend-item">✅ Available</span>
+        <span class="legend-item">➖ Not Available</span>
+    </div>
+
+    <div class="command-search">
+        <input
+            type="text"
+            id="command-search-input"
+            placeholder="Search commands..."
+            aria-label="Search commands"
+        />
+    </div>
+
+    {
+        commandData.map((group) => {
+            return (
+                <details class="command-group" open>
+                    <summary>{group.group}</summary>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                {languages.map((lang) => (
+                                    <th class="lang-col">
+                                        {languageLabels[lang]}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {group.commands.map((cmd) => (
+                                <tr
+                                    class="command-row"
+                                    data-command={cmd.command.toLowerCase()}
+                                >
+                                    <td>
+                                        <a
+                                            href={`https://valkey.io${(cmd as any)["valkey-io"]}`}
+                                            target="_blank"
+                                            rel="noopener"
+                                        >
+                                            {cmd.command}
+                                        </a>
+                                    </td>
+                                    {languages.map((lang) => {
+                                        const status = getStatus(cmd, lang);
+                                        const href = getHref(cmd, lang);
+                                        const icon =
+                                            statusIcons[status] || "❌";
+                                        const label =
+                                            statusLabels[status] ||
+                                            "Not Available";
+                                        return (
+                                            <td
+                                                class={`status-cell status-${status}`}
+                                                data-tooltip={label}
+                                                aria-label={label}
+                                            >
+                                                {href ? (
+                                                    <a href={href}>{icon}</a>
+                                                ) : (
+                                                    icon
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </details>
+            );
+        })
+    }
+
+    <p id="no-results-message" class="no-results" style="display: none;">
+        No commands found matching your search.
+    </p>
+</div>
+
+<script>
+    const input = document.getElementById(
+        "command-search-input",
+    ) as HTMLInputElement;
+    const groups = document.querySelectorAll(".command-group");
+    const noResults = document.getElementById("no-results-message");
+
+    input?.addEventListener("input", () => {
+        const query = input.value.toLowerCase();
+        let totalVisible = 0;
+
+        groups.forEach((group) => {
+            const rows = group.querySelectorAll(".command-row");
+            let groupVisible = 0;
+
+            rows.forEach((row) => {
+                const command = (row as HTMLElement).dataset.command || "";
+                const match = command.includes(query);
+                (row as HTMLElement).style.display = match ? "" : "none";
+                if (match) groupVisible++;
+            });
+
+            (group as HTMLElement).style.display =
+                groupVisible > 0 ? "" : "none";
+            totalVisible += groupVisible;
+        });
+
+        if (noResults) {
+            noResults.style.display = totalVisible === 0 ? "" : "none";
+        }
+    });
+
+    // For status cells linking to an in-page anchor, show the target
+    // heading's text as the tooltip instead of the status label.
+    document
+        .querySelectorAll<HTMLAnchorElement>('.status-cell a[href^="#"]')
+        .forEach((link) => {
+            const id = decodeURIComponent(
+                link.getAttribute("href")?.slice(1) || "",
+            );
+            if (!id) return;
+            const target = document.getElementById(id);
+            if (!target) return;
+            // Strip the trailing permalink anchor character some themes add.
+            const title = (target.textContent || "")
+                .replace(/[#¶]\s*$/, "")
+                .trim();
+            const cell = link.closest<HTMLElement>(".status-cell");
+            if (cell && title) {
+                cell.setAttribute("data-tooltip", title);
+                cell.setAttribute("aria-label", title);
+            }
+        });
+</script>
+
+<style>
+    .command-matrix {
+        margin-top: 1rem;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--sl-color-gray-2);
+    }
+
+    .legend-item {
+        white-space: nowrap;
+    }
+
+    .command-search {
+        margin-bottom: 1rem;
+    }
+
+    .command-search input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 0.375rem;
+        background: var(--sl-color-black);
+        color: var(--sl-color-white);
+        font-size: 0.9rem;
+    }
+
+    .command-search input:focus {
+        outline: 2px solid var(--sl-color-accent);
+        outline-offset: -1px;
+    }
+
+    .command-group {
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 0.375rem;
+    }
+
+    .command-group summary {
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .command-group table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .command-group th,
+    .command-group td {
+        padding: 0.4rem 0.6rem;
+        border-top: 1px solid var(--sl-color-gray-5);
+    }
+
+    .command-group th {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .command-group th:first-child {
+        text-align: left;
+    }
+
+    .lang-col {
+        width: 70px;
+    }
+
+    .status-cell {
+        text-align: center;
+        position: relative;
+    }
+
+    .status-cell[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        background: var(--sl-color-gray-6);
+        color: var(--sl-color-white);
+        border: 1px solid var(--sl-color-gray-5);
+        padding: 0.2rem 0.45rem;
+        border-radius: 0.25rem;
+        font-size: 0.7rem;
+        line-height: 1.2;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .status-cell a {
+        text-decoration: none;
+    }
+
+    .status-cell a:hover {
+        text-decoration: underline;
+    }
+
+    .command-group td:first-child a {
+        color: var(--sl-color-accent-high);
+        text-decoration: none;
+        font-family: monospace;
+    }
+
+    .command-group td:first-child a:hover {
+        text-decoration: underline;
+    }
+
+    .no-results {
+        text-align: center;
+        color: var(--sl-color-gray-3);
+        padding: 2rem;
+    }
+</style>

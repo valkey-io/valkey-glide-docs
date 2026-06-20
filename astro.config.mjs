@@ -113,11 +113,6 @@ export default defineConfig({
               ],
             },
             {
-              label: "Commands API",
-              collapsed: true,
-              items: ["commands/valkey-string"],
-            },
-            {
               label: "Core Features",
               collapsed: true,
               autogenerate: { directory: "concepts/client-features" },
@@ -152,6 +147,7 @@ export default defineConfig({
             "how-to/send-batch-commands",
             "how-to/synchronous-connection",
             "how-to/execute-custom-scripts",
+            "how-to/execute-custom-commands",
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
             "how-to/compressing-data",
@@ -330,10 +326,10 @@ export default defineConfig({
           label: "Reference",
           collapsed: true,
           items: [
+            "commands/supported-commands",
             "reference/access-control",
             "reference/scripting-reference",
             "reference/client-comparisons",
-            "reference/valkey-commands-implementation-progress",
             "reference/connection-options",
             "reference/known-issues",
             {

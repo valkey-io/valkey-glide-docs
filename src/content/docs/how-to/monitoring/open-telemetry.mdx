@@ -262,12 +262,15 @@ glide.GetOtelInstance().SetSpanContextExtractor(func(ctx context.Context) (glide
 ```
 
 :::tip[Notes]
-- The extractor is called synchronously before each sampled command/batch span
-- Pass `nil` to `SetSpanContextExtractor` to clear the extractor
-:::
+
+* The extractor is called synchronously before each sampled command/batch span
+* Pass `nil` to `SetSpanContextExtractor` to clear the extractor
+  :::
 
 ### `SpanContext`
+
 The `SpanContext` struct is a dependency-free representation of an OTel span context with the following fields:
+
 * `TraceID` (32 hex chars)
 * `SpanID` (16 hex chars)
 * `TraceFlags` (byte)

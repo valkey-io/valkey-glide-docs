@@ -1,0 +1,171 @@
+---
+title: Execute Custom Commands
+description: A guide on executing raw Valkey commands using GLIDE's custom command API.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+
+GLIDE's `custom_command` method lets you execute any Valkey command directly, allowing you to execute custom commands, custom modules, and commands not yet supported by clients' API.
+
+:::note
+Some unsupported commands will not work even with `custom_command`. These are either incompatible OR has the potential the break GLIDE's connection. See [Unsupported Commands](/commands/supported-commands#incompatible-commands) for details.
+:::
+
+## Execute a Custom Command
+
+Pass the command name and arguments as an array of strings:
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    async def main():
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = await GlideClient.create(config)
+
+        # Execute a SET command
+        await client.custom_command(["SET", "mykey", "hello"])
+
+        # Execute a GET command
+        result = await client.custom_command(["GET", "mykey"])
+        print(result)  # b'hello'
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    public class CustomCommandExample {
+        public static void main(String[] args) throws Exception {
+            GlideClientConfiguration config = GlideClientConfiguration.builder()
+                .address(NodeAddress.builder().host("localhost").port(6379).build())
+                .build();
+            GlideClient client = GlideClient.createClient(config).get();
+
+            // Execute a SET command
+            client.customCommand(new String[]{"SET", "mykey", "hello"}).get();
+
+            // Execute a GET command
+            Object result = client.customCommand(new String[]{"GET", "mykey"}).get();
+            System.out.println(result); // hello
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node.js">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    async function main() {
+        const client = await GlideClient.createClient({
+            addresses: [{ host: "localhost", port: 6379 }],
+        });
+
+        // Execute a SET command
+        await client.customCommand(["SET", "mykey", "hello"]);
+
+        // Execute a GET command
+        const result = await client.customCommand(["GET", "mykey"]);
+        console.log(result); // hello
+    }
+
+    main();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "context"
+        "fmt"
+        "github.com/valkey-io/valkey-glide/go/v2/glide"
+    )
+
+    func main() {
+        ctx := context.Background()
+        config := glide.NewGlideClientConfiguration().
+            WithAddress(&glide.NodeAddress{Host: "localhost", Port: 6379})
+        client, err := glide.NewGlideClient(config)
+        if err != nil {
+            panic(err)
+        }
+
+        // Execute a SET command
+        _, err = client.CustomCommand(ctx, []string{"SET", "mykey", "hello"})
+        if err != nil {
+            panic(err)
+        }
+
+        // Execute a GET command
+        result, err := client.CustomCommand(ctx, []string{"GET", "mykey"})
+        if err != nil {
+            panic(err)
+        }
+        fmt.Println(result) // hello
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    require 'vendor/autoload.php';
+
+    use Valkey\Glide\GlideClient;
+
+    $client = GlideClient::create("localhost:6379");
+
+    // Execute a SET command
+    $client->rawCommand("SET", "mykey", "hello");
+
+    // Execute a GET command
+    $result = $client->rawCommand("GET", "mykey");
+    echo $result; // hello
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Execute a SET command
+    await client.CustomCommand(["SET", "mykey", "hello"]);
+
+    // Execute a GET command
+    var result = await client.CustomCommand(["GET", "mykey"]);
+    Console.WriteLine(result); // hello
+    ```
+  </TabItem>
+</Tabs>
+
+## Limitations
+
+Keep these constraints in mind when using custom commands:
+
+* **Do not use for commands that alter connection state** — e.g., `SUBSCRIBE` on RESP2.
+* **Single-response commands only** — Do not use for commands that return multiple responses (e.g., `XREAD`).
+* **Key-based routing** — In cluster mode, key-based commands are routed by the first key. Do not use multi-key commands that span different hash slots.
+
+## Related
+
+* [Custom Commands concept](/concepts/client-features/custom-commands) — design rationale and additional notes
+* [Execute Custom Scripts](/how-to/execute-custom-scripts) — for Lua scripting via the `Script` API
