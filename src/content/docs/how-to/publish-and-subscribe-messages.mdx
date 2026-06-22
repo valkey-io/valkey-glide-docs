@@ -535,7 +535,7 @@ To use callback-based delivery, provide a subscription configuration with a call
 
   <TabItem label="Node">
     ```typescript
-    const received: string[] = [];
+    const received: GlideString[] = [];
     const callback = (msg: PubSubMsg, context: any) => {
         received.push(msg.message);
         console.log(`Received '${msg.message}' on '${msg.channel}'`);
@@ -555,12 +555,16 @@ To use callback-based delivery, provide a subscription configuration with a call
     await client.subscribe(new Set(["news"]), 5000);
 
     // Publish a message (from another client)
+    const publishingClient = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+    });
     await publishingClient.publish("Hello!", "news");
     await new Promise((r) => setTimeout(r, 500));
 
     // Verify the callback received the message
     console.assert(received.includes("Hello!"));
 
+    publishingClient.close();
     client.close();
     ```
   </TabItem>

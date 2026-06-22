@@ -73,7 +73,7 @@ This is not supported by the Go client.
     });
 
     // Retrieve statistics
-    const stats = await client.getStatistics();
+    const stats = await client.getStatistics() as Record<string, any>;
 
     // Example: Accessing and printing statistics
     console.log(`Total Connections: ${stats.total_connections}`);

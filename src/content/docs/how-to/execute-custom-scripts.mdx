@@ -147,29 +147,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
 
   <TabItem label="Node">
     <Steps>
-      1. Define the lua script
-
-         ```typescript
-         const lua = `
-         server.call('SET', KEYS[1], ARGV[1])
-         return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
-         `;
-         ```
-
-      2. Create a `Script` object with the Lua code
-
-         ```typescript
-         const script = new Script(lua);
-         ```
-
-      3. Execute script with keys and arguments
-
-         ```typescript
-         const keys = ["username"];
-         const args = ["John Doe"];
-         const result = await client.invokeScript(script, {keys, args});
-         console.log(result); // username: John Doe
-         ```
+      1. Define the Lua script as a string.
+      2. Create a `Script` object with the Lua code.
+      3. Execute the script using `invokeScript`.
     </Steps>
 
     <details>

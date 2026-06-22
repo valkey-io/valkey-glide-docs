@@ -37,6 +37,7 @@ Inflight requests limit can be configured through the general client configurati
     ```typescript
     // Limit to 1000 inflight requests per connection
     const clusterConfig: GlideClusterClientConfiguration = {
+        addresses: [{ host: "localhost", port: 6379 }],
         inflightRequestsLimit: 1000,
     };
     ```

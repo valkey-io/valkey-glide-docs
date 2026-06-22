@@ -175,8 +175,9 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
     ```typescript
     const productKey = "product:shoe:stock";
     const buyQuantity = "3";
+    const script = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])");
 
-    const result = await client.invokeScript(purchaseScript, {
+    const result = await client.invokeScript(script, {
         keys: [productKey],   // Maps to KEYS[1] in Lua
         args: [buyQuantity]   // Maps to ARGV[1] in Lua
     });
@@ -267,6 +268,9 @@ values directly into the script would create unique scripts each time, preventin
 
   <TabItem label="Node">
     ```typescript
+    const productKey = "product:shoe:stock";
+    const buyQuantity = "3";
+
     // Bad: Creates a new hash for each quantity
     const badScript = new Script(`return redis.call('DECRBY', ${productKey}, ${buyQuantity})`);
 
@@ -590,10 +594,10 @@ GLIDE provide options for explicit control over script routing in cluster mode.
 
   <TabItem label="Node">
     ```typescript
-    import {Routes, SlotType} from "@valkey/valkey-glide";
+    const script = new Script("return redis.call('PING')");
 
     // Route to the node holding a specific key's slot
-    const route = {type: "routeByAddress", host: "user:1000", slotType: SlotType.Primary};
+    const route = {type: "routeByAddress" as const, host: "localhost", port: 6379};
 
     // Route to all primary nodes
     await clusterClient.invokeScriptWithRoute(script, {route: "allPrimaries"});
@@ -737,7 +741,7 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     ]);
     transaction.get("script-key");
 
-    const results = await client.exec(transaction);
+    const results = await client.exec(transaction, true);
     console.log(`EVAL result: ${results[0]}`);  // OK
     console.log(`GET result: ${results[1]}`);   // script-value
     ```
