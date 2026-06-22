@@ -1,0 +1,211 @@
+---
+title: MONITOR Command
+description: Use the MONITOR command in Valkey GLIDE to observe all commands processed by the server in real time.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
+
+MONITOR is supported in Python, Node.js, Java, and Go clients. C# and PHP support is not yet available.
+
+## How It Works
+
+When you create a `MonitorClient`, GLIDE opens a dedicated connection and sends the `MONITOR` command. The server begins streaming command records back over that connection. Each record contains the timestamp, database index, client address, command name, and arguments.
+
+MONITOR is only supported for standalone (non-cluster) connections. Attempting to use it with a cluster configuration will result in an error.
+
+:::caution
+Running MONITOR in production degrades server throughput because every processed command must be serialized and sent back to the monitoring client. Use it only for short debugging sessions.
+:::
+
+There are two modes for consuming monitor messages:
+
+* **Callback mode** — provide a callback function at creation time; it is invoked for every incoming message.
+* **Queue mode** — omit the callback; messages are queued internally and retrieved by calling `getMonitorMessage` / `tryGetMonitorMessage`.
+
+## Examples
+
+### Callback mode
+
+<Tabs syncKey="">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClientConfiguration, NodeAddress
+    from glide.monitor_client import MonitorClient, MonitorMsg
+
+    def on_monitor_msg(msg: MonitorMsg) -> None:
+        print(f"{msg.timestamp:.6f} [{msg.db}] {msg.client_addr} {msg.command} {msg.args}")
+
+    async def main():
+        config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+        async with await MonitorClient.create(config, callback=on_monitor_msg) as monitor:
+            # Run commands on a separate client — the callback will print each one.
+            await asyncio.sleep(5)
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideMonitorClient, MonitorLine } from "@valkey/valkey-glide";
+
+    const monitor = await GlideMonitorClient.create(
+      { addresses: [{ host: "localhost", port: 6379 }] },
+      (line: MonitorLine) => {
+        console.log(`${line.timestamp} [${line.db}] ${line.clientAddr} ${line.command} ${line.args.join(" ")}`);
+      },
+    );
+
+    // Close when done.
+    await monitor.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.MonitorClient;
+    import glide.api.models.commands.MonitorMsg;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    try (MonitorClient monitor = MonitorClient.create(config, (MonitorMsg msg) ->
+            System.out.printf("%.6f [%d] %s %s %s%n",
+                msg.timestamp(), msg.db(), msg.clientAddr(), msg.command(), msg.args()))) {
+        // Run commands on a separate client — the callback will print each one.
+        Thread.sleep(5000);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "fmt"
+        "time"
+
+        "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func main() {
+        cfg := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+        monitor, err := glide.NewMonitorClient(cfg, func(line glide.MonitorLine) {
+            fmt.Printf("%.6f [%d] %s %s %v\n",
+                line.Timestamp, line.DB, line.ClientAddr, line.Command, line.Args)
+        })
+        if err != nil {
+            panic(err)
+        }
+        defer monitor.Close()
+
+        time.Sleep(5 * time.Second)
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Queue mode
+
+<Tabs syncKey="">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClientConfiguration, NodeAddress
+    from glide.monitor_client import MonitorClient
+
+    async def main():
+        config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+        async with await MonitorClient.create(config) as monitor:
+            msg = await monitor.get_monitor_message()
+            print(f"{msg.command} {msg.args}")
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideMonitorClient } from "@valkey/valkey-glide";
+
+    const monitor = await GlideMonitorClient.create({
+      addresses: [{ host: "localhost", port: 6379 }],
+    });
+
+    const line = await monitor.getNextMessage();
+    console.log(`${line.command} ${line.args.join(" ")}`);
+
+    await monitor.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.MonitorClient;
+    import glide.api.models.commands.MonitorMsg;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    try (MonitorClient monitor = MonitorClient.create(config)) {
+        MonitorMsg msg = monitor.getMonitorMessage();
+        System.out.printf("%s %s%n", msg.command(), msg.args());
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "fmt"
+
+        "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func main() {
+        cfg := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+        monitor, err := glide.NewMonitorClient(cfg, nil)
+        if err != nil {
+            panic(err)
+        }
+        defer monitor.Close()
+
+        line, err := monitor.GetMonitorMessage()
+        if err != nil {
+            panic(err)
+        }
+        fmt.Printf("%s %v\n", line.Command, line.Args)
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Monitor Message Fields
+
+Each monitor message contains the following fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `timestamp` | float/double | Unix timestamp of when the command was processed |
+| `db` | int | Database index the command ran against |
+| `clientAddr` | string | Address of the client that issued the command |
+| `command` | string | Command name |
+| `args` | list/array | Command arguments |
