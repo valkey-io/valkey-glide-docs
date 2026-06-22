@@ -7,7 +7,7 @@
 4. Cleans up and propagates the exit code.
 
 Usage:
-    python scripts/check_csharp_examples.py
+    python scripts/validators/check-csharp-examples.py
         --validator <path_to_validate_examples.py>
         --glide-dll <path_to_Valkey.Glide.dll>
 
@@ -24,8 +24,9 @@ import subprocess
 import sys
 import tempfile
 
-# Repository root is one level up from this script's directory (scripts/).
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Repository root is two levels up from this script's directory
+# (scripts/validators/).
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _DOCS_DIR = os.path.join(_REPO_ROOT, "src", "content", "docs")
 
 # Matches a ```csharp ... ``` fenced code block, capturing the content.

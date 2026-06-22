@@ -8,7 +8,7 @@ using ``tsc --noEmit``.
 Self-contained: no external Python dependencies beyond the standard library.
 
 Usage:
-    python scripts/validators/node.py --glide-path ../valkey-glide/node
+    python scripts/validators/check-node-examples.py --glide-path ../valkey-glide/node
 
 Requires a pre-built Node client (run ``npm ci && npm run build:release``
 in the valkey-glide/node directory first).

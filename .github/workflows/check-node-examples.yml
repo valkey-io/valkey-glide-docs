@@ -2,7 +2,7 @@ name: Check Node Examples
 
 # Full-compilation validates the Node.js (TypeScript) code examples in the
 # docs against the real @valkey/valkey-glide type definitions built from source.
-# See scripts/validators/node.py.
+# See scripts/validators/check-node-examples.py.
 
 on:
   pull_request:
@@ -57,4 +57,4 @@ jobs:
           python-version: "3.x"
 
       - name: Validate Node examples
-        run: python scripts/validators/node.py --glide-path valkey-glide/node
+        run: python scripts/validators/check-node-examples.py --glide-path valkey-glide/node
