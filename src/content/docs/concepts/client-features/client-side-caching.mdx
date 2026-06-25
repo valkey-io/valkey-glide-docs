@@ -538,24 +538,48 @@ When `serverAssisted` is enabled, the Java client uses Valkey's [`CLIENT TRACKIN
 
 ### Enabling server-assisted mode
 
-```java
-import glide.api.GlideClient;
-import glide.api.models.configuration.GlideClientConfiguration;
-import glide.api.models.ClientSideCache;
-import glide.api.models.configuration.NodeAddress;
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.ClientSideCache;
+    import glide.api.models.configuration.NodeAddress;
 
-ClientSideCache cache = ClientSideCache.builder()
-    .maxCacheKb(1024)
-    .entryTtlMs(60_000)
-    .serverAssisted(true)   // Enable server-assisted invalidation
-    .build();
+    ClientSideCache cache = ClientSideCache.builder()
+        .maxCacheKb(1024)
+        .entryTtlMs(60_000)
+        .serverAssisted(true)   // Enable server-assisted invalidation
+        .build();
 
-GlideClientConfiguration config = GlideClientConfiguration.builder()
-    .address(NodeAddress.builder().host("localhost").port(6379).build())
-    .clientSideCache(cache)
-    .build();
-GlideClient client = GlideClient.createClient(config).get();
-```
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .clientSideCache(cache)
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
+  <TabItem label="Node">
+    Server-assisted invalidation is not yet available in the Node.js client. Progress is tracked in [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+  </TabItem>
+
+  <TabItem label="Go">
+    Server-assisted invalidation is not yet available in the Go client. Progress is tracked in [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+  </TabItem>
+
+  <TabItem label="PHP">
+    Server-assisted invalidation is not yet available in the PHP client. Progress is tracked in [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
+  </TabItem>
+
+  <TabItem label="C#">
+    Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+  </TabItem>
+</Tabs>
 
 <Aside type="caution" title="RESP3 Required">
   Server-assisted caching requires the RESP3 protocol, which is enforced automatically by glide-core when `serverAssisted(true)` is set. Ensure your Valkey server supports RESP3 (Valkey 7.2+).
@@ -565,24 +589,44 @@ GlideClient client = GlideClient.createClient(config).get();
 
 The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
 
-```java
-// Standalone client
-Map<String, Object> info = client.clientTrackingInfo().get();
-// info contains:
-//   "flags"    -> Set<String> e.g. {"on", "noloop"}
-//   "redirect" -> Long (-1 if not redirecting)
-//   "prefixes" -> Object[] of monitored key prefixes
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    // Standalone client
+    Map<String, Object> info = client.clientTrackingInfo().get();
+    // info contains:
+    //   "flags"    -> Set<String> e.g. {"on", "noloop"}
+    //   "redirect" -> Long (-1 if not redirecting)
+    //   "prefixes" -> Object[] of monitored key prefixes
 
-// Cluster client — routes to a random node by default
-Map<String, Object> clusterInfo = clusterClient.clientTrackingInfo().get();
+    // Cluster client — routes to a random node by default
+    Map<String, Object> clusterInfo = clusterClient.clientTrackingInfo().get();
 
-// Cluster client — query all nodes
-Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
-```
+    // Cluster client — query all nodes
+    Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
+    ```
+  </TabItem>
 
-<Aside type="note" title="Java-only">
-  Server-assisted invalidation is currently available in the Java client only. Support for Python, Node.js, Go, PHP, and C# will be added in future releases.
-</Aside>
+  <TabItem label="Python">
+    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
+  <TabItem label="Node">
+    Not yet available. See [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+  </TabItem>
+
+  <TabItem label="Go">
+    Not yet available. See [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+  </TabItem>
+
+  <TabItem label="PHP">
+    Not yet available. See [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
+  </TabItem>
+
+  <TabItem label="C#">
+    Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+  </TabItem>
+</Tabs>
 
 ## Limitations
 
