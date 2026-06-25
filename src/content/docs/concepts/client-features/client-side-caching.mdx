@@ -8,7 +8,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
 <Aside type="caution" title="TTL-Only Caching (Default)">
-  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java** now supports [server-assisted invalidation](#server-assisted-invalidation-java) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. Other languages still use TTL-only mode; server-assisted support will be added in future releases.
+  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java** now supports [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. Other languages still use TTL-only mode; server-assisted support will be added in future releases.
 </Aside>
 
 ## How It Works
@@ -234,7 +234,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
 | `entryTtlMs`      | integer           | —       | Time-to-live per entry in milliseconds. Use `0` to disable TTL (entries persist until evicted).   |
 | `evictionPolicy`   | `LRU` or `LFU`   | `LRU`   | Policy for removing entries when the cache is full.                                               |
 | `enableMetrics`    | boolean           | `false` | When `true`, enables collection of hit/miss/eviction/expiration counters.                         |
-| `serverAssisted`   | boolean           | `false` | When `true`, enables server-assisted invalidation via Valkey's `CLIENT TRACKING` protocol. Requires RESP3. Currently available in Java only. |
+| `serverAssisted`   | boolean           | `false` | When `true`, enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` (broadcast) mode — the only tracking mode GLIDE currently supports. Requires RESP3.|
 
 ## Eviction Policies
 
@@ -532,9 +532,13 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
   * Metrics (hit rate, miss rate, etc.) are shared across all clients using the same cache instance.
 </Aside>
 
-## Server-Assisted Invalidation (Java)
+## Server-Assisted Invalidation
 
-When `serverAssisted` is enabled, the Java client uses Valkey's [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol to receive push invalidation messages from the server whenever a cached key is modified. This eliminates the staleness window inherent in TTL-only mode — the server notifies the client immediately when data changes, and the client removes the stale entry from its local cache.
+Server-assisted invalidation can be enabled in the client side configuration by setting server assisted to true.
+You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself; GLIDE issues `CLIENT TRACKING ON BCAST` on your behalf during connection setup. 
+
+Once enabled, the client receives push invalidation messages from the server whenever a cached key is modified, eliminating the staleness window inherent in TTL-only mode — the server notifies the client immediately when data changes, and the client removes the stale entry from its local cache.
+
 
 ### Enabling server-assisted mode
 
@@ -585,7 +589,7 @@ When `serverAssisted` is enabled, the Java client uses Valkey's [`CLIENT TRACKIN
   Server-assisted caching requires the RESP3 protocol, which is enforced automatically by glide-core when `serverAssisted(true)` is set. Ensure your Valkey server supports RESP3 (Valkey 7.2+).
 </Aside>
 
-### Diagnosing tracking state with `clientTrackingInfo()`
+### Diagnosing tracking state with `CLIENT TRACKINGINFO`
 
 The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
 
@@ -632,11 +636,11 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
 
 | Limitation | Details |
 | --- | --- |
-| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java supports [server-assisted invalidation](#server-assisted-invalidation-java) which eliminates this limitation. |
+| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java supports [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
-| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation-java) (Java), the server pushes invalidation messages that clear the stale entry immediately. |
+| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java), the server pushes invalidation messages that clear the stale entry immediately. |
 
 ### Compatibility with managed services
 
