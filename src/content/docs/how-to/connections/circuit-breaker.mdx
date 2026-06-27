@@ -1,0 +1,249 @@
+---
+title: Configure a Circuit Breaker
+description: Protect your application from thread explosion during degraded conditions by enabling the client-side circuit breaker.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads stalls. This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
+
+## Configuration
+
+The circuit breaker option is defined on the base client configuration, so it applies to both standalone and cluster clients. The examples below use the standalone client; pass the same configuration to the cluster client configuration to enable it for a cluster client.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, ClientCircuitBreakerConfiguration, NodeAddress
+
+    circuit_breaker = ClientCircuitBreakerConfiguration(
+        window_size_ms=10000,
+        failure_rate_threshold=0.5,
+        min_errors=50,
+        open_timeout_ms=5000,
+        count_timeouts=False,
+        consecutive_successes=3,
+    )
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        client_circuit_breaker=circuit_breaker,
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    ClientCircuitBreakerConfiguration circuitBreaker = ClientCircuitBreakerConfiguration.builder()
+        .windowSizeMs(10000)
+        .failureRateThreshold(0.5f)
+        .minErrors(50)
+        .openTimeoutMs(5000)
+        .countTimeouts(false)
+        .consecutiveSuccesses(3)
+        .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .clientCircuitBreakerConfiguration(circuitBreaker)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, GlideClientConfiguration } from '@valkey/valkey-glide';
+
+    const config: GlideClientConfiguration = {
+        addresses: [{ host: 'localhost', port: 6379 }],
+        clientCircuitBreaker: {
+            windowSizeMs: 10000,
+            failureRateThreshold: 0.5,
+            minErrors: 50,
+            openTimeoutMs: 5000,
+            countTimeouts: false,
+            consecutiveSuccesses: 3,
+        },
+    };
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/config"
+
+    circuitBreaker := &config.ClientCircuitBreakerConfiguration{
+        WindowSizeMs:         10000,
+        FailureRateThreshold: 0.5,
+        MinErrors:            50,
+        OpenTimeoutMs:        5000,
+        CountTimeouts:        false,
+        ConsecutiveSuccesses: 3,
+    }
+
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientCircuitBreaker(circuitBreaker)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    The circuit breaker is not yet available in the PHP client.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The circuit breaker is not yet available in the C# client.
+    :::
+  </TabItem>
+</Tabs>
+
+## How It Works
+
+The circuit breaker uses a state machine with three states:
+
+1. **Closed** (normal operation) — All requests pass through. The breaker monitors the error rate within a sliding window. If the error rate exceeds the threshold (and the minimum error count has been reached), the breaker trips to Open.
+
+2. **Open** (rejecting) — All requests are immediately rejected with a `CircuitBreakerException`/`CircuitBreakerError`. After the open timeout elapses, the breaker transitions to HalfOpen.
+
+3. **HalfOpen** (probing recovery) — All traffic is allowed through optimistically. If the configured number of consecutive successes is reached, the breaker closes. If a failure occurs, the breaker returns to Open.
+
+```
+Closed ──(error rate exceeds threshold)──► Open
+  ▲                                          │
+  │                                     (timeout)
+  │                                          ▼
+  └──(N consecutive successes)────────── HalfOpen
+```
+
+### What counts as a failure
+
+Only transport-level failures count toward tripping the breaker:
+
+* Connection failures (e.g. connection refused) and dropped connections
+* Failures sending or receiving on the connection (pipeline send/receive failures)
+* Request timeouts — but only when `countTimeouts` is enabled
+
+Application and server errors do **not** count, because the request reached the server and got a valid response. For example, `WRONGTYPE`, `MOVED`, and similar command-level errors leave the breaker closed.
+
+:::note
+This failure classification reflects the current core behavior and may evolve in a future release (see valkey-glide [#6208](https://github.com/valkey-io/valkey-glide/issues/6208)).
+:::
+
+## Handling Rejections
+
+When the circuit breaker is open, requests throw immediately. Catch these exceptions to implement fallback logic or surface appropriate errors to callers.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import CircuitBreakerError
+
+    try:
+        value = await client.get("key")
+    except CircuitBreakerError:
+        # Circuit breaker is open — use fallback or back off
+        pass
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.exceptions.CircuitBreakerException;
+    import java.util.concurrent.ExecutionException;
+
+    try {
+        String value = client.get("key").get();
+    } catch (ExecutionException e) {
+        if (e.getCause() instanceof CircuitBreakerException) {
+            // Circuit breaker is open — use fallback or back off
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { CircuitBreakerError } from '@valkey/valkey-glide';
+
+    try {
+        const value = await client.get("key");
+    } catch (e) {
+        if (e instanceof CircuitBreakerError) {
+            // Circuit breaker is open — use fallback or back off
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+        "errors"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    result, err := client.Get(context.Background(), "key")
+    if err != nil {
+        var cbErr *glide.CircuitBreakerError
+        if errors.As(err, &cbErr) {
+            // Circuit breaker is open — use fallback or back off
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    The circuit breaker is not yet available in the PHP client.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The circuit breaker is not yet available in the C# client.
+    :::
+  </TabItem>
+</Tabs>
+
+## Configuration Parameters
+
+All parameters are optional. The circuit breaker uses sensible defaults if you provide no configuration beyond enabling it.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `windowSizeMs` / `window_size_ms` | integer | `10000` (10s) | Sliding window duration for error rate calculation. |
+| `failureRateThreshold` / `failure_rate_threshold` | float | `0.5` (50%) | Error rate (0.0–1.0) that trips the breaker. |
+| `minErrors` / `min_errors` | integer | `50` | Minimum errors within the window before the rate is evaluated. Prevents tripping on low traffic. |
+| `openTimeoutMs` / `open_timeout_ms` | integer | `5000` (5s) | Time the breaker stays Open before transitioning to HalfOpen. |
+| `countTimeouts` / `count_timeouts` | boolean | `false` | Whether request timeouts count as failures toward tripping the breaker. |
+| `consecutiveSuccesses` / `consecutive_successes` | integer | `3` | Consecutive successful requests in HalfOpen needed to close the breaker. |
+
+## Best Practices
+
+**When to enable:**
+
+* Applications where thread exhaustion or resource starvation is a concern during server outages.
+* Services that can surface a degraded response (cache miss fallback, stale data) rather than hanging.
+* High-throughput workloads where queued requests would pile up faster than they drain.
+
+**Tuning guidance:**
+
+* Start with defaults and adjust based on observed behavior.
+* Lower `failureRateThreshold` if you want faster detection of degraded backends.
+* Increase `minErrors` in low-traffic environments to avoid false trips from small sample sizes.
+* Increase `openTimeoutMs` if your server typically takes longer to recover (e.g., failover scenarios).
+* Set `countTimeouts: true` if your timeout configuration is tight and timeouts reliably indicate a backend issue.
+* Keep `consecutiveSuccesses` low (2–5) for faster recovery; increase it if premature recovery causes cascading failures.
+
+:::tip
+Enable the circuit breaker with all defaults as a starting point — just pass an empty configuration object. This gives you protection with no tuning required.
+:::
