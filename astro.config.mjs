@@ -176,6 +176,7 @@ export default defineConfig({
             {
               label: "Connections",
               items: [
+                "how-to/connections/circuit-breaker",
                 "how-to/connections/configure-lazy-connection",
                 "how-to/connections/limit-inflight-requests",
                 "how-to/connections/read-strategy",
