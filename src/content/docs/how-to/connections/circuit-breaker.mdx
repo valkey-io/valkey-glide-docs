@@ -5,7 +5,7 @@ description: Protect your application from thread explosion during degraded cond
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads stalls. This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
+The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads . This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
 
 ## Configuration
 
@@ -131,10 +131,6 @@ Only transport-level failures count toward tripping the breaker:
 * Request timeouts — but only when `countTimeouts` is enabled
 
 Application and server errors do **not** count, because the request reached the server and got a valid response. For example, `WRONGTYPE`, `MOVED`, and similar command-level errors leave the breaker closed.
-
-:::note
-This failure classification reflects the current core behavior and may evolve in a future release (see valkey-glide [#6208](https://github.com/valkey-io/valkey-glide/issues/6208)).
-:::
 
 ## Handling Rejections
 
