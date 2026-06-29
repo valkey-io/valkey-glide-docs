@@ -5,7 +5,7 @@ description: Protect your application from thread explosion during degraded cond
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads stalls. This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
+The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads stall. This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
 
 ## Configuration
 
