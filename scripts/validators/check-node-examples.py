@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Full-compilation validator for Node (TypeScript) documentation examples.
 
-Extracts TypeScript/JavaScript code blocks from the MDX docs and compiles
-each snippet against the real ``@valkey/valkey-glide`` type definitions
-using ``tsc --noEmit``.
+Follows the same overall pattern as ``check-csharp-examples.py``:
+
+1. Extracts TypeScript/JavaScript code blocks from the MDX docs.
+2. Wraps each snippet into a compilable ``.ts`` file (injecting default
+   imports and ambient client declarations).
+3. Compiles everything in one pass with ``tsc --noEmit`` against the real
+   ``@valkey/valkey-glide`` package built from source.
+4. Parses the compiler output and reports failures per source location.
 
 Self-contained: no external Python dependencies beyond the standard library.
 
@@ -12,6 +17,16 @@ Usage:
 
 Requires a pre-built Node client (run ``npm ci && npm run build:release``
 in the valkey-glide/node directory first).
+
+Options:
+    --glide-path      Path to the built valkey-glide/node directory. We point
+                       at the directory (rather than directly at
+                       build-ts/index.d.ts) so npm can resolve the package via
+                       its package.json "exports"/"types"/"main" fields —
+                       this also correctly follows any relative imports
+                       across the package's other .d.ts files.
+    --keep-project    Preserve the temporary TypeScript project directory
+                       instead of deleting it, for local debugging.
 """
 
 from __future__ import annotations
@@ -26,48 +41,35 @@ import sys
 import tempfile
 import textwrap
 
+from _common import extract_all as _extract_all
+
 # ---------------------------------------------------------------------------
 # Extraction
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_DOCS_DIR = os.path.join(_REPO_ROOT, "src", "content", "docs")
+# Fence language tags this validator extracts.
+_LANGUAGES = ["typescript", "ts", "javascript", "js"]
 
-_TS_BLOCK_RE = re.compile(
-    r"^\s*```(?:typescript|ts|javascript|js)\s*\n(.*?)^\s*```\s*$",
-    re.MULTILINE | re.DOTALL,
-)
-
-
-def _extract_examples() -> dict[str, str]:
-    """Extract TypeScript/JS code blocks from all MDX files."""
-    examples: dict[str, str] = {}
-    for root, _dirs, files in os.walk(_DOCS_DIR):
-        # Skip migration guides — they contain comparison snippets from other clients
-        rel_root = os.path.relpath(root, _DOCS_DIR)
-        if rel_root.startswith("migration"):
-            continue
-        for fname in sorted(files):
-            if not fname.endswith(".mdx"):
-                continue
-            # Skip IAM integration guides — they import AWS SDK packages
-            if fname.startswith("iam-"):
-                continue
-            filepath = os.path.join(root, fname)
-            with open(filepath, encoding="utf-8") as fh:
-                content = fh.read()
-            for match in _TS_BLOCK_RE.finditer(content):
-                key_path = os.path.relpath(filepath, _REPO_ROOT)
-                line_number = content[: match.start()].count("\n") + 1
-                examples[f"{key_path}:{line_number}"] = match.group(1)
-    return examples
+# Files/directories skipped during extraction:
+#   - migration guides contain comparison snippets from other clients
+#   - IAM integration guides import AWS SDK packages we don't install
+_SKIP_PATTERNS = [r"^migration", r"iam-"]
 
 
 # ---------------------------------------------------------------------------
 # Wrapping
 # ---------------------------------------------------------------------------
 
-_IMPORT_LINE = re.compile(r"^\s*import\s+")
+# Matches the start of an import statement.
+_IMPORT_LINE_RE = re.compile(r"^\s*import\s+")
+
+# Matches the closing `from "..."` of an import statement, to detect where
+# a (possibly multi-line) import statement ends.
+_IMPORT_END_RE = re.compile(r"""from\s+["'][^"']+["']\s*;?\s*$""")
+
+# Matches the `{ Named, Imports }` portion of an import statement, so we can
+# tell which names a snippet already imports for itself.
+_NAMED_IMPORTS_RE = re.compile(r"\{([^}]+)\}")
 
 _DEFAULT_IMPORTS = (
     "GlideClient, GlideClusterClient, GlideClientConfiguration, "
@@ -88,16 +90,30 @@ _CLIENT_DECLARATIONS = (
 
 
 def _split_imports(code: str) -> tuple[list[str], list[str]]:
-    """Separate import statements (including multi-line) from the rest."""
+    """Separate import statements (including multi-line) from the rest.
+
+    Import statements can span multiple lines, e.g.:
+
+        import {
+            GlideClient,
+            GlideClusterClient,
+        } from "@valkey/valkey-glide";
+
+    We scan line by line: once a line starts an import, we keep consuming
+    lines until we see the closing `from "...";` (via ``_IMPORT_END_RE``),
+    which marks the end of that statement. Every other line is treated as
+    part of the snippet's body.
+    """
     imports: list[str] = []
     body: list[str] = []
     lines = code.splitlines()
     i = 0
     while i < len(lines):
         line = lines[i]
-        if _IMPORT_LINE.match(line):
+        if _IMPORT_LINE_RE.match(line):
             import_lines = [line]
-            while not re.search(r"""from\s+["'][^"']+["']\s*;?\s*$""", line) and i + 1 < len(lines):
+            # Keep consuming lines until this import statement closes.
+            while not _IMPORT_END_RE.search(line) and i + 1 < len(lines):
                 i += 1
                 line = lines[i]
                 import_lines.append(line)
@@ -117,7 +133,7 @@ def _wrap_snippet(code: str) -> str:
     # Inject default imports, deduped against snippet's own
     existing_names: set[str] = set()
     for imp in imports:
-        m = re.search(r"\{([^}]+)\}", imp)
+        m = _NAMED_IMPORTS_RE.search(imp)
         if m:
             for name in m.group(1).split(","):
                 existing_names.add(name.strip())
@@ -215,14 +231,22 @@ def _run_tsc(tmp_dir: str) -> str:
     return proc.stdout + proc.stderr
 
 
-_TSC_ERROR = re.compile(r"^(example_\d+\.ts)\((\d+),(\d+)\):\s+error\s+TS\d+:\s+(.+)$")
+# Matches a single tsc error line, e.g.:
+#   example_0001.ts(12,5): error TS2304: Cannot find name 'foo'.
+_TSC_ERROR_RE = re.compile(r"^(example_\d+\.ts)\((\d+),(\d+)\):\s+error\s+TS\d+:\s+(.+)$")
 
 
 def _parse_tsc_errors(output: str) -> dict[str, list[str]]:
-    """Parse tsc output into {filename: [messages]}."""
+    """Parse tsc output into per-file error messages.
+
+    Returns:
+        A dict mapping each generated example filename (e.g.
+        ``"example_0001.ts"``) to a list of human-readable error strings,
+        one per compiler diagnostic raised against that file.
+    """
     errors: dict[str, list[str]] = {}
     for line in output.splitlines():
-        m = _TSC_ERROR.match(line)
+        m = _TSC_ERROR_RE.match(line)
         if m:
             filename, line_no, _col, message = m.groups()
             errors.setdefault(filename, []).append(f"line {line_no}: {message}")
@@ -235,7 +259,21 @@ def validate(
     glide_path: str,
     keep_project: bool = False,
 ) -> dict[str, list[str]]:
-    """Compile all snippets and return {source: [errors]}."""
+    """Compile all snippets and collect any errors.
+
+    Args:
+        examples: Mapping of ``"<source>:<line>"`` to snippet code, as
+            produced by ``_common.extract_all``.
+        glide_path: Path to the built valkey-glide/node directory.
+        keep_project: If True, don't delete the temp project afterwards.
+
+    Returns:
+        A dict mapping each ``source`` key from ``examples`` to the list of
+        compiler error messages raised against that snippet. Sources that
+        compiled cleanly are omitted entirely (never mapped to an empty
+        list), since only failing example filenames appear in the tsc
+        output that ``_parse_tsc_errors`` parses.
+    """
     tmp_dir = tempfile.mkdtemp(prefix="glide_node_validate_")
     try:
         print("Setting up TypeScript project...", flush=True)
@@ -282,7 +320,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--keep-project", action="store_true",
-        help="Keep the temp project directory for inspection.",
+        help="Keep the temp project directory for inspection (useful when "
+             "debugging a failing snippet locally).",
     )
     args = parser.parse_args()
 
@@ -303,12 +342,8 @@ def main() -> None:
     _require_tool("node")
     _require_tool("npm")
 
-    if not os.path.isdir(_DOCS_DIR):
-        print(f"Error: docs directory not found: {_DOCS_DIR}", file=sys.stderr)
-        sys.exit(1)
-
     print("Extracting TypeScript examples from MDX docs...", flush=True)
-    examples = _extract_examples()
+    examples = _extract_all(_LANGUAGES, skip_patterns=_SKIP_PATTERNS)
     print(f"Extracted {len(examples)} example(s).", flush=True)
 
     if not examples:
