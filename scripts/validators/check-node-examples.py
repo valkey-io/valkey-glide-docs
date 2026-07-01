@@ -124,39 +124,64 @@ def _split_imports(code: str) -> tuple[list[str], list[str]]:
     return imports, body
 
 
-def _wrap_snippet(code: str) -> str:
-    """Wrap a snippet into a compilable .ts file."""
-    imports, body_lines = _split_imports(code)
+def _collect_imported_names(imports: list[str]) -> set[str]:
+    """Collect all named imports (`{ A, B }`) already present in a snippet."""
+    names: set[str] = set()
+    for import_statement in imports:
+        match = _NAMED_IMPORTS_RE.search(import_statement)
+        if not match:
+            continue
+        names.update(name.strip() for name in match.group(1).split(","))
+    return names
 
-    parts: list[str] = []
 
-    # Inject default imports, deduped against snippet's own
-    existing_names: set[str] = set()
-    for imp in imports:
-        m = _NAMED_IMPORTS_RE.search(imp)
-        if m:
-            for name in m.group(1).split(","):
-                existing_names.add(name.strip())
-    defaults = [
-        n.strip() for n in _DEFAULT_IMPORTS.split(",")
-        if n.strip() not in existing_names
+def _build_default_import_statement(imported_names: set[str]) -> str:
+    """Build the injected `import { ... } from "@valkey/valkey-glide"` line.
+
+    Names the snippet already imports itself are excluded to avoid
+    duplicate-import compiler errors.
+    """
+    missing_names = [
+        name.strip() for name in _DEFAULT_IMPORTS.split(",")
+        if name.strip() not in imported_names
     ]
-    if defaults:
-        parts.append(f"import {{ {', '.join(defaults)} }} from \"@valkey/valkey-glide\";\n")
+    if not missing_names:
+        return ""
+    return f"import {{ {', '.join(missing_names)} }} from \"@valkey/valkey-glide\";\n"
 
-    # Hoisted imports from snippet
-    if imports:
-        parts.append("\n".join(imports) + "\n")
 
-    # Client declarations
-    parts.append("\n" + _CLIENT_DECLARATIONS)
-
-    # Async wrapper for the body
+def _build_async_wrapper(body_lines: list[str]) -> str:
+    """Wrap the snippet's body lines in an async function, if non-empty."""
     body = "\n".join(body_lines).strip()
-    if body:
-        parts.append(f"\nasync function __run() {{\n{textwrap.indent(body, '    ')}\n}}\n")
+    if not body:
+        return ""
+    return f"\nasync function __run() {{\n{textwrap.indent(body, '    ')}\n}}\n"
 
-    return "\n".join(parts)
+
+def _wrap_snippet(code: str) -> str:
+    """Wrap a snippet into a compilable .ts file.
+
+    Steps:
+        1. Split the snippet into its own imports and body.
+        2. Build the injected default-import line, deduplicating against the
+           snippet's imports.
+        3. Reassemble: default imports, snippet imports, client
+           declarations, then the snippet body wrapped in an async function.
+    """
+    snippet_imports, snippet_body_lines = _split_imports(code)
+    imported_names = _collect_imported_names(snippet_imports)
+
+    default_import_statement = _build_default_import_statement(imported_names)
+    snippet_import_block = "\n".join(snippet_imports) + "\n" if snippet_imports else ""
+    async_wrapper = _build_async_wrapper(snippet_body_lines)
+
+    file_parts = [
+        default_import_statement,
+        snippet_import_block,
+        "\n" + _CLIENT_DECLARATIONS,
+        async_wrapper,
+    ]
+    return "\n".join(part for part in file_parts if part)
 
 
 # ---------------------------------------------------------------------------
