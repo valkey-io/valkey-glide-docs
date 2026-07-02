@@ -13,18 +13,16 @@ Follows the same overall pattern as ``check-csharp-examples.py``:
 Self-contained: no external Python dependencies beyond the standard library.
 
 Usage:
-    python scripts/validators/check-node-examples.py --glide-path ../valkey-glide/node
+    python scripts/validators/check-node-examples.py --glide-index ../valkey-glide/node/build-ts/index.d.ts
 
 Requires a pre-built Node client (run ``npm ci && npm run build:release``
 in the valkey-glide/node directory first).
 
 Options:
-    --glide-path      Path to the built valkey-glide/node directory. We point
-                       at the directory (rather than directly at
-                       build-ts/index.d.ts) so npm can resolve the package via
-                       its package.json "exports"/"types"/"main" fields —
-                       this also correctly follows any relative imports
-                       across the package's other .d.ts files.
+    --glide-index     Path to the built valkey-glide/node/build-ts/index.d.ts
+                       file. Mapped directly to the `@valkey/valkey-glide`
+                       import via a tsconfig `paths` entry, mirroring the
+                       C# validator's `--glide-dll`.
     --keep-project    Preserve the temporary TypeScript project directory
                        instead of deleting it, for local debugging.
 """
@@ -195,18 +193,18 @@ def _require_tool(name: str) -> None:
         sys.exit(1)
 
 
-def _setup_project(tmp_dir: str, glide_path: str) -> None:
-    """Create a temp TypeScript project referencing the local GLIDE build."""
-    glide_abs = os.path.abspath(glide_path)
+def _setup_project(tmp_dir: str, glide_index: str) -> None:
+    """Create a temp TypeScript project referencing the local GLIDE build.
 
+    Maps the `@valkey/valkey-glide` import directly to the built
+    `index.d.ts` via a `paths` entry, so no `npm install` of the GLIDE
+    package itself is needed — only the TypeScript compiler is installed.
+    """
     package_json = json.dumps(
         {
             "name": "glide-doc-validator",
             "private": True,
             "type": "module",
-            "dependencies": {
-                "@valkey/valkey-glide": f"file:{glide_abs}",
-            },
         },
         indent=2,
     )
@@ -221,6 +219,10 @@ def _setup_project(tmp_dir: str, glide_path: str) -> None:
                 "skipLibCheck": True,
                 "esModuleInterop": True,
                 "types": ["node"],
+                "baseUrl": ".",
+                "paths": {
+                    "@valkey/valkey-glide": [glide_index],
+                },
             },
             "include": ["*.ts"],
         },
@@ -281,7 +283,7 @@ def _parse_tsc_errors(output: str) -> dict[str, list[str]]:
 def validate(
     examples: dict[str, str],
     *,
-    glide_path: str,
+    glide_index: str,
     keep_project: bool = False,
 ) -> dict[str, list[str]]:
     """Compile all snippets and collect any errors.
@@ -289,7 +291,8 @@ def validate(
     Args:
         examples: Mapping of ``"<source>:<line>"`` to snippet code, as
             produced by ``_common.extract_all``.
-        glide_path: Path to the built valkey-glide/node directory.
+        glide_index: Path to the built valkey-glide/node
+            build-ts/index.d.ts file.
         keep_project: If True, don't delete the temp project afterwards.
 
     Returns:
@@ -301,7 +304,7 @@ def validate(
     tmp_dir = tempfile.mkdtemp(prefix="glide_node_validate_")
     try:
         print("Setting up TypeScript project...", flush=True)
-        _setup_project(tmp_dir, glide_path)
+        _setup_project(tmp_dir, glide_index)
 
         file_to_source: dict[str, str] = {}
         for idx, (source, code) in enumerate(examples.items()):
@@ -337,8 +340,8 @@ def main() -> None:
         description="Full-compilation validator for Node.js (TypeScript) doc examples."
     )
     parser.add_argument(
-        "--glide-path", required=True,
-        help="Path to the built valkey-glide/node directory.",
+        "--glide-index", required=True,
+        help="Path to the built valkey-glide/node/build-ts/index.d.ts file.",
     )
     parser.add_argument(
         "--keep-project", action="store_true",
@@ -347,16 +350,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    glide_path = os.path.abspath(args.glide_path)
+    glide_index = os.path.abspath(args.glide_index)
 
-    # Validate the glide path
-    if not os.path.isdir(glide_path):
-        print(f"Error: --glide-path not found: {glide_path}", file=sys.stderr)
-        sys.exit(1)
-    if not os.path.isfile(os.path.join(glide_path, "build-ts", "index.d.ts")):
+    # Validate the glide index path
+    if not os.path.isfile(glide_index):
         print(
-            f"Error: No build-ts/index.d.ts in {glide_path}. "
-            f"Build the client first: cd {glide_path} && npm ci && npm run build:release",
+            f"Error: --glide-index not found: {glide_index}. "
+            f"Build the client first: cd <valkey-glide>/node && npm ci && npm run build:release",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -375,7 +375,7 @@ def main() -> None:
 
     errors = validate(
         dedented,
-        glide_path=glide_path,
+        glide_index=glide_index,
         keep_project=args.keep_project,
     )
     errors = {s: msgs for s, msgs in errors.items() if msgs}

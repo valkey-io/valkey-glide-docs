@@ -57,4 +57,4 @@ jobs:
           python-version: "3.x"
 
       - name: Validate Node examples
-        run: python scripts/validators/check-node-examples.py --glide-path valkey-glide/node
+        run: python scripts/validators/check-node-examples.py --glide-index valkey-glide/node/build-ts/index.d.ts
