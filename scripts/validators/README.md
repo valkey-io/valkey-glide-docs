@@ -44,7 +44,3 @@ python scripts/validators/check-node-examples.py --glide-index <path_to_valkey-g
 ```
 
 Both scripts run automatically in CI on every PR (see `.github/workflows/check-csharp-examples.yml` and `.github/workflows/check-node-examples.yml`).
-
-## Adding a new language
-
-See `DESIGN.md` for the full pattern to follow when adding a validator for another language.
