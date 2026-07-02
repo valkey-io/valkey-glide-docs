@@ -295,9 +295,8 @@ def validate(
     Returns:
         A dict mapping each ``source`` key from ``examples`` to the list of
         compiler error messages raised against that snippet. Sources that
-        compiled cleanly are omitted entirely (never mapped to an empty
-        list), since only failing example filenames appear in the tsc
-        output that ``_parse_tsc_errors`` parses.
+        compiled cleanly are omitted entirely, since ``_parse_tsc_errors``
+        only returns entries for files tsc actually reported errors on.
     """
     tmp_dir = tempfile.mkdtemp(prefix="glide_node_validate_")
     try:
@@ -316,11 +315,9 @@ def validate(
         output = _run_tsc(tmp_dir)
 
         file_errors = _parse_tsc_errors(output)
-        result: dict[str, list[str]] = {}
-        for filename, msgs in file_errors.items():
-            source = file_to_source.get(filename)
-            if source:
-                result[source] = msgs
+        result: dict[str, list[str]] = {
+            file_to_source[filename]: msgs for filename, msgs in file_errors.items()
+        }
     finally:
         if keep_project:
             print(f"\nProject kept at: {tmp_dir}", flush=True)
