@@ -1,0 +1,192 @@
+---
+title: Resilience Best Practices
+description: Guidance for configuring Valkey GLIDE for resilient operation under server outages, failovers, and high-load scenarios.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide covers configuration and operational practices that help Valkey GLIDE clients remain responsive during server outages, failovers, and high-load scenarios.
+
+## Recommended Production Configuration
+
+A resilient client combines request timeout, inflight limiting, and the circuit breaker:
+
+<Tabs syncKey="progLangInExamples">
+<TabItem label="Python">
+
+```python
+from glide import (
+    GlideClusterClient,
+    GlideClusterClientConfiguration,
+    ClientCircuitBreakerConfiguration,
+    NodeAddress,
+)
+
+config = GlideClusterClientConfiguration(
+    addresses=[NodeAddress(host="localhost", port=6379)],
+    request_timeout=500,
+    inflight_requests_limit=1000,
+    client_circuit_breaker=ClientCircuitBreakerConfiguration(),
+)
+client = await GlideClusterClient.create(config)
+```
+
+</TabItem>
+<TabItem label="Java">
+
+```java
+import glide.api.GlideClusterClient;
+import glide.api.models.configuration.GlideClusterClientConfiguration;
+import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
+import glide.api.models.configuration.NodeAddress;
+
+GlideClusterClient client = GlideClusterClient.createClient(
+    GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .requestTimeout(500)
+        .inflightRequestsLimit(1000)
+        .clientCircuitBreakerConfiguration(
+            ClientCircuitBreakerConfiguration.builder().build())
+        .build()
+).get();
+```
+
+</TabItem>
+<TabItem label="Node">
+
+```typescript
+import { GlideClusterClient } from "@valkey/valkey-glide";
+
+const client = await GlideClusterClient.createClient({
+    addresses: [{ host: "localhost", port: 6379 }],
+    requestTimeout: 500,
+    inflightRequestsLimit: 1000,
+    clientCircuitBreaker: {},
+});
+```
+
+</TabItem>
+<TabItem label="Go">
+
+```go
+import (
+    "time"
+
+    glide "github.com/valkey-io/valkey-glide/go/v2"
+    "github.com/valkey-io/valkey-glide/go/v2/config"
+)
+
+clientConfig := config.NewClusterClientConfiguration().
+    WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+    WithRequestTimeout(500 * time.Millisecond).
+    WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
+
+client, err := glide.NewClusterClient(clientConfig)
+```
+
+</TabItem>
+</Tabs>
+
+## Single Client Instance
+
+Use one `GlideClusterClient` (or `GlideClient`) instance per application, shared across all threads. GLIDE clients maintain a multiplexed connection pool internally and are designed for concurrent access. See [Client Initialization](/how-to/client-initialization) for setup examples.
+
+Creating a client per request or per thread wastes connections, increases memory usage, and defeats the inflight request management that protects against overload.
+
+For sync APIs with blocking commands (e.g., `BLPOP` with long timeout), the calling thread is occupied for the duration. Size your thread pool accordingly or use async APIs for blocking command consumers.
+
+## Request Timeout
+
+Set `requestTimeout` based on your expected latency plus a buffer. See [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) for configuration details.
+
+- Too tight (e.g., 50ms when p99 is 40ms): causes false-positive timeouts under minor latency spikes, unnecessary retries, and wasted inflight slots. If the circuit breaker is enabled, frequent timeouts can also trip it unnecessarily.
+- Too loose (e.g., 5s): delays failure detection. Threads block longer before learning a node is unresponsive.
+
+A good starting point is 2-3x your observed p99 latency. The default of 250ms works well for most workloads with sub-millisecond latency. The examples above use 500ms (2x default) to provide headroom for occasional latency spikes.
+
+## Inflight Request Limit
+
+The `inflightRequestsLimit` controls how many concurrent requests a single client can have in-flight. The default is 1000.
+
+**Key points:**
+
+- The inflight limit should accommodate your expected concurrency: at throughput `T` ops/s with average latency `L` seconds, you need roughly `T × L` inflight slots (e.g., 50k ops/s at 1ms = ~50 slots, 50k ops/s at 10ms = ~500 slots).
+- When the limit is reached, new requests block until a slot frees up. The circuit breaker (if enabled) rejects before this blocking occurs.
+- If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
+- If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
+- Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
+- Note: The Go client does not yet expose `inflightRequestsLimit` configuration; the default is used.
+
+## Thread Pool Sizing (Java)
+
+For Java applications using `ForkJoinPool`:
+
+- `ForkJoinPool` parallelism, inflight limit, and request timeout are interconnected under load.
+- Calling `.get()` on a `CompletableFuture` inside a `ForkJoinPool` triggers `managedBlock()` (a JVM mechanism that creates additional threads to compensate for blocked ones).
+- If `requestTimeout` is long (e.g., 1s) and inflight is high (e.g., 1000), a stalled server can cause up to 1000 blocked threads before timeouts fire.
+- Where possible, use `.thenApply()` / `.thenAccept()` to chain async continuations instead of blocking with `.get()`.
+- Mitigation: use the circuit breaker (rejects before threads block) and keep request timeouts tight.
+
+## Enhanced Logging
+
+Enable WARN-level logging to see resilience diagnostics. See the [Logging guide](/how-to/monitoring/logging) for configuration.
+
+Key log messages to monitor:
+
+| Message | Meaning |
+|---------|---------|
+| `inflight requests limit reached` | Client is saturated; new commands will block or be rejected |
+| `Client circuit breaker tripped` | Sustained error rate exceeded threshold; requests now fast-rejected |
+| `Circuit breaker open, rejecting requests` | CB is actively rejecting (logged periodically while open) |
+| `Client circuit breaker closed` | Recovery confirmed; normal operation resumed |
+| `Timeout: cmd=... cause=...` | Watchdog fired with structured diagnostics (cause, phase, inflight trend) |
+
+### Timeout Watchdog Metrics
+
+When a command times out, the watchdog logs a structured diagnostic line with the following fields:
+
+| Field | Description |
+|-------|-------------|
+| `cmd` | The Valkey command that timed out |
+| `node` | The resolved target node address (or `"unknown"` if routing didn't complete) |
+| `cause` | Classified root cause: `ServerUnresponsive`, `SystemOverload`, or `ClientBackpressure` |
+| `phase` | `Queued` = command never left the client; `Sent` = command was sent, awaiting response |
+| `elapsed` | Actual wall-clock time since submission |
+| `configured` | The timeout duration that was set |
+| `pending` | Total commands registered with the watchdog at fire time |
+| `inflight` | Format: `at_register→at_timeout`. Shows how backpressure changed during the timeout window |
+| `p99` | Recent p99 latency for this client (from the last 4096 commands) |
+| `suggested_timeout` | 3x observed p99, floored at the configured timeout |
+| `retries` | Number of cluster retries attempted before timeout (only shown if > 0) |
+| `rss` | Process resident set size in MB at fire time (Linux/macOS) |
+
+Use `suggested_timeout` to determine if your configured timeout is too tight. If it consistently exceeds your configured value, increase `requestTimeout`.
+
+## Circuit Breaker
+
+See the dedicated [Circuit Breaker guide](/how-to/connections/circuit-breaker) for configuration details.
+
+**Key points:**
+
+- Enable CB for workloads where thread exhaustion is a concern during outages.
+- The CB rejects before the request reaches the network, so rejections are near-zero-cost.
+- Enable the `countTimeouts` option (Java: `countTimeouts(true)`, Python: `count_timeouts=True`, Node/Go: `countTimeouts: true`) if your timeout configuration is tight and timeouts reliably indicate a backend issue.
+- Recovery is optimistic (allows requests through to test if the server has recovered) with guards against premature closing.
+- When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
+
+## Standalone vs Cluster
+
+Both standalone and cluster clients benefit from:
+- Timeout watchdog (independent OS thread, fires timeouts reliably even under heavy load)
+- Inflight request limiting
+- Client-wide circuit breaker
+- Automatic reconnection with exponential backoff (see [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) to customize)
+- Automatic IAM token refresh (when configured)
+
+Cluster clients additionally benefit from:
+- Per-node routing (commands to healthy nodes are unaffected by one bad node)
+- Topology refresh and failover detection (periodic, enabled by default)
+- Automatic MOVED/ASK redirect handling
+- `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
+
+For standalone deployments, the client-wide circuit breaker is the primary protection against a single unresponsive server causing thread pile-up.
