@@ -10,10 +10,6 @@ GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statist
 * `total_connections` contains the number of active connections across **all** clients
 * `total_clients` contains the number of active clients (regardless of its type)
 
-:::caution[Not Generally Available]
-This is not supported by the Go client.
-:::
-
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     ```python
@@ -78,6 +74,34 @@ This is not supported by the Go client.
     // Example: Accessing and printing statistics
     console.log(`Total Connections: ${stats.total_connections}`);
     console.log(`Total Clients: ${stats.total_clients}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "fmt"
+        "log"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    clientConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379})
+
+    client, err := glide.NewClusterClient(clientConfig)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Close()
+
+    // Retrieve statistics
+    stats := client.GetStatistics()
+
+    // Example: Accessing and printing statistics
+    fmt.Printf("Total Connections: %d\n", stats["total_connections"])
+    fmt.Printf("Total Clients: %d\n", stats["total_clients"])
     ```
   </TabItem>
 
