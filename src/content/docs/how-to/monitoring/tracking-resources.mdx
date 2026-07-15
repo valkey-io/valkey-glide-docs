@@ -69,7 +69,7 @@ GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statist
     });
 
     // Retrieve statistics
-    const stats = await client.getStatistics();
+    const stats = await client.getStatistics() as Record<string, any>;
 
     // Example: Accessing and printing statistics
     console.log(`Total Connections: ${stats.total_connections}`);

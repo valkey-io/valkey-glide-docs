@@ -1,0 +1,399 @@
+#!/usr/bin/env python3
+"""Full-compilation validator for Node (TypeScript) documentation examples.
+
+Follows the same overall pattern as ``check-csharp-examples.py``:
+
+1. Extracts TypeScript/JavaScript code blocks from the MDX docs.
+2. Wraps each snippet into a compilable ``.ts`` file (injecting default
+   imports and ambient client declarations).
+3. Compiles everything in one pass with ``tsc --noEmit`` against the real
+   ``@valkey/valkey-glide`` package built from source.
+4. Parses the compiler output and reports failures per source location.
+
+Self-contained: no external Python dependencies beyond the standard library.
+
+Usage:
+    python scripts/validators/check-node-examples.py --glide-index ../valkey-glide/node/build-ts/index.d.ts
+
+Requires a pre-built Node client (run ``npm ci && npm run build:release``
+in the valkey-glide/node directory first).
+
+Options:
+    --glide-index     Path to the built valkey-glide/node/build-ts/index.d.ts
+                       file. Mapped directly to the `@valkey/valkey-glide`
+                       import via a tsconfig `paths` entry, mirroring the
+                       C# validator's `--glide-dll`.
+    --keep-project    Preserve the temporary TypeScript project directory
+                       instead of deleting it, for local debugging.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
+
+from _common import extract_all as _extract_all
+
+# ---------------------------------------------------------------------------
+# Extraction
+# ---------------------------------------------------------------------------
+
+# Fence language tags this validator extracts.
+_LANGUAGES = ["typescript", "ts", "javascript", "js"]
+
+# Files/directories skipped during extraction:
+#   - migration guides contain comparison snippets from other clients
+#   - IAM integration guides import AWS SDK packages we don't install
+_SKIP_PATTERNS = [r"^migration", r"iam-"]
+
+
+# ---------------------------------------------------------------------------
+# Wrapping
+# ---------------------------------------------------------------------------
+
+# Matches the start of an import statement.
+_IMPORT_LINE_RE = re.compile(r"^\s*import\s+")
+
+# Matches the closing `from "..."` of an import statement, to detect where
+# a (possibly multi-line) import statement ends.
+_IMPORT_END_RE = re.compile(r"""from\s+["'][^"']+["']\s*;?\s*$""")
+
+# Matches the `{ Named, Imports }` portion of an import statement, so we can
+# tell which names a snippet already imports for itself.
+_NAMED_IMPORTS_RE = re.compile(r"\{([^}]+)\}")
+
+_DEFAULT_IMPORTS = (
+    "GlideClient, GlideClusterClient, GlideClientConfiguration, "
+    "GlideClusterClientConfiguration, Batch, ClusterBatch, BatchOptions, "
+    "ClusterBatchOptions, ClusterBatchRetryStrategy, Script, Transaction, "
+    "Routes, Logger, RequestError, ServerCredentials, GlideFt, "
+    "GlideJson, OpenTelemetry, ClientSideCache, EvictionPolicy, TimeUnit, "
+    "Field, FtSearchOptions, FtSearchReturnType, Decoder, "
+    "AdvancedGlideClusterClientConfiguration, CompressionBackend, "
+    "OpenTelemetryConfig, OpenTelemetryMetricsConfig, OpenTelemetryTracesConfig, "
+    "ClusterScanCursor, ReadFrom, GlideString, PubSubMsg, ALL_CHANNELS, ALL_PATTERNS"
+)
+
+_CLIENT_DECLARATIONS = (
+    "declare const client: GlideClient;\n"
+    "declare const clusterClient: GlideClusterClient;\n"
+)
+
+
+def _split_imports(code: str) -> tuple[list[str], list[str]]:
+    """Separate import statements (including multi-line) from the rest.
+
+    Import statements can span multiple lines, e.g.:
+
+        import {
+            GlideClient,
+            GlideClusterClient,
+        } from "@valkey/valkey-glide";
+
+    We scan line by line: once a line starts an import, we keep consuming
+    lines until we see the closing `from "...";` (via ``_IMPORT_END_RE``),
+    which marks the end of that statement. Every other line is treated as
+    part of the snippet's body.
+    """
+    imports: list[str] = []
+    body: list[str] = []
+    lines = code.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if _IMPORT_LINE_RE.match(line):
+            import_lines = [line]
+            # Keep consuming lines until this import statement closes.
+            while not _IMPORT_END_RE.search(line) and i + 1 < len(lines):
+                i += 1
+                line = lines[i]
+                import_lines.append(line)
+            imports.append("\n".join(import_lines))
+        else:
+            body.append(line)
+        i += 1
+    return imports, body
+
+
+def _collect_imported_names(imports: list[str]) -> set[str]:
+    """Collect all named imports (`{ A, B }`) already present in a snippet."""
+    names: set[str] = set()
+    for import_statement in imports:
+        match = _NAMED_IMPORTS_RE.search(import_statement)
+        if not match:
+            continue
+        names.update(name.strip() for name in match.group(1).split(","))
+    return names
+
+
+def _build_default_import_statement(imported_names: set[str]) -> str:
+    """Build the injected `import { ... } from "@valkey/valkey-glide"` line.
+
+    Names the snippet already imports itself are excluded to avoid
+    duplicate-import compiler errors.
+    """
+    missing_names = [
+        name.strip() for name in _DEFAULT_IMPORTS.split(",")
+        if name.strip() not in imported_names
+    ]
+    if not missing_names:
+        return ""
+    return f"import {{ {', '.join(missing_names)} }} from \"@valkey/valkey-glide\";\n"
+
+
+def _build_async_wrapper(body_lines: list[str]) -> str:
+    """Wrap the snippet's body lines in an async function, if non-empty."""
+    body = "\n".join(body_lines).strip()
+    if not body:
+        return ""
+    return f"\nasync function __run() {{\n{textwrap.indent(body, '    ')}\n}}\n"
+
+
+def _wrap_snippet(code: str) -> str:
+    """Wrap a snippet into a compilable .ts file.
+
+    Steps:
+        1. Split the snippet into its own imports and body.
+        2. Build the injected default-import line, deduplicating against the
+           snippet's imports.
+        3. Reassemble: default imports, snippet imports, client
+           declarations, then the snippet body wrapped in an async function.
+    """
+    snippet_imports, snippet_body_lines = _split_imports(code)
+    imported_names = _collect_imported_names(snippet_imports)
+
+    default_import_statement = _build_default_import_statement(imported_names)
+    snippet_import_block = "\n".join(snippet_imports) + "\n" if snippet_imports else ""
+    async_wrapper = _build_async_wrapper(snippet_body_lines)
+
+    file_parts = [
+        default_import_statement,
+        snippet_import_block,
+        "\n" + _CLIENT_DECLARATIONS,
+        async_wrapper,
+    ]
+    return "\n".join(part for part in file_parts if part)
+
+
+# ---------------------------------------------------------------------------
+# Compilation
+# ---------------------------------------------------------------------------
+
+
+def _require_tool(name: str) -> None:
+    if shutil.which(name) is None:
+        print(f"Error: '{name}' is not installed or not on PATH.", file=sys.stderr)
+        sys.exit(1)
+
+
+def _setup_project(tmp_dir: str, glide_index: str) -> None:
+    """Create a temp TypeScript project referencing the local GLIDE build.
+
+    Maps the `@valkey/valkey-glide` import directly to the built
+    `index.d.ts` via a `paths` entry, so no `npm install` of the GLIDE
+    package itself is needed — only the TypeScript compiler is installed.
+    """
+    package_json = json.dumps(
+        {
+            "name": "glide-doc-validator",
+            "private": True,
+            "type": "module",
+        },
+        indent=2,
+    )
+    tsconfig = json.dumps(
+        {
+            "compilerOptions": {
+                "module": "ESNext",
+                "moduleResolution": "bundler",
+                "target": "ESNext",
+                "noEmit": True,
+                "strict": False,
+                "skipLibCheck": True,
+                "esModuleInterop": True,
+                "types": ["node"],
+                "baseUrl": ".",
+                "paths": {
+                    "@valkey/valkey-glide": [glide_index],
+                },
+            },
+            "include": ["*.ts"],
+        },
+        indent=2,
+    )
+
+    with open(os.path.join(tmp_dir, "package.json"), "w") as f:
+        f.write(package_json)
+    with open(os.path.join(tmp_dir, "tsconfig.json"), "w") as f:
+        f.write(tsconfig)
+
+    proc = subprocess.run(
+        ["npm", "install", "typescript", "@types/node", "--save"],
+        cwd=tmp_dir,
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout).strip()
+        print(f"Error: npm install failed:\n{detail}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _run_tsc(tmp_dir: str) -> str:
+    """Run tsc --noEmit and return combined output."""
+    tsc_path = os.path.join(tmp_dir, "node_modules", ".bin", "tsc")
+    proc = subprocess.run(
+        [tsc_path, "--noEmit", "--pretty", "false"],
+        cwd=tmp_dir,
+        capture_output=True,
+        text=True,
+    )
+    return proc.stdout + proc.stderr
+
+
+# Matches a single tsc error line, e.g.:
+#   example_0001.ts(12,5): error TS2304: Cannot find name 'foo'.
+_TSC_ERROR_RE = re.compile(r"^(example_\d+\.ts)\((\d+),(\d+)\):\s+error\s+TS\d+:\s+(.+)$")
+
+
+def _parse_tsc_errors(output: str) -> dict[str, list[str]]:
+    """Parse tsc output into per-file error messages.
+
+    Returns:
+        A dict mapping each generated example filename (e.g.
+        ``"example_0001.ts"``) to a list of human-readable error strings,
+        one per compiler diagnostic raised against that file.
+    """
+    errors: dict[str, list[str]] = {}
+    for line in output.splitlines():
+        m = _TSC_ERROR_RE.match(line)
+        if m:
+            filename, line_no, _col, message = m.groups()
+            errors.setdefault(filename, []).append(f"line {line_no}: {message}")
+    return errors
+
+
+def validate(
+    examples: dict[str, str],
+    *,
+    glide_index: str,
+    keep_project: bool = False,
+) -> dict[str, list[str]]:
+    """Compile all snippets and collect any errors.
+
+    Args:
+        examples: Mapping of ``"<source>:<line>"`` to snippet code, as
+            produced by ``_common.extract_all``.
+        glide_index: Path to the built valkey-glide/node
+            build-ts/index.d.ts file.
+        keep_project: If True, don't delete the temp project afterwards.
+
+    Returns:
+        A dict mapping each ``source`` key from ``examples`` to the list of
+        compiler error messages raised against that snippet. Sources that
+        compiled cleanly are omitted entirely, since ``_parse_tsc_errors``
+        only returns entries for files tsc actually reported errors on.
+    """
+    tmp_dir = tempfile.mkdtemp(prefix="glide_node_validate_")
+    try:
+        print("Setting up TypeScript project...", flush=True)
+        _setup_project(tmp_dir, glide_index)
+
+        file_to_source: dict[str, str] = {}
+        for idx, (source, code) in enumerate(examples.items()):
+            filename = f"example_{idx:04d}.ts"
+            file_to_source[filename] = source
+            wrapped = _wrap_snippet(code)
+            with open(os.path.join(tmp_dir, filename), "w", encoding="utf-8") as f:
+                f.write(wrapped)
+
+        print(f"Running tsc --noEmit on {len(examples)} file(s)...", flush=True)
+        output = _run_tsc(tmp_dir)
+
+        file_errors = _parse_tsc_errors(output)
+        result: dict[str, list[str]] = {
+            file_to_source[filename]: msgs for filename, msgs in file_errors.items()
+        }
+    finally:
+        if keep_project:
+            print(f"\nProject kept at: {tmp_dir}", flush=True)
+        else:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Full-compilation validator for Node.js (TypeScript) doc examples."
+    )
+    parser.add_argument(
+        "--glide-index", required=True,
+        help="Path to the built valkey-glide/node/build-ts/index.d.ts file.",
+    )
+    parser.add_argument(
+        "--keep-project", action="store_true",
+        help="Keep the temp project directory for inspection (useful when "
+             "debugging a failing snippet locally).",
+    )
+    args = parser.parse_args()
+
+    glide_index = os.path.abspath(args.glide_index)
+
+    # Validate the glide index path
+    if not os.path.isfile(glide_index):
+        print(
+            f"Error: --glide-index not found: {glide_index}. "
+            f"Build the client first: cd <valkey-glide>/node && npm ci && npm run build:release",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    _require_tool("node")
+    _require_tool("npm")
+
+    print("Extracting TypeScript examples from MDX docs...", flush=True)
+    examples = _extract_all(_LANGUAGES, skip_patterns=_SKIP_PATTERNS)
+    print(f"Extracted {len(examples)} example(s).", flush=True)
+
+    if not examples:
+        sys.exit(0)
+
+    dedented = {source: textwrap.dedent(code) for source, code in examples.items()}
+
+    errors = validate(
+        dedented,
+        glide_index=glide_index,
+        keep_project=args.keep_project,
+    )
+    errors = {s: msgs for s, msgs in errors.items() if msgs}
+
+    if errors:
+        bar = "=" * 60
+        print(f"\n{bar}\nFAILURES ({len(errors)} of {len(examples)} examples)\n{bar}\n")
+        for source, messages in errors.items():
+            print(f"  FAIL: {source}")
+            for message in messages:
+                print(f"        {message}")
+            print()
+        print(f"{len(examples) - len(errors)} passed, {len(errors)} failed")
+        sys.exit(1)
+
+    print(f"\nAll {len(examples)} node examples compiled successfully.")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

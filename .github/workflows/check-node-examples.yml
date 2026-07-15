@@ -1,0 +1,60 @@
+name: Check Node Examples
+
+# Full-compilation validates the Node.js (TypeScript) code examples in the
+# docs against the real @valkey/valkey-glide type definitions built from source.
+# See scripts/validators/check-node-examples.py.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-node-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout valkey-glide-docs
+        uses: actions/checkout@v4
+
+      - name: Checkout valkey-glide
+        uses: actions/checkout@v4
+        with:
+          repository: valkey-io/valkey-glide
+          path: valkey-glide
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install protoc
+        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3
+        with:
+          version: "25.1"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Build Node client
+        working-directory: valkey-glide/node
+        run: |
+          npm ci
+          npm run build:release
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Validate Node examples
+        run: python scripts/validators/check-node-examples.py --glide-index valkey-glide/node/build-ts/index.d.ts

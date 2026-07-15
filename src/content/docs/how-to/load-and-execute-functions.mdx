@@ -158,31 +158,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
   <TabItem label="Node">
     <Steps>
-      1. Define the lua script.
-
-         ```typescript
-         const luaCode = `#!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
-         end)
-         `;
-         ```
-
+      1. Define the Lua script.
       2. Load the function to Valkey.
-
-         ```typescript
-         await client.functionLoad(luaCode, {replace: true});
-         ```
-
       3. Call the function.
-
-         ```typescript
-         await client.set("page:home:visits", "0");
-         const result = await client.fcall("set_then_get", 
-             ["page:home:visits"], ["1"]);
-         console.log(result);  // 1
-         ```
     </Steps>
 
     <details>
@@ -458,20 +436,20 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
   <TabItem label="Node">
     ```typescript
-    const result = await client.fcallReadonly("get_value", ["mykey"]);
+    const result = await client.fcallReadonly("get_value", ["mykey"], []);
     ```
 
     **With Routing (Cluster Mode)**
 
     ```typescript
     // Route to all nodes
-    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allNodes" });
+    const allNodesResult = await clusterClient.fcallReadonlyWithRoute("get_value", [], { route: "allNodes" });
 
     // Route to all primary nodes
-    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "allPrimaries" });
+    const primaryResult = await clusterClient.fcallReadonlyWithRoute("get_value", [], { route: "allPrimaries" });
 
     // Route to a random node
-    const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "randomNode" });
+    const randomResult = await clusterClient.fcallReadonlyWithRoute("get_value", [], { route: "randomNode" });
     ```
   </TabItem>
 

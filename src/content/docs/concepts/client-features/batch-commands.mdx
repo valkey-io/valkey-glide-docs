@@ -68,9 +68,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     import {Batch} from "@valkey/valkey-glide";
 
     // Create an atomic batch (transaction)
-    const batch = new Batch(true)
+    const atomicBatch = new Batch(true)
     // Create a non-atomic batch (pipeline)
-    const batch = new Batch(false)
+    const nonAtomicBatch = new Batch(false)
     ```
   </TabItem>
 
@@ -134,9 +134,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     import {ClusterBatch} from "@valkey/valkey-glide";
 
     // Create an atomic cluster batch (must use keys mapping to same slot)
-    const batch = new ClusterBatch(true)
+    const atomicBatch = new ClusterBatch(true)
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
-    const batch = new ClusterBatch(false)
+    const nonAtomicBatch = new ClusterBatch(false)
     ```
   </TabItem>
 
@@ -206,7 +206,7 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
   </TabItem>
 
   <TabItem label="Node">
-    ```typescript
+    ```text
     // Standalone Mode
     public async exec(
         batch: Batch,
@@ -324,19 +324,23 @@ Behavior:
   <TabItem label="Node">
     ```typescript
     // Cluster pipeline with raiseOnError = false
+    const key = "mykey";
+    const key2 = "newkey";
     const batch = new ClusterBatch(false);
     batch.set(key, "hello")     // OK
            .lpop(key)           // WRONGTYPE error (not a list)
            .del([key])          // 1
            .rename(key, key2);  // NO SUCH KEY error
 
-    const result = await GlideClusterClient.exec(batch, false);
+    const result = await clusterClient.exec(batch, false);
     console.log("Result is:", result);
     // Output: Result is: [OK, RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value, 1, RequestError: An error was signalled by the server: - ResponseError: no such key])
     ```
 
     ```typescript
     // Transaction with raiseOnError = true
+    const key = "mykey";
+    const key2 = "newkey";
     const batch = new Batch(true);
     batch.set(key, "hello")     // OK
            .lpop(key)           // WRONGTYPE error (not a list)
@@ -344,7 +348,7 @@ Behavior:
            .rename(key, key2);  // NO SUCH KEY error
 
     try {
-        await GlideClient.exec(batch, true);
+        await client.exec(batch, true);
     } catch (error) {
         console.log("Batch execution aborted: ", error);
     }

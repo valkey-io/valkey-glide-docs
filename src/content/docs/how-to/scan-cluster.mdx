@@ -52,11 +52,11 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   <TabItem label="Node">
     ```typescript
     let cursor = new ClusterScanCursor();
-    const allKeys: string[] = [];
-    let keys: string[] = [];
+    const allKeys: GlideString[] = [];
 
     while (!cursor.isFinished()) {
-        [cursor, keys] = await client.scan(cursor);
+        let keys;
+        [cursor, keys] = await clusterClient.scan(cursor);
         allKeys.push(...keys);
     }
     ```
@@ -162,10 +162,11 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         { key: "something_else", value: "value4" }
     ]);
     let cursor = new ClusterScanCursor();
-    const matchedKeys: string[] = [];
+    const matchedKeys: GlideString[] = [];
 
     while (!cursor.isFinished()) {
-        [cursor, keys] = await client.scan(cursor, { match: "*key*" });
+        let keys;
+        [cursor, keys] = await clusterClient.scan(cursor, { match: "*key*" });
         matchedKeys.push(...keys);
     }
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
@@ -288,10 +289,11 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         { key: "something_else", value: "value4" }
     ]);
     let cursor = new ClusterScanCursor();
-    const allKeys: string[] = [];
+    const allKeys: GlideString[] = [];
 
     while (!cursor.isFinished()) {
-        [cursor, keys] = await client.scan(cursor, { count: 10 });
+        let keys;
+        [cursor, keys] = await clusterClient.scan(cursor, { count: 10 });
         allKeys.push(...keys);
     }
     // Returns around `count` keys per iteration
@@ -405,6 +407,8 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
   <TabItem label="Node">
     ```typescript
+    import { ObjectType } from "@valkey/valkey-glide";
+
     await client.mset([
         { key: "key1", value: "value1" },
         { key: "key2", value: "value2" },
@@ -412,10 +416,11 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ]);
     await client.sadd("thisIsASet", ["value4"]);
     let cursor = new ClusterScanCursor();
-    const stringKeys: string[] = [];
+    const stringKeys: GlideString[] = [];
 
     while (!cursor.isFinished()) {
-        [cursor, keys] = await client.scan(cursor, { type: ObjectType.STRING });
+        let keys;
+        [cursor, keys] = await clusterClient.scan(cursor, { type: ObjectType.STRING });
         stringKeys.push(...keys);
     }
     // Output: ["key1", "key2", "key3"]

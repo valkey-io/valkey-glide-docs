@@ -7,7 +7,7 @@
 4. Cleans up and propagates the exit code.
 
 Usage:
-    python scripts/check_csharp_examples.py
+    python scripts/validators/check-csharp-examples.py
         --validator <path_to_validate_examples.py>
         --glide-dll <path_to_Valkey.Glide.dll>
 
@@ -19,46 +19,12 @@ Options:
 import argparse
 import json
 import os
-import re
 import subprocess
 import sys
 import tempfile
 
-# Repository root is one level up from this script's directory (scripts/).
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_DOCS_DIR = os.path.join(_REPO_ROOT, "src", "content", "docs")
-
-# Matches a ```csharp ... ``` fenced code block, capturing the content.
-# Allows leading whitespace before fences (common in MDX tab components).
-_CSHARP_BLOCK_RE = re.compile(
-    r"^\s*```csharp\s*\n(.*?)^\s*```\s*$",
-    re.MULTILINE | re.DOTALL,
-)
-
-
-def extract_all(docs_dir: str) -> dict[str, str]:
-    """Recursively walk docs_dir for .mdx files and extract C# blocks.
-
-    Returns a dict mapping "<repo_relative_path>:<line_number>" to the
-    code string.
-    """
-    examples: dict[str, str] = {}
-
-    for root, _dirs, files in os.walk(docs_dir):
-        for fname in sorted(files):
-            if not fname.endswith(".mdx"):
-                continue
-            
-            filepath = os.path.join(root, fname)
-            with open(filepath, encoding="utf-8") as fh:
-                content = fh.read()
-
-            for match in _CSHARP_BLOCK_RE.finditer(content):
-                key_path = os.path.relpath(filepath, _REPO_ROOT)
-                line_number = content[: match.start()].count("\n") + 1
-                examples[f"{key_path}:{line_number}"] = match.group(1)
-
-    return examples
+from _common import DOCS_DIR as _DOCS_DIR
+from _common import extract_all as _extract_all
 
 
 def main() -> None:
@@ -103,7 +69,7 @@ def main() -> None:
         sys.exit(1)
 
     # Step 1: Extract examples from MDX files
-    examples = extract_all(_DOCS_DIR)
+    examples = _extract_all(["csharp"])
     print(f"Extracted {len(examples)} C# code example(s).")
 
     if not examples:

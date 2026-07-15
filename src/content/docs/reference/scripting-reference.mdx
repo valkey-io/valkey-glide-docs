@@ -1170,7 +1170,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
 
   <TabItem label="Node">
     ```typescript
-    import {RequestError} from "@valkey/valkey-glide";
+    import {RequestError, Script} from "@valkey/valkey-glide";
+
+    const script = new Script("return redis.call('MGET', KEYS[1], KEYS[2])");
 
     // Handle cluster routing errors
     try {

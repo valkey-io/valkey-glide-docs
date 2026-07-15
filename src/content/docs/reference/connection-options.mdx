@@ -42,9 +42,9 @@ The following are the configuration references for each Glide clients:
 
   <TabItem label="Node">
     ```typescript
-    import { GlideClientOptions } from "@valkey/valkey-glide";
+    import { GlideClientConfiguration } from "@valkey/valkey-glide";
 
-    const config: GlideClientOptions = {
+    const config: GlideClientConfiguration = {
         addresses: [{ host: "localhost", port: 6379 }],
         useTLS: false,
         requestTimeout: 1000,

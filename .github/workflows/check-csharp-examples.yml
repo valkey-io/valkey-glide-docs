@@ -3,6 +3,7 @@ name: Check C# Examples
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -44,6 +45,6 @@ jobs:
 
       - name: Run C# Example Validation
         run: |
-          python scripts/check_csharp_examples.py \
+          python scripts/validators/check-csharp-examples.py \
             --validator valkey-glide-csharp/dev/scripts/validate_examples.py \
             --glide-dll valkey-glide-csharp/sources/Valkey.Glide/bin/Release/net8.0/Valkey.Glide.dll

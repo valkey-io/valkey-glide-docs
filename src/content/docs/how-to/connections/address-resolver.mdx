@@ -329,6 +329,11 @@ The cluster client supports the same resolver signature.
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
+    // Your custom host resolution logic
+    function getActualHost(host: string): string {
+        return host;
+    }
+
     const client = await GlideClusterClient.createClient({
         addresses: [{ host: "internal-dns.service", port: 7000 }],
         addressResolver: (host: string, port: number): [string, number] => {

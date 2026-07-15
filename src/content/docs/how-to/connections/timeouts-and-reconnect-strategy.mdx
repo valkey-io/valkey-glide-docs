@@ -271,8 +271,8 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     const client = await GlideClusterClient.createClient({
         addresses: addresses,
-        reconnectStrategy: {
-            numOfRetries: 3,
+        connectionBackoff: {
+            numberOfRetries: 3,
             factor: 2,
             exponentBase: 2
         }
