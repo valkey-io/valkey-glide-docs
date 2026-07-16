@@ -5,7 +5,7 @@ description: Why Valkey GLIDE doesn't expose DEBUG as a typed API, and how to ru
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-[`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command. Valkey GLIDE clients does not expose `DEBUG` as a
+[`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command. Valkey GLIDE clients do not expose `DEBUG` as a
 first-class client method as it is an internal command meant for developing and testing Valkey. However, it can be executed
 via the [custom command](/concepts/client-features/custom-commands/) API.
 
