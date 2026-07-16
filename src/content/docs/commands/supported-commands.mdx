@@ -50,7 +50,7 @@ These commands are incompatible with GLIDE's current architecture and are curren
 | ---------------- | ------------------------------------------------------------------------------------------------------------- |
 | `CLIENT REPLY`   | Would break the multiplexed response protocol                                                                 |
 | `CLIENT UNBLOCK` | Requires internal connection/client IDs not exposed to users                                                  |
-| `DEBUG`          | Admin/developer debugging command; will not be exposed                                                        |
+| `DEBUG`          | Admin/developer debugging command; [will not be exposed](#debug-commands)                                                        |
 | `DISCARD`        | Not compatible with GLIDE's [transaction model](/concepts/client-features/batch-commands/).                   |
 | `PSYNC`          | Server-to-server replication protocol; puts the connection into streaming mode incompatible with client usage |
 | `SHUTDOWN`       | Dangerous admin command; no plan to support unless strong use case                                            |
@@ -61,3 +61,11 @@ These commands exist in Valkey's command registry but are not meaningful to impl
 
 * Parent commands (e.g. `CLUSTER`, `CLIENT`, `PUBSUB`, etc.) act as namespaces and have no functionality on their own.
 * Any `* HELP` commands (e.g. `ACL HELP`, `CLIENT HELP`, `CLUSTER HELP`, etc.) returns usage information texts.
+
+## DEBUG Commands
+
+[`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command used primarily for debugging and developing Valkey server.
+Certain `DEBUG` commands can crash or hang a server. In fact, it is blocked on managed services like AWS Elasticache.
+As such, Valkey GLIDE clients do not expose `DEBUG` as a first-class client because of this reason.
+
+It may be executed via the [custom command](/concepts/client-features/custom-commands/) API but **at your own risk!**.
