@@ -66,6 +66,6 @@ These commands exist in Valkey's command registry but are not meaningful to impl
 
 [`DEBUG`](https://valkey.io/commands/debug/) is an internal Valkey server command used primarily for debugging and developing Valkey server.
 Certain `DEBUG` commands can crash or hang a server. In fact, it is blocked on managed services like AWS Elasticache.
-As such, Valkey GLIDE clients do not expose `DEBUG` as a first-class client because of this reason.
+Valkey GLIDE clients do not expose `DEBUG` as a first-class client because of this reason.
 
 It may be executed via the [custom command](/concepts/client-features/custom-commands/) API but **at your own risk!**.
