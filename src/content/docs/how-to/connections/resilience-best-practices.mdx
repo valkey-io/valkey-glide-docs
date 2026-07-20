@@ -170,8 +170,8 @@ See the dedicated [Circuit Breaker guide](/how-to/connections/circuit-breaker) f
 
 - Enable CB for workloads where thread exhaustion is a concern during outages.
 - The CB rejects before the request reaches the network, so rejections are near-zero-cost.
-- Enable the `countTimeouts` option (Java: `countTimeouts(true)`, Python: `count_timeouts=True`, Node/Go: `countTimeouts: true`) if your timeout configuration is tight and timeouts reliably indicate a backend issue.
-- Recovery is optimistic (allows requests through to test if the server has recovered) with guards against premature closing.
+- Enable `countTimeouts` to protect against dead or unreachable nodes. In cluster mode, dead nodes surface primarily as timeouts, so this flag is required for the CB to trip on sustained node outages.
+- Recovery is optimistic: in HalfOpen, all traffic is allowed through. After consecutive successes the breaker closes. If a failure occurs, it returns to Open.
 - When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
 
 ## Standalone vs Cluster
