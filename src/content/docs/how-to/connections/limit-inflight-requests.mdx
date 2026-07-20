@@ -19,9 +19,11 @@ Inflight requests limit can be configured through the general client configurati
   </TabItem>
 
   <TabItem label="Go">
-    :::note
-    This feature is not yet available in GLIDE Go.
-    :::
+    ```go
+    // Limit to 1000 inflight requests per connection
+    clusterConfig := config.NewClusterClientConfiguration().
+        WithInflightRequestsLimit(1000)
+    ```
   </TabItem>
 
   <TabItem label="Java">

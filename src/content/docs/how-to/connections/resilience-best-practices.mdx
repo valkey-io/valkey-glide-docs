@@ -79,6 +79,7 @@ import (
 clientConfig := config.NewClusterClientConfiguration().
     WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
     WithRequestTimeout(500 * time.Millisecond).
+    WithInflightRequestsLimit(1000).
     WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
 
 client, err := glide.NewClusterClient(clientConfig)
@@ -115,7 +116,6 @@ The `inflightRequestsLimit` controls how many concurrent requests a single clien
 - If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
 - If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
 - Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
-- Note: The Go client does not yet expose `inflightRequestsLimit` configuration; the default is used.
 
 ## Thread Pool Sizing (Java)
 
