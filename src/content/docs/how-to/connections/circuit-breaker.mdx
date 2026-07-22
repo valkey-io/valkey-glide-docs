@@ -130,7 +130,11 @@ Only transport-level failures count toward tripping the breaker:
 * Failures sending or receiving on the connection (pipeline send/receive failures)
 * Request timeouts — but only when `countTimeouts` is enabled
 
-Application and server errors do **not** count, because the request reached the server and got a valid response. For example, `WRONGTYPE`, `MOVED`, and similar command-level errors leave the breaker closed.
+Application and server errors do **not** count, because the request reached the server and got a valid response. For example, `WRONGTYPE`, `MOVED`, `CLUSTERDOWN`, and similar command-level errors leave the breaker closed.
+
+:::note
+In cluster mode, a dead or unreachable node typically produces only one initial transport error (connection drop). Subsequent requests are reclassified as timeouts while the client attempts reconnection. With the default `countTimeouts: false`, these timeouts do not feed the circuit breaker. To protect against sustained node outages in cluster mode, enable `countTimeouts: true`.
+:::
 
 ## Handling Rejections
 
@@ -237,9 +241,10 @@ All parameters are optional. The circuit breaker uses sensible defaults if you p
 * Lower `failureRateThreshold` if you want faster detection of degraded backends.
 * Increase `minErrors` in low-traffic environments to avoid false trips from small sample sizes.
 * Increase `openTimeoutMs` if your server typically takes longer to recover (e.g., failover scenarios).
-* Set `countTimeouts: true` if your timeout configuration is tight and timeouts reliably indicate a backend issue.
+* Set `countTimeouts: true` if timeouts indicate a backend issue. In cluster mode, dead nodes surface primarily as timeouts (not transport errors), so this flag is required for the circuit breaker to protect against sustained node outages.
+* In cluster mode, a single shard failure affects only ~1/N of traffic (where N is the number of shards). With the default 50% threshold, the circuit breaker will not trip for partial cluster failures. This is intentional, as healthy shards continue serving normally.
 * Keep `consecutiveSuccesses` low (2–5) for faster recovery; increase it if premature recovery causes cascading failures.
 
 :::tip
-Enable the circuit breaker with all defaults as a starting point — just pass an empty configuration object. This gives you protection with no tuning required.
+Enable the circuit breaker with all defaults as a starting point by passing an empty configuration object.
 :::
