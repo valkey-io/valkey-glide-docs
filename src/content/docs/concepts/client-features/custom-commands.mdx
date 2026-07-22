@@ -11,6 +11,8 @@ The `custom_command` function is designed to execute a single command without ch
 In PHP, this method is called `rawcommand()` instead of `custom_command`.
 :::
 
+For `custom_command` examples, refer to the [Execute Custom Commands](/how-to/execute-custom-commands/) guide.
+
 #### Usage Notes:
 
 * **Single-Response Commands Only**: This function is intended for use with commands that return a single response. Commands that do not return a response (such as SUBSCRIBE), those that potentially return multiple responses (such as XREAD), or those that alter the client's behavior (such as entering pub/sub mode on RESP2 connections) should not be executed using this function.

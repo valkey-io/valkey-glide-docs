@@ -100,8 +100,8 @@ For sync APIs with blocking commands (e.g., `BLPOP` with long timeout), the call
 
 Set `requestTimeout` based on your expected latency plus a buffer. See [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) for configuration details.
 
-- Too tight (e.g., 50ms when p99 is 40ms): causes false-positive timeouts under minor latency spikes, unnecessary retries, and wasted inflight slots. If the circuit breaker is enabled, frequent timeouts can also trip it unnecessarily.
-- Too loose (e.g., 5s): delays failure detection. Threads block longer before learning a node is unresponsive.
+* Too tight (e.g., 50ms when p99 is 40ms): causes false-positive timeouts under minor latency spikes, unnecessary retries, and wasted inflight slots. If the circuit breaker is enabled, frequent timeouts can also trip it unnecessarily.
+* Too loose (e.g., 5s): delays failure detection. Threads block longer before learning a node is unresponsive.
 
 A good starting point is 2-3x your observed p99 latency. The default of 250ms works well for most workloads with sub-millisecond latency. The examples above use 500ms (2x default) to provide headroom for occasional latency spikes.
 
@@ -121,11 +121,11 @@ The `inflightRequestsLimit` controls how many concurrent requests a single clien
 
 For Java applications using `ForkJoinPool`:
 
-- `ForkJoinPool` parallelism, inflight limit, and request timeout are interconnected under load.
-- Calling `.get()` on a `CompletableFuture` inside a `ForkJoinPool` triggers `managedBlock()` (a JVM mechanism that creates additional threads to compensate for blocked ones).
-- If `requestTimeout` is long (e.g., 1s) and inflight is high (e.g., 1000), a stalled server can cause up to 1000 blocked threads before timeouts fire.
-- Where possible, use `.thenApply()` / `.thenAccept()` to chain async continuations instead of blocking with `.get()`.
-- Mitigation: use the circuit breaker (rejects before threads block) and keep request timeouts tight.
+* `ForkJoinPool` parallelism, inflight limit, and request timeout are interconnected under load.
+* Calling `.get()` on a `CompletableFuture` inside a `ForkJoinPool` triggers `managedBlock()` (a JVM mechanism that creates additional threads to compensate for blocked ones).
+* If `requestTimeout` is long (e.g., 1s) and inflight is high (e.g., 1000), a stalled server can cause up to 1000 blocked threads before timeouts fire.
+* Where possible, use `.thenApply()` / `.thenAccept()` to chain async continuations instead of blocking with `.get()`.
+* Mitigation: use the circuit breaker (rejects before threads block) and keep request timeouts tight.
 
 ## Enhanced Logging
 
@@ -177,16 +177,18 @@ See the dedicated [Circuit Breaker guide](/how-to/connections/circuit-breaker) f
 ## Standalone vs Cluster
 
 Both standalone and cluster clients benefit from:
-- Timeout watchdog (independent OS thread, fires timeouts reliably even under heavy load)
-- Inflight request limiting
-- Client-wide circuit breaker
-- Automatic reconnection with exponential backoff (see [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) to customize)
-- Automatic IAM token refresh (when configured)
+
+* Timeout watchdog (independent OS thread, fires timeouts reliably even under heavy load)
+* Inflight request limiting
+* Client-wide circuit breaker
+* Automatic reconnection with exponential backoff (see [Timeouts and Reconnect Strategy](/how-to/connections/timeouts-and-reconnect-strategy) to customize)
+* Automatic IAM token refresh (when configured)
 
 Cluster clients additionally benefit from:
-- Per-node routing (commands to healthy nodes are unaffected by one bad node)
-- Topology refresh and failover detection (periodic, enabled by default)
-- Automatic MOVED/ASK redirect handling
-- `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
+
+* Per-node routing (commands to healthy nodes are unaffected by one bad node)
+* Topology refresh and failover detection (periodic, enabled by default)
+* Automatic MOVED/ASK redirect handling
+* `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
 
 For standalone deployments, the client-wide circuit breaker is the primary protection against a single unresponsive server causing thread pile-up.
