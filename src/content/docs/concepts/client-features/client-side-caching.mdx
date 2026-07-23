@@ -7,8 +7,8 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
-<Aside type="caution" title="TTL-Only Caching">
-  The current implementation uses **TTL-based expiration only**. There is no server-side invalidation — cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. Server-side tracking-based invalidation (using the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol) will be added in a future release.
+<Aside type="caution" title="TTL-Only Caching (Default)">
+  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java** now supports [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. Other languages still use TTL-only mode; server-assisted support will be added in future releases.
 </Aside>
 
 ## How It Works
@@ -93,6 +93,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         .entryTtlMs(60_000)                  // 60 second TTL per entry (0 = no expiration)
         .evictionPolicy(EvictionPolicy.LRU)  // LRU or LFU
         .enableMetrics(true)                 // Enable hit/miss tracking
+        // .serverAssisted(true)             // Enable server-assisted invalidation (requires RESP3)
         .build();
 
     // Standalone client
@@ -233,6 +234,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
 | `entryTtlMs`      | integer           | —       | Time-to-live per entry in milliseconds. Use `0` to disable TTL (entries persist until evicted).   |
 | `evictionPolicy`   | `LRU` or `LFU`   | `LRU`   | Policy for removing entries when the cache is full.                                               |
 | `enableMetrics`    | boolean           | `false` | When `true`, enables collection of hit/miss/eviction/expiration counters.                         |
+| `serverAssisted`   | boolean           | `false` | When `true`, enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` (broadcast) mode — the only tracking mode GLIDE currently supports. Requires RESP3.|
 
 ## Eviction Policies
 
@@ -530,19 +532,119 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
   * Metrics (hit rate, miss rate, etc.) are shared across all clients using the same cache instance.
 </Aside>
 
+## Server-Assisted Invalidation
+
+Server-assisted invalidation can be enabled in the client side configuration by setting server assisted to true.
+You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself; GLIDE issues `CLIENT TRACKING ON BCAST` on your behalf during connection setup. 
+
+Once enabled, the client receives push invalidation messages from the server whenever a cached key is modified, eliminating the staleness window inherent in TTL-only mode — the server notifies the client immediately when data changes, and the client removes the stale entry from its local cache.
+
+
+### Enabling server-assisted mode
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.ClientSideCache;
+    import glide.api.models.configuration.NodeAddress;
+
+    ClientSideCache cache = ClientSideCache.builder()
+        .maxCacheKb(1024)
+        .entryTtlMs(60_000)
+        .serverAssisted(true)   // Enable server-assisted invalidation
+        .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .clientSideCache(cache)
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
+  <TabItem label="Node">
+    Server-assisted invalidation is not yet available in the Node.js client. Progress is tracked in [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+  </TabItem>
+
+  <TabItem label="Go">
+    Server-assisted invalidation is not yet available in the Go client. Progress is tracked in [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+  </TabItem>
+
+  <TabItem label="PHP">
+    Server-assisted invalidation is not yet available in the PHP client. Progress is tracked in [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
+  </TabItem>
+
+  <TabItem label="C#">
+    Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="RESP3 Required">
+  Server-assisted caching requires the RESP3 protocol, which is enforced automatically by glide-core when `serverAssisted(true)` is set. Ensure your Valkey server supports RESP3 (Valkey 7.2+).
+</Aside>
+
+### Diagnosing tracking state with `CLIENT TRACKINGINFO`
+
+The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Java">
+    ```java
+    // Standalone client
+    Map<String, Object> info = client.clientTrackingInfo().get();
+    // info contains:
+    //   "flags"    -> Set<String> e.g. {"on", "noloop"}
+    //   "redirect" -> Long (-1 if not redirecting)
+    //   "prefixes" -> Object[] of monitored key prefixes
+
+    // Cluster client — routes to a random node by default
+    Map<String, Object> clusterInfo = clusterClient.clientTrackingInfo().get();
+
+    // Cluster client — query all nodes
+    Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Python">
+    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
+  <TabItem label="Node">
+    Not yet available. See [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+  </TabItem>
+
+  <TabItem label="Go">
+    Not yet available. See [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+  </TabItem>
+
+  <TabItem label="PHP">
+    Not yet available. See [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
+  </TabItem>
+
+  <TabItem label="C#">
+    Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+  </TabItem>
+</Tabs>
+
 ## Limitations
 
 | Limitation | Details |
 | --- | --- |
-| **TTL-only expiration** | No server-side invalidation. Cached values may become stale if the key is modified on the server before the TTL expires. |
+| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java supports [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
-| **No invalidation on writes** | Writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. |
+| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java), the server pushes invalidation messages that clear the stale entry immediately. |
 
 ### Compatibility with managed services
 
-GLIDE does not currently support the `CLIENT TRACKING` command. When server-driven invalidation lands in a future release, it will rely on Valkey's [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) subcommand. Not every deployment exposes that command. The table below summarizes where the feature will be available once it ships:
+The Java client now supports server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
 
 | Deployment                                                          | Exposes `CLIENT TRACKING`? | Notes                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
