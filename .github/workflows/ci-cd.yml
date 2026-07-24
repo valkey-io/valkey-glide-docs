@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   pull_request:
-    branches: [main, public]
+    branches: [main]
   workflow_dispatch:
   workflow_call:
 
