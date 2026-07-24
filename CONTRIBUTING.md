@@ -13,7 +13,7 @@ onto the live site.
 
 Content not ready for release can be merged asap if they are marked as draft. Draft contents are hidden from the production site.
 
-**Draft Page** — set `draft: true` in frontmatter. The page is not rendered in production builds but visible in `pnpm dev`. 
+**Draft Page** — set `draft: true` in frontmatter. The page is not rendered in production builds but visible in `pnpm dev`.
 Always use `draft-reason` to mark when the page can be release.
 
 ```
@@ -21,11 +21,11 @@ Always use `draft-reason` to mark when the page can be release.
 title: My New Feature
 description: ...
 draft: true
-draft-reason: For release 2.5 
+draft-reason: For release 2.5
 ---
 ```
 
-**Draft Section** (e.g., one language's example tab) — wrap it in the `<Draft>` component. Always use `draft-reason` to mark 
+**Draft Section** (e.g., one language's example tab) — wrap it in the `<Draft>` component. Always use `draft-reason` to mark
 when the page can be release.
 
 ```mdx

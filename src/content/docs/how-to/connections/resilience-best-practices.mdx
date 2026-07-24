@@ -12,80 +12,75 @@ This guide covers configuration and operational practices that help Valkey GLIDE
 A resilient client combines request timeout, inflight limiting, and the circuit breaker:
 
 <Tabs syncKey="progLangInExamples">
-<TabItem label="Python">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        ClientCircuitBreakerConfiguration,
+        NodeAddress,
+    )
 
-```python
-from glide import (
-    GlideClusterClient,
-    GlideClusterClientConfiguration,
-    ClientCircuitBreakerConfiguration,
-    NodeAddress,
-)
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="localhost", port=6379)],
+        request_timeout=500,
+        inflight_requests_limit=1000,
+        client_circuit_breaker=ClientCircuitBreakerConfiguration(),
+    )
+    client = await GlideClusterClient.create(config)
+    ```
+  </TabItem>
 
-config = GlideClusterClientConfiguration(
-    addresses=[NodeAddress(host="localhost", port=6379)],
-    request_timeout=500,
-    inflight_requests_limit=1000,
-    client_circuit_breaker=ClientCircuitBreakerConfiguration(),
-)
-client = await GlideClusterClient.create(config)
-```
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
+    import glide.api.models.configuration.NodeAddress;
 
-</TabItem>
-<TabItem label="Java">
+    GlideClusterClient client = GlideClusterClient.createClient(
+        GlideClusterClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .requestTimeout(500)
+            .inflightRequestsLimit(1000)
+            .clientCircuitBreakerConfiguration(
+                ClientCircuitBreakerConfiguration.builder().build())
+            .build()
+    ).get();
+    ```
+  </TabItem>
 
-```java
-import glide.api.GlideClusterClient;
-import glide.api.models.configuration.GlideClusterClientConfiguration;
-import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
-import glide.api.models.configuration.NodeAddress;
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
 
-GlideClusterClient client = GlideClusterClient.createClient(
-    GlideClusterClientConfiguration.builder()
-        .address(NodeAddress.builder().host("localhost").port(6379).build())
-        .requestTimeout(500)
-        .inflightRequestsLimit(1000)
-        .clientCircuitBreakerConfiguration(
-            ClientCircuitBreakerConfiguration.builder().build())
-        .build()
-).get();
-```
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        requestTimeout: 500,
+        inflightRequestsLimit: 1000,
+        clientCircuitBreaker: {},
+    });
+    ```
+  </TabItem>
 
-</TabItem>
-<TabItem label="Node">
+  <TabItem label="Go">
+    ```go
+    import (
+        "time"
 
-```typescript
-import { GlideClusterClient } from "@valkey/valkey-glide";
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
 
-const client = await GlideClusterClient.createClient({
-    addresses: [{ host: "localhost", port: 6379 }],
-    requestTimeout: 500,
-    inflightRequestsLimit: 1000,
-    clientCircuitBreaker: {},
-});
-```
+    clientConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithRequestTimeout(500 * time.Millisecond).
+        WithInflightRequestsLimit(1000).
+        WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
 
-</TabItem>
-<TabItem label="Go">
-
-```go
-import (
-    "time"
-
-    glide "github.com/valkey-io/valkey-glide/go/v2"
-    "github.com/valkey-io/valkey-glide/go/v2/config"
-)
-
-clientConfig := config.NewClusterClientConfiguration().
-    WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-    WithRequestTimeout(500 * time.Millisecond).
-    WithInflightRequestsLimit(1000).
-    WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
-
-client, err := glide.NewClusterClient(clientConfig)
-```
-
-</TabItem>
+    client, err := glide.NewClusterClient(clientConfig)
+    ```
+  </TabItem>
 </Tabs>
 
 ## Single Client Instance
@@ -111,11 +106,11 @@ The `inflightRequestsLimit` controls how many concurrent requests a single clien
 
 **Key points:**
 
-- The inflight limit should accommodate your expected concurrency: at throughput `T` ops/s with average latency `L` seconds, you need roughly `T × L` inflight slots (e.g., 50k ops/s at 1ms = ~50 slots, 50k ops/s at 10ms = ~500 slots).
-- When the limit is reached, new requests block until a slot frees up. The circuit breaker (if enabled) rejects before this blocking occurs.
-- If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
-- If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
-- Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
+* The inflight limit should accommodate your expected concurrency: at throughput `T` ops/s with average latency `L` seconds, you need roughly `T × L` inflight slots (e.g., 50k ops/s at 1ms = ~50 slots, 50k ops/s at 10ms = ~500 slots).
+* When the limit is reached, new requests block until a slot frees up. The circuit breaker (if enabled) rejects before this blocking occurs.
+* If using Java with `ForkJoinPool.managedBlock()` (common in Akka, Play, or reactive frameworks), set the limit to 2-3x your thread pool size. This prevents thread explosion where `managedBlock()` spawns compensating threads faster than requests complete.
+* If you see "inflight requests limit reached" warnings in logs, either increase the limit or reduce concurrency at the application level.
+* Setting the limit too high risks memory pressure under sustained backpressure. The default of 1000 is appropriate for most workloads.
 
 ## Thread Pool Sizing (Java)
 
@@ -168,11 +163,11 @@ See the dedicated [Circuit Breaker guide](/how-to/connections/circuit-breaker) f
 
 **Key points:**
 
-- Enable CB for workloads where thread exhaustion is a concern during outages.
-- The CB rejects before the request reaches the network, so rejections are near-zero-cost.
-- Enable `countTimeouts` to protect against dead or unreachable nodes. In cluster mode, dead nodes surface primarily as timeouts, so this flag is required for the CB to trip on sustained node outages.
-- Recovery is optimistic: in HalfOpen, all traffic is allowed through. After consecutive successes the breaker closes. If a failure occurs, it returns to Open.
-- When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
+* Enable CB for workloads where thread exhaustion is a concern during outages.
+* The CB rejects before the request reaches the network, so rejections are near-zero-cost.
+* Enable `countTimeouts` to protect against dead or unreachable nodes. In cluster mode, dead nodes surface primarily as timeouts, so this flag is required for the CB to trip on sustained node outages.
+* Recovery is optimistic: in HalfOpen, all traffic is allowed through. After consecutive successes the breaker closes. If a failure occurs, it returns to Open.
+* When the CB rejects, handle the `CircuitBreakerException`/`CircuitBreakerError` in your application by returning a cached or degraded response, or signaling the caller to retry after a delay.
 
 ## Standalone vs Cluster
 
