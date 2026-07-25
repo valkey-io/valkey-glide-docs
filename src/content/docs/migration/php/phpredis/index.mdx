@@ -361,6 +361,78 @@ if ($client->get('nonexistent') === false) {
 }
 ```
 
+#### Error Introspection: `getLastError()` / `clearLastError()`
+
+Valkey GLIDE implements `getLastError()` and `clearLastError()` on both `ValkeyGlide` and `ValkeyGlideCluster`, matching PHPRedis semantics exactly.
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `getLastError()` | `getLastError(): ?string` | Returns the last recorded command error message, or `NULL` if none |
+| `clearLastError()` | `clearLastError(): bool` | Resets the last error; always returns `true` |
+
+**Behavior:**
+- When a command fails and returns `false`, the server error message is recorded
+- Successful commands do **not** clear the last error
+- A new error overwrites the previous error
+- Only `clearLastError()` explicitly resets it
+- Paths that throw `ValkeyGlideException` are not affected (the exception carries the message)
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', 6379);
+
+    // Force an error: INCR on a string value
+    $redis->set('mykey', 'not-a-number');
+    $redis->incr('mykey'); // returns false
+
+    echo $redis->getLastError();
+    // "ERR value is not an integer or out of range"
+
+    // Successful commands do NOT clear the error
+    $redis->set('other', 'value');
+    echo $redis->getLastError();
+    // Still: "ERR value is not an integer or out of range"
+
+    // Explicitly clear
+    $redis->clearLastError(); // returns true
+    var_dump($redis->getLastError()); // NULL
+    ```
+  </TabItem>
+
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect('127.0.0.1', 6379);
+
+    // Force an error: INCR on a string value
+    $client->set('mykey', 'not-a-number');
+    $client->incr('mykey'); // returns false
+
+    echo $client->getLastError();
+    // "ERR value is not an integer or out of range"
+
+    // Successful commands do NOT clear the error
+    $client->set('other', 'value');
+    echo $client->getLastError();
+    // Still: "ERR value is not an integer or out of range"
+
+    // Explicitly clear
+    $client->clearLastError(); // returns true
+    var_dump($client->getLastError()); // NULL
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip
+`getLastError()` and `clearLastError()` behave identically in Valkey GLIDE and PHPRedis. Libraries like Symfony Lock that call `clearLastError()` before `eval()` and then inspect `getLastError()` afterwards work without modification.
+:::
+
+:::note
+NOSCRIPT errors preserve the `NOSCRIPT` prefix in the error message (e.g., `"NOSCRIPT No matching script..."`), ensuring compatibility with frameworks that pattern-match on it.
+:::
+
 ### 5. Configuration Options
 
 PHPRedis options such as `OPT_SERIALIZER`, `OPT_PREFIX`, `OPT_SCAN`, and `OPT_COMPRESSION` are not currently supported. Use application-level serialization and key prefixing instead.
@@ -505,6 +577,7 @@ Valkey GLIDE PHP supports all major Redis/Valkey features including:
 * [ ] Add exception handling around connection operations
 * [ ] Update return type expectations for consistency
 * [ ] Test cluster operations if using cluster mode
+* [ ] Verify `getLastError()` / `clearLastError()` usage works correctly for libraries that depend on error introspection (e.g., Symfony Lock)
 * [ ] Update configuration to use `connect()` method parameters
 * [ ] Verify TLS/SSL configuration if using encrypted connections
 * [ ] Test IAM authentication if using AWS ElastiCache
