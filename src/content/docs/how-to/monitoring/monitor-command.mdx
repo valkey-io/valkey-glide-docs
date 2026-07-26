@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
 
-MONITOR is supported in Python, Node.js, Java, and Go clients. C# and PHP support is not yet available.
+MONITOR is supported in Python, Node.js, Java, Go, and C# clients. PHP support is not yet available.
 
 ## How It Works
 
@@ -113,6 +113,29 @@ There are two modes for consuming monitor messages:
     }
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The C# client uses `IAsyncEnumerable<MonitorMessage>` instead of callbacks. Messages are consumed via `await foreach` with native cancellation support.
+    :::
+
+    ```csharp
+    using Valkey.Glide;
+
+    // Create a MonitorConfig (implements IDisposable for secure credential handling)
+    using var config = new MonitorConfig("localhost", 6379);
+
+    // Create the monitor client
+    await using var monitor = await MonitorClient.CreateClient(config);
+
+    // Consume messages as an async stream with cancellation support
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+    await foreach (MonitorMessage msg in monitor.GetMessagesAsync(cts.Token))
+    {
+        Console.WriteLine($"{msg.Timestamp:O} [{msg.Database}] {msg.ClientAddress} {msg.Command} {string.Join(" ", msg.Args)}");
+    }
+    ```
+  </TabItem>
 </Tabs>
 
 ### Queue mode
@@ -196,7 +219,44 @@ There are two modes for consuming monitor messages:
     }
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    The C# client does not have a separate queue mode. `GetMessagesAsync()` returns an `IAsyncEnumerable` that can be consumed one message at a time or as a continuous stream.
+    :::
+
+    ```csharp
+    using Valkey.Glide;
+
+    // Create a MonitorConfig (implements IDisposable for secure credential handling)
+    using var config = new MonitorConfig("localhost", 6379);
+
+    // Create the monitor client
+    await using var monitor = await MonitorClient.CreateClient(config);
+
+    // Consume messages as an async stream with cancellation support
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+    await foreach (MonitorMessage msg in monitor.GetMessagesAsync(cts.Token))
+    {
+        Console.WriteLine($"{msg.Timestamp:O} [{msg.Database}] {msg.ClientAddress} {msg.Command} {string.Join(" ", msg.Args)}");
+    }
+    ```
+  </TabItem>
 </Tabs>
+
+## C# Configuration
+
+The C# client uses the `MonitorConfig` fluent API for connection configuration:
+
+```csharp
+using var config = new MonitorConfig("localhost", 6379)
+    .WithTls()                          // Enable TLS
+    .WithAuth("password")               // Password-only auth
+    .WithAuth("user", "password")       // Username + password auth
+    .WithDatabase(2);                   // Select database
+```
+
+Note: `MonitorConfig` implements `IDisposable` — it clears the password array on dispose for secure credential handling.
 
 ## Monitor Message Fields
 
@@ -209,3 +269,15 @@ Each monitor message contains the following fields:
 | `clientAddr` | string | Address of the client that issued the command |
 | `command` | string | Command name |
 | `args` | list/array | Command arguments |
+
+## C# Type Mapping
+
+In the C# client, `MonitorMessage` is a strongly-typed class:
+
+| Property | Type |
+| --- | --- |
+| `Timestamp` | `DateTimeOffset` |
+| `Database` | `ushort` |
+| `ClientAddress` | `string` |
+| `Command` | `string` |
+| `Args` | `IReadOnlyList<string>` |
