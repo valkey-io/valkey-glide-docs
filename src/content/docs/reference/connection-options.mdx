@@ -106,3 +106,32 @@ The following are the configuration references for each Glide clients:
     ```
   </TabItem>
 </Tabs>
+
+## Client Identification Options
+
+GLIDE clients can customize the library name reported to the Valkey server via `CLIENT SETINFO LIB-NAME`. This is useful for frameworks and libraries built on top of GLIDE that want to be identifiable in `CLIENT INFO` and `CLIENT LIST` output.
+
+| Option | Description | Availability |
+|--------|-------------|--------------|
+| `lib_name` | Fully overrides the default library name (e.g. `GlidePy`) | Python |
+| `client_info_tag` | Appends a parenthesized tag to the library name (e.g. `GlidePy(my-tag)`) | Python |
+| `libName` | Overrides the default library name | Java |
+
+:::note
+`client_info_tag` is currently Python-only. Java supports `libName` for overriding the library name but does not yet have the tag-append option. Node.js, Go, PHP, and C# do not yet support these options.
+:::
+
+### Example
+
+```python
+from glide import GlideClusterClientConfiguration, NodeAddress
+
+# Append a framework tag while preserving GLIDE identity
+config = GlideClusterClientConfiguration(
+    addresses=[NodeAddress("localhost", 6379)],
+    client_info_tag="my-framework:1.2.3",
+)
+# Resulting lib-name: GlidePy(my-framework:1.2.3)
+```
+
+For detailed usage, the behavior matrix, and validation rules, see [Client Identification](/how-to/monitoring/client-identification/).
