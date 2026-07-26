@@ -1,0 +1,225 @@
+---
+title: Migration Guide
+description: Learn the steps and strategies for migrating from Jedis 4.x to GLIDE using the Jedis 4.x Compatibility Layer.
+sidebar:
+  order: 2
+
+---
+
+import { Aside, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+
+This section outlines the steps and strategies for migrating from Jedis 4.x to Valkey GLIDE using the Jedis 4.x Compatibility Layer.
+
+## Instructions
+
+The migration can be done by replacing the `jedis` 4.x dependency with `valkey-glide-jedis-4-compatibility`.
+
+<Aside type="caution" title="Platform classifier required">
+  Unlike the Jedis 5.x compatibility layer, the Jedis 4.x compatibility layer currently requires a platform classifier. Choose the classifier matching your deployment platform.
+</Aside>
+
+**Available platform classifiers:**
+
+| Platform | Classifier |
+|---|---|
+| macOS ARM64 (Apple Silicon) | `osx-aarch_64` |
+| macOS x86_64 (Intel) | `osx-x86_64` |
+| Linux ARM64 | `linux-aarch_64` |
+| Linux x86_64 | `linux-x86_64` |
+| Windows x86_64 | `win32-x86-64` |
+
+<Tabs>
+  <TabItem label="Gradle">
+    ```diff lang="groovy"
+    dependencies {
+    -    implementation 'redis.clients:jedis:4.4.8'
+    +    implementation group: 'io.valkey', name: 'valkey-glide-jedis-4-compatibility', version: '2.1.0', classifier: 'linux-x86_64'
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Maven">
+    ```diff lang="xml"
+    <dependency>
+    -    <groupId>redis.clients</groupId>
+    -    <artifactId>jedis</artifactId>
+    -    <version>4.4.8</version>
+    +    <groupId>io.valkey</groupId>
+    +    <artifactId>valkey-glide-jedis-4-compatibility</artifactId>
+    +    <version>2.1.0</version>
+    +    <classifier>linux-x86_64</classifier>
+    </dependency>
+    ```
+  </TabItem>
+</Tabs>
+
+After updating the dependency, your existing Jedis 4.x code should compile without modification as the compatibility layer is a drop-in replacement for Jedis 4.x.
+
+```java
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+// Jedis 4.x style - GenericObjectPoolConfig<Jedis>
+GenericObjectPoolConfig<Jedis> poolConfig = new GenericObjectPoolConfig<>();
+poolConfig.setMaxTotal(8);
+
+try (JedisPool pool = new JedisPool(poolConfig, "localhost", 6379)) {
+    try (Jedis jedis = pool.getResource()) {
+        jedis.set("key", "value");
+        String result = jedis.get("key");
+    }
+}
+```
+
+<Aside type="tip">
+  Deployed applications can be migrated by replacing the Jedis JAR with the Valkey GLIDE JAR and the compatibility layer JAR in the application's classpath.
+</Aside>
+
+## Common Migration Scenarios
+
+### JedisPooled (Jedis 4.x Style)
+
+The key difference between Jedis 4.x and 5.x is the `JedisPooled` generic type. Jedis 4.x uses `GenericObjectPoolConfig<Connection>`:
+
+```java
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisPooled;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+// Jedis 4.x style - GenericObjectPoolConfig<Connection>
+GenericObjectPoolConfig<Connection> poolConfig = new GenericObjectPoolConfig<>();
+poolConfig.setMaxTotal(16);
+
+try (JedisPooled jedis = new JedisPooled(poolConfig, "localhost", 6379, 2000, "password")) {
+    jedis.set("key", "value");
+    String value = jedis.get("key");
+}
+```
+
+This code works **unchanged** with the Jedis 4.x compatibility layer.
+
+### JedisCluster
+
+```java
+import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.HostAndPort;
+import java.util.HashSet;
+import java.util.Set;
+
+Set<HostAndPort> nodes = new HashSet<>();
+nodes.add(new HostAndPort("localhost", 7000));
+nodes.add(new HostAndPort("localhost", 7001));
+nodes.add(new HostAndPort("localhost", 7002));
+
+JedisCluster jedisCluster = new JedisCluster(nodes, 2000, 2000, 5, "password", "default");
+
+jedisCluster.set("key", "value");
+String value = jedisCluster.get("key");
+```
+
+### UnifiedJedis
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+
+try (UnifiedJedis jedis = new UnifiedJedis("localhost", 6379)) {
+    jedis.set("key", "value");
+    String value = jedis.get("key");
+}
+```
+
+### SSL/TLS Connection
+
+```java
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.JedisClientConfig;
+import redis.clients.jedis.JedisPooled;
+
+// TLS using system trust store
+JedisClientConfig config = DefaultJedisClientConfig.builder()
+    .ssl(true)
+    .build();
+
+// Or use rediss:// URI scheme
+JedisPooled jedis = new JedisPooled("rediss://localhost:6380");
+```
+
+<Aside type="caution" title="TLS limitations">
+  Only basic TLS via system trust store is supported. Custom `SSLSocketFactory`, `HostnameVerifier`, keystore/truststore, cipher suites, TLS protocol versions, and client-auth are **not** supported and will throw `JedisConfigurationException` at client creation.
+</Aside>
+
+## Testing Your Application
+
+After migration, it is crucial to thoroughly evaluate your application to ensure compatibility and stability.
+
+1. **Test All Code Paths:** Do not rely on successful compilation. Test every part of your application that interacts with Jedis, not just simple `get`/`set` operations.
+2. **Monitor for Runtime Exceptions:** Specifically watch for errors from unsupported or stubbed methods.
+3. **Start with simple operations**: Keep it simple first by verifying basic compatibility.
+
+## Migration Checklist
+
+1. **Check your Jedis version** — ensure you are on Jedis 4.0.x through 4.4.x. If on Jedis 5.x, use the [Jedis Compatibility Layer](/migration/java/jedis/jedis-compatibility-layer/) instead.
+2. **Audit your codebase** for unsupported features. See the <a href={`/migration/java/jedis/jedis-4-compatibility-layer/supported-features/`}>Supported Features</a> section for details.
+3. **Replace the dependency** with `valkey-glide-jedis-4-compatibility` and the correct platform classifier.
+4. **Test thoroughly** in a development environment.
+5. **Review connection configurations** for compatibility. See the <a href={`/migration/java/jedis/jedis-4-compatibility-layer/configurations-mapping/`}>Configuration Mapping</a> page.
+6. **Plan for feature gaps** that may require code changes (especially custom SSL/TLS, AuthXManager, custom credential providers).
+7. **Expect pool config to be ignored** — GLIDE manages pooling internally.
+8. **Verify protocol behavior** — `.protocol()` and `getRedisProtocol()` exist for source compatibility but are ignored (always RESP2).
+
+## Migration Strategies
+
+1. Start with simple applications using basic commands.
+2. Gradually migrate complex features to native Valkey GLIDE APIs.
+3. Consider using Valkey GLIDE native APIs for unsupported features.
+4. Monitor performance and behavior differences.
+
+<Aside type="tip" title="Have a Rollback Plan">
+  Be prepared to revert to your original Jedis 4.x dependency if you discover critical incompatibilities. Simply swap the dependency back to `redis.clients:jedis:4.x.x` and rebuild.
+</Aside>
+
+## Troubleshooting
+
+### Compilation Error: Cannot find symbol `GenericObjectPoolConfig<Connection>`
+
+**Solution:** You may be accidentally using the Jedis 5.x compatibility layer. Switch to `jedis-4-compatibility`:
+
+<Tabs>
+  <TabItem label="Gradle">
+    ```groovy
+    // Change from:
+    implementation 'io.valkey:valkey-glide-jedis-compatibility:2.1.0'
+
+    // To:
+    implementation group: 'io.valkey', name: 'valkey-glide-jedis-4-compatibility', version: '2.1.0', classifier: 'linux-x86_64'
+    ```
+  </TabItem>
+
+  <TabItem label="Maven">
+    ```xml
+    <!-- Change from: -->
+    <artifactId>valkey-glide-jedis-compatibility</artifactId>
+
+    <!-- To: -->
+    <artifactId>valkey-glide-jedis-4-compatibility</artifactId>
+    <classifier>linux-x86_64</classifier>
+    ```
+  </TabItem>
+</Tabs>
+
+### Need RESP3 support
+
+RESP3 is not available in the Jedis 4.x compatibility layer. To use RESP3, upgrade your application to Jedis 5.x APIs and use the [Jedis Compatibility Layer](/migration/java/jedis/jedis-compatibility-layer/) instead.
+
+### Tests fail with connection errors
+
+- Check that your Redis/Valkey server is running and accessible
+- Verify connection parameters (host, port, password)
+- Review GLIDE logs for connection errors
+
+## Manual Migration
+
+If your application relies heavily on unsupported features or you want the maximum performance and features of GLIDE, consider a **manual migration** directly to the native API.
+
+<LinkCard title="Manual Migration" href={`/migration/java/jedis/manual-migrations/`} description="Migrate from Jedis to Valkey GLIDE using native APIs for full feature support." />

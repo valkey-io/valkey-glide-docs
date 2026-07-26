@@ -227,6 +227,15 @@ export default defineConfig({
                       ],
                     },
                     {
+                      label: "Jedis 4.x Compatibility Layer",
+                      items: [
+                        "migration/java/jedis/jedis-4-compatibility-layer",
+                        "migration/java/jedis/jedis-4-compatibility-layer/instructions",
+                        "migration/java/jedis/jedis-4-compatibility-layer/supported-features",
+                        "migration/java/jedis/jedis-4-compatibility-layer/configurations-mapping",
+                      ],
+                    },
+                    {
                       label: "Manual Migrations",
                       items: [
                         "migration/java/jedis/manual-migrations",
