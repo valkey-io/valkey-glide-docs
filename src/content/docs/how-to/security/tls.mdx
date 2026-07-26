@@ -545,7 +545,7 @@ The advanced TLS configuration only supplies the client-side material.
 
 #### In-memory PEM (static)
 
-Use `WithMutualTLS(cert, key)` when the client certificate and key are already loaded as PEM bytes.
+Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) when the client certificate and key are already loaded as PEM bytes.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
@@ -601,12 +601,12 @@ Use `WithMutualTLS(cert, key)` when the client certificate and key are already l
     func ConnectClusterWithMutualTLSBytes() error {
         // Load certificate and key bytes from a secret store (not from source).
         clientCert := []byte(`-----BEGIN CERTIFICATE-----
-    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-    ...
-    -----END CERTIFICATE-----`)
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+...
+-----END CERTIFICATE-----`)
         clientKey := []byte(`-----BEGIN PRIVATE KEY-----
-    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
-    -----END PRIVATE KEY-----`)
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
+-----END PRIVATE KEY-----`)
 
         // Create TLS configuration with in-memory client cert and key.
         // The cert and key are loaded once at connection time (static, no reload).
@@ -651,7 +651,7 @@ Use `WithMutualTLS(cert, key)` when the client certificate and key are already l
 
 #### Path-based with automatic reload
 
-Use `WithMutualTLSFromFiles(certPath, keyPath)` to point at files on disk; the core re-reads the material at its default cadence (currently 300 seconds).
+Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(certPath, keyPath)` (Java) to point at files on disk; the core re-reads the material at its default cadence (currently 300 seconds).
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
@@ -748,7 +748,7 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` to point at files on disk; the c
 
 #### Path-based with a custom reload interval
 
-Pass a positive duration to `WithReloadInterval(d)` to override the core default (currently 300 seconds).
+Pass a positive interval in seconds to override the core default. In Java, use `useMutualTlsWithReload(certPath, keyPath, intervalSecs)`. In Go, pass `config.WithReloadInterval(d)` to `WithMutualTLSFromFiles()`.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
