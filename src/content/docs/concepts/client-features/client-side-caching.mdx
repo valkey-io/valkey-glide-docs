@@ -8,7 +8,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
 <Aside type="caution" title="TTL-Only Caching (Default)">
-  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java, Python, Node.js, and Go** now support [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. C# and PHP still use TTL-only mode; server-assisted support will be added in future releases.
+  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java, Python, Node.js, and Go** now support [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. PHP still uses TTL-only mode; server-assisted support will be added in a future release.
 </Aside>
 
 ## How It Works
@@ -631,7 +631,19 @@ Once enabled, the client receives push invalidation messages from the server whe
   </TabItem>
 
   <TabItem label="C#">
-    Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60))
+        .WithServerAssisted(true);  // Enable server-assisted invalidation
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var client = await GlideClient.CreateClient(config);
+    ```
   </TabItem>
 </Tabs>
 
@@ -731,7 +743,21 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
   </TabItem>
 
   <TabItem label="C#">
-    Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+
+    // Standalone client
+    ClientTrackingInfo info = await client.ClientTrackingInfoAsync();
+    // info.Flags     -> IReadOnlySet<string> e.g. {"on", "noloop"}
+    // info.Redirect  -> long (-1 if not redirecting)
+    // info.Prefixes  -> IReadOnlySet<string> of monitored key prefixes
+
+    // Cluster client — routes to a random node by default
+    ClientTrackingInfo clusterInfo = (await clusterClient.ClientTrackingInfoAsync(Route.Random)).SingleValue;
+
+    // Cluster client — query all nodes
+    ClusterValue<ClientTrackingInfo> allInfo = await clusterClient.ClientTrackingInfoAsync(Route.AllNodes);
+    ```
   </TabItem>
 </Tabs>
 
@@ -739,15 +765,15 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
 
 | Limitation | Details |
 | --- | --- |
-| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java, Python, Node.js, and Go support [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
+| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java, Python, Node.js, Go, and C# support [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
-| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java, Python, Node.js, Go), the server pushes invalidation messages that clear the stale entry immediately. |
+| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java, Python, Node.js, Go, C#), the server pushes invalidation messages that clear the stale entry immediately. |
 
 ### Compatibility with managed services
 
-Java, Python, Node.js, and Go clients now support server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
+Java, Python, Node.js, Go, and C# clients now support server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
 
 | Deployment                                                          | Exposes `CLIENT TRACKING`? | Notes                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
