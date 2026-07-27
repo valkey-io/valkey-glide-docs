@@ -7,7 +7,15 @@
  */
 import commandData from "../data/available-commands.json";
 
-const languages = ["python", "node", "java", "go", "csharp", "php"] as const;
+const languages = [
+    "python",
+    "node",
+    "java",
+    "go",
+    "csharp",
+    "php",
+    "ruby",
+] as const;
 const languageLabels: Record<string, string> = {
     python: "Python",
     node: "Node.js",
@@ -15,6 +23,7 @@ const languageLabels: Record<string, string> = {
     go: "Go",
     csharp: "C#",
     php: "PHP",
+    ruby: "Ruby",
 };
 
 const statusIcons: Record<string, string> = {
