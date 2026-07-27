@@ -8,7 +8,7 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
 <Aside type="caution" title="TTL-Only Caching (Default)">
-  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java** now supports [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. Other languages still use TTL-only mode; server-assisted support will be added in future releases.
+  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java, Python, Node.js, and Go** now support [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. PHP still uses TTL-only mode; server-assisted support will be added in a future release.
 </Aside>
 
 ## How It Works
@@ -565,15 +565,65 @@ Once enabled, the client receives push invalidation messages from the server whe
   </TabItem>
 
   <TabItem label="Python">
-    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        ClientSideCache,
+        NodeAddress,
+    )
+
+    cache = ClientSideCache.create(
+        max_cache_kb=1024,
+        entry_ttl_ms=60_000,
+        server_assisted=True,   # Enable server-assisted invalidation
+    )
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        client_side_cache=cache,
+    )
+    client = await GlideClient.create(config)
+    ```
   </TabItem>
 
   <TabItem label="Node">
-    Server-assisted invalidation is not yet available in the Node.js client. Progress is tracked in [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+    ```typescript
+    import {
+        GlideClient,
+        ClientSideCache,
+    } from "@valkey/valkey-glide";
+
+    const cache = ClientSideCache.create(
+        1024,    // maxCacheKb
+        60000,   // entryTtlMs
+        {
+            serverAssisted: true,  // Enable server-assisted invalidation
+        }
+    );
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-    Server-assisted invalidation is not yet available in the Go client. Progress is tracked in [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+    ```go
+    import (
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    cache := config.NewClientSideCache(1024, 60000).
+        WithServerAssisted(true)  // Enable server-assisted invalidation
+
+    clientConfig := config.NewGlideClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithClientSideCache(cache)
+    client, err := glide.NewGlideClient(clientConfig)
+    ```
   </TabItem>
 
   <TabItem label="PHP">
@@ -581,7 +631,19 @@ Once enabled, the client receives push invalidation messages from the server whe
   </TabItem>
 
   <TabItem label="C#">
-    Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var cache = new ClientSideCacheConfig(maxCacheKb: 1024, entryTtl: TimeSpan.FromSeconds(60))
+        .WithServerAssisted(true);  // Enable server-assisted invalidation
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithClientSideCache(cache)
+        .Build();
+    var client = await GlideClient.CreateClient(config);
+    ```
   </TabItem>
 </Tabs>
 
@@ -612,15 +674,68 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
   </TabItem>
 
   <TabItem label="Python">
-    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+    ```python
+    from glide import GlideClient, GlideClusterClient, ClientTrackingInfo
+    from glide.routes import AllNodes
+
+    # Standalone client
+    info = await client.client_tracking_info()
+    # info is a ClientTrackingInfo with:
+    #   info.flags     -> set e.g. {"on", "noloop"}
+    #   info.redirect  -> int (-1 if not redirecting)
+    #   info.prefixes  -> set of monitored key prefixes
+
+    # Cluster client — routes to a random node by default
+    info = await cluster_client.client_tracking_info()
+
+    # Cluster client — query all nodes
+    all_info = await cluster_client.client_tracking_info(route=AllNodes())
+    # Returns dict[bytes, ClientTrackingInfo]
+    ```
   </TabItem>
 
   <TabItem label="Node">
-    Not yet available. See [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+    ```typescript
+    import { ClientTrackingInfo } from "@valkey/valkey-glide";
+
+    // Standalone client
+    const info = await client.clientTrackingInfo();
+    console.log(info.flags);     // Set { "off" } or Set { "on", "noloop" }
+    console.log(info.redirect);  // -1
+    console.log(info.prefixes);  // Set {}
+
+    // Cluster client — routes to a random node by default
+    const clusterInfo = await clusterClient.clientTrackingInfo();
+
+    // Cluster client — query all nodes
+    const allInfo = await clusterClient.clientTrackingInfo({ route: "allNodes" });
+    // allInfo is Record<string, ClientTrackingInfo>
+    ```
   </TabItem>
 
   <TabItem label="Go">
-    Not yet available. See [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+    ```go
+    import (
+        "context"
+        "github.com/valkey-io/valkey-glide/go/v2/models"
+        "github.com/valkey-io/valkey-glide/go/v2/options"
+    )
+
+    ctx := context.Background()
+
+    // Standalone client
+    info, err := client.ClientTrackingInfo(ctx)
+    // info.Flags     -> []string e.g. ["on", "noloop"]
+    // info.Redirect  -> int64 (-1 if not redirecting)
+    // info.Prefixes  -> []string of monitored key prefixes
+
+    // Cluster client — routes to a random node by default
+    info, err := clusterClient.ClientTrackingInfo(ctx)
+
+    // Cluster client — query all nodes
+    result, err := clusterClient.ClientTrackingInfoWithOptions(ctx, options.RouteOption{Route: config.AllNodes})
+    // result is ClusterValue[ClientTrackingInfo]
+    ```
   </TabItem>
 
   <TabItem label="PHP">
@@ -628,7 +743,21 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
   </TabItem>
 
   <TabItem label="C#">
-    Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+
+    // Standalone client
+    ClientTrackingInfo info = await client.ClientTrackingInfoAsync();
+    // info.Flags     -> IReadOnlySet<string> e.g. {"on", "noloop"}
+    // info.Redirect  -> long (-1 if not redirecting)
+    // info.Prefixes  -> IReadOnlySet<string> of monitored key prefixes
+
+    // Cluster client — routes to a random node by default
+    ClientTrackingInfo clusterInfo = (await clusterClient.ClientTrackingInfoAsync(Route.Random)).SingleValue;
+
+    // Cluster client — query all nodes
+    ClusterValue<ClientTrackingInfo> allInfo = await clusterClient.ClientTrackingInfoAsync(Route.AllNodes);
+    ```
   </TabItem>
 </Tabs>
 
@@ -636,15 +765,15 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
 
 | Limitation | Details |
 | --- | --- |
-| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java supports [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
+| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java, Python, Node.js, Go, and C# support [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
-| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java), the server pushes invalidation messages that clear the stale entry immediately. |
+| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java, Python, Node.js, Go, C#), the server pushes invalidation messages that clear the stale entry immediately. |
 
 ### Compatibility with managed services
 
-The Java client now supports server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
+Java, Python, Node.js, Go, and C# clients now support server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
 
 | Deployment                                                          | Exposes `CLIENT TRACKING`? | Notes                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
