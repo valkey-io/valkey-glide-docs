@@ -145,6 +145,8 @@ export default defineConfig({
             "how-to/connection-management",
             "how-to/publish-and-subscribe-messages",
             "how-to/send-batch-commands",
+            "how-to/client-pool",
+            "how-to/isolated-scope",
             "how-to/synchronous-connection",
             "how-to/execute-custom-scripts",
             "how-to/execute-custom-commands",

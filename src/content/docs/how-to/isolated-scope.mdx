@@ -1,0 +1,228 @@
+---
+title: Use Isolated Execution Scopes
+description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with optimistic concurrency control.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
+
+Use isolated scopes when you need optimistic concurrency control (OCC) — for example, incrementing a counter only if no other client modified it, or implementing compare-and-swap patterns.
+
+## Acquire a Scope
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient
+
+    client = await GlideClient.create(config)
+
+    async with await client.scoped_connection(routing_key="my-key") as scope:
+        # Use scope for WATCH/MULTI/EXEC
+        pass
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.scope.IsolatedScope;
+
+    GlideClient client = GlideClient.createClient(config).get();
+
+    try (IsolatedScope scope = client.scopedConnection(
+            Duration.ofSeconds(5), "my-key").get()) {
+        // Use scope for WATCH/MULTI/EXEC
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from '@valkey/valkey-glide';
+
+    const client = await GlideClient.createClient(config);
+
+    const scope = await client.scopedConnection({ routingKey: 'my-key' });
+    try {
+        // Use scope for WATCH/MULTI/EXEC
+    } finally {
+        await scope.close();
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    scope, err := client.ScopedConnection(ctx, glide.ScopeOptions{
+        RoutingKey: "my-key",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer scope.Close()
+    // Use scope for WATCH/MULTI/EXEC
+    ```
+  </TabItem>
+</Tabs>
+
+## Optimistic Locking with WATCH/MULTI/EXEC
+
+The classic optimistic concurrency control pattern works as follows:
+
+1. Acquire a scope
+2. `WATCH` the key(s) you intend to modify
+3. Read the current value
+4. Begin a `MULTI` transaction
+5. Write the new value
+6. `EXEC` — returns `null` if any watched key was modified by another client
+7. Retry if `EXEC` returned `null`
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient
+
+    client = await GlideClient.create(config)
+
+    max_retries = 10
+    for attempt in range(max_retries):
+        async with await client.scoped_connection(routing_key="counter") as scope:
+            await scope.watch("counter")
+            val = await scope.get("counter")
+            new_val = str(int(val or "0") + 1)
+            await scope.multi()
+            await scope.set("counter", new_val)
+            result = await scope.exec()
+            if result is not None:
+                break  # Success
+            # WATCH conflict — retry
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.scope.IsolatedScope;
+
+    GlideClient client = GlideClient.createClient(config).get();
+
+    for (int attempt = 0; attempt < 10; attempt++) {
+        try (IsolatedScope scope = client.scopedConnection(
+                Duration.ofSeconds(5), "counter").get()) {
+            scope.watch("counter").get();
+            String val = scope.get("counter").get();
+            int newVal = (val != null ? Integer.parseInt(val) : 0) + 1;
+            scope.multi().get();
+            scope.set("counter", String.valueOf(newVal)).get();
+            Object result = scope.exec().get();
+            if (result != null) break; // Success
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from '@valkey/valkey-glide';
+
+    const client = await GlideClient.createClient(config);
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const scope = await client.scopedConnection({ routingKey: 'counter' });
+        try {
+            await scope.watch('counter');
+            const val = await scope.get('counter');
+            const newVal = String((parseInt(val ?? '0', 10)) + 1);
+            await scope.multi();
+            await scope.set('counter', newVal);
+            const result = await scope.exec();
+            if (result !== null) break; // Success
+        } finally {
+            await scope.close();
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    for attempt := 0; attempt < 10; attempt++ {
+        scope, err := client.ScopedConnection(ctx, glide.ScopeOptions{
+            RoutingKey: "counter",
+        })
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        scope.Watch(ctx, "counter")
+        val, _ := scope.Get(ctx, "counter")
+        newVal := strconv.Itoa(atoi(val) + 1)
+        scope.Multi(ctx)
+        scope.Set(ctx, "counter", newVal)
+        result, _ := scope.Exec(ctx)
+        scope.Close()
+        if result != nil {
+            break // Success
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Cluster Mode
+
+When using isolated scopes with a cluster client, keep the following in mind:
+
+### Routing Key
+
+Pass a `routing_key` when acquiring the scope. The key is used to determine which cluster node (via CRC16 slot hashing) the scope's dedicated connection targets.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    async with await client.scoped_connection(routing_key="user:123") as scope:
+        await scope.watch("user:123")
+        # ...
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    try (IsolatedScope scope = client.scopedConnection(
+            Duration.ofSeconds(5), "user:123").get()) {
+        scope.watch("user:123").get();
+        // ...
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const scope = await client.scopedConnection({ routingKey: 'user:123' });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    scope, _ := client.ScopedConnection(ctx, glide.ScopeOptions{
+        RoutingKey: "user:123",
+    })
+    ```
+  </TabItem>
+</Tabs>
+
+### Same-Slot Requirement
+
+All keys used within a scope must hash to the same slot. If you attempt a cross-slot operation, the command will be rejected. Use hash tags (e.g., `{user:123}:name` and `{user:123}:email`) to ensure related keys land in the same slot.
+
+### MOVED Handling
+
+If a `MOVED` redirect occurs during an active scope (for example, during a cluster rebalance), the `WATCH` detects this as a conflict and `EXEC` returns `null`. Your retry loop will handle this naturally — simply retry and the scope will connect to the new node for that slot.
+
+## Limitations
+
+- **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE` or `PSUBSCRIBE`. Use the main client for Pub/Sub.
+- **No MOVED/ASK redirects:** By design, scoped connections hold per-connection state and cannot follow redirects. Conflicts are surfaced as `EXEC` returning `null`.
+- **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
