@@ -1,0 +1,234 @@
+---
+title: Use Client Pool
+description: Manage a pool of reusable GLIDE client connections for high-concurrency workloads, blocking commands, and connection isolation.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Client Pool manages a set of reusable GLIDE client instances that can be borrowed and returned on demand. Use it when your application needs high concurrency, runs blocking commands like `BLPOP`, `BRPOP`, or `XREAD BLOCK` that tie up a connection, or requires connection isolation between independent workflows.
+
+## Configuration
+
+The pool is configured with a `PoolConfig` object. All parameters are optional and have sensible defaults.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `max_size` / `maxSize` / `MaxSize` | int | 10 | Maximum number of client instances in the pool |
+| `min_idle` / `minIdle` / `MinIdle` | int | 1 | Number of clients to pre-warm at creation |
+| `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min | How long an idle client stays in the pool before eviction |
+| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (DISCARD, UNWATCH) when returning a client |
+| `acquire_timeout_s` / `acquireTimeoutS` / `AcquireTimeout` | duration | 5 sec | How long to wait for a client when the pool is exhausted |
+
+## Create a Pool
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress
+    from glide import AsyncClientPool, PoolConfig
+
+    pool_config = PoolConfig(
+        max_size=10,
+        min_idle=2,
+        acquire_timeout_s=5.0,
+    )
+    client_config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    pool = await AsyncClientPool.create(client_config, pool_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.pool.ClientPool;
+    import glide.api.models.pool.ClientPoolConfig;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .maxSize(10)
+        .minIdle(2)
+        .acquireTimeout(Duration.ofSeconds(5))
+        .clientConfig(GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .build())
+        .build();
+
+    ClientPool pool = ClientPool.create(poolConfig);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { ClientPool, GlideClientConfiguration } from '@valkey/valkey-glide';
+
+    const pool = await ClientPool.create({
+        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+        maxSize: 10,
+        minIdle: 2,
+        acquireTimeoutS: 5,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        "time"
+    )
+
+    poolCfg := glide.PoolConfig{
+        MaxSize:        10,
+        MinIdle:        2,
+        AcquireTimeout: 5 * time.Second,
+    }
+    clientCfg := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+    pool, err := glide.NewClientPool(clientCfg, poolCfg)
+    ```
+  </TabItem>
+</Tabs>
+
+## Borrow and Return Clients
+
+Acquire a client from the pool before use, and always release it when done. Use context managers or try/finally blocks to guarantee the client is returned even if an error occurs.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    Using an async context manager (recommended):
+
+    ```python
+    async with pool.borrow() as client:
+        await client.set("key", "value")
+        result = await client.get("key")
+    ```
+
+    Manual acquire/release:
+
+    ```python
+    client_id = await pool.acquire()
+    try:
+        client = pool._get_or_create_client(client_id)
+        await client.set("key", "value")
+    finally:
+        pool.release(client_id)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    long clientId = pool.acquire().get();
+    try {
+        GlideClient client = pool.getClient(clientId);
+        client.set("key", "value").get();
+    } finally {
+        pool.release(clientId);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const client = await pool.acquire();
+    try {
+        await client.set('key', 'value');
+        const result = await client.get('key');
+    } finally {
+        pool.release(client);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    client, err := pool.Acquire(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Close() // returns to pool
+
+    client.Set(ctx, "key", "value")
+    result, _ := client.Get(ctx, "key")
+    ```
+  </TabItem>
+</Tabs>
+
+## Pool Metrics
+
+Check the current state of the pool to monitor utilization and diagnose capacity issues.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    metrics = pool.metrics()
+    print(f"Idle: {metrics['idle']}, Active: {metrics['active']}, Total: {metrics['total']}")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    PoolMetrics metrics = pool.getMetrics();
+    System.out.println("Idle: " + metrics.getIdle()
+        + ", Active: " + metrics.getActive()
+        + ", Total: " + metrics.getTotal());
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const metrics = pool.metrics();
+    console.log(`Idle: ${metrics.idle}, Active: ${metrics.active}, Total: ${metrics.total}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    metrics := pool.Metrics()
+    fmt.Printf("Idle: %d, Active: %d, Total: %d\n", metrics.Idle, metrics.Active, metrics.Total)
+    ```
+  </TabItem>
+</Tabs>
+
+## Close the Pool
+
+When your application shuts down, close the pool to release all connections.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    pool.close()
+
+    # Or use as an async context manager:
+    async with AsyncClientPool.create(config, pool_config) as pool:
+        async with pool.borrow() as client:
+            await client.set("key", "value")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    pool.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    await pool.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    pool.Close()
+    ```
+  </TabItem>
+</Tabs>
+
+## Limitations
+
+- **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
+- **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
+- **No abandon detection:** If a borrowed client is never returned (leaked), the pool cannot detect or reclaim it.
+- **State reset always sends DISCARD:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` even if no `MULTI` transaction was active. This adds a small round-trip on each release.
