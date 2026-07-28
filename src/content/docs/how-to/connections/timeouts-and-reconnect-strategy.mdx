@@ -111,6 +111,18 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      timeout: 0.5 # request timeout in seconds (500 ms)
+    )
+    ```
+  </TabItem>
 </Tabs>
 
 ## Setting Connection Timeout
@@ -210,6 +222,18 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      connect_timeout: 5.0 # connection timeout in seconds (5000 ms)
+    )
     ```
   </TabItem>
 </Tabs>
@@ -334,6 +358,22 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         .Build();
 
     await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # GLIDE derives an exponential backoff strategy from these
+    # redis-rb-style options (delays are in seconds)
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      reconnect_attempts: 3,
+      reconnect_delay: 0.5,
+      reconnect_delay_max: 5.0
+    )
     ```
   </TabItem>
 </Tabs>

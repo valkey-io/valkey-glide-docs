@@ -226,6 +226,41 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     // Atomic Batch Results: OK, OK, 50, 50, 50
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Initialize client
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    # Create an atomic transaction using multi
+    results = client.multi do |tx|
+      tx.set("account:source", "100")
+      tx.set("account:dest", "0")
+      tx.incrby("account:dest", 50)
+      tx.decrby("account:source", 50)
+      tx.get("account:source")
+    end
+
+    puts "Atomic Transaction Results: #{results.inspect}"
+    # Atomic Transaction Results: ["OK", "OK", 50, 50, "50"]
+    ```
+
+    Use `watch` / `unwatch` for optimistic locking around a transaction:
+
+    ```ruby
+    client.watch("account:source") do
+      if client.get("account:source") == "100"
+        client.multi do |tx|
+          tx.decrby("account:source", 50)
+        end
+      else
+        client.unwatch
+      end
+    end
+    ```
+  </TabItem>
 </Tabs>
 
 ### Cluster
@@ -433,6 +468,26 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     // Atomic Cluster Batch: OK, 6, 6
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Initialize cluster client
+    nodes = [{ host: "127.0.0.1", port: 6379 }]
+    client = Valkey.new(nodes: nodes, cluster_mode: true)
+
+    # Create an atomic transaction (all keys map to same slot)
+    results = client.multi do |tx|
+      tx.set("user:100:visits", "1")
+      tx.incrby("user:100:visits", 5)
+      tx.get("user:100:visits")
+    end
+
+    puts "Atomic Cluster Transaction: #{results.inspect}"
+    # Atomic Cluster Transaction: ["OK", 6, "6"]
+    ```
+  </TabItem>
 </Tabs>
 
 :::caution[Important]
@@ -625,6 +680,26 @@ Pipelining is a group of commands sent in a single request that does not guarant
     var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Results: {string.Join(", ", results!)}");
     // Pipeline Results: OK, OK, value1, value2
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Initialize client
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    # Create non-atomic pipeline using pipelined
+    results = client.pipelined do |pipe|
+      pipe.set("temp:key1", "value1")
+      pipe.set("temp:key2", "value2")
+      pipe.get("temp:key1")
+      pipe.get("temp:key2")
+    end
+
+    puts "Pipeline Results: #{results.inspect}"
+    # Pipeline Results: ["OK", "OK", "value1", "value2"]
     ```
   </TabItem>
 </Tabs>
@@ -864,6 +939,29 @@ Pipelining is a group of commands sent in a single request that does not guarant
     var results = await client.Exec(pipeline, raiseOnError: false, options);
     Console.WriteLine($"Pipeline Cluster Results: {string.Join(", ", results!)}");
     // Pipeline Cluster Results: OK, 125, 125, 1, 2, [user2, user1]
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Initialize cluster client
+    nodes = [{ host: "localhost", port: 6379 }]
+    client = Valkey.new(nodes: nodes, cluster_mode: true)
+
+    # Create pipeline spanning multiple slots
+    results = client.pipelined do |pipe|
+      pipe.set("page:home:views", "100")
+      pipe.incrby("page:home:views", 25)
+      pipe.get("page:home:views")
+      pipe.lpush("recent:logins", "user1")
+      pipe.lpush("recent:logins", "user2")
+      pipe.lrange("recent:logins", 0, 1)
+    end
+
+    puts "Pipeline Cluster Results: #{results.inspect}"
+    # Pipeline Cluster Results: ["OK", 125, "125", 1, 2, ["user2", "user1"]]
     ```
   </TabItem>
 </Tabs>

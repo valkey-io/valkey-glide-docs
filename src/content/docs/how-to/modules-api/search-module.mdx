@@ -360,6 +360,39 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     Console.WriteLine($"Vectors: [{string.Join(", ", vectors)}]");  // Vectors: [0000000000000000, 00000000000080BF]
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Both standalone and cluster mode are supported
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    prefix = "{hash}:"
+    index = prefix + "index"
+
+    # FT.CREATE a Hash index with a vector field
+    client.ft_create(index, "ON", "HASH", "PREFIX", "1", prefix,
+                     "SCHEMA", "vec", "AS", "VEC", "VECTOR", "HNSW", "6",
+                     "TYPE", "FLOAT32", "DIM", "2", "DISTANCE_METRIC", "L2")
+    # => "OK"
+
+    # Insert hash data with vector fields (2-dimensional float32 vectors = 8 bytes each)
+    vec0 = [0.0, 0.0].pack("e2")  # "\x00\x00\x00\x00\x00\x00\x00\x00"
+    vec1 = [0.0, -1.0].pack("e2") # "\x00\x00\x00\x00\x00\x00\x80\xBF"
+    client.hset(prefix + "0", "vec", vec0)
+    client.hset(prefix + "1", "vec", vec1)
+
+    sleep 1 # let server digest the data and update index
+
+    # FT.SEARCH
+    result = client.ft_search(index, "*=>[KNN 2 @VEC $query_vec]",
+                              "PARAMS", "2", "query_vec", vec0,
+                              "DIALECT", "2")
+    # result[0] == 2
+    # the remaining entries contain "{hash}:0" and "{hash}:1" with their vector values
+    ```
+  </TabItem>
 </Tabs>
 
 ## What's Next

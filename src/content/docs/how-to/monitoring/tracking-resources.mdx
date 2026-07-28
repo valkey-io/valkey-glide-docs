@@ -130,4 +130,23 @@ GLIDE 1.2 introduces a new non-Valkey API: `getStatistics` which returns statist
     echo "Total Clients: {$stats['total_clients']}\n";
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      timeout: 0.5 # request timeout in seconds (500 ms)
+    )
+
+    # Retrieve statistics
+    stats = client.get_statistics
+
+    # Example: Accessing and printing statistics
+    puts "Total Connections: #{stats[:total_connections]}"
+    puts "Total Clients: #{stats[:total_clients]}"
+    ```
+  </TabItem>
 </Tabs>

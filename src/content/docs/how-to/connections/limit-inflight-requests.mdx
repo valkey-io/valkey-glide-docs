@@ -58,6 +58,17 @@ Inflight requests limit can be configured through the general client configurati
     )
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Limit to 1000 inflight requests per connection
+    client = Valkey.new(
+      nodes: [{ host: "localhost", port: 7000 }],
+      cluster_mode: true,
+      inflight_requests_limit: 1000
+    )
+    ```
+  </TabItem>
 </Tabs>
 
 ## Why Limit Inflight Requests

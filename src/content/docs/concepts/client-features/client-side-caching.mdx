@@ -535,10 +535,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 ## Server-Assisted Invalidation
 
 Server-assisted invalidation can be enabled in the client side configuration by setting server assisted to true.
-You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself; GLIDE issues `CLIENT TRACKING ON BCAST` on your behalf during connection setup. 
+You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself; GLIDE issues `CLIENT TRACKING ON BCAST` on your behalf during connection setup.
 
 Once enabled, the client receives push invalidation messages from the server whenever a cached key is modified, eliminating the staleness window inherent in TTL-only mode — the server notifies the client immediately when data changes, and the client removes the stale entry from its local cache.
-
 
 ### Enabling server-assisted mode
 

@@ -409,6 +409,65 @@ The following example shows a simple example of loading and executing a Valkey F
       ```
     </details>
   </TabItem>
+
+  <TabItem label="Ruby">
+    <Steps>
+      1. Define the lua script.
+
+         ```ruby
+         lua_code = <<~LUA
+           #!lua name=example_module
+           server.register_function('set_then_get', function(key, value)
+              server.call('SET', key, value)
+              return server.call('GET', key)
+           end)
+         LUA
+         ```
+
+      2. Load the function to Valkey.
+
+         ```ruby
+         client.function_load(lua_code, replace: true)
+         ```
+
+      3. Call the function.
+
+         ```ruby
+         client.set("page:home:visits", "0")
+         result = client.fcall("set_then_get", keys: ["page:home:visits"], args: ["1"])
+         puts result  # 1
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```ruby
+      require "valkey"
+
+      client = Valkey.new(host: "localhost", port: 6379)
+
+      # lua code that updates a key and returns its new value
+      lua_code = <<~LUA
+        #!lua name=page_visits
+        server.register_function('update_visits', function(visits)
+            server.call('INCR', visits[1])
+            return server.call('GET', visits[1])
+        end)
+      LUA
+
+      # loading the function to valkey
+      client.function_load(lua_code, replace: true)
+
+      client.set("page:home:visits", "0")
+      # calling the previously loaded function
+      result = client.fcall("update_visits", keys: ["page:home:visits"])
+      puts result  # 1
+
+      client.close
+      ```
+    </details>
+  </TabItem>
 </Tabs>
 
 ## Read-Only Functions
@@ -541,6 +600,25 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
     // Route to a random node
     $result = $client->fcall_ro('get_value', [], [], 'randomNode');
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    result = client.fcall_ro("get_value", keys: ["mykey"])
+    ```
+
+    **With Routing (Cluster Mode)**
+
+    ```ruby
+    # Route to all nodes
+    result = client.fcall_ro("get_value", route: Valkey::Route.all_nodes)
+
+    # Route to all primary nodes
+    result = client.fcall_ro("get_value", route: Valkey::Route.all_primaries)
+
+    # Route to a random node
+    result = client.fcall_ro("get_value", route: Valkey::Route.random)
     ```
   </TabItem>
 </Tabs>

@@ -110,6 +110,16 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     );
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    nodes = [{ host: "address.example.com", port: 6379 }]
+
+    client = Valkey.new(nodes: nodes, cluster_mode: true, ssl: true)
+    ```
+  </TabItem>
 </Tabs>
 
 ### Standalone
@@ -213,6 +223,20 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     $client = new ValkeyGlide();
     $client->connect(addresses: $addresses, use_tls: true);
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(host: "primary.example.com", port: 6379, ssl: true)
+    ```
+
+    A `rediss://` URL enables TLS as well:
+
+    ```ruby
+    client = Valkey.new(url: "rediss://primary.example.com:6379")
     ```
   </TabItem>
 </Tabs>
@@ -525,6 +549,60 @@ You can provide custom root certificates for TLS connections. This is useful whe
         use_tls: true,
         advanced_config: ['tls_config' => ['root_certs' => $certData]]
     );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    **Certificate Behavior:**
+
+    * If `ssl_params` is not provided, the system's default certificate trust store is used
+    * `ca_file` takes a path to a CA certificate file in PEM format
+    * Multiple certificates can be provided as PEM strings via the `root_certs` array, or by pointing `ca_path` at a directory of `.crt`/`.pem` files
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      host: "address.example.com",
+      port: 6379,
+      ssl: true,
+      ssl_params: { ca_file: "/path/to/ca-cert.pem" }
+    )
+    ```
+
+    #### Example - Using Certificate as String
+
+    ```ruby
+    cert_data = <<~CERT
+      -----BEGIN CERTIFICATE-----
+      MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+      ...
+      -----END CERTIFICATE-----
+    CERT
+
+    client = Valkey.new(
+      host: "address.example.com",
+      port: 6379,
+      ssl: true,
+      ssl_params: { root_certs: [cert_data] }
+    )
+    ```
+
+    #### Example - Client Certificate (Mutual TLS)
+
+    ```ruby
+    client = Valkey.new(
+      host: "address.example.com",
+      port: 6379,
+      ssl: true,
+      ssl_params: {
+        ca_file: "/path/to/ca-cert.pem",
+        cert: "/path/to/client-cert.pem",
+        key: "/path/to/client-key.pem"
+      }
+    )
     ```
   </TabItem>
 </Tabs>
