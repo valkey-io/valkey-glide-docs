@@ -1,0 +1,87 @@
+---
+title: Recovery Request Queue
+description: Buffer requests during cluster topology-refresh reconnects instead of failing them immediately
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+When a cluster client detects a circular MOVED redirect, it enters a recovery state to refresh the cluster topology. During this window, incoming requests would normally fail immediately with a `ClientError("Connection in recovery")`. The **recovery request queue** introduces a bounded buffer that holds those requests and retries them transparently once reconnection completes.
+
+## Configuration
+
+Configure the recovery request queue size through the cluster client configuration.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="C#">
+    :::note
+    This feature is not yet available in GLIDE C#.
+    :::
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Buffer up to 2000 requests during cluster recovery
+    clientConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithRecoveryRequestsQueueSize(2000)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Buffer up to 2000 requests during cluster recovery
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .recoveryRequestsQueueSize(2000)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Buffer up to 2000 requests during cluster recovery
+    const config: GlideClusterClientConfiguration = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        recoveryRequestsQueueSize: 2000,
+    };
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    This feature is not yet available in GLIDE PHP.
+    :::
+  </TabItem>
+
+  <TabItem label="Python">
+    ```python
+    # Buffer up to 2000 requests during cluster recovery
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="localhost", port=6379)],
+        recovery_requests_queue_size=2000,
+    )
+    ```
+  </TabItem>
+</Tabs>
+
+## How It Works
+
+1. **Trigger:** The cluster client detects that the topology has changed when it encounters a circular MOVED redirect (a redirect loop indicating the cached slot map is stale). The client enters a recovery state to refresh its view of the cluster.
+2. **Buffering:** During recovery, incoming requests are placed into a bounded FIFO queue instead of being failed immediately. This happens transparently — callers simply experience a brief delay rather than an error.
+3. **Dispatch:** When recovery completes and the topology is refreshed, buffered requests are dispatched in FIFO order. Each request retains its full retry budget, so transient routing issues after recovery are handled normally.
+4. **Overflow:** If the queue is full (i.e., the number of buffered requests reaches the configured cap), additional requests are failed immediately with an error. This prevents unbounded memory growth during prolonged recovery windows.
+
+## When to Adjust
+
+| Scenario | Recommendation |
+|----------|---------------|
+| High-throughput workloads with long recovery windows | Increase the queue size to avoid dropping requests during extended topology refreshes |
+| Memory-constrained environments | Decrease the queue size to limit memory usage during recovery |
+| Application handles retries at a higher level | Set to `0` to disable the queue and restore fail-fast behavior |
+| Short-lived bursts with fast recovery | The default of 1000 is typically sufficient |
+
+**Disabling the queue:** Setting `recovery_requests_queue_size` to `0` restores the previous behavior where requests arriving during recovery are failed immediately. This is useful when your application already implements retry logic above the client layer and you prefer immediate feedback over transparent buffering.
+
+## Defaults
+
+The default recovery request queue size is **1000**. This applies only to cluster clients (`GlideClusterClient`). Standalone clients use a different reconnection mechanism and do not encounter circular MOVED redirects, so this option has no effect on them.
