@@ -545,13 +545,48 @@ The advanced TLS configuration only supplies the client-side material.
 
 #### In-memory PEM (static)
 
-Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) when the client certificate and key are already loaded as PEM bytes.
+Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) when the client certificate and key are already loaded as PEM bytes. In Python, pass `client_cert_pem` and `client_key_pem` as bytes to `TlsAdvancedConfiguration`.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+        AdvancedGlideClusterClientConfiguration,
+    )
+
+    # Load certificate and key bytes from a secret store (not from source).
+    client_cert = b"""-----BEGIN CERTIFICATE-----
+    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+    ...
+    -----END CERTIFICATE-----"""
+    client_key = b"""-----BEGIN PRIVATE KEY-----
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
+    -----END PRIVATE KEY-----"""
+
+    # Create TLS configuration with in-memory client cert and key.
+    # The cert and key are loaded once at connection time (static, no reload).
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_pem=client_cert,
+        client_key_pem=client_key,
+    )
+
+    advanced_config = AdvancedGlideClusterClientConfiguration(
+        tls_config=tls_config
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(
+        addresses,
+        use_tls=True,
+        advanced_configuration=advanced_config,
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -651,13 +686,39 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
 
 #### Path-based with automatic reload
 
-Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(certPath, keyPath)` (Java) to point at files on disk; the core re-reads the material at its default cadence (currently 300 seconds).
+Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(certPath, keyPath)` (Java) to point at files on disk; the core re-reads the material at its default cadence (currently 300 seconds). In Python, pass `client_cert_path` and `client_key_path` to `TlsAdvancedConfiguration`.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+        AdvancedGlideClientConfiguration,
+    )
+
+    # Create TLS configuration with client cert/key file paths.
+    # The core will re-read the files at the default cadence (currently 300 seconds).
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_path="/path/to/client-cert.pem",
+        client_key_path="/path/to/client-key.pem",
+    )
+
+    advanced_config = AdvancedGlideClientConfiguration(
+        tls_config=tls_config
+    )
+
+    addresses = [NodeAddress(host="primary.example.com", port=6379)]
+    client_config = GlideClientConfiguration(
+        addresses,
+        use_tls=True,
+        advanced_configuration=advanced_config,
+    )
+
+    client = await GlideClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -748,13 +809,40 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
 
 #### Path-based with a custom reload interval
 
-Pass a positive interval in seconds to override the core default. In Java, use `useMutualTlsWithReload(certPath, keyPath, intervalSecs)`. In Go, pass `config.WithReloadInterval(d)` to `WithMutualTLSFromFiles()`.
+Pass a positive interval in seconds to override the core default. In Java, use `useMutualTlsWithReload(certPath, keyPath, intervalSecs)`. In Go, pass `config.WithReloadInterval(d)` to `WithMutualTLSFromFiles()`. In Python, pass `cert_reload_interval_seconds` to `TlsAdvancedConfiguration`.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+        AdvancedGlideClusterClientConfiguration,
+    )
+
+    # Create TLS configuration with client cert/key file paths and custom reload interval.
+    # The core will re-read the files every 60 seconds.
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_path="/path/to/client-cert.pem",
+        client_key_path="/path/to/client-key.pem",
+        cert_reload_interval_seconds=60,
+    )
+
+    advanced_config = AdvancedGlideClusterClientConfiguration(
+        tls_config=tls_config
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(
+        addresses,
+        use_tls=True,
+        advanced_configuration=advanced_config,
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -851,9 +939,42 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+        AdvancedGlideClientConfiguration,
+    )
+    from glide_shared.config import load_client_certificate_and_key_from_file
+
+    # Use the helper to load both cert and key from files.
+    # Note: this helper is in glide_shared.config, not the top-level glide package.
+    cert, key = load_client_certificate_and_key_from_file(
+        "/path/to/client-cert.pem",
+        "/path/to/client-key.pem",
+    )
+
+    # Create TLS configuration with the loaded in-memory bytes (static, no reload).
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_pem=cert,
+        client_key_pem=key,
+    )
+
+    advanced_config = AdvancedGlideClientConfiguration(
+        tls_config=tls_config
+    )
+
+    addresses = [NodeAddress(host="primary.example.com", port=6379)]
+    client_config = GlideClientConfiguration(
+        addresses,
+        use_tls=True,
+        advanced_configuration=advanced_config,
+    )
+
+    client = await GlideClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -959,8 +1080,10 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
 * **Path vs bytes are exclusive:** do not mix modes on the same builder.
   In Go, calling both `WithMutualTLS` and `WithMutualTLSFromFiles` on the same `TlsConfiguration` will replace the previous setting (the last call wins).
   To switch modes, create a new `TlsConfiguration`.
+  In Python, passing both path-based (`client_cert_path`/`client_key_path`) and bytes-based (`client_cert_pem`/`client_key_pem`) parameters raises a `ConfigurationError` at construction time.
 * **Sub-second and non-positive intervals are rejected:** in Go these fail with an error at configuration time.
-  If you want static mTLS from files, load the bytes yourself using `LoadClientCertificateAndKeyFromFile` and use `WithMutualTLS(cert, key)`.
+  In Python, `cert_reload_interval_seconds` must be a positive `int` — `bool`, `float`, zero, and negative values are rejected with a `ConfigurationError` at construction time.
+  If you want static mTLS from files, load the bytes yourself using `LoadClientCertificateAndKeyFromFile` (Go) or `load_client_certificate_and_key_from_file` (Python) and use the bytes-based mode.
 * **mTLS still needs `use_tls=True`:** the advanced TLS configuration only fills in the client-side material and does not enable TLS by itself.
 
 ### TLS Certificate Format
