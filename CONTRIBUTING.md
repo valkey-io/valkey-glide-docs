@@ -2,18 +2,71 @@
 
 Thank you for your interest in contributing to the Valkey GLIDE documentation!
 
-## Branches Overview
+## Deployment Model
 
-| Branch   | Purpose                                                                          |
-| -------- | -------------------------------------------------------------------------------- |
-| `main`   | Integration branch — all PRs target here                                         |
-| `public` | Production — deploys the live site at [glide.valkey.io](https://glide.valkey.io) |
+We use two branches:
 
-In general:
+| Branch   | Purpose                                                                                               |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| `main`   | Integration branch. Source of truth. All PRs target here. Content on `main` is awaiting release.      |
+| `public` | Production branch. deploys the live site at [glide.valkey.io](https://glide.valkey.io) on every push. |
 
-- Open all PRs against `main`.
-- On release day, `main` is merged onto `public` triggering a deployment.
-- Only urgent fixes are accepted directly into `public`.
+All documentation changes flow through `main` first, then are promoted to `public` on release.
+
+### Contribution Flow
+
+1. Open your PR against `main`.
+2. Once approved and CI passes, merge to `main`. Merge early and often to avoid big-bang release-day merges.
+3. Content sits on `main` until the next release.
+
+### Release Process
+
+`main` is the source of truth. On release day, a maintainer resets `public` to `main`'s HEAD and force-pushes:
+
+```bash
+git fetch origin
+git push origin +origin/main:public
+```
+
+Any contents on `main` that isn't ready to go live should be disabled (see [Unreleased Content](#unreleased-content)).
+
+### Applying a Hotfix
+
+For urgent fixes to the live site that can't wait for the next release:
+
+1. Open a PR targeting `public`.
+2. Once merged, deployment will start automatically.
+3. **Backport the same change to `main` immediately**. Because releases reset `public` to `main` HEAD, any hotfix that isn't on `main` before the next release will be erased.
+
+### Unreleased Content
+
+Content that has landed on `main` but isn't ready for release yet must be marked as draft so it doesn't appear on the live site when `public` is next updated.
+
+**Draft Page** — set `draft: true` in frontmatter. The page is excluded from production builds but visible in `pnpm dev`. Always include a `draft-reason` so releases can locate what to unflip.
+
+```
+---
+title: My New Feature
+description: ...
+draft: true
+draft-reason: For release 2.5
+---
+```
+
+Remove the page from sidebar entry in `astro.config.mjs` as it will fail the build if linked explicitly.
+
+**Draft Section** (e.g., one language's example tab) — wrap the section in the `<Draft>` component. Always include a `draft-reason`.
+
+```mdx
+import Draft from "@components/Draft.astro";
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">...</TabItem>
+  <Draft draft-reason="For release 2.5">
+    <TabItem label="Ruby">...</TabItem>
+  </Draft>
+</Tabs>
+```
 
 ## Getting Started
 

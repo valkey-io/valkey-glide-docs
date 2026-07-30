@@ -1,0 +1,10 @@
+---
+/**
+ * Inline equivalent of Starlight's page-level `draft: true` frontmatter:
+ * hides its children in production builds; shows them in dev mode.
+ *
+ * To release the content, delete the wrapping <Draft> tags.
+ */
+---
+
+{import.meta.env.DEV && <slot />}
