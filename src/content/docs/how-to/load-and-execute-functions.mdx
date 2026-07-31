@@ -26,9 +26,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
          ```python
          lua_code = """#!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
+         server.register_function('set_then_get', function(keys, args)
+            server.call('SET', keys[1], args[1])
+            return server.call('GET', keys[1])
          end)
          """
          ```
@@ -89,9 +89,9 @@ The following example shows a simple example of loading and executing a Valkey F
          ```java
          String luaCode = """
          #!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
+         server.register_function('set_then_get', function(keys, args)
+            server.call('SET', keys[1], args[1])
+            return server.call('GET', keys[1])
          end)
          """;
          ```
@@ -162,9 +162,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
          ```typescript
          const luaCode = `#!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
+         server.register_function('set_then_get', function(keys, args)
+            server.call('SET', keys[1], args[1])
+            return server.call('GET', keys[1])
          end)
          `;
          ```
@@ -226,9 +226,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
          ```go
          luaCode := `#!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
+         server.register_function('set_then_get', function(keys, args)
+            server.call('SET', keys[1], args[1])
+            return server.call('GET', keys[1])
          end)
          `
          ```
@@ -360,9 +360,9 @@ The following example shows a simple example of loading and executing a Valkey F
          ```php
          $luaCode = <<<'LUA'
          #!lua name=example_module
-         server.register_function('set_then_get', function(key, value)
-            server.call('SET', key, value)
-            return server.call('GET', key)
+         server.register_function('set_then_get', function(keys, args)
+            server.call('SET', keys[1], args[1])
+            return server.call('GET', keys[1])
          end)
          LUA;
          ```
