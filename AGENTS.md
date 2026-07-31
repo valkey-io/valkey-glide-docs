@@ -14,6 +14,7 @@ GLIDE provides client implementations in multiple languages, all sharing a commo
 | Go       | https://github.com/valkey-io/valkey-glide/tree/main/go     |
 | C#       | https://github.com/valkey-io/valkey-glide-csharp           |
 | PHP      | https://github.com/valkey-io/valkey-glide-php              |
+| Ruby     | https://github.com/valkey-io/valkey-glide-ruby             |
 
 The core Rust engine lives at https://github.com/valkey-io/valkey-glide/tree/main/glide-core and provides the shared connection management, routing, and protocol logic that all language clients wrap.
 
@@ -116,18 +117,26 @@ Contains the automated audit of command implementations across all clients:
 - `ISSUE_CREATION_PLAN.md` — full plan for the issue creation workflow
 - Repos: `valkey-io/valkey-glide` (python/node/java/go), `valkey-io/valkey-glide-php`, `valkey-io/valkey-glide-csharp`
 
-### Local Source Repos (for verification)
-
-- Main (Python, Node.js, Java, Go): `../valkey-glide`
-- PHP: `../valkey-glide-php`
-- C#: `../valkey-glide-csharp`
-
 ## Content Guidelines
 
 - Each MDX page should have frontmatter with `title` and `description` fields
 - The `description` field is used for SEO and should be a concise summary of the page content
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
+
+### Language Tabs
+
+Per-language code examples use Starlight tabs synced across pages:
+
+```mdx
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">...</TabItem>
+  ...
+</Tabs>
+```
+
+- Tab labels (in this order): `Python`, `Java`, `Node`, `Go`, `PHP`, `C#`, `Ruby`
+- Examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow
 
 ## Commit Requirements
 

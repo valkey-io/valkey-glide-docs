@@ -47,8 +47,10 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 
     # Create an atomic batch (transaction)
     batch = Batch(True)
+    batch.set("key", "value")
     # Create a non-atomic batch (pipeline)
-    batch = Batch(False)
+    pipeline = Batch(False)
+    pipeline.set("key", "value")
     ```
   </TabItem>
 
@@ -58,8 +60,10 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 
     // Create an atomic batch (transaction)
     Batch batch = new Batch(true);
+    batch.set("key", "value");
     // Create a non-atomic batch (pipeline)
     Batch pipeline = new Batch(false);
+    pipeline.set("key", "value");
     ```
   </TabItem>
 
@@ -68,9 +72,11 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     import {Batch} from "@valkey/valkey-glide";
 
     // Create an atomic batch (transaction)
-    const batch = new Batch(true)
+    const batch = new Batch(true);
+    batch.set("key", "value");
     // Create a non-atomic batch (pipeline)
-    const batch = new Batch(false)
+    const pipeline = new Batch(false);
+    pipeline.set("key", "value");
     ```
   </TabItem>
 
@@ -80,8 +86,10 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 
     // Create an atomic batch (transaction)
     transaction := pipeline.NewStandaloneBatch(true)
+    transaction.Set("key", "value")
     // Create a non-atomic batch (pipeline)
-    pipeline := pipeline.NewStandaloneBatch(false)
+    pipe := pipeline.NewStandaloneBatch(false)
+    pipe.Set("key", "value")
     ```
   </TabItem>
 
@@ -91,8 +99,24 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 
     // Create an atomic batch (transaction)
     var transaction = new Batch(true);
+    transaction.SetAsync("key", "value");
     // Create a non-atomic batch (pipeline)
     var pipeline = new Batch(false);
+    pipeline.SetAsync("key", "value");
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Atomic batch (transaction)
+    client.multi do |tx|
+      tx.set("key", "value")
+    end
+
+    # Non-atomic batch (pipeline)
+    client.pipelined do |pipe|
+      pipe.set("key", "value")
+    end
     ```
   </TabItem>
 </Tabs>
@@ -113,8 +137,10 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 
     # Create an atomic cluster batch (must use keys mapping to same slot)
     batch = ClusterBatch(True)
+    batch.set("key", "value")
     # Create a non-atomic cluster batch (pipeline may span multiple slots)
-    batch = ClusterBatch(False)
+    pipeline = ClusterBatch(False)
+    pipeline.set("key", "value")
     ```
   </TabItem>
 
@@ -124,8 +150,10 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 
     // Create an atomic cluster batch (must use keys mapping to same slot)
     ClusterBatch atomicCluster = new ClusterBatch(true);
+    atomicCluster.set("key", "value");
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
     ClusterBatch pipelineCluster = new ClusterBatch(false);
+    pipelineCluster.set("key", "value");
     ```
   </TabItem>
 
@@ -134,9 +162,11 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     import {ClusterBatch} from "@valkey/valkey-glide";
 
     // Create an atomic cluster batch (must use keys mapping to same slot)
-    const batch = new ClusterBatch(true)
+    const batch = new ClusterBatch(true);
+    batch.set("key", "value");
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
-    const batch = new ClusterBatch(false)
+    const pipeline = new ClusterBatch(false);
+    pipeline.set("key", "value");
     ```
   </TabItem>
 
@@ -146,8 +176,10 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 
     // Create an atomic cluster batch (must use keys mapping to same slot)
     transaction := pipeline.NewClusterBatch(true)
+    transaction.Set("key", "value")
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
-    pipeline := pipeline.NewClusterBatch(false)
+    pipe := pipeline.NewClusterBatch(false)
+    pipe.Set("key", "value")
     ```
   </TabItem>
 
@@ -157,8 +189,24 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 
     // Create an atomic cluster batch (must use keys mapping to same slot)
     var transaction = new ClusterBatch(true);
+    transaction.SetAsync("key", "value");
     // Create a non-atomic cluster batch (pipeline may span multiple slots)
     var pipeline = new ClusterBatch(false);
+    pipeline.SetAsync("key", "value");
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Atomic cluster batch (must use keys mapping to same slot)
+    cluster_client.multi do |tx|
+      tx.set("key", "value")
+    end
+
+    # Non-atomic cluster batch (pipeline may span multiple slots)
+    cluster_client.pipelined do |pipe|
+      pipe.set("key", "value")
+    end
     ```
   </TabItem>
 </Tabs>

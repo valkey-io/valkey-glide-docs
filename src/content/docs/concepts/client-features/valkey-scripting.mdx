@@ -5,7 +5,7 @@ description: Understanding how GLIDE handles Lua scripting, caching, and atomici
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-Valkey GLIDE provide an interface for Valkey scripting allowing you to manage and execute
+Valkey GLIDE provide a scripting interface through the `Script` class, allowing you to manage and execute
 custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
 
 For more detail on just Valkey scripting, visit the Valkey [documentation](https://valkey.io/topics/eval-intro/).
@@ -17,9 +17,9 @@ with GLIDE, see our [guide](/how-to/load-and-execute-functions/).
 To learn more about Valkey Functions, see the Valkey [documentations](https://valkey.io/topics/functions-intro/).
 :::
 
-:::caution[Php Not Supported]
-The GLIDE Php client does not yet support this interface.
-To execute custom scripts, use the appropriate Php Valkey command API for executing and caching scripts.
+:::caution[Clients Not Supported]
+The GLIDE PHP and Ruby clients do not support the `Script` interface or `invokeScript()` method.
+To execute custom scripts, use the Valkey command API methods: `eval()`, `evalsha()`, `eval_ro()`, and `evalsha_ro()`.
 :::
 
 ## Key Benefits
@@ -131,6 +131,7 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     Console.WriteLine(result); // Hello, Valkey!
     ```
   </TabItem>
+
 </Tabs>
 
 ## Handling Inputs with KEYS and ARGV
@@ -210,15 +211,19 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
     var config = new StandaloneClientConfigurationBuilder().Build();
     await using var client = await GlideClient.CreateClient(config);
 
+    var productKey = "product:shoe:stock";
+    var buyQuantity = "3";
+
     using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
 
     var options = new ScriptOptions()
-      .WithKeys("mykey")     // Maps to KEYS[1] in Lua
-      .WithArgs("myvalue"); // Maps to ARGV[1] in Lua
+      .WithKeys(productKey)    // Maps to KEYS[1] in Lua
+      .WithArgs(buyQuantity);  // Maps to ARGV[1] in Lua
 
     var result = await client.ScriptInvokeAsync(script, options);
     ```
   </TabItem>
+
 </Tabs>
 
 #### Why Use KEYS and ARGV
@@ -314,6 +319,7 @@ values directly into the script would create unique scripts each time, preventin
     var result = await client.ScriptInvokeAsync(goodScript, options);
     ```
   </TabItem>
+
 </Tabs>
 
 :::tip[Large Data]
@@ -366,6 +372,7 @@ GLIDE then automatically caches scripts with each `invoke_script()` call.
     Console.WriteLine($"Script hash: {script.Hash}"); // SHA1 hash of the script
     ```
   </TabItem>
+
 </Tabs>
 
 Scripts with identical code produce identical hashes, enabling efficient caching and reuse.
@@ -412,6 +419,7 @@ Scripts with identical code produce identical hashes, enabling efficient caching
     System.Diagnostics.Debug.Assert(script1.Hash == script2.Hash); // Same hash
     ```
   </TabItem>
+
 </Tabs>
 
 :::caution[Script hashing is content-sensitive]
@@ -553,6 +561,7 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
             .WithArgs("John"));
     ```
   </TabItem>
+
 </Tabs>
 
 ### Explicit Routing
@@ -676,6 +685,7 @@ Adding a hash tag `{}` in the key allow you to specify the specific slot.
     var keys = new[] { "user:{1000}:name", "user:{1000}:email" };
     ```
   </TabItem>
+
 </Tabs>
 
 To lean more about hash tags, see the [documentation](https://valkey.io/topics/cluster-spec/#hash-tags).
@@ -787,6 +797,7 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     Console.WriteLine($"GET result: {results[1]}");  // script-value
     ```
   </TabItem>
+
 </Tabs>
 
 ## What's Next
