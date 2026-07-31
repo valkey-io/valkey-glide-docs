@@ -26,6 +26,7 @@ config = GlideClusterClientConfiguration(
     addresses=[NodeAddress(host="localhost", port=6379)],
     request_timeout=500,
     inflight_requests_limit=1000,
+    recovery_requests_queue_size=1000,
     client_circuit_breaker=ClientCircuitBreakerConfiguration(),
 )
 client = await GlideClusterClient.create(config)
@@ -45,6 +46,7 @@ GlideClusterClient client = GlideClusterClient.createClient(
         .address(NodeAddress.builder().host("localhost").port(6379).build())
         .requestTimeout(500)
         .inflightRequestsLimit(1000)
+        .recoveryRequestsQueueSize(1000)
         .clientCircuitBreakerConfiguration(
             ClientCircuitBreakerConfiguration.builder().build())
         .build()
@@ -61,6 +63,7 @@ const client = await GlideClusterClient.createClient({
     addresses: [{ host: "localhost", port: 6379 }],
     requestTimeout: 500,
     inflightRequestsLimit: 1000,
+    recoveryRequestsQueueSize: 1000,
     clientCircuitBreaker: {},
 });
 ```
@@ -80,6 +83,7 @@ clientConfig := config.NewClusterClientConfiguration().
     WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
     WithRequestTimeout(500 * time.Millisecond).
     WithInflightRequestsLimit(1000).
+    WithRecoveryRequestsQueueSize(1000).
     WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
 
 client, err := glide.NewClusterClient(clientConfig)
@@ -189,6 +193,7 @@ Cluster clients additionally benefit from:
 * Per-node routing (commands to healthy nodes are unaffected by one bad node)
 * Topology refresh and failover detection (periodic, enabled by default)
 * Automatic MOVED/ASK redirect handling
+* Recovery request queue: buffers requests during topology-refresh reconnects instead of failing them immediately (see [Recovery Request Queue](/how-to/connections/recovery-queue))
 * `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
 
 For standalone deployments, the client-wide circuit breaker is the primary protection against a single unresponsive server causing thread pile-up.
