@@ -663,9 +663,28 @@ Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) whe
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Load certificate and key from a secret store (not from source).
+    // The material is loaded once at connect time (static, no reload).
+    const clientCert: Buffer = /* PEM-encoded certificate bytes from a secret store */;
+    const clientKey: Buffer = /* PEM-encoded private key bytes from a secret store */;
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: {
+                mutualTls: {
+                    kind: "bytes",
+                    certBytes: clientCert,
+                    keyBytes: clientKey,
+                },
+            },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -766,9 +785,25 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Point at cert/key files on disk.
+    // The core re-reads the material at its default cadence (300 seconds).
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: {
+                mutualTls: {
+                    kind: "path",
+                    certPath: "/path/to/client-cert.pem",
+                    keyPath: "/path/to/client-key.pem",
+                },
+            },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -863,9 +898,26 @@ Pass a positive interval in seconds to override the core default. In Java, use `
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Point at cert/key files on disk with a custom reload interval.
+    // The core re-reads the material every 60 seconds.
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: {
+                mutualTls: {
+                    kind: "path",
+                    certPath: "/path/to/client-cert.pem",
+                    keyPath: "/path/to/client-key.pem",
+                    reloadIntervalSeconds: 60,
+                },
+            },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -965,9 +1017,33 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import {
+        GlideClient,
+        loadClientCertificateAndKeyFromFile,
+    } from "@valkey/valkey-glide";
+
+    // Use the helper to load cert and key PEM bytes from disk.
+    const { cert, key } = await loadClientCertificateAndKeyFromFile(
+        "/path/to/client-cert.pem",
+        "/path/to/client-key.pem",
+    );
+
+    // Feed the loaded bytes to the in-memory mTLS mode (static, no reload).
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: {
+                mutualTls: {
+                    kind: "bytes",
+                    certBytes: cert,
+                    keyBytes: key,
+                },
+            },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -1040,6 +1116,8 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
 * **Sub-second and non-positive intervals are rejected:** in Go these fail with an error at configuration time.
   If you want static mTLS from files, load the bytes yourself using `LoadClientCertificateAndKeyFromFile` and use `WithMutualTLS(cert, key)`.
 * **mTLS still needs `use_tls=True`:** the advanced TLS configuration only fills in the client-side material and does not enable TLS by itself.
+* **Node.js `certBytes`/`keyBytes` must be non-empty:** proto3 `bytes` treats empty as unset, so GLIDE rejects empty `certBytes` or `keyBytes` at configuration time with a `ConfigurationError` rather than silently downgrading to server-auth-only TLS.
+* **Node.js `reloadIntervalSeconds` must be a positive integer ≤ 4,294,967,295:** protobufjs casts `uint32` via `value >>> 0`, so out-of-range values would silently truncate. GLIDE rejects them with a `ConfigurationError`.
 
 ### TLS Certificate Format
 
