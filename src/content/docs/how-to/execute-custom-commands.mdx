@@ -155,6 +155,28 @@ Pass the command name and arguments as an array of strings:
     Console.WriteLine(result); // hello
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    # Execute a SET command
+    client.call("SET", "mykey", "hello")
+
+    # Execute a GET command
+    result = client.call("GET", "mykey")
+    puts result # hello
+
+    # call_v takes the whole command as a single array —
+    # useful when the command is built dynamically
+    result = client.call_v(["MGET", "mykey"])
+    puts result.inspect # ["hello"]
+
+    client.close
+    ```
+  </TabItem>
 </Tabs>
 
 ## Limitations

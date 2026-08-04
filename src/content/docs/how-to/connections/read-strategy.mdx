@@ -141,6 +141,22 @@ Valkey GLIDE provides support for the following read strategies, allowing you to
     $client->get('key1');
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      read_from: Valkey::ReadFrom::PREFER_REPLICA
+    )
+
+    client.set("key1", "val1")
+    # get will read from one of the replicas
+    client.get("key1")
+    ```
+  </TabItem>
 </Tabs>
 
 ### AZ Affinity
@@ -272,6 +288,23 @@ When using the AZ Affinity read strategy, the `clientAz` setting is required to 
     $client->get('key1');
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      read_from: Valkey::ReadFrom::AZ_AFFINITY,
+      client_az: "us-east-1a"
+    )
+
+    client.set("key1", "val1")
+    # get will read from one of the replicas in the same client's availability zone if they exist
+    client.get("key1")
+    ```
+  </TabItem>
 </Tabs>
 
 ### AZ Affinity Replicas and Primary Read Strategy
@@ -401,6 +434,23 @@ When using the AZ Affinity Replicas and Primary read strategy, the `clientAz` se
     $client->set('key1', 'val1');
     // get will read from one of the replicas or the primary in the same client's availability zone if they exist
     $client->get('key1');
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      read_from: Valkey::ReadFrom::AZ_AFFINITY_REPLICAS_AND_PRIMARY,
+      client_az: "us-east-1a"
+    )
+
+    client.set("key1", "val1")
+    # get will read from one of the replicas or the primary in the same client's availability zone if they exist
+    client.get("key1")
     ```
   </TabItem>
 </Tabs>

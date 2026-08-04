@@ -176,6 +176,29 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     Console.WriteLine($"Output: {response}");  // Output: {"a":1.0,"b":2}
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+    require "json"
+
+    # Both standalone and cluster mode are supported
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    key = "testKey"
+    path = "$"
+    json_value = '{"a": 1.0, "b": 2}'
+
+    # JSON.SET
+    set_response = client.json_set(key, path, json_value)
+    # set_response == "OK"
+
+    # JSON.GET
+    get_response = client.json_get(key, "$")
+    # get_response == '[{"a":1.0,"b":2}]'
+    JSON.parse(get_response) # => [{"a" => 1.0, "b" => 2}]
+    ```
+  </TabItem>
 </Tabs>
 
 ## What's Next

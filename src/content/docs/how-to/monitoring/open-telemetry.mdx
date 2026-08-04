@@ -159,6 +159,26 @@ GLIDE does not export data directly to third-party services—instead, it sends 
     );
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Initialize once per process, before creating clients
+    Valkey::OpenTelemetry.init(
+      traces: {
+        endpoint: "http://localhost:4318/v1/traces",
+        sample_percentage: 10 # Optional, defaults to 1
+      },
+      metrics: {
+        endpoint: "http://localhost:4318/v1/metrics"
+      },
+      flush_interval_ms: 1000 # Optional, defaults to 5000
+    )
+
+    client = Valkey.new(host: "localhost", port: 6379)
+    ```
+  </TabItem>
 </Tabs>
 
 :::tip
