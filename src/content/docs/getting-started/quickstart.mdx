@@ -174,6 +174,20 @@ Windows support is currently available only for Valkey-GLIDE Java
     dotnet add package Valkey.Glide
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    **Requirements:** Ruby 2.6+
+
+    ```bash
+    gem install valkey-glide-rb
+    ```
+
+    Or add it to your `Gemfile`:
+
+    ```ruby
+    gem "valkey-glide-rb"
+    ```
+  </TabItem>
 </ParamTabs>
 
 :::tip[Installation Guides]
@@ -364,6 +378,28 @@ For testing against a live instance, update the `GlideClient` configurations.
     }
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Create the client
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    begin
+      # Test the connection
+      response = client.ping
+
+      # Valkey responds with PONG
+      puts "Connected! Server responded: #{response}"
+    rescue StandardError => e
+      puts "Connection failed: #{e.message}"
+    ensure
+      # Always close the client
+      client.close
+    end
+    ```
+  </TabItem>
 </Tabs>
 
 Running the above snippet should give you this response.
@@ -494,6 +530,22 @@ These options, and other interfaces, stay consistent between languages.
         .Build();
 
     await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Setting up connection configuration
+    client = Valkey.new(
+      host: "localhost",
+      port: 6379,
+      # Request timeout (seconds)
+      timeout: 5.0,
+      # TLS configuration (if needed)
+      ssl: false,
+      # Database selection (0-15 for Redis/Valkey)
+      db: 0
+    )
     ```
   </TabItem>
 </Tabs>

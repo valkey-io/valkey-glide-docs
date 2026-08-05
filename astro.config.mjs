@@ -369,6 +369,11 @@ export default defineConfig({
                   link: "https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
+                {
+                  label: "Ruby",
+                  link: "https://github.com/valkey-io/valkey-glide-ruby",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
               ],
             },
           ],

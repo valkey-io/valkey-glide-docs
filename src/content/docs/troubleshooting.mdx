@@ -193,6 +193,19 @@ To fix this, increase the **connection timeout** which is separate from the **re
     );
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "localhost", port: 6379 }],
+      cluster_mode: true,
+      timeout: 5.0,          # Request timeout in seconds
+      connect_timeout: 10.0  # Connection timeout in seconds
+    )
+    ```
+  </TabItem>
 </Tabs>
 
 ## Extension Not Loaded (PHP)
