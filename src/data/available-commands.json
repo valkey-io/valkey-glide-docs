@@ -97,7 +97,7 @@
       { "command": "HELLO", "valkey-io": "/commands/hello", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "PING", "valkey-io": "/commands/ping", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "QUIT", "valkey-io": "/commands/quit", "python": "not_available", "node": "not_available", "java": "not_available", "go": "not_available", "csharp": "not_available", "php": "not_available", "href": "#deprecated-commands", "ruby": "not_available" },
-      { "command": "RESET", "valkey-io": "/commands/reset", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "not_available", "php": "not_available", "csharp-href": "https://github.com/valkey-io/valkey-glide/issues/6292", "php-href": "https://github.com/valkey-io/valkey-glide/issues/6292", "ruby": "available" },
+      { "command": "RESET", "valkey-io": "/commands/reset", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "SELECT", "valkey-io": "/commands/select", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" }
     ]
   },
