@@ -1,0 +1,307 @@
+---
+title: Node Discovery Mode
+description: Control how standalone clients discover node roles and topology during connection initialization.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Node discovery mode controls how a standalone GLIDE client discovers the roles (primary vs. replica) and topology of nodes during connection initialization. This is only relevant for standalone clients — cluster mode has its own topology discovery mechanism.
+
+## Available Modes
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| **Standard** (default) | Verifies node roles via `INFO REPLICATION`. Uses only the provided addresses. | Default for most deployments. Fully backward-compatible. |
+| **Static** | Skips role detection entirely. Trusts provided addresses as-is; the first address is the primary. | Proxies (Envoy, Twemproxy) or known-static topologies where `INFO` is unavailable. |
+| **DiscoverAll** | Discovers the full topology (primary + all replicas) from any single starting node. | When you want to provide one node address and have the client find all others. |
+
+## Configuration
+
+### Standard Mode
+
+Standard is the default — no configuration needed. The client sends `INFO REPLICATION` to each provided address to verify node roles.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress, NodeDiscoveryMode
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("primary.example.com", 6379)],
+        node_discovery_mode=NodeDiscoveryMode.STANDARD
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.NodeDiscoveryMode;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("primary.example.com").port(6379).build())
+        .nodeDiscoveryMode(NodeDiscoveryMode.STANDARD)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, NodeDiscoveryMode } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        nodeDiscoveryMode: NodeDiscoveryMode.Standard
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+        WithNodeDiscoveryMode(config.NodeDiscoveryModeStandard)
+
+    client, err := glide.NewClient(myConfig)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'primary.example.com', 'port' => 6379]],
+        node_discovery_mode: 'standard'
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithNodeDiscoveryMode(NodeDiscoveryMode.Standard)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+</Tabs>
+
+### Static Mode
+
+Static mode skips role detection entirely. The client trusts the provided addresses as-is and treats the first address as the primary. This is ideal for proxy deployments where `INFO REPLICATION` is unavailable or returns unexpected results.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress, NodeDiscoveryMode
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("proxy.example.com", 6379)],
+        node_discovery_mode=NodeDiscoveryMode.STATIC
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.NodeDiscoveryMode;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("proxy.example.com").port(6379).build())
+        .nodeDiscoveryMode(NodeDiscoveryMode.STATIC)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, NodeDiscoveryMode } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "proxy.example.com", port: 6379 }],
+        nodeDiscoveryMode: NodeDiscoveryMode.Static
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "proxy.example.com", Port: 6379}).
+        WithNodeDiscoveryMode(config.NodeDiscoveryModeStatic)
+
+    client, err := glide.NewClient(myConfig)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'proxy.example.com', 'port' => 6379]],
+        node_discovery_mode: 'static'
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("proxy.example.com", 6379)
+        .WithNodeDiscoveryMode(NodeDiscoveryMode.Static)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+</Tabs>
+
+### DiscoverAll Mode
+
+DiscoverAll mode discovers the full topology (primary + all replicas) from any single starting node. Provide any node address — primary or replica — and the client will find and connect to all other nodes in the replication group.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress, NodeDiscoveryMode
+
+    # Provide any single node — the client discovers the rest
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("any-node.example.com", 6379)],
+        node_discovery_mode=NodeDiscoveryMode.DISCOVER_ALL
+    )
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.NodeDiscoveryMode;
+
+    // Provide any single node — the client discovers the rest
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("any-node.example.com").port(6379).build())
+        .nodeDiscoveryMode(NodeDiscoveryMode.DISCOVER_ALL)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, NodeDiscoveryMode } from "@valkey/valkey-glide";
+
+    // Provide any single node — the client discovers the rest
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "any-node.example.com", port: 6379 }],
+        nodeDiscoveryMode: NodeDiscoveryMode.DiscoverAll
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    // Provide any single node — the client discovers the rest
+    myConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "any-node.example.com", Port: 6379}).
+        WithNodeDiscoveryMode(config.NodeDiscoveryModeDiscoverAll)
+
+    client, err := glide.NewClient(myConfig)
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // Provide any single node — the client discovers the rest
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'any-node.example.com', 'port' => 6379]],
+        node_discovery_mode: 'discover_all'
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Provide any single node — the client discovers the rest
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("any-node.example.com", 6379)
+        .WithNodeDiscoveryMode(NodeDiscoveryMode.DiscoverAll)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+</Tabs>
+
+## Limitations and Caveats
+
+### Static Mode + ClientName
+
+Do not set a client name when using Static mode with a proxy. Proxies may not support the `CLIENT SETNAME` command that the client sends during connection setup, causing the connection to fail.
+
+### DiscoverAll — One-Time Discovery
+
+Discovery happens only at client creation time. Topology changes that occur after the client is created (e.g., a new replica joining) are not re-discovered. To pick up topology changes, recreate the client.
+
+### DiscoverAll + Read-Only Are Mutually Exclusive
+
+DiscoverAll mode requires `INFO REPLICATION` to discover the topology. Read-only mode skips this command. Because of this conflict, combining DiscoverAll with read-only mode is rejected at client creation time.
+
+### Standalone Mode Only
+
+NodeDiscoveryMode is only relevant for standalone clients. In cluster mode, the client uses its own built-in topology discovery mechanism, and this setting is ignored.
+
+## When to Use Each Mode
+
+### Standard (default)
+
+Use Standard mode when:
+- You are connecting directly to Valkey nodes (no proxy in between)
+- You want the client to verify which node is the primary and which are replicas
+- You are providing addresses for all nodes you want the client to connect to
+
+This is the safest and most common choice. Existing code continues to work without changes.
+
+### Static
+
+Use Static mode when:
+- Connecting through a proxy (Envoy, Twemproxy, HAProxy) that does not support `INFO REPLICATION`
+- The topology is known and will not change (e.g., a single-node deployment)
+- You want to minimize connection setup overhead by skipping role verification
+
+### DiscoverAll
+
+Use DiscoverAll mode when:
+- You want to connect to all nodes in a replication group but only know one node's address
+- You are using `PreferReplica` read strategy and want the client to automatically find replicas
+- Your infrastructure provides a single entry point but the client should spread reads across replicas
