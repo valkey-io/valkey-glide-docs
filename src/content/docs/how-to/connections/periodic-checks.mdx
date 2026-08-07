@@ -1,0 +1,127 @@
+---
+title: Configure Periodic Checks
+description: Guide for configuring periodic topology checks that keep a cluster client's view of the cluster up to date.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+In cluster mode, Valkey GLIDE periodically checks the cluster topology to detect changes and refreshes its internal slot map when a change is found.
+Periodic checks are enabled by default with a **60 second** interval. You can keep the default, set a custom interval, or disable them.
+
+## Configuration Options
+
+| Option                | Description                                                                                                | How to set it                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Enabled (Default)** | Runs topology checks at the default 60 second interval.                                                    | Leave `periodicChecks` unset.                                       |
+| **Manual Interval**   | Runs topology checks at a custom interval.                                                                 | Set `periodicChecks` to a manual interval with a duration in seconds. |
+| **Disabled**          | Turns off periodic checks. The client only refreshes topology on-demand in response to redirection errors. | Set `periodicChecks` to disabled.                                   |
+
+## Configuring
+
+The example below sets a custom interval of 30 seconds. Each snippet also shows, as a comment, how to disable periodic checks instead.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        PeriodicChecksManualInterval,
+        PeriodicChecksStatus,
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
+    client_config = GlideClusterClientConfiguration(
+        addresses,
+        periodic_checks=PeriodicChecksManualInterval(duration_in_sec=30),
+        # To disable instead: periodic_checks=PeriodicChecksStatus.DISABLED
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.PeriodicChecksManualInterval;
+    import glide.api.models.configuration.PeriodicChecksStatus;
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .advancedConfiguration(AdvancedGlideClusterClientConfiguration.builder()
+            .periodicChecks(PeriodicChecksManualInterval.builder().durationInSec(30).build())
+            // To disable instead: .periodicChecks(PeriodicChecksStatus.DISABLED)
+            .build())
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        periodicChecks: { duration_in_sec: 30 },
+        // To disable instead: periodicChecks: "disabled"
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        "context"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithPeriodicChecks() {
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithPeriodicChecks(config.PeriodicChecksManualInterval{DurationInSec: 30})
+            // To disable instead: WithPeriodicChecks(config.PeriodicChecksDisabled{})
+
+        myConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, _ := glide.NewClusterClient(myConfig)
+
+        client.Ping(context.Background())
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note
+    This feature is not yet available in GLIDE PHP.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note
+    This feature is not yet available in GLIDE C#.
+    :::
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      periodic_checks: { manual_interval: { duration_in_sec: 30 } }
+      # To disable instead: periodic_checks: { disabled: true }
+    )
+    ```
+  </TabItem>
+</Tabs>
