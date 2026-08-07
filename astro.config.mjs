@@ -179,6 +179,7 @@ export default defineConfig({
                 "how-to/connections/circuit-breaker",
                 "how-to/connections/configure-lazy-connection",
                 "how-to/connections/limit-inflight-requests",
+                "how-to/connections/periodic-checks",
                 "how-to/connections/read-strategy",
                 "how-to/connections/resilience-best-practices",
                 "how-to/connections/timeouts-and-reconnect-strategy",
