@@ -13,9 +13,12 @@ Inflight requests limit can be configured through the general client configurati
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="C#">
-    :::note
-    This feature is not yet available in GLIDE C#.
-    :::
+    ```csharp
+    // Limit to 1000 inflight requests per connection
+    var clusterConfig = new GlideClusterClientConfiguration()
+        .WithAddress("address.example.com", 6379)
+        .WithInflightRequestsLimit(1000);
+    ```
   </TabItem>
 
   <TabItem label="Go">
