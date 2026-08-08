@@ -18,6 +18,7 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 | `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min | How long an idle client stays in the pool before eviction |
 | `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (DISCARD, UNWATCH) when returning a client |
 | `acquire_timeout_s` / `acquireTimeoutS` / `AcquireTimeout` | duration | 5 sec | How long to wait for a client when the pool is exhausted |
+| `abandon_timeout_ms` / `abandonTimeoutMs` / `AbandonTimeout` | duration | 5 min (300000 ms) | Maximum inactivity time for a borrowed client before the pool reclaims it. The timer resets on every command sent. The abandon monitor skips clients executing blocking commands. Set to 0 to disable (in Go, set to a negative value to disable; 0 means use default). |
 
 ## Create a Pool
 
@@ -191,6 +192,101 @@ Check the current state of the pool to monitor utilization and diagnose capacity
   </TabItem>
 </Tabs>
 
+## Abandon Detection
+
+The pool runs a background monitor that reclaims borrowed clients when they have been inactive beyond a configurable timeout. This prevents connection leaks when application code forgets to return a client.
+
+**How it works:**
+
+- The monitor scans at half the timeout interval (e.g., every 2.5 minutes with the default 5-minute timeout).
+- A borrowed client is reclaimed if no command has been sent to it within the threshold.
+- The inactivity timer resets on every command sent to the borrowed client.
+- Blocking commands (`BLPOP`, `BRPOP`, `XREAD BLOCK`, etc.) are automatically detected and excluded from reclaim.
+- When a client is reclaimed, the connection is discarded and a fresh one is created on the next `acquire()`.
+
+### Configure a Custom Timeout
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import PoolConfig
+
+    # Set abandon timeout to 1 minute
+    pool_config = PoolConfig(abandon_timeout_ms=60000)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.pool.ClientPoolConfig;
+    import java.time.Duration;
+
+    // Set abandon timeout to 1 minute
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .abandonTimeout(Duration.ofMinutes(1))
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Set abandon timeout to 1 minute
+    const pool = await ClientPool.create({
+        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+        abandonTimeoutMs: 60000,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Set abandon timeout to 1 minute
+    poolCfg := glide.PoolConfig{
+        AbandonTimeout: 1 * time.Minute,
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Disable Abandon Detection
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Disable abandon detection
+    pool_config = PoolConfig(abandon_timeout_ms=0)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Disable abandon detection
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .abandonTimeout(Duration.ZERO)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Disable abandon detection
+    const pool = await ClientPool.create({
+        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+        abandonTimeoutMs: 0,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Disable abandon detection (use a negative value in Go)
+    poolCfg := glide.PoolConfig{
+        AbandonTimeout: -1 * time.Second,
+    }
+    ```
+  </TabItem>
+</Tabs>
+
 ## Close the Pool
 
 When your application shuts down, close the pool to release all connections.
@@ -230,5 +326,4 @@ When your application shuts down, close the pool to release all connections.
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
-- **No abandon detection:** If a borrowed client is never returned (leaked), the pool cannot detect or reclaim it.
 - **State reset always sends DISCARD:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` even if no `MULTI` transaction was active. This adds a small round-trip on each release.
