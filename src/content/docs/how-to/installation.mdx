@@ -99,7 +99,7 @@ The release of Valkey GLIDE was tested on the following platforms:
 </details>
 
 :::caution
-Alpine Linux / MUSL support varies by language. Node.js and Java provide MUSL-compatible builds. Python does not currently support MUSL.
+Alpine Linux / MUSL support varies by language. Node.js, Java, and PHP provide MUSL-compatible builds. Python, Go, and C# do not currently support MUSL.
 :::
 
 ### MacOS
@@ -310,6 +310,14 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     ```bash
     php -m | grep valkey_glide
     ```
+
+    :::note[Alpine Linux / MUSL]
+    The PHP extension supports Alpine Linux (musl libc 1.2.3+, Alpine 3.19+) on both x86_64 and aarch64. Building from source on Alpine requires additional packages:
+
+    ```bash
+    apk add cmake g++ perl linux-headers
+    ```
+    :::
   </TabItem>
 
   <TabItem label="C#">
