@@ -678,8 +678,8 @@ Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) whe
             tlsAdvancedConfiguration: {
                 mutualTls: {
                     kind: "bytes",
-                    certBytes: clientCert,
-                    keyBytes: clientKey,
+                    clientCertificate: clientCert,
+                    clientKey: clientKey,
                 },
             },
         },
@@ -797,8 +797,8 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
             tlsAdvancedConfiguration: {
                 mutualTls: {
                     kind: "path",
-                    certPath: "/path/to/client-cert.pem",
-                    keyPath: "/path/to/client-key.pem",
+                    clientCertPath: "/path/to/client-cert.pem",
+                    clientKeyPath: "/path/to/client-key.pem",
                 },
             },
         },
@@ -910,8 +910,8 @@ Pass a positive interval in seconds to override the core default. In Java, use `
             tlsAdvancedConfiguration: {
                 mutualTls: {
                     kind: "path",
-                    certPath: "/path/to/client-cert.pem",
-                    keyPath: "/path/to/client-key.pem",
+                    clientCertPath: "/path/to/client-cert.pem",
+                    clientKeyPath: "/path/to/client-key.pem",
                     reloadIntervalSeconds: 60,
                 },
             },
@@ -1037,8 +1037,8 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
             tlsAdvancedConfiguration: {
                 mutualTls: {
                     kind: "bytes",
-                    certBytes: cert,
-                    keyBytes: key,
+                    clientCertificate: cert,
+                    clientKey: key,
                 },
             },
         },
@@ -1116,7 +1116,8 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
 * **Sub-second and non-positive intervals are rejected:** in Go these fail with an error at configuration time.
   If you want static mTLS from files, load the bytes yourself using `LoadClientCertificateAndKeyFromFile` and use `WithMutualTLS(cert, key)`.
 * **mTLS still needs `use_tls=True`:** the advanced TLS configuration only fills in the client-side material and does not enable TLS by itself.
-* **Node.js `certBytes`/`keyBytes` must be non-empty:** proto3 `bytes` treats empty as unset, so GLIDE rejects empty `certBytes` or `keyBytes` at configuration time with a `ConfigurationError` rather than silently downgrading to server-auth-only TLS.
+* **Node.js `clientCertificate`/`clientKey` must be non-empty:** proto3 `bytes` treats empty as unset, so GLIDE rejects empty `clientCertificate` or `clientKey` at configuration time with a `ConfigurationError` rather than silently downgrading to server-auth-only TLS.
+* **Node.js `reloadIntervalSeconds` requires path-based mTLS:** setting `reloadIntervalSeconds` on a `kind: "bytes"` mTLS configuration is rejected with a `ConfigurationError` since byte-based material cannot be reloaded.
 * **Node.js `reloadIntervalSeconds` must be a positive integer ≤ 4,294,967,295:** protobufjs casts `uint32` via `value >>> 0`, so out-of-range values would silently truncate. GLIDE rejects them with a `ConfigurationError`.
 
 ### TLS Certificate Format
