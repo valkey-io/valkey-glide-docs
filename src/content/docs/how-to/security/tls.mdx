@@ -630,7 +630,7 @@ Byte-based mTLS is inherently static: the material is read once at connect time 
 Path-based and byte-based mTLS are mutually exclusive within a single configuration.
 Supplying both is rejected at configuration time in every SDK.
 
-A custom reload interval must be a positive whole number of seconds no greater than 2^32 - 1.
+A custom reload interval must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years).
 Sub-second, zero, negative, and oversized values are rejected at configuration time.
 
 #### In-memory PEM (static)
@@ -1183,7 +1183,7 @@ Feed those bytes into the byte-based entry point shown above.
 
 * **mTLS still needs TLS enabled at the top level.** The advanced TLS configuration only supplies the client-side material; without TLS on the base client configuration (`use_tls=True`, `.useTLS(true)`, `useTLS: true`, or `.WithUseTLS(true)`), the client connects in plaintext and the mTLS material is not used.
 * **Path-based and byte-based mTLS are mutually exclusive.** Supplying both a certificate/key path and inline PEM bytes on the same configuration is a configuration error in every SDK.
-* **Sub-second, zero, negative, and oversized reload intervals are rejected.** The custom interval is validated at configuration time: it must be a positive whole number of seconds no greater than 2^32 - 1. If you want static mTLS from files, load the bytes yourself with the file-loading helper and use the byte-based mode.
+* **Sub-second, zero, negative, and oversized reload intervals are rejected.** The custom interval is validated at configuration time: it must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years). If you want static mTLS from files, load the bytes yourself with the file-loading helper and use the byte-based mode.
 * **Byte-based mTLS is static.** The material is read once at connect time and never reloads. Use a path-based mode when the certificate rotates.
 * **Reload cadence is a lower bound.** The interval bounds how stale the on-disk material can be before the next reload attempt; the next successful reload takes effect on the next reconnect, not on open connections.
 * **Reload failures keep the last known-good material.** A path that becomes unreadable, a mismatched key, or a corrupt certificate causes the reload to fail. The core keeps the last successfully loaded material and retries at the next tick.
