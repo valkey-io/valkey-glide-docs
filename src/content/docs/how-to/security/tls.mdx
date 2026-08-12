@@ -272,7 +272,7 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
     client_config = GlideClusterClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -361,7 +361,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClusterClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -393,7 +393,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClient.create(client_config)
@@ -431,7 +431,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClusterClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClusterClient.create(client_config)
