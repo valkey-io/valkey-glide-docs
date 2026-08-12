@@ -295,6 +295,20 @@ end
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Read script from file
+    $rateLimit = file_get_contents('rate_limit.lua');
+
+    // Usage
+    $result = $client->eval(
+        $rateLimit,
+        ['rate_limit:user:123', '10', '60'],  // 10 requests per 60 seconds
+        1  // num_keys
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -313,20 +327,6 @@ end
         new ScriptOptions()
             .WithKeys("rate_limit:user:123")
             .WithArgs("10", "60")); // 10 requests per 60 seconds
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Read script from file
-    $rateLimit = file_get_contents('rate_limit.lua');
-
-    // Usage
-    $result = $client->eval(
-        $rateLimit,
-        ['rate_limit:user:123', '10', '60'],  // 10 requests per 60 seconds
-        1  // num_keys
-    );
     ```
   </TabItem>
 
@@ -513,6 +513,34 @@ end
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Read scripts from files
+    $acquireLock = file_get_contents('acquire_lock.lua');
+    $releaseLock = file_get_contents('release_lock.lua');
+
+    // Acquire lock
+    $lockAcquired = $client->eval(
+        $acquireLock,
+        ['lock:resource:123', 'unique_token', '30'],  // 30 second expiration
+        1  // num_keys
+    );
+
+    if ($lockAcquired) {
+        try {
+            // Do work while holding lock
+        } finally {
+            // Release lock
+            $client->eval(
+                $releaseLock,
+                ['lock:resource:123', 'unique_token'],
+                1  // num_keys
+            );
+        }
+    }
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -549,34 +577,6 @@ end
                 new ScriptOptions()
                     .WithKeys("lock:resource:123")
                     .WithArgs("unique_token"));
-        }
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Read scripts from files
-    $acquireLock = file_get_contents('acquire_lock.lua');
-    $releaseLock = file_get_contents('release_lock.lua');
-
-    // Acquire lock
-    $lockAcquired = $client->eval(
-        $acquireLock,
-        ['lock:resource:123', 'unique_token', '30'],  // 30 second expiration
-        1  // num_keys
-    );
-
-    if ($lockAcquired) {
-        try {
-            // Do work while holding lock
-        } finally {
-            // Release lock
-            $client->eval(
-                $releaseLock,
-                ['lock:resource:123', 'unique_token'],
-                1  // num_keys
-            );
         }
     }
     ```
@@ -707,6 +707,20 @@ end
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Read script from file
+    $conditionalUpdate = file_get_contents('conditional_update.lua');
+
+    // Update only if current value matches expected
+    $updated = $client->eval(
+        $conditionalUpdate,
+        ['user:123:status', 'pending', 'active'],  // Change from "pending" to "active"
+        1  // num_keys
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -725,20 +739,6 @@ end
         new ScriptOptions()
             .WithKeys("user:123:status")
             .WithArgs("pending", "active")); // Change from "pending" to "active"
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Read script from file
-    $conditionalUpdate = file_get_contents('conditional_update.lua');
-
-    // Update only if current value matches expected
-    $updated = $client->eval(
-        $conditionalUpdate,
-        ['user:123:status', 'pending', 'active'],  // Change from "pending" to "active"
-        1  // num_keys
-    );
     ```
   </TabItem>
 
@@ -863,6 +863,28 @@ end
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Handle script execution errors
+    $script = "return redis.call('INCR', 'not_a_number')";
+
+    try {
+        $result = $client->eval($script, ['not_a_number'], 0);
+    } catch (ValkeyGlideException $e) {
+        $message = $e->getMessage();
+        if (str_contains($message, 'WRONGTYPE') || str_contains($message, 'not an integer')) {
+            echo "Type error in script\n";
+        } elseif (str_contains(strtolower($message), 'syntax error')) {
+            echo "Lua syntax error in script\n";
+        } elseif (str_contains(strtolower($message), 'unknown command')) {
+            echo "Invalid Redis command in script\n";
+        } else {
+            echo "Script error: $message\n";
+        }
+    }
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -890,28 +912,6 @@ end
             Console.WriteLine("Invalid Redis command in script");
         else
             Console.WriteLine($"Script error: {message}");
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Handle script execution errors
-    $script = "return redis.call('INCR', 'not_a_number')";
-
-    try {
-        $result = $client->eval($script, ['not_a_number'], 0);
-    } catch (ValkeyGlideException $e) {
-        $message = $e->getMessage();
-        if (str_contains($message, 'WRONGTYPE') || str_contains($message, 'not an integer')) {
-            echo "Type error in script\n";
-        } elseif (str_contains(strtolower($message), 'syntax error')) {
-            echo "Lua syntax error in script\n";
-        } elseif (str_contains(strtolower($message), 'unknown command')) {
-            echo "Invalid Redis command in script\n";
-        } else {
-            echo "Script error: $message\n";
-        }
     }
     ```
   </TabItem>
@@ -1107,6 +1107,43 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    **Requirements:** PHP 8.1+
+
+    ```php
+    // Configure client timeout for long-running scripts
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        request_timeout: 30000  // 30 seconds for long scripts (default is 250ms)
+    );
+
+    // Handle long-running scripts
+    $longScript = <<<'LUA'
+    local start = redis.call('TIME')[1]
+    while redis.call('TIME')[1] - start < 25 do
+        redis.call('GET', 'dummy_key')  -- Read-only operation
+    end
+    return 'Done'
+    LUA;
+
+    try {
+        $result = $client->eval($longScript, [], 0);
+        echo "Script completed: $result\n";
+    } catch (ValkeyGlideException $e) {
+        $message = $e->getMessage();
+        if (str_contains(strtolower($message), 'timeout')) {
+            echo "Client timeout - script may still be running on server!\n";
+            echo "Consider increasing request_timeout in client configuration\n";
+        } elseif (str_contains($message, 'Script killed')) {
+            echo "Script was killed by server (only possible for read-only scripts)\n";
+        } else {
+            echo "Script error: $message\n";
+        }
+    }
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1145,43 +1182,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             Console.WriteLine("Script was killed by server (only possible for read-only scripts)");
         else
             Console.WriteLine($"Script error: {message}");
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    **Requirements:** PHP 8.1+
-
-    ```php
-    // Configure client timeout for long-running scripts
-    $client = new ValkeyGlide();
-    $client->connect(
-        addresses: [['host' => 'localhost', 'port' => 6379]],
-        request_timeout: 30000  // 30 seconds for long scripts (default is 250ms)
-    );
-
-    // Handle long-running scripts
-    $longScript = <<<'LUA'
-    local start = redis.call('TIME')[1]
-    while redis.call('TIME')[1] - start < 25 do
-        redis.call('GET', 'dummy_key')  -- Read-only operation
-    end
-    return 'Done'
-    LUA;
-
-    try {
-        $result = $client->eval($longScript, [], 0);
-        echo "Script completed: $result\n";
-    } catch (ValkeyGlideException $e) {
-        $message = $e->getMessage();
-        if (str_contains(strtolower($message), 'timeout')) {
-            echo "Client timeout - script may still be running on server!\n";
-            echo "Consider increasing request_timeout in client configuration\n";
-        } elseif (str_contains($message, 'Script killed')) {
-            echo "Script was killed by server (only possible for read-only scripts)\n";
-        } else {
-            echo "Script error: $message\n";
-        }
     }
     ```
   </TabItem>
@@ -1302,6 +1302,24 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Handle cluster routing errors
+    try {
+        $result = $clusterClient->eval(
+            $script,
+            ['key1', 'key2'],  // Might be in different slots
+            2  // num_keys
+        );
+    } catch (ValkeyGlideException $e) {
+        if (str_contains($e->getMessage(), 'CROSSSLOT')) {
+            echo "Keys are in different slots\n";
+            // Use hash tags or route explicitly
+        }
+    }
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1322,24 +1340,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     {
         Console.WriteLine("Keys are in different slots");
         // Use hash tags or route explicitly
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Handle cluster routing errors
-    try {
-        $result = $clusterClient->eval(
-            $script,
-            ['key1', 'key2'],  // Might be in different slots
-            2  // num_keys
-        );
-    } catch (ValkeyGlideException $e) {
-        if (str_contains($e->getMessage(), 'CROSSSLOT')) {
-            echo "Keys are in different slots\n";
-            // Use hash tags or route explicitly
-        }
     }
     ```
   </TabItem>
@@ -1484,6 +1484,31 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Good: Conditional update with multiple data structures
+    $conditionalUpdate = <<<'LUA'
+    local current = redis.call('GET', KEYS[1])
+    local threshold = tonumber(ARGV[2])
+
+    if current and tonumber(current) >= threshold then
+        redis.call('SET', KEYS[1], ARGV[1])
+        redis.call('LPUSH', KEYS[2], ARGV[1])
+        redis.call('EXPIRE', KEYS[2], ARGV[3])
+        return 1
+    else
+        return 0
+    end
+    LUA;
+
+    $result = $client->eval(
+        $conditionalUpdate,
+        ['user:score', 'user:history', '100', '50', '86400'],  // new score, threshold, expire in 1 day
+        2  // num_keys
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1512,31 +1537,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         new ScriptOptions()
             .WithKeys("user:score", "user:history")
             .WithArgs("100", "50", "86400")); // new score, threshold, expire in 1 day
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Good: Conditional update with multiple data structures
-    $conditionalUpdate = <<<'LUA'
-    local current = redis.call('GET', KEYS[1])
-    local threshold = tonumber(ARGV[2])
-
-    if current and tonumber(current) >= threshold then
-        redis.call('SET', KEYS[1], ARGV[1])
-        redis.call('LPUSH', KEYS[2], ARGV[1])
-        redis.call('EXPIRE', KEYS[2], ARGV[3])
-        return 1
-    else
-        return 0
-    end
-    LUA;
-
-    $result = $client->eval(
-        $conditionalUpdate,
-        ['user:score', 'user:history', '100', '50', '86400'],  // new score, threshold, expire in 1 day
-        2  // num_keys
-    );
     ```
   </TabItem>
 
@@ -1635,6 +1635,20 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Good: Proper nil handling
+    $safeScript = <<<'LUA'
+    local val = redis.call('GET', KEYS[1])
+    if val then
+        return val
+    else
+        return 'default_value'
+    end
+    LUA;
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1648,20 +1662,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             return 'default_value'
         end
     ");
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Good: Proper nil handling
-    $safeScript = <<<'LUA'
-    local val = redis.call('GET', KEYS[1])
-    if val then
-        return val
-    else
-        return 'default_value'
-    end
-    LUA;
     ```
   </TabItem>
 
@@ -1733,6 +1733,16 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Good: Return appropriate types
+    $typedScript = <<<'LUA'
+    local value = redis.call('GET', KEYS[1])
+    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+    LUA;
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1742,16 +1752,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         local value = redis.call('GET', KEYS[1])
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     ");
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Good: Return appropriate types
-    $typedScript = <<<'LUA'
-    local value = redis.call('GET', KEYS[1])
-    return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
-    LUA;
     ```
   </TabItem>
 
@@ -1857,6 +1857,24 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Good: Use hash tags for related keys
+    $clusterScript = <<<'LUA'
+    redis.call('SET', KEYS[1], ARGV[1])
+    redis.call('SET', KEYS[2], ARGV[2])
+    return 'OK'
+    LUA;
+
+    // Execute with hash tags
+    $clusterClient->eval(
+        $clusterScript,
+        ['user:{123}:name', 'user:{123}:email', 'John', 'john@example.com'],
+        2  // num_keys
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -1878,24 +1896,6 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         new ScriptOptions()
             .WithKeys("user:{123}:name", "user:{123}:email")
             .WithArgs("John", "john@example.com"));
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Good: Use hash tags for related keys
-    $clusterScript = <<<'LUA'
-    redis.call('SET', KEYS[1], ARGV[1])
-    redis.call('SET', KEYS[2], ARGV[2])
-    return 'OK'
-    LUA;
-
-    // Execute with hash tags
-    $clusterClient->eval(
-        $clusterScript,
-        ['user:{123}:name', 'user:{123}:email', 'John', 'john@example.com'],
-        2  // num_keys
-    );
     ```
   </TabItem>
 

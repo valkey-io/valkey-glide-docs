@@ -23,6 +23,68 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 ## Examples
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    :::tip[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/ft/).
+    :::
+
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        ft,
+        glide_json,
+        DataType,
+        NumericField,
+        ReturnField,
+        FtCreateOptions,
+        FtSearchOptions,
+    )
+    import json
+    import time
+
+    # Both standalone and cluster mode are supported
+    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+
+    prefix = "{json}:"
+    json_key1 = prefix + "1"
+    json_key2 = prefix + "2"
+    json_value1 = {"a": 11111, "b": 2, "c": 3}
+    json_value2 = {"a": 22222, "b": 2, "c": 3}
+    index = prefix + "index"
+
+    # FT.CREATE
+    await ft.create(
+        client,
+        index,
+        schema=[
+            NumericField("$.a", "a"),
+            NumericField("$.b", "b"),
+        ],
+        options=FtCreateOptions(data_type=DataType.JSON, prefixes=[prefix]),
+    )
+
+    await glide_json.set(client, json_key1, "$", json.dumps(json_value1))
+    await glide_json.set(client, json_key2, "$", json.dumps(json_value2))
+
+    time.sleep(1)  # let server digest the data and update index
+
+    # FT.SEARCH
+    ft_search_options = FtSearchOptions(
+        return_fields=[
+            ReturnField(field_identifier="a", alias="a_new"),
+            ReturnField(field_identifier="b", alias="b_new"),
+        ]
+    )
+
+    search_result = await ft.search(client, index, "@a:[-inf +inf]", options=ft_search_options)
+    # search_result[0] == 2
+    # search_result[1] contains results with "{json}:1" and "{json}:2"
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     :::tip[Javadoc]
     The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/FT.html).
@@ -148,68 +210,6 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     );
     console.log(searchResult[0]); // Output: 1
     console.log(searchResult[1]); // Output: search result containing "{json}:1"
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    :::tip[API Reference]
-    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/ft/).
-    :::
-
-    ```python
-    from glide import (
-        GlideClient,
-        GlideClientConfiguration,
-        NodeAddress,
-        ft,
-        glide_json,
-        DataType,
-        NumericField,
-        ReturnField,
-        FtCreateOptions,
-        FtSearchOptions,
-    )
-    import json
-    import time
-
-    # Both standalone and cluster mode are supported
-    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
-    client = await GlideClient.create(config)
-
-    prefix = "{json}:"
-    json_key1 = prefix + "1"
-    json_key2 = prefix + "2"
-    json_value1 = {"a": 11111, "b": 2, "c": 3}
-    json_value2 = {"a": 22222, "b": 2, "c": 3}
-    index = prefix + "index"
-
-    # FT.CREATE
-    await ft.create(
-        client,
-        index,
-        schema=[
-            NumericField("$.a", "a"),
-            NumericField("$.b", "b"),
-        ],
-        options=FtCreateOptions(data_type=DataType.JSON, prefixes=[prefix]),
-    )
-
-    await glide_json.set(client, json_key1, "$", json.dumps(json_value1))
-    await glide_json.set(client, json_key2, "$", json.dumps(json_value2))
-
-    time.sleep(1)  # let server digest the data and update index
-
-    # FT.SEARCH
-    ft_search_options = FtSearchOptions(
-        return_fields=[
-            ReturnField(field_identifier="a", alias="a_new"),
-            ReturnField(field_identifier="b", alias="b_new"),
-        ]
-    )
-
-    search_result = await ft.search(client, index, "@a:[-inf +inf]", options=ft_search_options)
-    # search_result[0] == 2
-    # search_result[1] contains results with "{json}:1" and "{json}:2"
     ```
   </TabItem>
 

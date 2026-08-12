@@ -18,6 +18,7 @@
     "format:check:non-mdx": "prettier --check .",
     "format:check:mdx": "bash scripts/check-format.sh",
     "format:check": "pnpm run format:check:non-mdx && pnpm run format:check:mdx",
+    "check:tab-order": "node scripts/check-tab-order.mjs",
     "test-deploy": "pnpm build && ./test-deploy.sh"
   },
   "dependencies": {

@@ -33,6 +33,9 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
+      - name: Check language tab ordering
+        run: pnpm check:tab-order
+
       - name: Build (will also check for internal links)
         run: pnpm build
 

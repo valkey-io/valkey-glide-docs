@@ -41,19 +41,6 @@ The following are the configuration references for each Glide clients:
     ```
   </TabItem>
 
-  <TabItem label="Node">
-    ```typescript
-    import { GlideClientOptions } from "@valkey/valkey-glide";
-
-    const config: GlideClientOptions = {
-        addresses: [{ host: "localhost", port: 6379 }],
-        useTLS: false,
-        requestTimeout: 1000,
-        clientName: "node_app"
-    };
-    ```
-  </TabItem>
-
   <TabItem label="Java">
     ```java
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -65,6 +52,19 @@ The following are the configuration references for each Glide clients:
         .requestTimeout(1000)
         .clientName("java_app")
         .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClientOptions } from "@valkey/valkey-glide";
+
+    const config: GlideClientOptions = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        useTLS: false,
+        requestTimeout: 1000,
+        clientName: "node_app"
+    };
     ```
   </TabItem>
 

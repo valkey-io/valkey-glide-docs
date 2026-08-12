@@ -12,32 +12,6 @@ GLIDE supports **lazy connection mode**, which defers the establishment of physi
 Lazy connection can be configured through the client configuration object.
 
 <Tabs syncKey="progLangInExamples">
-  <TabItem label="Node">
-    ```typescript
-    import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
-
-    // Standalone client with lazy connect
-    const standaloneClient = await GlideClient.createClient({
-        addresses: [{ host: "localhost", port: 6379 }],
-        lazyConnect: true,
-        requestTimeout: 5000
-    });
-
-    // Cluster client with lazy connect
-    const clusterClient = await GlideClusterClient.createClient({
-        addresses: [
-            { host: "localhost", port: 7000 },
-            { host: "localhost", port: 7001 }
-        ],
-        lazyConnect: true,
-        requestTimeout: 5000
-    });
-
-    // No connection established yet - this will trigger the connection
-    const result = await standaloneClient.ping();
-    ```
-  </TabItem>
-
   <TabItem label="Python">
     ```python
     from glide import GlideClient, GlideClusterClient, NodeAddress
@@ -98,6 +72,32 @@ Lazy connection can be configured through the client configuration object.
     ```
   </TabItem>
 
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Standalone client with lazy connect
+    const standaloneClient = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        lazyConnect: true,
+        requestTimeout: 5000
+    });
+
+    // Cluster client with lazy connect
+    const clusterClient = await GlideClusterClient.createClient({
+        addresses: [
+            { host: "localhost", port: 7000 },
+            { host: "localhost", port: 7001 }
+        ],
+        lazyConnect: true,
+        requestTimeout: 5000
+    });
+
+    // No connection established yet - this will trigger the connection
+    const result = await standaloneClient.ping();
+    ```
+  </TabItem>
+
   <TabItem label="Go">
     ```go
     import (
@@ -133,6 +133,34 @@ Lazy connection can be configured through the client configuration object.
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // Standalone client with lazy connect
+    $standaloneClient = new ValkeyGlide();
+    $standaloneClient->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        lazy_connect: true,
+        request_timeout: 5000
+    );
+
+    // Cluster client with lazy connect
+    $clusterClient = new ValkeyGlideCluster(
+        addresses: [
+            ['host' => 'localhost', 'port' => 7000],
+            ['host' => 'localhost', 'port' => 7001]
+        ],
+        lazy_connect: true,
+        request_timeout: 5000
+    );
+
+    // No connection established yet - this will trigger the connection
+    $result = $standaloneClient->ping();
+
+    $standaloneClient->close();
+    $clusterClient->close();
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -159,34 +187,6 @@ Lazy connection can be configured through the client configuration object.
 
     // No connection established yet - this will trigger the connection
     var result = await standaloneClient.PingAsync();
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // Standalone client with lazy connect
-    $standaloneClient = new ValkeyGlide();
-    $standaloneClient->connect(
-        addresses: [['host' => 'localhost', 'port' => 6379]],
-        lazy_connect: true,
-        request_timeout: 5000
-    );
-
-    // Cluster client with lazy connect
-    $clusterClient = new ValkeyGlideCluster(
-        addresses: [
-            ['host' => 'localhost', 'port' => 7000],
-            ['host' => 'localhost', 'port' => 7001]
-        ],
-        lazy_connect: true,
-        request_timeout: 5000
-    );
-
-    // No connection established yet - this will trigger the connection
-    $result = $standaloneClient->ping();
-
-    $standaloneClient->close();
-    $clusterClient->close();
     ```
   </TabItem>
 
