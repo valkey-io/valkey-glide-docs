@@ -46,17 +46,17 @@ To achieve this, each of GLIDE's clients supports the language's native asynchro
     :::
   </TabItem>
 
-  <TabItem label="Node">
-    ```typescript
-    // Support Javascript Promises syntax
-    const status = await client.set("user:101", "active");
-    ```
-  </TabItem>
-
   <TabItem label="Java">
     ```java
     // Async set operation using Future interface
     CompletableFuture<String> future = client.set("user:101", "active");
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Support Javascript Promises syntax
+    const status = await client.set("user:101", "active");
     ```
   </TabItem>
 

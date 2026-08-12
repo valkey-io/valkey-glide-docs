@@ -61,6 +61,16 @@ Under steady load, the Rust core also holds:
 ## Language-Specific Notes
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    The Rust core's native memory is visible in process RSS but **not** reported
+    by `sys.getsizeof` or the `tracemalloc` module — those inspect Python
+    objects only. To observe total footprint use OS-level tools (`ps`,
+    `/proc/self/status`, container memory metrics, or `psutil`).
+
+    Python response objects (`bytes`, `str`, lists for multi-value replies) live
+    on the CPython heap and are subject to normal reference-counted reclamation.
+  </TabItem>
+
   <TabItem label="Java">
     GLIDE's Java client does **not** use JVM NIO direct (off-heap) buffers for
     network I/O. All socket reads and writes are performed in the Rust core;
@@ -79,16 +89,6 @@ Under steady load, the Rust core also holds:
     point.
   </TabItem>
 
-  <TabItem label="Python">
-    The Rust core's native memory is visible in process RSS but **not** reported
-    by `sys.getsizeof` or the `tracemalloc` module — those inspect Python
-    objects only. To observe total footprint use OS-level tools (`ps`,
-    `/proc/self/status`, container memory metrics, or `psutil`).
-
-    Python response objects (`bytes`, `str`, lists for multi-value replies) live
-    on the CPython heap and are subject to normal reference-counted reclamation.
-  </TabItem>
-
   <TabItem label="Node">
     The Rust core allocates outside the V8 heap; V8's `process.memoryUsage()`
     reports `rss` (which includes the native side) and `heapUsed` (which does
@@ -102,12 +102,6 @@ Under steady load, the Rust core also holds:
     (via its own allocator) is **not** visible in `runtime.MemStats` — those
     stats only track Go's own runtime allocations. Container sizing should be
     based on OS-reported RSS, not `MemStats.Sys`.
-  </TabItem>
-
-  <TabItem label="C#">
-    The Rust core's allocations are outside the managed heap and will not be
-    reported by `GC.GetTotalMemory`. Process-level counters
-    (`Process.WorkingSet64`, OS-level RSS) reflect the true footprint.
   </TabItem>
 
   <TabItem label="PHP">
@@ -126,6 +120,12 @@ Under steady load, the Rust core also holds:
     by the Rust core's push notification handler and queued into an unbounded
     linked list on the C side. If the PHP process does not consume messages
     promptly, this queue grows without limit.
+  </TabItem>
+
+  <TabItem label="C#">
+    The Rust core's allocations are outside the managed heap and will not be
+    reported by `GC.GetTotalMemory`. Process-level counters
+    (`Process.WorkingSet64`, OS-level RSS) reflect the true footprint.
   </TabItem>
 </Tabs>
 
@@ -172,6 +172,13 @@ expected.
 **From the runtime:**
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    import psutil, os
+    rss_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // JVM heap
@@ -183,13 +190,6 @@ expected.
     }
     // Enable NMT at startup with -XX:NativeMemoryTracking=summary
     // then: jcmd <pid> VM.native_memory summary
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```python
-    import psutil, os
-    rss_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
     ```
   </TabItem>
 
@@ -207,13 +207,6 @@ expected.
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    ```csharp
-    using System.Diagnostics;
-    long rss = Process.GetCurrentProcess().WorkingSet64;
-    ```
-  </TabItem>
-
   <TabItem label="PHP">
     ```php
     // emalloc-tracked memory only (excludes Rust core)
@@ -222,6 +215,13 @@ expected.
     $realMemory = memory_get_usage(true);
     // Peak real allocation
     $peakMemory = memory_get_peak_usage(true);
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using System.Diagnostics;
+    long rss = Process.GetCurrentProcess().WorkingSet64;
     ```
   </TabItem>
 </Tabs>

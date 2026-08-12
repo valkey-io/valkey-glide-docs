@@ -17,6 +17,44 @@ The dynamic password update functionality does not rotate the password on the se
 Below are examples demonstrating how to utilize the dynamic password update feature in different programming languages using GLIDE.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
+
+    async def main():
+        # Define your server credentials
+        credentials = ServerCredentials(
+            username='your-username',
+            password='your-password-or-token'
+        )
+        # Define the list of node addresses
+        addresses = [
+            NodeAddress("my-instance.valkey.us-central1.gcp.cloud", 6379),
+        ]
+        # Create a configuration for the GlideClusterClient
+        config = GlideClusterClientConfiguration(
+            addresses=addresses,
+            credentials=credentials,
+            request_timeout=250,
+            client_name='my-client'
+        )
+
+        # Create the GlideClusterClient instance
+        client = await GlideClusterClient.create_client(config)
+
+        # Update password dynamically
+        await client.update_connection_password('your-new-password')
+        # To perform immediate re-authentication, set the second parameter to true
+        await client.update_connection_password('your-new-password', True)
+        # Resetting password by passing None
+        await client.update_connection_password(None) # Note: This will clear the password from the connection configuration.
+
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     import com.valkey.glide.GlideClusterClient;
@@ -103,75 +141,9 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     ```
   </TabItem>
 
-  <TabItem label="Python">
-    ```python
-    import asyncio
-    from glide import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
-
-    async def main():
-        # Define your server credentials
-        credentials = ServerCredentials(
-            username='your-username',
-            password='your-password-or-token'
-        )
-        # Define the list of node addresses
-        addresses = [
-            NodeAddress("my-instance.valkey.us-central1.gcp.cloud", 6379),
-        ]
-        # Create a configuration for the GlideClusterClient
-        config = GlideClusterClientConfiguration(
-            addresses=addresses,
-            credentials=credentials,
-            request_timeout=250,
-            client_name='my-client'
-        )
-
-        # Create the GlideClusterClient instance
-        client = await GlideClusterClient.create_client(config)
-
-        # Update password dynamically
-        await client.update_connection_password('your-new-password')
-        # To perform immediate re-authentication, set the second parameter to true
-        await client.update_connection_password('your-new-password', True)
-        # Resetting password by passing None
-        await client.update_connection_password(None) # Note: This will clear the password from the connection configuration.
-
-
-    asyncio.run(main())
-    ```
-  </TabItem>
-
   <TabItem label="Go">
     ```go
     // TODO: Add Example
-    ```
-  </TabItem>
-
-  <TabItem label="C#">
-    ```csharp
-    using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new ClusterClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
-        .WithAuthentication("your-username", "your-password-or-token")
-        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
-        .WithClientName("my-client")
-        .Build();
-
-    await using var client = await GlideClusterClient.CreateClient(config);
-
-    // Update password with lazy re-authentication.
-    await client.UpdateConnectionPasswordAsync("your-new-password");
-
-    // Update password with immediate re-authentication.
-    await client.UpdateConnectionPasswordAsync("your-new-password", immediateAuth: true);
-
-    // Clear password with lazy re-authentication.
-    await client.ClearConnectionPasswordAsync();
-
-    // Clear password with immediate re-authentication.
-    await client.ClearConnectionPasswordAsync(immediateAuth: true);
     ```
   </TabItem>
 
@@ -207,6 +179,34 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     $client->clearConnectionPassword(); // Note: This will clear the password from the connection configuration.
     ```
   </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithAuthentication("your-username", "your-password-or-token")
+        .WithRequestTimeout(TimeSpan.FromMilliseconds(5000))
+        .WithClientName("my-client")
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+
+    // Update password with lazy re-authentication.
+    await client.UpdateConnectionPasswordAsync("your-new-password");
+
+    // Update password with immediate re-authentication.
+    await client.UpdateConnectionPasswordAsync("your-new-password", immediateAuth: true);
+
+    // Clear password with lazy re-authentication.
+    await client.ClearConnectionPasswordAsync();
+
+    // Clear password with immediate re-authentication.
+    await client.ClearConnectionPasswordAsync(immediateAuth: true);
+    ```
+  </TabItem>
 </Tabs>
 
 :::caution
@@ -226,6 +226,14 @@ When dynamically switching to a new credential, ensure that it has enough permis
 In scenarios where a username is not required (e.g., IAM authentication), you can omit it or set it to `null`.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    credentials = ServerCredentials(
+        password='your-password-or-token'
+    )
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     ServerCredentials credentials = ServerCredentials.builder()
@@ -242,17 +250,17 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
     ```
   </TabItem>
 
-  <TabItem label="Python">
-    ```python
-    credentials = ServerCredentials(
-        password='your-password-or-token'
-    )
-    ```
-  </TabItem>
-
   <TabItem label="Go">
     ```go
     // TODO: Add Example
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $credentials = [
+        'password' => 'your-password-or-token'
+    ];
     ```
   </TabItem>
 
@@ -264,14 +272,6 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
         .WithAddress("address.example.com", 6379)
         .WithAuthentication("your-password-or-token")
         .Build();
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $credentials = [
-        'password' => 'your-password-or-token'
-    ];
     ```
   </TabItem>
 </Tabs>

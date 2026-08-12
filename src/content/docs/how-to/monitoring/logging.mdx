@@ -47,55 +47,6 @@ The following examples show how to configure the logger in GLIDE clients.
     Refer to the API [reference](https://glide.valkey.io/languages/python/api/glide_async/logger/?h=logger) for the full logger interface.
   </TabItem>
 
-  <TabItem label="Node">
-    ```typescript
-    import { GlideClient, Logger } from "@valkey/valkey-glide";
-
-    // Configure the log level and the output file name.
-    Logger.setLoggerConfig("debug", "./glide_logs");
-
-    // Logging example
-    const message = "Hello World!";
-    const identifier = "LoggingExample";
-    Logger.log("info", identifier, message);
-
-    // Standalone client configuration
-    const addresses = [{ host: "localhost", port: 6379 }];
-    const client = await GlideClient.createClient({
-      addresses: addresses,
-    });
-
-    await client.ping();
-
-    ```
-
-    Refer to the API [reference](https://glide.valkey.io/languages/nodejs/api/classes/Logger.Logger.html) for the full logger interface.
-  </TabItem>
-
-  <TabItem label="C#">
-    ```csharp
-    using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    // Configure the log level and the output file name.
-    Logger.SetLoggerConfig(Level.Debug, "./glide_logs");
-
-    // Logging example
-    Logger.Log(Level.Info, "LoggingExample", "Hello World!");
-
-    // Standalone client configuration
-    var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
-        .Build();
-
-    // Create a standalone client
-    await using var client = await GlideClient.CreateClient(config);
-    await client.PingAsync();
-    ```
-
-    Refer to the API [reference](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/Logger.cs#L33) for the full logger interface.
-  </TabItem>
-
   <TabItem label="Java">
     ```java
     package com.example;
@@ -140,6 +91,31 @@ The following examples show how to configure the logger in GLIDE clients.
     Refer to the API [reference](https://glide.valkey.io/languages/java/api/glide/api/logging/Logger.html) for the full logger interface.
   </TabItem>
 
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, Logger } from "@valkey/valkey-glide";
+
+    // Configure the log level and the output file name.
+    Logger.setLoggerConfig("debug", "./glide_logs");
+
+    // Logging example
+    const message = "Hello World!";
+    const identifier = "LoggingExample";
+    Logger.log("info", identifier, message);
+
+    // Standalone client configuration
+    const addresses = [{ host: "localhost", port: 6379 }];
+    const client = await GlideClient.createClient({
+      addresses: addresses,
+    });
+
+    await client.ping();
+
+    ```
+
+    Refer to the API [reference](https://glide.valkey.io/languages/nodejs/api/classes/Logger.Logger.html) for the full logger interface.
+  </TabItem>
+
   <TabItem label="PHP">
     ```php
     // Configure the log level and the output file name
@@ -160,6 +136,30 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the [logger functions](https://github.com/valkey-io/valkey-glide-php/blob/main/logger.stub.php) for the full logger interface.
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Configure the log level and the output file name.
+    Logger.SetLoggerConfig(Level.Debug, "./glide_logs");
+
+    // Logging example
+    Logger.Log(Level.Info, "LoggingExample", "Hello World!");
+
+    // Standalone client configuration
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    // Create a standalone client
+    await using var client = await GlideClient.CreateClient(config);
+    await client.PingAsync();
+    ```
+
+    Refer to the API [reference](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/Logger.cs#L33) for the full logger interface.
   </TabItem>
 </Tabs>
 

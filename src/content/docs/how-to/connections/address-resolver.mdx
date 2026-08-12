@@ -119,25 +119,6 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    ```csharp
-    using Valkey.Glide;
-
-    var realHost = "127.0.0.1";
-    ushort realPort = 6379;
-
-    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
-        .WithAddress("host.unreachable", 9999)
-        .WithAddressResolver((host, port) => (realHost, realPort))
-        .Build();
-
-    await using var client = await GlideClient.CreateClient(config);
-
-    // Client is now connected to 127.0.0.1:6379
-    await client.SetAsync("key", "value");
-    ```
-  </TabItem>
-
   <TabItem label="PHP">
     ```php
     $realHost = '127.0.0.1';
@@ -155,6 +136,25 @@ Pass a callable to the address resolver parameter. The callable receives the ori
 
     // Client is now connected to 127.0.0.1:6379
     $client->set('key', 'value');
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    var realHost = "127.0.0.1";
+    ushort realPort = 6379;
+
+    var config = new ConnectionConfiguration.StandaloneClientConfigurationBuilder()
+        .WithAddress("host.unreachable", 9999)
+        .WithAddressResolver((host, port) => (realHost, realPort))
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    // Client is now connected to 127.0.0.1:6379
+    await client.SetAsync("key", "value");
     ```
   </TabItem>
 </Tabs>
@@ -252,6 +252,21 @@ If the resolver throws an exception or returns invalid data, the client falls ba
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    // This resolver throws — the client will use the original address
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        address_resolver: function (string $host, int $port): array {
+            throw new \RuntimeException('Resolution failed');
+        },
+    );
+
+    // Still connects to localhost:6379
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -263,21 +278,6 @@ If the resolver throws an exception or returns invalid data, the client falls ba
         .Build();
 
     await using var client = await GlideClient.CreateClient(config);
-
-    // Still connects to localhost:6379
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    // This resolver throws — the client will use the original address
-    $client = new ValkeyGlide();
-    $client->connect(
-        addresses: [['host' => 'localhost', 'port' => 6379]],
-        address_resolver: function (string $host, int $port): array {
-            throw new \RuntimeException('Resolution failed');
-        },
-    );
 
     // Still connects to localhost:6379
     ```
@@ -361,6 +361,17 @@ The cluster client supports the same resolver signature.
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $cluster = new ValkeyGlideCluster(
+        addresses: [['host' => 'internal-dns.service', 'port' => 7000]],
+        address_resolver: function (string $host, int $port): array {
+            return ['host' => getActualHost($host), 'port' => $port];
+        },
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -374,17 +385,6 @@ The cluster client supports the same resolver signature.
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $cluster = new ValkeyGlideCluster(
-        addresses: [['host' => 'internal-dns.service', 'port' => 7000]],
-        address_resolver: function (string $host, int $port): array {
-            return ['host' => getActualHost($host), 'port' => $port];
-        },
-    );
     ```
   </TabItem>
 </Tabs>

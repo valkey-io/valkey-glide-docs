@@ -387,29 +387,6 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     ```
   </TabItem>
 
-  <TabItem label="Node">
-    ```typescript
-    // Both clients share the same cache
-    const cache = ClientSideCache.create(1024, 60000);
-
-    const client1 = await GlideClient.createClient({
-        addresses: [{ host: "localhost", port: 6379 }],
-        clientSideCache: cache,
-    });
-    const client2 = await GlideClient.createClient({
-        addresses: [{ host: "localhost", port: 6379 }],
-        clientSideCache: cache,
-    });
-
-    // client1 populates the cache
-    await client1.set("key", "value");
-    await client1.get("key");  // Cache miss — fetches from server
-
-    // client2 gets a cache hit without contacting the server
-    const result = await client2.get("key");  // Cache hit
-    ```
-  </TabItem>
-
   <TabItem label="Java">
     ```java
     // Both clients share the same cache
@@ -438,6 +415,29 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
     // client2 gets a cache hit without contacting the server
     String result = client2.get("key").get();  // Cache hit
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Both clients share the same cache
+    const cache = ClientSideCache.create(1024, 60000);
+
+    const client1 = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+    const client2 = await GlideClient.createClient({
+        addresses: [{ host: "localhost", port: 6379 }],
+        clientSideCache: cache,
+    });
+
+    // client1 populates the cache
+    await client1.set("key", "value");
+    await client1.get("key");  // Cache miss — fetches from server
+
+    // client2 gets a cache hit without contacting the server
+    const result = await client2.get("key");  // Cache hit
     ```
   </TabItem>
 
@@ -542,6 +542,10 @@ Once enabled, the client receives push invalidation messages from the server whe
 ### Enabling server-assisted mode
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     import glide.api.GlideClient;
@@ -561,10 +565,6 @@ Once enabled, the client receives push invalidation messages from the server whe
         .build();
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
-
-  <TabItem label="Python">
-    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
   </TabItem>
 
   <TabItem label="Node">
@@ -593,6 +593,10 @@ Once enabled, the client receives push invalidation messages from the server whe
 The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // Standalone client
@@ -608,10 +612,6 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
     // Cluster client — query all nodes
     Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
     ```
-  </TabItem>
-
-  <TabItem label="Python">
-    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
   </TabItem>
 
   <TabItem label="Node">

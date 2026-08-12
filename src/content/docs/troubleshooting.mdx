@@ -52,19 +52,19 @@ To enable logging, you will need to set the logger from within your application.
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    ```csharp
-    using Valkey.Glide;
-
-    Logger.SetLoggerConfig(Level.Debug);
-    ```
-  </TabItem>
-
   <TabItem label="PHP">
     ```php
     use Glide\Logger;
 
     Logger::setLoggerConfig(Logger::LEVEL_DEBUG);
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    Logger.SetLoggerConfig(Level.Debug);
     ```
   </TabItem>
 </Tabs>
@@ -165,6 +165,20 @@ To fix this, increase the **connection timeout** which is separate from the **re
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        request_timeout: 5000,  // Request timeout in milliseconds
+        advanced_config: [
+            'connection_timeout' => 10000,  // Connection timeout in milliseconds
+            'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
+        ]
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -177,20 +191,6 @@ To fix this, increase the **connection timeout** which is separate from the **re
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client = new ValkeyGlide();
-    $client->connect(
-        addresses: [['host' => 'localhost', 'port' => 6379]],
-        request_timeout: 5000,  // Request timeout in milliseconds
-        advanced_config: [
-            'connection_timeout' => 10000,  // Connection timeout in milliseconds
-            'socket_timeout' => 5000  // Socket read/write timeout in milliseconds
-        ]
-    );
     ```
   </TabItem>
 

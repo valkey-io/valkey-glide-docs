@@ -136,6 +136,8 @@ Per-language code examples use Starlight tabs synced across pages:
 ```
 
 - Tab labels (in this order): `Python`, `Java`, `Node`, `Go`, `PHP`, `C#`, `Ruby`
+- Languages a page doesn't cover are simply omitted; the remaining tabs keep this relative order
+- This order is enforced by `pnpm check:tab-order` (run in CI). The check lives at `scripts/check-tab-order.mjs` — update the `CANONICAL` array there if the order ever changes
 - Examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow
 
 ## Commit Requirements

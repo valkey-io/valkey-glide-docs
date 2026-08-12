@@ -78,21 +78,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    ```csharp
-    using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
-
-    await foreach (var key in clusterClient.ScanAsync())
-    {
-        Console.WriteLine($"Key: {key}");
-    }
-    ```
-  </TabItem>
-
   <TabItem label="PHP">
     ```php
     $cursor = new ClusterScanCursor();
@@ -110,6 +95,21 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         if ($cursor->isFinished()) {
             break;
         }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
+    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
+
+    await foreach (var key in clusterClient.ScanAsync())
+    {
+        Console.WriteLine($"Key: {key}");
     }
     ```
   </TabItem>
@@ -198,6 +198,29 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
+
+    $cursor = new ClusterScanCursor();
+    $matchingKeys = [];
+
+    while (true) {
+        $keys = $client->scan($cursor, '*key*');
+        if ($keys) {
+            $matchingKeys = array_merge($matchingKeys, $keys);
+        }
+        
+        $cursor = new ClusterScanCursor($cursor->getNextCursor());
+        
+        if ($cursor->isFinished()) {
+            break;
+        }
+    }
+    // Returns matching keys such as ['my_key1', 'my_key2', 'not_my_key']
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -222,29 +245,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
 
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-
-    $cursor = new ClusterScanCursor();
-    $matchingKeys = [];
-
-    while (true) {
-        $keys = $client->scan($cursor, '*key*');
-        if ($keys) {
-            $matchingKeys = array_merge($matchingKeys, $keys);
-        }
-        
-        $cursor = new ClusterScanCursor($cursor->getNextCursor());
-        
-        if ($cursor->isFinished()) {
-            break;
-        }
-    }
-    // Returns matching keys such as ['my_key1', 'my_key2', 'not_my_key']
     ```
   </TabItem>
 </Tabs>
@@ -324,6 +324,16 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
+
+    $cursor = new ClusterScanCursor();
+    $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
+    // Returns around `count` keys: ['my_key1']
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -348,16 +358,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
 
     // Returns around `count` keys per iteration
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
-
-    $cursor = new ClusterScanCursor();
-    $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
-    // Returns around `count` keys: ['my_key1']
     ```
   </TabItem>
 </Tabs>
@@ -448,6 +448,30 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
+    $client->sadd('this_is_a_set', 'value4');
+
+    $cursor = new ClusterScanCursor();
+    $allKeys = [];
+
+    while (true) {
+        $keys = $client->scan($cursor, null, 0, 'string');
+        if ($keys) {
+            $allKeys = array_merge($allKeys, $keys);
+        }
+        
+        $cursor = new ClusterScanCursor($cursor->getNextCursor());
+        
+        if ($cursor->isFinished()) {
+            break;
+        }
+    }
+    // Output: ['key1', 'key2', 'key3']
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -472,30 +496,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
 
     // keys: ["key1", "key2", "key3"]
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
-    $client->sadd('this_is_a_set', 'value4');
-
-    $cursor = new ClusterScanCursor();
-    $allKeys = [];
-
-    while (true) {
-        $keys = $client->scan($cursor, null, 0, 'string');
-        if ($keys) {
-            $allKeys = array_merge($allKeys, $keys);
-        }
-        
-        $cursor = new ClusterScanCursor($cursor->getNextCursor());
-        
-        if ($cursor->isFinished()) {
-            break;
-        }
-    }
-    // Output: ['key1', 'key2', 'key3']
     ```
   </TabItem>
 </Tabs>

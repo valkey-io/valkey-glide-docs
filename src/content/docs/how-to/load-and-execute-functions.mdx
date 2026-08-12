@@ -313,46 +313,6 @@ The following example shows a simple example of loading and executing a Valkey F
     </details>
   </TabItem>
 
-  <TabItem label="C#">
-    <Steps>
-      1. Define the Lua script as a string.
-      2. Load the function to Valkey using `FunctionLoadAsync`.
-      3. Call the function using `FCallAsync`.
-    </Steps>
-
-    <details>
-      <summary>Full Example</summary>
-
-      ```csharp
-      using Valkey.Glide;
-      using static Valkey.Glide.ConnectionConfiguration;
-
-      var config = new StandaloneClientConfigurationBuilder()
-          .WithAddress("localhost", 6379)
-          .Build();
-      await using var client = await GlideClient.CreateClient(config);
-
-      await client.SetAsync("page:home:visits", "0");
-
-      // 1. Define the Lua script as a string.
-      // lua code that updates a key and returns its new value
-      var luaCode = @"#!lua name=page_visits
-      server.register_function('update_visits', function(visits)
-          server.call('INCR', visits[1])
-          return server.call('GET', visits[1])
-      end)
-      ";
-
-      // 2. Load the function to Valkey using `FunctionLoadAsync`.
-      await client.FunctionLoadAsync(luaCode, replace: true);
-
-      // 3. Call the function using `FCallAsync`.
-      var result = await client.FCallAsync("update_visits", ["page:home:visits"], []);
-      Console.WriteLine(result); // 1
-      ```
-    </details>
-  </TabItem>
-
   <TabItem label="PHP">
     <Steps>
       1. Define the lua script.
@@ -406,6 +366,46 @@ The following example shows a simple example of loading and executing a Valkey F
       // calling the previously loaded function
       $result = $client->fcall('update_visits', ['page:home:visits']);
       echo $result;  // 1
+      ```
+    </details>
+  </TabItem>
+
+  <TabItem label="C#">
+    <Steps>
+      1. Define the Lua script as a string.
+      2. Load the function to Valkey using `FunctionLoadAsync`.
+      3. Call the function using `FCallAsync`.
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```csharp
+      using Valkey.Glide;
+      using static Valkey.Glide.ConnectionConfiguration;
+
+      var config = new StandaloneClientConfigurationBuilder()
+          .WithAddress("localhost", 6379)
+          .Build();
+      await using var client = await GlideClient.CreateClient(config);
+
+      await client.SetAsync("page:home:visits", "0");
+
+      // 1. Define the Lua script as a string.
+      // lua code that updates a key and returns its new value
+      var luaCode = @"#!lua name=page_visits
+      server.register_function('update_visits', function(visits)
+          server.call('INCR', visits[1])
+          return server.call('GET', visits[1])
+      end)
+      ";
+
+      // 2. Load the function to Valkey using `FunctionLoadAsync`.
+      await client.FunctionLoadAsync(luaCode, replace: true);
+
+      // 3. Call the function using `FCallAsync`.
+      var result = await client.FCallAsync("update_visits", ["page:home:visits"], []);
+      Console.WriteLine(result); // 1
       ```
     </details>
   </TabItem>
@@ -558,6 +558,25 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $result = $client->fcall_ro('get_value', ['mykey']);
+    ```
+
+    **With Routing (Cluster Mode)**
+
+    ```php
+    // Route to all nodes
+    $result = $client->fcall_ro('get_value', [], [], 'allNodes');
+
+    // Route to all primary nodes
+    $result = $client->fcall_ro('get_value', [], [], 'allPrimaries');
+
+    // Route to a random node
+    $result = $client->fcall_ro('get_value', [], [], 'randomNode');
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -581,25 +600,6 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     var allNodesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllNodes);
     var allPrimariesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllPrimaries);
     var randomResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.Random);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $result = $client->fcall_ro('get_value', ['mykey']);
-    ```
-
-    **With Routing (Cluster Mode)**
-
-    ```php
-    // Route to all nodes
-    $result = $client->fcall_ro('get_value', [], [], 'allNodes');
-
-    // Route to all primary nodes
-    $result = $client->fcall_ro('get_value', [], [], 'allPrimaries');
-
-    // Route to a random node
-    $result = $client->fcall_ro('get_value', [], [], 'randomNode');
     ```
   </TabItem>
 

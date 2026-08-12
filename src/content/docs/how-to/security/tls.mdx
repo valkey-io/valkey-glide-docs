@@ -84,6 +84,19 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $addresses = [
+        ['host' => 'address.example.com', 'port' => 6379]
+    ];
+
+    $client = new ValkeyGlideCluster(
+        addresses: $addresses,
+        use_tls: true
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -95,19 +108,6 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $addresses = [
-        ['host' => 'address.example.com', 'port' => 6379]
-    ];
-
-    $client = new ValkeyGlideCluster(
-        addresses: $addresses,
-        use_tls: true
-    );
     ```
   </TabItem>
 
@@ -197,6 +197,19 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $addresses = [
+        ['host' => 'primary.example.com', 'port' => 6379],
+        ['host' => 'replica1.example.com', 'port' => 6379],
+        ['host' => 'replica2.example.com', 'port' => 6379]
+    ];
+
+    $client = new ValkeyGlide();
+    $client->connect(addresses: $addresses, use_tls: true);
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -210,19 +223,6 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         .Build();
 
     await using var client = await GlideClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $addresses = [
-        ['host' => 'primary.example.com', 'port' => 6379],
-        ['host' => 'replica1.example.com', 'port' => 6379],
-        ['host' => 'replica2.example.com', 'port' => 6379]
-    ];
-
-    $client = new ValkeyGlide();
-    $client->connect(addresses: $addresses, use_tls: true);
     ```
   </TabItem>
 
@@ -297,6 +297,16 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
     :::
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -309,16 +319,6 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client = new ValkeyGlideCluster(
-        addresses: [['host' => 'address.example.com', 'port' => 6379]],
-        use_tls: true,
-        advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
-    );
     ```
   </TabItem>
 </Tabs>
@@ -456,6 +456,39 @@ You can provide custom root certificates for TLS connections. This is useful whe
     :::
   </TabItem>
 
+  <TabItem label="PHP">
+    #### Example - Connecting with Custom Root Certificate
+
+    ```php
+    // Read certificate file
+    $rootCert = file_get_contents('/path/to/ca-cert.pem');
+
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: ['tls_config' => ['root_certs' => $rootCert]]
+    );
+    ```
+
+    #### Example - Using Certificate as String
+
+    ```php
+    $certData = <<<'CERT'
+    -----BEGIN CERTIFICATE-----
+    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+    ...
+    -----END CERTIFICATE-----
+    CERT;
+
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: ['tls_config' => ['root_certs' => $certData]]
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     **Certificate Behavior:**
 
@@ -516,39 +549,6 @@ You can provide custom root certificates for TLS connections. This is useful whe
         .Build();
 
     await using var client = await GlideClusterClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    #### Example - Connecting with Custom Root Certificate
-
-    ```php
-    // Read certificate file
-    $rootCert = file_get_contents('/path/to/ca-cert.pem');
-
-    $client = new ValkeyGlide();
-    $client->connect(
-        addresses: [['host' => 'address.example.com', 'port' => 6379]],
-        use_tls: true,
-        advanced_config: ['tls_config' => ['root_certs' => $rootCert]]
-    );
-    ```
-
-    #### Example - Using Certificate as String
-
-    ```php
-    $certData = <<<'CERT'
-    -----BEGIN CERTIFICATE-----
-    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-    ...
-    -----END CERTIFICATE-----
-    CERT;
-
-    $client = new ValkeyGlideCluster(
-        addresses: [['host' => 'address.example.com', 'port' => 6379]],
-        use_tls: true,
-        advanced_config: ['tls_config' => ['root_certs' => $certData]]
-    );
     ```
   </TabItem>
 
@@ -714,15 +714,15 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
-  </TabItem>
-
   <TabItem label="PHP">
     :::note[Coming soon]
     Mutual TLS configuration documentation for PHP is coming soon.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note[Coming soon]
+    Mutual TLS configuration documentation for C# is coming soon.
     :::
   </TabItem>
 </Tabs>
@@ -811,15 +811,15 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
-  </TabItem>
-
   <TabItem label="PHP">
     :::note[Coming soon]
     Mutual TLS configuration documentation for PHP is coming soon.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note[Coming soon]
+    Mutual TLS configuration documentation for C# is coming soon.
     :::
   </TabItem>
 </Tabs>
@@ -910,15 +910,15 @@ Pass a positive interval in seconds to override the core default. In Java, use `
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
-  </TabItem>
-
   <TabItem label="PHP">
     :::note[Coming soon]
     Mutual TLS configuration documentation for PHP is coming soon.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note[Coming soon]
+    Mutual TLS configuration documentation for C# is coming soon.
     :::
   </TabItem>
 </Tabs>
@@ -1015,15 +1015,15 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
     ```
   </TabItem>
 
-  <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
-  </TabItem>
-
   <TabItem label="PHP">
     :::note[Coming soon]
     Mutual TLS configuration documentation for PHP is coming soon.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note[Coming soon]
+    Mutual TLS configuration documentation for C# is coming soon.
     :::
   </TabItem>
 </Tabs>

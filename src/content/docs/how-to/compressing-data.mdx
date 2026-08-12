@@ -97,6 +97,21 @@ When enabled, values are transparently compressed before being sent to the serve
     ```
   </TabItem>
 
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        compression: [
+            'enabled' => true,
+            'backend' => ValkeyGlide::COMPRESSION_BACKEND_ZSTD,
+            'compression_level' => 3,
+            'min_compression_size' => 128,
+        ],
+    );
+    ```
+  </TabItem>
+
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
@@ -113,21 +128,6 @@ When enabled, values are transparently compressed before being sent to the serve
         .Build();
 
     await using var client = await GlideClient.CreateClient(config);
-    ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    ```php
-    $client = new ValkeyGlide();
-    $client->connect(
-        addresses: [['host' => 'localhost', 'port' => 6379]],
-        compression: [
-            'enabled' => true,
-            'backend' => ValkeyGlide::COMPRESSION_BACKEND_ZSTD,
-            'compression_level' => 3,
-            'min_compression_size' => 128,
-        ],
-    );
     ```
   </TabItem>
 </Tabs>

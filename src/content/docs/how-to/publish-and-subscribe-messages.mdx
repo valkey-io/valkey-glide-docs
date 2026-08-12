@@ -26,6 +26,19 @@ Since the RESP protocol does not guarantee strong delivery semantics for PubSub 
 To publish a message, create a separate client to your Valkey instance. Both Standalone and Cluster are supported.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    publisher_config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)]
+    )
+
+    publisher = await GlideClient.create(publisher_config)
+
+    # Publish message on 'ch1' channel
+    await publisher.publish("Test message", "ch1")
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     GlideClientConfiguration publisherConfig = GlideClientConfiguration.builder()
@@ -49,19 +62,6 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     await publisher.publish("Test message", "ch1");
 
     publisher.close();
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    publisher_config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)]
-    )
-
-    publisher = await GlideClient.create(publisher_config)
-
-    # Publish message on 'ch1' channel
-    await publisher.publish("Test message", "ch1")
     ```
   </TabItem>
 
@@ -116,6 +116,41 @@ Starting with GLIDE 2.3, you can subscribe to channels and patterns at any point
 No special configuration is needed at client creation time — you can subscribe dynamically on any client. Messages are buffered and retrievable via polling by default. If you want callback-based delivery instead (explained [below](#callback)), provide a subscription configuration with a callback at client creation time (the initial channel set can be empty).
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    # Create a regular client — no subscription configuration needed
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+    )
+    client = await GlideClient.create(config)
+
+    # --- Exact channel subscriptions ---
+
+    # Blocking: waits up to 5000ms for server confirmation
+    await client.subscribe({"news", "updates"}, timeout_ms=5000)
+
+    # Non-blocking (lazy): returns immediately, subscribes in background
+    await client.subscribe_lazy({"alerts"})
+
+    # --- Pattern subscriptions ---
+
+    # Blocking
+    await client.psubscribe({"chat*", "event*"}, timeout_ms=5000)
+
+    # Non-blocking (lazy)
+    await client.psubscribe_lazy({"log*"})
+
+    # --- Sharded subscriptions (cluster mode only) ---
+    # await cluster_client.ssubscribe({"shard-ch1"}, timeout_ms=5000)
+    # await cluster_client.ssubscribe_lazy({"shard-ch2"})
+
+    # Retrieve messages via polling
+    msg = await client.get_pubsub_message()
+
+    await client.close()
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // Create a regular client — no subscription configuration needed
@@ -185,41 +220,6 @@ No special configuration is needed at client creation time — you can subscribe
     const msg = await client.getPubSubMessage();
 
     await client.close();
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    # Create a regular client — no subscription configuration needed
-    config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)],
-    )
-    client = await GlideClient.create(config)
-
-    # --- Exact channel subscriptions ---
-
-    # Blocking: waits up to 5000ms for server confirmation
-    await client.subscribe({"news", "updates"}, timeout_ms=5000)
-
-    # Non-blocking (lazy): returns immediately, subscribes in background
-    await client.subscribe_lazy({"alerts"})
-
-    # --- Pattern subscriptions ---
-
-    # Blocking
-    await client.psubscribe({"chat*", "event*"}, timeout_ms=5000)
-
-    # Non-blocking (lazy)
-    await client.psubscribe_lazy({"log*"})
-
-    # --- Sharded subscriptions (cluster mode only) ---
-    # await cluster_client.ssubscribe({"shard-ch1"}, timeout_ms=5000)
-    # await cluster_client.ssubscribe_lazy({"shard-ch2"})
-
-    # Retrieve messages via polling
-    msg = await client.get_pubsub_message()
-
-    await client.close()
     ```
   </TabItem>
 
@@ -339,6 +339,37 @@ No special configuration is needed at client creation time — you can subscribe
 For GLIDE versions prior to 2.3, or when your subscriptions are known at startup, you can define them in the client configuration. These subscriptions are applied immediately when the client connects.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    # Define callback and context
+    def callback(msg: CoreCommands.PubSubMsg, ctx: Any):
+        print(f"Received {msg}, context {ctx}\n")
+    context = "example"
+
+    # Configure the client to invoke the callback for messages published
+    # to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscription_config = GlideClientConfiguration.PubSubSubscriptions(
+        channels_and_patterns={
+            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
+            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"}
+        },
+        callback=callback,
+        context=context,
+    )
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=subscription_config
+    )
+
+    listening_client = await GlideClient.create(config)
+
+    # Do some work/wait - the callback will be invoked on incoming messages
+
+    await listening_client.close()    # Unsubscribe happens here
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // Define callback and context
@@ -396,37 +427,6 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
     // Do some work/wait - the callback will be invoked on incoming messages
 
     listeningClient.close();    // Unsubscribe happens here
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    # Define callback and context
-    def callback(msg: CoreCommands.PubSubMsg, ctx: Any):
-        print(f"Received {msg}, context {ctx}\n")
-    context = "example"
-
-    # Configure the client to invoke the callback for messages published
-    # to 'ch1' and 'ch2' and to channels matched by 'chat*' glob pattern.
-    subscription_config = GlideClientConfiguration.PubSubSubscriptions(
-        channels_and_patterns={
-            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
-            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"}
-        },
-        callback=callback,
-        context=context,
-    )
-
-    config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)],
-        pubsub_subscriptions=subscription_config
-    )
-
-    listening_client = await GlideClient.create(config)
-
-    # Do some work/wait - the callback will be invoked on incoming messages
-
-    await listening_client.close()    # Unsubscribe happens here
     ```
   </TabItem>
 
@@ -504,6 +504,38 @@ When a callback is configured, all incoming messages are sent to that callback. 
 To use callback-based delivery, provide a subscription configuration with a callback at client creation time. The callback fires for every incoming message — from both config-based and dynamic subscriptions.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    received = []
+
+    def callback(msg: CoreCommands.PubSubMsg, context: Any):
+        received.append(msg.message)
+        print(f"Received '{msg.message}' on '{msg.channel}'")
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=GlideClientConfiguration.PubSubSubscriptions(
+            channels_and_patterns={},
+            callback=callback,
+            context=None,
+        ),
+    )
+    client = await GlideClient.create(config)
+
+    # Subscribe dynamically — messages are delivered to the callback
+    await client.subscribe({"news"}, timeout_ms=5000)
+
+    # Publish a message (from another client)
+    await publishing_client.publish("Hello!", "news")
+    await asyncio.sleep(0.5)
+
+    # Verify the callback received the message
+    assert "Hello!" in received
+
+    await client.close()
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     List<String> received = Collections.synchronizedList(new ArrayList<>());
@@ -562,38 +594,6 @@ To use callback-based delivery, provide a subscription configuration with a call
     console.assert(received.includes("Hello!"));
 
     client.close();
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    received = []
-
-    def callback(msg: CoreCommands.PubSubMsg, context: Any):
-        received.append(msg.message)
-        print(f"Received '{msg.message}' on '{msg.channel}'")
-
-    config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)],
-        pubsub_subscriptions=GlideClientConfiguration.PubSubSubscriptions(
-            channels_and_patterns={},
-            callback=callback,
-            context=None,
-        ),
-    )
-    client = await GlideClient.create(config)
-
-    # Subscribe dynamically — messages are delivered to the callback
-    await client.subscribe({"news"}, timeout_ms=5000)
-
-    # Publish a message (from another client)
-    await publishing_client.publish("Hello!", "news")
-    await asyncio.sleep(0.5)
-
-    # Verify the callback received the message
-    assert "Hello!" in received
-
-    await client.close()
     ```
   </TabItem>
 
@@ -685,6 +685,34 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 * **Non-blocking poll:** `tryGetPubSubMessage()` / `try_get_pubsub_message()` — returns the next message or `null`/`None` immediately.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    # Configure the client to receive messages published to 'ch1'
+    # and 'ch2' and to channels matched by 'chat*' glob pattern.
+    subscriptions_config = GlideClientConfiguration.PubSubSubscriptions(
+        channels_and_patterns={
+            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
+            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"},
+        },
+    )
+
+    config = GlideClientConfiguration(
+        [NodeAddress("localhost", 6379)],
+        pubsub_subscriptions=subscriptions_config,
+    )
+
+    listening_client = await GlideClient.create(config)
+
+    # Non-blocking: returns None if no message is available
+    message = listening_client.try_get_pubsub_message()
+
+    # Async: waits for the next message
+    message = await listening_client.get_pubsub_message()
+
+    await listening_client.close()    # Unsubscribe happens here
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // Configure the client to receive messages published to 'ch1'
@@ -735,34 +763,6 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
     const message = await listeningClient.getPubSubMessage();
 
     listeningClient.close();    // Unsubscribe happens here
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    # Configure the client to receive messages published to 'ch1'
-    # and 'ch2' and to channels matched by 'chat*' glob pattern.
-    subscriptions_config = GlideClientConfiguration.PubSubSubscriptions(
-        channels_and_patterns={
-            GlideClientConfiguration.PubSubChannelModes.Exact: {"ch1", "ch2"},
-            GlideClientConfiguration.PubSubChannelModes.Pattern: {"chat*"},
-        },
-    )
-
-    config = GlideClientConfiguration(
-        [NodeAddress("localhost", 6379)],
-        pubsub_subscriptions=subscriptions_config,
-    )
-
-    listening_client = await GlideClient.create(config)
-
-    # Non-blocking: returns None if no message is available
-    message = listening_client.try_get_pubsub_message()
-
-    # Async: waits for the next message
-    message = await listening_client.get_pubsub_message()
-
-    await listening_client.close()    # Unsubscribe happens here
     ```
   </TabItem>
 
@@ -873,6 +873,33 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
 :::
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    # Unsubscribe from specific exact channels (blocking)
+    await client.unsubscribe({"news"}, timeout_ms=5000)
+
+    # Unsubscribe from specific exact channels (lazy)
+    await client.unsubscribe_lazy({"alerts"})
+
+    # Unsubscribe from all exact channels
+    await client.unsubscribe(ALL_CHANNELS, timeout_ms=5000)
+
+    # Unsubscribe from specific patterns (blocking)
+    await client.punsubscribe({"chat*"}, timeout_ms=5000)
+
+    # Unsubscribe from specific patterns (lazy)
+    await client.punsubscribe_lazy({"log*"})
+
+    # Unsubscribe from all patterns
+    await client.punsubscribe(ALL_PATTERNS, timeout_ms=5000)
+
+    # Sharded unsubscribe (cluster mode only)
+    # await cluster_client.sunsubscribe({"shard-ch1"}, timeout_ms=5000)
+    # await cluster_client.sunsubscribe_lazy({"shard-ch2"})
+    # await cluster_client.sunsubscribe(ALL_SHARDED_CHANNELS, timeout_ms=5000)
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     // Unsubscribe from specific exact channels (blocking)
@@ -924,33 +951,6 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // await clusterClient.sunsubscribe(new Set(["shard-ch1"]), 5000);
     // await clusterClient.sunsubscribeLazy(new Set(["shard-ch2"]));
     // await clusterClient.sunsubscribe(ALL_SHARDED_CHANNELS, 5000);
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    # Unsubscribe from specific exact channels (blocking)
-    await client.unsubscribe({"news"}, timeout_ms=5000)
-
-    # Unsubscribe from specific exact channels (lazy)
-    await client.unsubscribe_lazy({"alerts"})
-
-    # Unsubscribe from all exact channels
-    await client.unsubscribe(ALL_CHANNELS, timeout_ms=5000)
-
-    # Unsubscribe from specific patterns (blocking)
-    await client.punsubscribe({"chat*"}, timeout_ms=5000)
-
-    # Unsubscribe from specific patterns (lazy)
-    await client.punsubscribe_lazy({"log*"})
-
-    # Unsubscribe from all patterns
-    await client.punsubscribe(ALL_PATTERNS, timeout_ms=5000)
-
-    # Sharded unsubscribe (cluster mode only)
-    # await cluster_client.sunsubscribe({"shard-ch1"}, timeout_ms=5000)
-    # await cluster_client.sunsubscribe_lazy({"shard-ch2"})
-    # await cluster_client.sunsubscribe(ALL_SHARDED_CHANNELS, timeout_ms=5000)
     ```
   </TabItem>
 
@@ -1046,6 +1046,14 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
 Use `get_subscriptions()` to inspect the current subscription state. It returns both the **desired** subscriptions (what you've requested) and the **actual** subscriptions (what the server has confirmed). This is useful for verifying that lazy subscriptions have been fully applied.
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```py
+    state = await client.get_subscriptions()
+    print(f"Desired: {state.desired_subscriptions}")
+    print(f"Actual: {state.actual_subscriptions}")
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     ```java
     PubSubState state = client.getSubscriptions().get();
@@ -1059,14 +1067,6 @@ Use `get_subscriptions()` to inspect the current subscription state. It returns 
     const state = await client.getSubscriptions();
     console.log("Desired:", state.desiredSubscriptions);
     console.log("Actual:", state.actualSubscriptions);
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    ```py
-    state = await client.get_subscriptions()
-    print(f"Desired: {state.desired_subscriptions}")
-    print(f"Actual: {state.actual_subscriptions}")
     ```
   </TabItem>
 

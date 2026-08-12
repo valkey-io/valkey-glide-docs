@@ -22,6 +22,32 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 ## Examples
 
 <Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    :::tip[API Reference]
+    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/glide_json/).
+    :::
+
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress, glide_json
+    import json
+
+    # Both standalone and cluster mode are supported
+    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    client = await GlideClient.create(config)
+    value = {'a': 1.0, 'b': 2}
+    json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
+
+    # Sets the value at `doc` as a JSON object.
+    set_response = await glide_json.set(client, "doc", "$", json_str)
+    print(set_response) # "OK" - Indicates successful setting of the value at path '$' in the key stored at `doc`.
+
+    # Gets the value at path '$' in the JSON document stored at `doc`.
+    get_response = await glide_json.get(client, "doc", "$") 
+    print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
+    json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
+    ```
+  </TabItem>
+
   <TabItem label="Java">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/Json.html).
@@ -77,32 +103,6 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     // Gets the value at path '$' in the JSON document stored at `doc`.
     const jsonGetResponse = await GlideJson.get(client, "doc", {path: "$"});
     console.log(JSON.stringify(jsonGetResponse)); //  [{"a": 1.0, "b": 2}] # JSON object retrieved from the key `doc`
-    ```
-  </TabItem>
-
-  <TabItem label="Python">
-    :::tip[API Reference]
-    The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/glide_json/).
-    :::
-
-    ```python
-    from glide import GlideClient, GlideClientConfiguration, NodeAddress, glide_json
-    import json
-
-    # Both standalone and cluster mode are supported
-    config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
-    client = await GlideClient.create(config)
-    value = {'a': 1.0, 'b': 2}
-    json_str = json.dumps(value) # Convert Python dictionary to JSON string using json.dumps()
-
-    # Sets the value at `doc` as a JSON object.
-    set_response = await glide_json.set(client, "doc", "$", json_str)
-    print(set_response) # "OK" - Indicates successful setting of the value at path '$' in the key stored at `doc`.
-
-    # Gets the value at path '$' in the JSON document stored at `doc`.
-    get_response = await glide_json.get(client, "doc", "$") 
-    print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
-    json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
     ```
   </TabItem>
 
