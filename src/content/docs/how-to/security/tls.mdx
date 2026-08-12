@@ -320,9 +320,32 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
   </TabItem>
 
   <TabItem label="Go">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Go is coming soon.
-    :::
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithInsecureTLS() error {
+        tlsConfig := config.NewTlsConfiguration().WithInsecureTLS(true)
+
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">
@@ -425,9 +448,32 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
   </TabItem>
 
   <TabItem label="Go">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Go is coming soon.
-    :::
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectStandaloneWithInsecureTLS() error {
+        tlsConfig := config.NewTlsConfiguration().WithInsecureTLS(true)
+
+        advancedConfig := config.NewAdvancedClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">
