@@ -74,12 +74,18 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectClusterWithTLS() {
-        myConfig := config.NewClusterClientConfiguration().
+    func ConnectClusterWithTLS() error {
+        clientConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithUseTLS(true)
 
-        client, err := glide.NewClusterClient(myConfig)
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
     }
     ```
   </TabItem>
@@ -187,12 +193,18 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectStandaloneWithTLS() {
-        myConfig := config.NewClientConfiguration().
+    func ConnectStandaloneWithTLS() error {
+        clientConfig := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
             WithUseTLS(true)
 
-        client, err := glide.NewClient(myConfig)
+        client, err := glide.NewClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
     }
     ```
   </TabItem>
