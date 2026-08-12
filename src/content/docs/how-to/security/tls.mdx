@@ -637,21 +637,143 @@ You can provide custom root certificates for TLS connections. This is useful whe
   </TabItem>
 
   <TabItem label="Java">
-    :::note[Coming soon]
-    Custom root certificate documentation for Java is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `rootCertificates` is not set (default), the system's default certificate trust store is used
+    * If `rootCertificates` is an empty byte array, an error will be returned
+    * Certificates must be in PEM format as a byte array
+    * Multiple certificates can be provided by concatenating them in PEM format
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+
+    byte[] rootCaBytes = Files.readAllBytes(Paths.get("/path/to/ca-cert.pem"));
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
+        .rootCertificates(rootCaBytes)
+        .build();
+
+    AdvancedGlideClusterClientConfiguration advancedConfig =
+        AdvancedGlideClusterClientConfiguration.builder()
+            .tlsAdvancedConfiguration(tlsConfig)
+            .build();
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+
+    #### Example - Connecting with Custom Root Certificates from KeyStore
+
+    `TlsAdvancedConfiguration.fromKeyStore` is a static factory that pulls trusted certificate entries out of a Java `KeyStore` (JKS or PKCS12) and returns a fully-configured `TlsAdvancedConfiguration`.
+
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.fromKeyStore(
+        "/path/to/truststore.p12",
+        "changeit".toCharArray(),
+        "PKCS12");
+
+    AdvancedGlideClusterClientConfiguration advancedConfig =
+        AdvancedGlideClusterClientConfiguration.builder()
+            .tlsAdvancedConfiguration(tlsConfig)
+            .build();
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Custom root certificate documentation for Node.js is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `rootCertificates` is not set (default), the system's default certificate trust store is used
+    * If `rootCertificates` is empty, an error will be returned
+    * Certificates must be in PEM format, provided as a `Buffer` or a raw PEM `string`
+    * Multiple certificates can be provided by concatenating them in PEM format
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```typescript
+    import { readFileSync } from "node:fs";
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const rootCertificates = readFileSync("/path/to/ca-cert.pem");
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { rootCertificates },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-    :::note[Coming soon]
-    Custom root certificate documentation for Go is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `WithRootCertificates` is not called (default), the system's default certificate trust store is used
+    * Certificates must be in PEM format as a byte slice
+    * Multiple certificates can be provided by concatenating them in PEM format
+    * `config.LoadRootCertificatesFromFile` reads a PEM file and returns the bytes, ready to pass to `WithRootCertificates`
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithCustomRootCA() error {
+        rootCerts, err := config.LoadRootCertificatesFromFile("/path/to/ca-cert.pem")
+        if err != nil {
+            return err
+        }
+
+        tlsConfig := config.NewTlsConfiguration().WithRootCertificates(rootCerts)
+
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">
