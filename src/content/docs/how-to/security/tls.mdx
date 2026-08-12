@@ -998,8 +998,9 @@ The material is read once at connect time and does not reload.
     import glide.api.models.configuration.NodeAddress;
     import glide.api.models.configuration.TlsAdvancedConfiguration;
 
-    byte[] clientCert = /* PEM-encoded certificate bytes from a secret store */;
-    byte[] clientKey  = /* PEM-encoded private key bytes from a secret store */;
+    // Replace loadPemFromSecretStore(...) with your own secret-store lookup returning PEM-encoded bytes.
+    byte[] clientCert = loadPemFromSecretStore("client-cert");
+    byte[] clientKey  = loadPemFromSecretStore("client-key");
 
     TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
         .useMutualTls(clientCert, clientKey)
@@ -1025,8 +1026,9 @@ The material is read once at connect time and does not reload.
     import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
 
     // Load PEM bytes from a secret store, not from source.
-    const clientCertificate: Buffer = /* PEM-encoded certificate bytes */;
-    const clientKey: Buffer = /* PEM-encoded private key bytes */;
+    // Replace loadPemFromSecretStore(...) with your own secret-store lookup returning PEM-encoded bytes.
+    const clientCertificate: Buffer = loadPemFromSecretStore("client-cert");
+    const clientKey: Buffer = loadPemFromSecretStore("client-key");
 
     const mutualTls: MutualTls = {
         kind: "bytes",
@@ -1052,9 +1054,8 @@ The material is read once at connect time and does not reload.
     )
 
     func ConnectClusterWithMutualTLSBytes() error {
-        // Load PEM bytes from a secret store, not from source.
-        var clientCert []byte = /* PEM-encoded certificate bytes */
-        var clientKey []byte  = /* PEM-encoded private key bytes */
+        // Replace loadPemFromSecretStore(...) with your own secret-store lookup returning PEM-encoded bytes.
+        clientCert, clientKey := loadPemFromSecretStore()
 
         tlsConfig, err := config.NewTlsConfiguration().WithMutualTLS(clientCert, clientKey)
         if err != nil {
@@ -1355,6 +1356,8 @@ Pass a positive whole number of seconds to override the core default cadence.
 
 When static, byte-based mTLS is desired but the material lives on disk, each SDK offers a helper that reads the PEM files and returns the bytes.
 Feed those bytes into the byte-based entry point shown above.
+
+The same file-loading helpers work for both `GlideClient` (standalone) and `GlideClusterClient` (cluster-mode). The examples below show the standalone client; substitute the cluster variant if you are connecting to a cluster.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
