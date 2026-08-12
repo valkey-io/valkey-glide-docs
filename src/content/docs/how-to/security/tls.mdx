@@ -306,9 +306,17 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { insecure: true },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -403,9 +411,17 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { insecure: true },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
