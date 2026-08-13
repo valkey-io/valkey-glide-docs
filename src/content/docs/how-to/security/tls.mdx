@@ -1369,7 +1369,7 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
         NodeAddress,
         TlsAdvancedConfiguration,
     )
-    from glide_shared.config import load_client_certificate_and_key_from_file
+    from glide import load_client_certificate_and_key_from_file
 
     cert, key = load_client_certificate_and_key_from_file(
         "/etc/glide/client.pem",
