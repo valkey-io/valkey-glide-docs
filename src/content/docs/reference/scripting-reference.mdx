@@ -1353,7 +1353,7 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         keys: ["key1", "key2"]  # Might be in different slots
       )
     rescue Valkey::CommandError => e
-      if e.message.include?("CROSSSLOT")
+      if e.message.downcase.include?("crossslot")
         puts "Keys are in different slots"
         # Use hash tags or route explicitly
       end
