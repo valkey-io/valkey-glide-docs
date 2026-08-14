@@ -417,9 +417,9 @@ The following example shows a simple example of loading and executing a Valkey F
          ```ruby
          lua_code = <<~LUA
            #!lua name=example_module
-           server.register_function('set_then_get', function(key, value)
-              server.call('SET', key, value)
-              return server.call('GET', key)
+           server.register_function('set_then_get', function(keys, args)
+              server.call('SET', keys[1], args[1])
+              return server.call('GET', keys[1])
            end)
          LUA
          ```
@@ -434,7 +434,7 @@ The following example shows a simple example of loading and executing a Valkey F
 
          ```ruby
          client.set("page:home:visits", "0")
-         result = client.fcall("set_then_get", keys: ["page:home:visits"], args: ["1"])
+         result = client.fcall("set_then_get", keys: ["page:home:visits"], arguments: ["1"])
          puts result  # 1
          ```
     </Steps>
@@ -606,19 +606,6 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
   <TabItem label="Ruby">
     ```ruby
     result = client.fcall_ro("get_value", keys: ["mykey"])
-    ```
-
-    **With Routing (Cluster Mode)**
-
-    ```ruby
-    # Route to all nodes
-    result = client.fcall_ro("get_value", route: Valkey::Route.all_nodes)
-
-    # Route to all primary nodes
-    result = client.fcall_ro("get_value", route: Valkey::Route.all_primaries)
-
-    # Route to a random node
-    result = client.fcall_ro("get_value", route: Valkey::Route.random)
     ```
   </TabItem>
 </Tabs>
