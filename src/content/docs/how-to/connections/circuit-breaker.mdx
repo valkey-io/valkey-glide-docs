@@ -109,9 +109,25 @@ The circuit breaker option is defined on the base client configuration, so it ap
   </TabItem>
 
   <TabItem label="C#">
-    :::note
-    The circuit breaker is not yet available in the C# client.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var circuitBreaker = new CircuitBreakerConfig()
+        .WithWindowSize(TimeSpan.FromSeconds(10))
+        .WithFailureRateThreshold(0.5f)
+        .WithMinErrors(50)
+        .WithOpenTimeout(TimeSpan.FromSeconds(5))
+        .WithCountTimeouts(false)
+        .WithConsecutiveSuccesses(3);
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .WithCircuitBreaker(circuitBreaker)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
   </TabItem>
 </Tabs>
 
@@ -223,9 +239,26 @@ When the circuit breaker is open, requests throw immediately. Catch these except
   </TabItem>
 
   <TabItem label="C#">
-    :::note
-    The circuit breaker is not yet available in the C# client.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+    using static Valkey.Glide.Errors;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+
+    try
+    {
+        var value = await client.GetAsync("key");
+    }
+    catch (CircuitBreakerException)
+    {
+        // Circuit breaker is open — use fallback or back off
+    }
+    ```
   </TabItem>
 </Tabs>
 
