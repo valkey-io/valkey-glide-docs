@@ -124,6 +124,25 @@ Both standalone and cluster mode support authentication authentication with user
     $client->connect(addresses: $addresses, credentials: $credentials);
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(
+      host: "primary.example.com",
+      port: 6379,
+      username: "user1",
+      password: "passwordA"
+    )
+    ```
+
+    Credentials can also be embedded in a connection URL:
+
+    ```ruby
+    client = Valkey.new(url: "redis://user1:passwordA@primary.example.com:6379")
+    ```
+  </TabItem>
 </Tabs>
 
 ### Cluster
@@ -223,6 +242,21 @@ Both standalone and cluster mode support authentication authentication with user
         addresses: $addresses,
         credentials: $credentials
     );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    nodes = [{ host: "address.example.com", port: 6379 }]
+
+    client = Valkey.new(
+      nodes: nodes,
+      cluster_mode: true,
+      username: "user1",
+      password: "passwordA"
+    )
     ```
   </TabItem>
 </Tabs>

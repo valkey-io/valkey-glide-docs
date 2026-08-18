@@ -179,6 +179,7 @@ export default defineConfig({
                 "how-to/connections/circuit-breaker",
                 "how-to/connections/configure-lazy-connection",
                 "how-to/connections/limit-inflight-requests",
+                "how-to/connections/periodic-checks",
                 "how-to/connections/read-strategy",
                 "how-to/connections/resilience-best-practices",
                 "how-to/connections/timeouts-and-reconnect-strategy",
@@ -367,6 +368,11 @@ export default defineConfig({
                 {
                   label: "PHP",
                   link: "https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide.stub.php",
+                  attrs: { style: "font-style: italic", target: "_blank" },
+                },
+                {
+                  label: "Ruby",
+                  link: "https://github.com/valkey-io/valkey-glide-ruby",
                   attrs: { style: "font-style: italic", target: "_blank" },
                 },
               ],

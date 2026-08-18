@@ -5,6 +5,7 @@ pagefind: false
 
 import { LinkButton } from '@astrojs/starlight/components';
 import ButtonGroup from '../../../components/ButtonGroup.astro';
+import RubyIcon from '../../../assets/ruby.svg';
 
 <ButtonGroup>
   <LinkButton icon="seti:python" iconPlacement="start" href="/getting-started/quickstart?lang=python"> Python </LinkButton>
@@ -13,4 +14,9 @@ import ButtonGroup from '../../../components/ButtonGroup.astro';
   <LinkButton icon="seti:go" iconPlacement="start" href="/getting-started/quickstart?lang=go"> Go </LinkButton>
   <LinkButton icon="seti:c-sharp" iconPlacement="start" href="/getting-started/quickstart?lang=csharp"> C# </LinkButton>
   <LinkButton icon="seti:php" iconPlacement="start" href="/getting-started/quickstart?lang=php"> PHP </LinkButton>
+
+  <LinkButton href="/getting-started/quickstart?lang=ruby">
+    <RubyIcon />
+    Ruby
+  </LinkButton>
 </ButtonGroup>

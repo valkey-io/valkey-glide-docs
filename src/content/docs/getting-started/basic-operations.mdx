@@ -187,6 +187,26 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     Console.WriteLine($"✓ Retrieved value: {value}");
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    begin
+      # Set a key-value pair
+      client.set("user:1000", "john_doe")
+      puts "✓ Key set successfully"
+
+      # Get the value
+      value = client.get("user:1000")
+      puts "✓ Retrieved value: #{value}"
+    ensure
+      client.close
+    end
+    ```
+  </TabItem>
 </Tabs>
 
 ## Making Multiple Atomic Operations
@@ -302,6 +322,18 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     Console.WriteLine($"✓ Retrieved values: {string.Join(", ", values)}");
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Set multiple keys at once
+    client.mapped_mset("user:1001" => "alice", "user:1002" => "bob", "user:1003" => "charlie")
+    puts "✓ Multiple keys set"
+
+    # Get multiple keys at once
+    values = client.mget("user:1001", "user:1002", "user:1003")
+    puts "✓ Retrieved values: #{values}"
+    ```
+  </TabItem>
 </Tabs>
 
 ## Removing Keys
@@ -359,6 +391,13 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
 
     var count = await client.DeleteAsync(["user:1001", "user:1002", "user:1003"]);
     Console.WriteLine($"✓ Deleted {count} keys");
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    deleted_count = client.del("user:1001", "user:1002", "user:1003")
+    puts "✓ Deleted #{deleted_count} keys"
     ```
   </TabItem>
 </Tabs>

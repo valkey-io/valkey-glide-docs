@@ -189,6 +189,34 @@ Lazy connection can be configured through the client configuration object.
     $clusterClient->close();
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Standalone client with lazy connect
+    standalone_client = Valkey.new(
+      host: "localhost",
+      port: 6379,
+      lazy_connect: true,
+      timeout: 5.0
+    )
+
+    # Cluster client with lazy connect
+    cluster_client = Valkey.new(
+      nodes: [
+        { host: "localhost", port: 7000 },
+        { host: "localhost", port: 7001 }
+      ],
+      cluster_mode: true,
+      lazy_connect: true,
+      timeout: 5.0
+    )
+
+    # No connection established yet - this will trigger the connection
+    result = standalone_client.ping
+    ```
+  </TabItem>
 </Tabs>
 
 ## How It Works

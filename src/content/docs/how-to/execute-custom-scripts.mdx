@@ -380,6 +380,65 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
     Other GLIDE clients provide a `Script` API that automatically handles script caching and SHA1 management. In PHP, you manually manage this using `eval()` and `evalsha()`. For detailed patterns and best practices, see the [Valkey Scripting Reference](/reference/scripting-reference).
     :::
   </TabItem>
+
+  <TabItem label="Ruby">
+    <Steps>
+      1. Define the lua script
+
+         ```ruby
+         lua = <<~LUA
+           server.call('SET', KEYS[1], ARGV[1])
+           return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+         LUA
+         ```
+
+      2. Execute the script with keys and arguments using `eval`
+
+         ```ruby
+         keys = ["username"]
+         args = ["John Doe"]
+         result = client.eval(lua, keys: keys, args: args)
+         puts result # username: John Doe
+         ```
+    </Steps>
+
+    <details>
+      <summary>Full Example</summary>
+
+      ```ruby
+      require "valkey"
+
+      client = Valkey.new(host: "localhost", port: 6379)
+
+      lua = <<~LUA
+        server.call('SET', KEYS[1], ARGV[1])
+        return KEYS[1] .. ': ' .. server.call('GET', KEYS[1])
+      LUA
+
+      keys = ["username"]
+      args = ["John Doe"]
+      result = client.eval(lua, keys: keys, args: args)
+      puts result
+
+      client.close
+      ```
+    </details>
+
+    ### Using script\_load and evalsha for Repeated Execution
+
+    For scripts executed multiple times, load the script once with `script_load` and execute it by its SHA1 hash:
+
+    ```ruby
+    sha = client.script_load(lua)
+
+    result = client.evalsha(sha, keys: ["username"], args: ["John Doe"])
+    puts result # username: John Doe
+
+    # invoke_script is equivalent and also takes the SHA1 hash
+    result = client.invoke_script(sha, keys: ["username"], args: ["John Doe"])
+    puts result # username: John Doe
+    ```
+  </TabItem>
 </Tabs>
 
 ## What's Next

@@ -92,9 +92,20 @@ The circuit breaker option is defined on the base client configuration, so it ap
   </TabItem>
 
   <TabItem label="PHP">
-    :::note
-    The circuit breaker is not yet available in the PHP client.
-    :::
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        circuit_breaker: [
+            'window_size_ms' => 10000,
+            'failure_rate_threshold' => 0.5,
+            'min_errors' => 50,
+            'open_timeout_ms' => 5000,
+            'count_timeouts' => false,
+            'consecutive_successes' => 3,
+        ]
+    );
+    ```
   </TabItem>
 
   <TabItem label="C#">
@@ -202,9 +213,13 @@ When the circuit breaker is open, requests throw immediately. Catch these except
   </TabItem>
 
   <TabItem label="PHP">
-    :::note
-    The circuit breaker is not yet available in the PHP client.
-    :::
+    ```php
+    try {
+        $value = $client->get("key");
+    } catch (CircuitBreakerException $e) {
+        // Circuit breaker is open — use fallback or back off
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">

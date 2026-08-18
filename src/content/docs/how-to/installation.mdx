@@ -325,4 +325,30 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     dotnet add package Valkey.Glide
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    **Requirements:** Ruby 3.0+
+
+    To get started, Valkey GLIDE Ruby is available on [RubyGems](https://rubygems.org/gems/valkey-glide-rb).
+
+    ```bash
+    gem install valkey-glide-rb
+    ```
+
+    Or add it to your `Gemfile`:
+
+    ```ruby
+    gem "valkey-glide-rb"
+    ```
+
+    Verify installation:
+
+    ```bash
+    ruby -e 'require "valkey"; puts Valkey::VERSION'
+    ```
+
+    :::note
+    The gem ships prebuilt native libraries for Linux and macOS, including Alpine Linux / musl (3.18+), and depends on the [`ffi`](https://github.com/ffi/ffi) gem.
+    :::
+  </TabItem>
 </Tabs>

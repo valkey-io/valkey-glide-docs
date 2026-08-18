@@ -7,9 +7,9 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This page contains code references for working with custom Lua scripts in Valkey GLIDE.
 
-:::caution[PHP Not Supported]
-The GLIDE PHP client does not support the `Script` interface or `invokeScript()` method.
-To execute custom scripts, use the PHP Valkey command API methods: `eval()`, `evalsha()`, `eval_ro()`, and `evalsha_ro()`.
+:::caution[Clients Not Supported]
+The GLIDE PHP and Ruby clients do not support the `Script` interface or `invokeScript()` method.
+To execute custom scripts, use the Valkey command API methods: `eval()`, `evalsha()`, `eval_ro()`, and `evalsha_ro()`.
 :::
 
 ## Migration from Direct EVAL
@@ -98,16 +98,6 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
     ```
   </TabItem>
 
-  <TabItem label="PHP">
-    ```php
-    // PHP uses eval() method directly
-    $result = $client->eval(
-        "return redis.call('SET', KEYS[1], ARGV[1])",
-        ['mykey', 'myvalue'],
-        1  // num_keys
-    );
-    ```
-  </TabItem>
 </Tabs>
 
 ### Script Class (After)
@@ -189,12 +179,6 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
     var options = new ScriptOptions().WithKeys("mykey").WithArgs("myvalue");
     var result = await client.ScriptInvokeAsync(script, options);
     ```
-  </TabItem>
-
-  <TabItem label="PHP">
-    :::note
-    PHP does not support the `Script` class or `invokeScript()` method. Use `eval()` method as shown in the "Before" section.
-    :::
   </TabItem>
 </Tabs>
 
@@ -343,6 +327,20 @@ end
         ['rate_limit:user:123', '10', '60'],  // 10 requests per 60 seconds
         1  // num_keys
     );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Read script from file
+    rate_limit = File.read("rate_limit.lua")
+
+    # Usage
+    result = client.eval(
+      rate_limit,
+      keys: ["rate_limit:user:123"],
+      args: ["10", "60"]  # 10 requests per 60 seconds
+    )
     ```
   </TabItem>
 </Tabs>
@@ -583,6 +581,34 @@ end
     }
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Read scripts from files
+    acquire_lock = File.read("acquire_lock.lua")
+    release_lock = File.read("release_lock.lua")
+
+    # Acquire lock
+    lock_acquired = client.eval(
+      acquire_lock,
+      keys: ["lock:resource:123"],
+      args: ["unique_token", "30"]  # 30 second expiration
+    )
+
+    if lock_acquired == 1
+      begin
+        # Do work while holding lock
+      ensure
+        # Release lock
+        client.eval(
+          release_lock,
+          keys: ["lock:resource:123"],
+          args: ["unique_token"]
+        )
+      end
+    end
+    ```
+  </TabItem>
 </Tabs>
 
 ### Conditional Update
@@ -713,6 +739,20 @@ end
         ['user:123:status', 'pending', 'active'],  // Change from "pending" to "active"
         1  // num_keys
     );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Read script from file
+    conditional_update = File.read("conditional_update.lua")
+
+    # Update only if current value matches expected
+    updated = client.eval(
+      conditional_update,
+      keys: ["user:123:status"],
+      args: ["pending", "active"]  # Change from "pending" to "active"
+    )
     ```
   </TabItem>
 </Tabs>
@@ -873,6 +913,28 @@ end
             echo "Script error: $message\n";
         }
     }
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Handle script execution errors
+    script = "return redis.call('INCR', 'not_a_number')"
+
+    begin
+      result = client.eval(script)
+    rescue Valkey::CommandError => e
+      message = e.message
+      if message.include?("WRONGTYPE") || message.include?("not an integer")
+        puts "Type error in script"
+      elsif message.downcase.include?("syntax error")
+        puts "Lua syntax error in script"
+      elsif message.downcase.include?("unknown command")
+        puts "Invalid Redis command in script"
+      else
+        puts "Script error: #{message}"
+      end
+    end
     ```
   </TabItem>
 </Tabs>
@@ -1123,6 +1185,43 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     }
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Configure client timeout for long-running scripts
+    client = Valkey.new(
+      host: "localhost",
+      port: 6379,
+      timeout: 30.0  # 30 seconds for long scripts (default is 5.0)
+    )
+
+    # Handle long-running scripts
+    long_script = <<~LUA
+      local start = redis.call('TIME')[1]
+      while redis.call('TIME')[1] - start < 25 do
+          redis.call('GET', 'dummy_key')  -- Read-only operation
+      end
+      return 'Done'
+    LUA
+
+    begin
+      result = client.eval(long_script)
+      puts "Script completed: #{result}"
+    rescue Valkey::BaseError => e
+      message = e.message
+      if message.downcase.include?("timeout")
+        puts "Client timeout - script may still be running on server!"
+        puts "Consider increasing the timeout option in the client configuration"
+      elsif message.include?("Script killed")
+        puts "Script was killed by server (only possible for read-only scripts)"
+      else
+        puts "Script error: #{message}"
+      end
+    end
+    ```
+  </TabItem>
 </Tabs>
 
 ### Cluster-Specific Errors
@@ -1242,6 +1341,23 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             // Use hash tags or route explicitly
         }
     }
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Handle cluster routing errors
+    begin
+      result = cluster_client.eval(
+        script,
+        keys: ["key1", "key2"]  # Might be in different slots
+      )
+    rescue Valkey::CommandError => e
+      if e.message.downcase.include?("crossslot")
+        puts "Keys are in different slots"
+        # Use hash tags or route explicitly
+      end
+    end
     ```
   </TabItem>
 </Tabs>
@@ -1423,6 +1539,31 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     );
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Good: Conditional update with multiple data structures
+    conditional_update = <<~LUA
+      local current = redis.call('GET', KEYS[1])
+      local threshold = tonumber(ARGV[2])
+
+      if current and tonumber(current) >= threshold then
+          redis.call('SET', KEYS[1], ARGV[1])
+          redis.call('LPUSH', KEYS[2], ARGV[1])
+          redis.call('EXPIRE', KEYS[2], ARGV[3])
+          return 1
+      else
+          return 0
+      end
+    LUA
+
+    result = client.eval(
+      conditional_update,
+      keys: ["user:score", "user:history"],
+      args: ["100", "50", "86400"]  # new score, threshold, expire in 1 day
+    )
+    ```
+  </TabItem>
 </Tabs>
 
 ### 2. Handle Nil Values Properly
@@ -1523,6 +1664,20 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     LUA;
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Good: Proper nil handling
+    safe_script = <<~LUA
+      local val = redis.call('GET', KEYS[1])
+      if val then
+          return val
+      else
+          return 'default_value'
+      end
+    LUA
+    ```
+  </TabItem>
 </Tabs>
 
 ### 3. Use Appropriate Data Types
@@ -1597,6 +1752,16 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     local value = redis.call('GET', KEYS[1])
     return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     LUA;
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Good: Return appropriate types
+    typed_script = <<~LUA
+      local value = redis.call('GET', KEYS[1])
+      return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
+    LUA
     ```
   </TabItem>
 </Tabs>
@@ -1731,6 +1896,24 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         ['user:{123}:name', 'user:{123}:email', 'John', 'john@example.com'],
         2  // num_keys
     );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Good: Use hash tags for related keys
+    cluster_script = <<~LUA
+      redis.call('SET', KEYS[1], ARGV[1])
+      redis.call('SET', KEYS[2], ARGV[2])
+      return 'OK'
+    LUA
+
+    # Execute with hash tags
+    cluster_client.eval(
+      cluster_script,
+      keys: ["user:{123}:name", "user:{123}:email"],
+      args: ["John", "john@example.com"]
+    )
     ```
   </TabItem>
 </Tabs>
