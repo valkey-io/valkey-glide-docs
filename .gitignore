@@ -12,7 +12,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-
 # environment variables
 .env
 .env.production
@@ -28,9 +27,10 @@ doc-gen/test/
 doc-gen/.venv/
 doc-gen/valkey-glide/
 
-# Kiro files
-.kiro/
-
 # Python bytecode
 __pycache__/
 *.pyc
+
+# AI agents
+.kiro/
+.claude/
