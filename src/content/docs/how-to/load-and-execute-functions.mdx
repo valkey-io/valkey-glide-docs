@@ -561,10 +561,6 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var result = await client.FCallReadOnlyAsync("get_value", ["mykey"], []);
     ```
@@ -573,10 +569,6 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     var allNodesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllNodes);
     var allPrimariesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllPrimaries);
