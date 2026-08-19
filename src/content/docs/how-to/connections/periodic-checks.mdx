@@ -107,9 +107,18 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
   </TabItem>
 
   <TabItem label="C#">
-    :::note
-    This feature is not yet available in GLIDE C#.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithPeriodicChecks(TimeSpan.FromSeconds(30))
+        // To disable instead: .WithoutPeriodicChecks()
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
   </TabItem>
 
   <TabItem label="Ruby">
