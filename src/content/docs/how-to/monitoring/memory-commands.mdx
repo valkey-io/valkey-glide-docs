@@ -1,0 +1,374 @@
+---
+title: MEMORY Commands
+description: Use MEMORY DOCTOR, MALLOC-STATS, PURGE, and STATS commands in Valkey GLIDE to inspect and manage server memory usage.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The MEMORY commands help you inspect and manage memory usage on the Valkey server. They provide diagnostics, allocator statistics, memory reclamation, and detailed consumption breakdowns.
+
+These commands are supported in Python, Node.js, Java, Go, C#, and PHP clients.
+
+:::note
+MEMORY commands are NOT available in batch/transaction mode.
+:::
+
+## MEMORY DOCTOR
+
+Returns a diagnostic report about memory problems detected by the server. If no issues are found, the server returns "Sam, I have no memory problems".
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    import asyncio
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    async def main():
+        config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+        client = await GlideClient.create(config)
+
+        result = await client.memory_doctor()
+        print(result)  # "Sam, I have no memory problems" or diagnostic report
+
+        await client.close()
+
+    asyncio.run(main())
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+      addresses: [{ host: "localhost", port: 6379 }],
+    });
+
+    const result = await client.memoryDoctor();
+    console.log(result); // "Sam, I have no memory problems" or diagnostic report
+
+    client.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("localhost").port(6379).build())
+        .build();
+
+    try (GlideClient client = GlideClient.create(config).get()) {
+        String result = client.memoryDoctor().get();
+        System.out.println(result);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    package main
+
+    import (
+        "fmt"
+
+        "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func main() {
+        cfg := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+        client, err := glide.NewGlideClient(cfg)
+        if err != nil {
+            panic(err)
+        }
+        defer client.Close()
+
+        result, err := client.MemoryDoctor()
+        if err != nil {
+            panic(err)
+        }
+        fmt.Println(result)
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("localhost", 6379)
+        .Build();
+    await using var client = await GlideClient.CreateClient(config);
+
+    string result = await client.MemoryDoctorAsync();
+    Console.WriteLine(result);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    <?php
+    use Valkey\Glide\ValkeyGlide;
+
+    $client = ValkeyGlide::createClient("localhost", 6379);
+
+    $result = $client->memoryDoctor(); // returns string|false
+    echo $result;
+    ```
+  </TabItem>
+</Tabs>
+
+## MEMORY MALLOC-STATS
+
+Returns internal statistics from the memory allocator. The output format depends on which allocator was compiled into the server (typically jemalloc).
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    result = await client.memory_malloc_stats()
+    print(result)  # Allocator-specific statistics string
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const result = await client.memoryMallocStats();
+    console.log(result); // Allocator-specific statistics string
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    String result = client.memoryMallocStats().get();
+    System.out.println(result);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    result, err := client.MemoryMallocStats()
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(result)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    string result = await client.MemoryMallocStatsAsync();
+    Console.WriteLine(result);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $result = $client->memoryMallocStats(); // returns string|false
+    echo $result;
+    ```
+  </TabItem>
+</Tabs>
+
+## MEMORY PURGE
+
+Asks the allocator to release memory back to the operating system. This is useful when the server has freed many keys and you want to reduce the resident set size.
+
+:::caution
+Only use MEMORY PURGE when memory fragmentation is a concern. The operation can temporarily increase latency while the allocator reorganizes its internal structures.
+:::
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    result = await client.memory_purge()
+    print(result)  # "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const result = await client.memoryPurge();
+    console.log(result); // "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    String result = client.memoryPurge().get();
+    System.out.println(result); // "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    result, err := client.MemoryPurge()
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(result) // "OK"
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    await client.MemoryPurgeAsync();
+    Console.WriteLine("Memory purge complete");
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $result = $client->memoryPurge(); // returns bool|string (true, or "OK" with OPT_REPLY_LITERAL)
+    var_dump($result);
+    ```
+  </TabItem>
+</Tabs>
+
+## MEMORY STATS
+
+Returns a detailed breakdown of memory consumption by category (e.g., peak memory, dataset size, overhead, replication buffers, etc.).
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    result = await client.memory_stats()
+    print(f"Peak allocated: {result['peak.allocated']}")
+    print(f"Total allocated: {result['total.allocated']}")
+    print(f"Dataset size: {result['dataset.bytes']}")
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const result = await client.memoryStats();
+    console.log(`Peak allocated: ${result["peak.allocated"]}`);
+    console.log(`Total allocated: ${result["total.allocated"]}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    Map<String, Object> result = client.memoryStats().get();
+    System.out.println("Peak allocated: " + result.get("peak.allocated"));
+    System.out.println("Total allocated: " + result.get("total.allocated"));
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    result, err := client.MemoryStats()
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Peak allocated: %v\n", result["peak.allocated"])
+    fmt.Printf("Total allocated: %v\n", result["total.allocated"])
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    var result = await client.MemoryStatsAsync();
+    Console.WriteLine($"Peak allocated: {result.PeakAllocated}");
+    Console.WriteLine($"Total allocated: {result.TotalAllocated}");
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $result = $client->memoryStats(); // returns array|false
+    echo "Peak allocated: " . $result['peak.allocated'] . "\n";
+    echo "Total allocated: " . $result['total.allocated'] . "\n";
+    ```
+  </TabItem>
+</Tabs>
+
+## Cluster Routing
+
+In cluster mode, MEMORY commands target individual nodes. You can specify a route to control which nodes execute the command.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClusterClient, AllPrimaries
+
+    # Route to all primary nodes
+    result = await client.memory_doctor(route=AllPrimaries())
+
+    # MEMORY STATS on all primaries
+    result = await client.memory_stats(route=AllPrimaries())
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    // Route to all primary nodes
+    const result = await client.memoryDoctor({ route: "allPrimaries" });
+
+    // MEMORY STATS on all primaries
+    const stats = await client.memoryStats({ route: "allPrimaries" });
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_PRIMARIES;
+
+    // Route to all primary nodes — returns ClusterValue<String>
+    ClusterValue<String> result = client.memoryDoctor(ALL_PRIMARIES).get();
+
+    // MEMORY STATS on all primaries — returns ClusterValue<Map<String, Object>>
+    ClusterValue<Map<String, Object>> stats = client.memoryStats(ALL_PRIMARIES).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import "github.com/valkey-io/valkey-glide/go/v2/options"
+
+    // Route to all primary nodes
+    opts := options.NewMemoryDoctorOptions().WithRoute(options.AllPrimaries)
+    result, err := client.MemoryDoctorWithOptions(opts)
+
+    // MEMORY STATS with routing
+    statsOpts := options.NewMemoryStatsOptions().WithRoute(options.AllPrimaries)
+    stats, err := client.MemoryStatsWithOptions(statsOpts)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+
+    // Route to all primary nodes — returns ClusterValue<string>
+    ClusterValue<string> result = await clusterClient.MemoryDoctorAsync(Route.AllPrimaries);
+
+    // MEMORY STATS with routing — returns ClusterValue<MemoryStats>
+    ClusterValue<MemoryStats> stats = await clusterClient.MemoryStatsAsync(Route.AllPrimaries);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    // ValkeyGlideCluster client — route to all primaries
+    $result = $client->memoryDoctor('allPrimaries');
+
+    // Route to all nodes
+    $stats = $client->memoryStats('allNodes');
+
+    // Route to a specific node by address
+    $result = $client->memoryDoctor('127.0.0.1:6379');
+    ```
+  </TabItem>
+</Tabs>
