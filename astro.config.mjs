@@ -192,7 +192,6 @@ export default defineConfig({
                 "how-to/monitoring/open-telemetry",
                 "how-to/monitoring/tracking-resources",
                 "how-to/monitoring/monitor-command",
-                "how-to/monitoring/memory-commands",
               ],
             },
             {
