@@ -129,6 +129,7 @@ def main() -> None:
                 validator_path,
                 "--examples", tmp_path,
                 "--glide-dll", dll_path,
+                "--add-clients",
             ],
             check=False,
         )

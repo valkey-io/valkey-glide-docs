@@ -81,10 +81,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await foreach (var key in clusterClient.ScanAsync())
     {
@@ -202,10 +198,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
@@ -328,10 +320,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
@@ -452,10 +440,6 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {

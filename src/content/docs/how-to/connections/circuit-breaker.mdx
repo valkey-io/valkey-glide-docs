@@ -240,15 +240,7 @@ When the circuit breaker is open, requests throw immediately. Catch these except
 
   <TabItem label="C#">
     ```csharp
-    using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
     using static Valkey.Glide.Errors;
-
-    var config = new StandaloneClientConfigurationBuilder()
-        .WithAddress("localhost", 6379)
-        .Build();
-
-    await using var client = await GlideClient.CreateClient(config);
 
     try
     {
