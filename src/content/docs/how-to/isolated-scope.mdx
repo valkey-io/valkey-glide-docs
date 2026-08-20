@@ -40,24 +40,30 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
 
   <TabItem label="Node">
     ```typescript
-    import { GlideClient } from '@valkey/valkey-glide';
+    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
+    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
 
     const client = await GlideClient.createClient(config);
 
-    const scope = await client.scopedConnection({ routingKey: 'my-key' });
+    // Build connection request bytes from the same config
+    const req = connection_request.ConnectionRequest.create({
+        addresses: [{ host: 'localhost', port: 6379 }],
+        requestTimeout: 5000,
+    });
+    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
+
+    const scope = await IsolatedScope.acquire(client, connReqBytes, 'my-key');
     try {
         // Use scope for WATCH/MULTI/EXEC
     } finally {
-        await scope.close();
+        scope.release();
     }
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    scope, err := client.ScopedConnection(ctx, glide.ScopeOptions{
-        RoutingKey: "my-key",
-    })
+    scope, err := client.ScopedConnection(ctx, 5*time.Second, "my-key")
     if err != nil {
         log.Fatal(err)
     }
@@ -125,12 +131,18 @@ The classic optimistic concurrency control pattern works as follows:
 
   <TabItem label="Node">
     ```typescript
-    import { GlideClient } from '@valkey/valkey-glide';
+    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
+    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
 
     const client = await GlideClient.createClient(config);
+    const req = connection_request.ConnectionRequest.create({
+        addresses: [{ host: 'localhost', port: 6379 }],
+        requestTimeout: 5000,
+    });
+    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
 
     for (let attempt = 0; attempt < 10; attempt++) {
-        const scope = await client.scopedConnection({ routingKey: 'counter' });
+        const scope = await IsolatedScope.acquire(client, connReqBytes, 'counter');
         try {
             await scope.watch('counter');
             const val = await scope.get('counter');
@@ -140,7 +152,7 @@ The classic optimistic concurrency control pattern works as follows:
             const result = await scope.exec();
             if (result !== null) break; // Success
         } finally {
-            await scope.close();
+            scope.release();
         }
     }
     ```
@@ -149,9 +161,7 @@ The classic optimistic concurrency control pattern works as follows:
   <TabItem label="Go">
     ```go
     for attempt := 0; attempt < 10; attempt++ {
-        scope, err := client.ScopedConnection(ctx, glide.ScopeOptions{
-            RoutingKey: "counter",
-        })
+        scope, err := client.ScopedConnection(ctx, 5*time.Second, "counter")
         if err != nil {
             log.Fatal(err)
         }
@@ -163,7 +173,7 @@ The classic optimistic concurrency control pattern works as follows:
         scope.Set(ctx, "counter", newVal)
         result, _ := scope.Exec(ctx)
         scope.Close()
-        if result != nil {
+        if result != "" {
             break // Success
         }
     }
@@ -200,15 +210,13 @@ Pass a `routing_key` when acquiring the scope. The key is used to determine whic
 
   <TabItem label="Node">
     ```typescript
-    const scope = await client.scopedConnection({ routingKey: 'user:123' });
+    const scope = await IsolatedScope.acquire(client, connReqBytes, 'user:123');
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    scope, _ := client.ScopedConnection(ctx, glide.ScopeOptions{
-        RoutingKey: "user:123",
-    })
+    scope, _ := client.ScopedConnection(ctx, 5*time.Second, "user:123")
     ```
   </TabItem>
 </Tabs>

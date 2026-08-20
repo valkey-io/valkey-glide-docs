@@ -62,8 +62,11 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
     ```typescript
     import { ClientPool, GlideClientConfiguration } from '@valkey/valkey-glide';
 
-    const pool = await ClientPool.create({
-        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+    const clientConfig: GlideClientConfiguration = {
+        addresses: [{ host: 'localhost', port: 6379 }],
+    };
+
+    const pool = await ClientPool.create(clientConfig, {
         maxSize: 10,
         minIdle: 2,
         acquireTimeoutS: 5,
@@ -98,53 +101,54 @@ Acquire a client from the pool before use, and always release it when done. Use 
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    Using an async context manager (recommended):
-
     ```python
     async with pool.borrow() as client:
         await client.set("key", "value")
         result = await client.get("key")
     ```
-
-    Manual acquire/release:
-
-    ```python
-    client_id = await pool.acquire()
-    try:
-        client = pool._get_or_create_client(client_id)
-        await client.set("key", "value")
-    finally:
-        pool.release(client_id)
-    ```
   </TabItem>
 
   <TabItem label="Java">
     ```java
-    long clientId = pool.acquire().get();
-    try {
-        GlideClient client = pool.getClient(clientId);
+    try (PooledGlideClient client = pool.acquire().get()) {
         client.set("key", "value").get();
-    } finally {
-        pool.release(clientId);
+        String result = client.get("key").get();
     }
+    // client is automatically returned to the pool on close
     ```
   </TabItem>
 
   <TabItem label="Node">
+    Using `borrow()` (recommended):
+
+    ```typescript
+    const result = await pool.borrow(async (client) => {
+        await client.set('key', 'value');
+        return await client.get('key');
+    });
+    ```
+
+    Manual acquire/release:
+
     ```typescript
     const client = await pool.acquire();
     try {
         await client.set('key', 'value');
         const result = await client.get('key');
     } finally {
-        pool.release(client);
+        await pool.release(client);
     }
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    client, err := pool.Acquire(ctx)
+    clientID, err := pool.Acquire(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    client, err := pool.GetClient(clientID)
     if err != nil {
         log.Fatal(err)
     }
@@ -179,15 +183,15 @@ Check the current state of the pool to monitor utilization and diagnose capacity
 
   <TabItem label="Node">
     ```typescript
-    const metrics = pool.metrics();
+    const metrics = pool.getMetrics();
     console.log(`Idle: ${metrics.idle}, Active: ${metrics.active}, Total: ${metrics.total}`);
     ```
   </TabItem>
 
   <TabItem label="Go">
     ```go
-    metrics := pool.Metrics()
-    fmt.Printf("Idle: %d, Active: %d, Total: %d\n", metrics.Idle, metrics.Active, metrics.Total)
+    fmt.Printf("Idle: %d, Active: %d, Total: %d\n",
+        pool.IdleCount(), pool.ActiveCount(), pool.TotalCount())
     ```
   </TabItem>
 </Tabs>
@@ -311,7 +315,7 @@ When your application shuts down, close the pool to release all connections.
 
   <TabItem label="Node">
     ```typescript
-    await pool.close();
+    pool.close();
     ```
   </TabItem>
 
