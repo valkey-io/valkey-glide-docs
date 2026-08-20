@@ -22,12 +22,13 @@ By default, GLIDE routes all read commands to the primary nodes. While this guar
 there are many write operations on the primary node.
 To optimize read performance and distribute the load, GLIDE clients support different read strategies that allow reads to be directed to replica nodes.
 
-| Strategy                      | Description                                                                                                                                                                                                             |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Primary` (Default)           | Always read from primary, in order to get the freshest data.                                                                                                                                                            |
-| `PreferReplica`               | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                            |
-| `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                      |
-| `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
+| Strategy                      | Description                                                                                                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Primary` (Default)           | Always read from primary, in order to get the freshest data.                                                                                                                                                                           |
+| `PreferReplica`               | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                                           |
+| `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                                     |
+| `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed.                |
+| `AZAffinityAllNodes`          | Spread the read requests equally among all nodes (primary and replicas) within the client's availability zone in a round robin manner, falling back to a round robin across all nodes if none exist in the client's availability zone. |
 
 ## Automatic Redirect Handling (MOVED and ASK)
 
