@@ -231,6 +231,7 @@ If a `MOVED` redirect occurs during an active scope (for example, during a clust
 
 ## Limitations
 
+- **Blocking commands do not honor their timeout:** Blocking commands (`BLPOP key 0`, `BRPOP`, `XREAD BLOCK`, etc.) executed on a scoped connection currently time out at the client's configured request timeout instead of respecting the command's blocking timeout. This means `BLPOP key 0` (block forever) will fail after the request timeout expires. This will be fixed in a future release.
 - **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE` or `PSUBSCRIBE`. Use the main client for Pub/Sub.
 - **No MOVED/ASK redirects:** By design, scoped connections hold per-connection state and cannot follow redirects. Conflicts are surfaced as `EXEC` returning `null`.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
