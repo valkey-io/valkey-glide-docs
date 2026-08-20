@@ -15,11 +15,11 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 
 * GLIDE automatically generates **temporary authentication tokens** that are valid for **15 minutes**
 * GLIDE **refreshes the token every 5 minutes** (default). On failure, it retries with **exponential backoff** and keeps using the **last valid token** until a new one is obtained
-* When a refreshed token is available, GLIDE **re-authenticates each connection lazily** — the new token is applied on the next command sent over that connection, not immediately pushed to all connections
-* If a connection is idle during a node failover or reconnection event, GLIDE also refreshes the IAM token **during reconnection** to ensure a valid token is used even without active commands
-* Each connection session remains valid for up to **12 hours**, after which GLIDE handles re-authentication automatically
+* When a refreshed token is available, GLIDE **updates the token in the connection parameters on every command**. The actual re-authentication (AUTH command) only happens during reconnection — not on each command
+* During reconnection, GLIDE **checks whether the cached token has expired** (age ≥ 15 minutes). If so, it generates a fresh token before attempting to reconnect — ensuring a valid credential is used even when connections have been idle
+* GLIDE handles **re-authentication** automatically when required — for example, when ElastiCache or MemoryDB terminates a session after its maximum lifetime
 * GLIDE handles all **token management**, **refresh operations**, and **re-authentication** behind the scenes
-* Manual token refresh is available via **`refreshIamToken`** (see [Manual Refresh](#manual-refresh) below)
+* On-demand token refresh is available via **`refreshIamToken`** (see [On-Demand Refresh](#on-demand-refresh) below)
 
 ## Required Setup
 
@@ -215,12 +215,12 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
   </TabItem>
 </Tabs>
 
-## Manual Refresh
+## On-Demand Refresh
 
-You can call `refreshIamToken` (or language equivalent) to immediately request a fresh token from AWS and update the internal token cache.
+You can call `refreshIamToken` (or language equivalent) at any time to immediately request a fresh token from AWS and update the internal token cache.
 
 :::note[What this does and does not do]
-`refreshIamToken` **generates a new token and caches it**. It does **not** immediately re-authenticate existing connections — each connection will use the new token lazily, on its next command.
+`refreshIamToken` **generates a new token and caches it**. It does **not** immediately send AUTH to existing connections — the updated token is applied during the next reconnection for each connection.
 
 The method always returns `"OK"`. If AWS token generation fails, errors are logged internally and the previously cached token remains in use. To detect misconfiguration, note that a `ConfigurationError` is raised if IAM is not enabled.
 :::
