@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
 
-MONITOR is supported in Python, Node.js, Java, and Go clients. C# and PHP support is not yet available.
+MONITOR is supported in Python, Node.js, Java, Go, and C# clients. PHP support is not yet available.
 
 ## How It Works
 
@@ -19,14 +19,12 @@ MONITOR is only supported for standalone (non-cluster) connections. Attempting t
 Running MONITOR in production degrades server throughput because every processed command must be serialized and sent back to the monitoring client. Use it only for short debugging sessions.
 :::
 
-There are two modes for consuming monitor messages:
+GLIDE clients generally provide two modes for consuming monitor messages:
 
-* **Callback mode** — provide a callback function at creation time; it is invoked for every incoming message.
-* **Queue mode** — omit the callback; messages are queued internally and retrieved by calling `getMonitorMessage` / `tryGetMonitorMessage`.
+* **Callback mode**: Provide a callback function at creation time that is invoked for every incoming message.
+* **Queue mode** — Messages are queued internally and retrieved by polling.
 
 ## Examples
-
-### Callback mode
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
@@ -35,14 +33,21 @@ There are two modes for consuming monitor messages:
     from glide import GlideClientConfiguration, NodeAddress
     from glide.monitor_client import MonitorClient, MonitorMsg
 
-    def on_monitor_msg(msg: MonitorMsg) -> None:
-        print(f"{msg.timestamp:.6f} [{msg.db}] {msg.client_addr} {msg.command} {msg.args}")
-
     async def main():
         config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+
+        # Callback mode
+        def on_monitor_msg(msg: MonitorMsg) -> None:
+            print(f"{msg.timestamp:.6f} [{msg.db}] {msg.client_addr} {msg.command} {msg.args}")
+
         async with await MonitorClient.create(config, callback=on_monitor_msg) as monitor:
             # Run commands on a separate client — the callback will print each one.
             await asyncio.sleep(5)
+
+        # Queue mode
+        async with await MonitorClient.create(config) as monitor:
+            msg = await monitor.get_monitor_message()
+            print(f"{msg.command} {msg.args}")
 
     asyncio.run(main())
     ```
@@ -52,15 +57,22 @@ There are two modes for consuming monitor messages:
     ```typescript
     import { GlideMonitorClient, MonitorLine } from "@valkey/valkey-glide";
 
-    const monitor = await GlideMonitorClient.create(
-      { addresses: [{ host: "localhost", port: 6379 }] },
+    const addresses = [{ host: "localhost", port: 6379 }];
+
+    // Callback mode
+    const callbackMonitor = await GlideMonitorClient.create(
+      { addresses },
       (line: MonitorLine) => {
         console.log(`${line.timestamp} [${line.db}] ${line.clientAddr} ${line.command} ${line.args.join(" ")}`);
       },
     );
+    await callbackMonitor.close();
 
-    // Close when done.
-    await monitor.close();
+    // Queue mode
+    const queueMonitor = await GlideMonitorClient.create({ addresses });
+    const line = await queueMonitor.getNextMessage();
+    console.log(`${line.command} ${line.args.join(" ")}`);
+    await queueMonitor.close();
     ```
   </TabItem>
 
@@ -75,11 +87,18 @@ There are two modes for consuming monitor messages:
         .address(NodeAddress.builder().host("localhost").port(6379).build())
         .build();
 
+    // Callback mode
     try (MonitorClient monitor = MonitorClient.create(config, (MonitorMsg msg) ->
             System.out.printf("%.6f [%d] %s %s %s%n",
                 msg.timestamp(), msg.db(), msg.clientAddr(), msg.command(), msg.args()))) {
         // Run commands on a separate client — the callback will print each one.
         Thread.sleep(5000);
+    }
+
+    // Queue mode
+    try (MonitorClient monitor = MonitorClient.create(config)) {
+        MonitorMsg msg = monitor.getMonitorMessage();
+        System.out.printf("%s %s%n", msg.command(), msg.args());
     }
     ```
   </TabItem>
@@ -100,100 +119,73 @@ There are two modes for consuming monitor messages:
         cfg := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-        monitor, err := glide.NewMonitorClient(cfg, func(line glide.MonitorLine) {
+        // Callback mode
+        callbackMonitor, err := glide.NewMonitorClient(cfg, func(line glide.MonitorLine) {
             fmt.Printf("%.6f [%d] %s %s %v\n",
                 line.Timestamp, line.DB, line.ClientAddr, line.Command, line.Args)
         })
         if err != nil {
             panic(err)
         }
-        defer monitor.Close()
-
         time.Sleep(5 * time.Second)
-    }
-    ```
-  </TabItem>
-</Tabs>
+        callbackMonitor.Close()
 
-### Queue mode
-
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
-    ```python
-    import asyncio
-    from glide import GlideClientConfiguration, NodeAddress
-    from glide.monitor_client import MonitorClient
-
-    async def main():
-        config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
-        async with await MonitorClient.create(config) as monitor:
-            msg = await monitor.get_monitor_message()
-            print(f"{msg.command} {msg.args}")
-
-    asyncio.run(main())
-    ```
-  </TabItem>
-
-  <TabItem label="Node">
-    ```typescript
-    import { GlideMonitorClient } from "@valkey/valkey-glide";
-
-    const monitor = await GlideMonitorClient.create({
-      addresses: [{ host: "localhost", port: 6379 }],
-    });
-
-    const line = await monitor.getNextMessage();
-    console.log(`${line.command} ${line.args.join(" ")}`);
-
-    await monitor.close();
-    ```
-  </TabItem>
-
-  <TabItem label="Java">
-    ```java
-    import glide.api.MonitorClient;
-    import glide.api.models.commands.MonitorMsg;
-    import glide.api.models.configuration.GlideClientConfiguration;
-    import glide.api.models.configuration.NodeAddress;
-
-    GlideClientConfiguration config = GlideClientConfiguration.builder()
-        .address(NodeAddress.builder().host("localhost").port(6379).build())
-        .build();
-
-    try (MonitorClient monitor = MonitorClient.create(config)) {
-        MonitorMsg msg = monitor.getMonitorMessage();
-        System.out.printf("%s %s%n", msg.command(), msg.args());
-    }
-    ```
-  </TabItem>
-
-  <TabItem label="Go">
-    ```go
-    package main
-
-    import (
-        "fmt"
-
-        "github.com/valkey-io/valkey-glide/go/v2"
-        "github.com/valkey-io/valkey-glide/go/v2/config"
-    )
-
-    func main() {
-        cfg := config.NewClientConfiguration().
-            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
-
-        monitor, err := glide.NewMonitorClient(cfg, nil)
+        // Queue mode
+        queueMonitor, err := glide.NewMonitorClient(cfg, nil)
         if err != nil {
             panic(err)
         }
-        defer monitor.Close()
+        defer queueMonitor.Close()
 
-        line, err := monitor.GetMonitorMessage()
+        line, err := queueMonitor.GetMonitorMessage()
         if err != nil {
             panic(err)
         }
         fmt.Printf("%s %v\n", line.Command, line.Args)
     }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    
+    The C# client returns an [`IAsyncEnumerable`](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1) 
+    stream instead of providing separate callback and queue modes. Similar functionality to other clients can easily be implemented using
+    the stream directly - see examples below.
+
+    ```csharp
+    using System.Threading.Channels;
+    using Valkey.Glide;
+
+    using var config = new MonitorConfig("localhost", 6379);
+
+    void OnMessage(MonitorMessage msg) =>
+        Console.WriteLine($"{msg.Timestamp:O} [{msg.Database}] {msg.ClientAddress} {msg.Command} {string.Join(" ", msg.Args)}");
+   
+    // Callback using delegate.
+    await using var callbackMonitor = await MonitorClient.CreateClient(config);
+
+    using var callbackCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+    await foreach (var msg in callbackMonitor.GetMessagesAsync(callbackCts.Token))
+    {
+        OnMessage(msg);
+    }
+
+    // Queue using channel.
+    await using var queueMonitor = await MonitorClient.CreateClient(config);
+    
+    var queue = Channel.CreateUnbounded<MonitorMessage>();
+    using var queueCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+    _ = Task.Run(async () =>
+    {
+        await foreach (var msg in queueMonitor.GetMessagesAsync(queueCts.Token))
+        {
+            await queue.Writer.WriteAsync(msg, queueCts.Token);
+        }
+        queue.Writer.Complete();
+    });
+
+    var next = await queue.Reader.ReadAsync(queueCts.Token);
+    OnMessage(next);
     ```
   </TabItem>
 </Tabs>
@@ -202,10 +194,12 @@ There are two modes for consuming monitor messages:
 
 Each monitor message contains the following fields:
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `timestamp` | float/double | Unix timestamp of when the command was processed |
-| `db` | int | Database index the command ran against |
-| `clientAddr` | string | Address of the client that issued the command |
-| `command` | string | Command name |
-| `args` | list/array | Command arguments |
+| Field          | Type           | Description                                   |
+| -------------- | -------------- | --------------------------------------------- |
+| Timestamp      | Floating point | Time when the command was processed           |
+| Database       | Integer        | Database index the command ran against        |
+| Client address | String         | Address of the client that issued the command |
+| Command        | String         | Command name                                  |
+| Arguments      | List           | Command arguments                             |
+
+The exact names and types vary by client, following each language's specifications and conventions.

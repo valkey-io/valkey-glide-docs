@@ -74,12 +74,18 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectClusterWithTLS() {
-        myConfig := config.NewClusterClientConfiguration().
+    func ConnectClusterWithTLS() error {
+        clientConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithUseTLS(true)
 
-        client, err := glide.NewClusterClient(myConfig)
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
     }
     ```
   </TabItem>
@@ -187,12 +193,18 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectStandaloneWithTLS() {
-        myConfig := config.NewClientConfiguration().
+    func ConnectStandaloneWithTLS() error {
+        clientConfig := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
             WithUseTLS(true)
 
-        client, err := glide.NewClient(myConfig)
+        client, err := glide.NewClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
     }
     ```
   </TabItem>
@@ -251,28 +263,27 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 **SECURITY WARNING**: Insecure mode is only for development and testing environments. **It is strongly discouraged in production environments** as it introduces security risks such as man-in-the-middle attacks.
 :::
 
+#### Cluster Mode
+
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
     ```python
     from glide import (
+        AdvancedGlideClusterClientConfiguration,
         GlideClusterClient,
         GlideClusterClientConfiguration,
         NodeAddress,
         TlsAdvancedConfiguration,
-        AdvancedGlideClusterClientConfiguration
     )
 
     tls_config = TlsAdvancedConfiguration(use_insecure_tls=True)
 
-    advanced_config = AdvancedGlideClusterClientConfiguration(
-        tls_config=tls_config
-    )
+    advanced_config = AdvancedGlideClusterClientConfiguration(tls_config=tls_config)
 
-    addresses = [NodeAddress(host="address.example.com", port=6379)]
     client_config = GlideClusterClientConfiguration(
-        addresses,
+        addresses=[NodeAddress(host="address.example.com", port=6379)],
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config,
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -280,21 +291,73 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
   </TabItem>
 
   <TabItem label="Java">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Java is coming soon.
-    :::
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
+        .useInsecureTLS(true)
+        .build();
+
+    AdvancedGlideClusterClientConfiguration advancedConfig =
+        AdvancedGlideClusterClientConfiguration.builder()
+            .tlsAdvancedConfiguration(tlsConfig)
+            .build();
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { insecure: true },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-    :::note[Coming soon]
-    Insecure TLS configuration documentation for Go is coming soon.
-    :::
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithInsecureTLS() error {
+        tlsConfig := config.NewTlsConfiguration().WithInsecureTLS(true)
+
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">
@@ -320,6 +383,141 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
     );
     ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    :::note[Not currently supported]
+    The Ruby client (`valkey-glide-rb`) does not currently expose a way to skip TLS certificate verification. Its TLS options accept a CA bundle and client key material through `ssl_params`, but there is no `insecure`, `verify_mode`, or equivalent flag. For local testing with a self-signed certificate, pass the CA bundle via `ssl_params: { ca_file: "/path/to/ca-cert.pem" }` instead.
+    :::
+  </TabItem>
+</Tabs>
+
+#### Standalone
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import (
+        AdvancedGlideClientConfiguration,
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+    )
+
+    tls_config = TlsAdvancedConfiguration(use_insecure_tls=True)
+
+    advanced_config = AdvancedGlideClientConfiguration(tls_config=tls_config)
+
+    client_config = GlideClientConfiguration(
+        addresses=[NodeAddress(host="primary.example.com", port=6379)],
+        use_tls=True,
+        advanced_config=advanced_config,
+    )
+
+    client = await GlideClient.create(client_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.AdvancedGlideClientConfiguration;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
+        .useInsecureTLS(true)
+        .build();
+
+    AdvancedGlideClientConfiguration advancedConfig = AdvancedGlideClientConfiguration.builder()
+        .tlsAdvancedConfiguration(tlsConfig)
+        .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("primary.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { insecure: true },
+        },
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectStandaloneWithInsecureTLS() error {
+        tlsConfig := config.NewTlsConfiguration().WithInsecureTLS(true)
+
+        advancedConfig := config.NewAdvancedClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithTls()
+        .WithInsecureTls()
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </TabItem>
+
+  <TabItem label="PHP">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'primary.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
+    );
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    :::note[Not currently supported]
+    The Ruby client (`valkey-glide-rb`) does not currently expose a way to skip TLS certificate verification. Its TLS options accept a CA bundle and client key material through `ssl_params`, but there is no `insecure`, `verify_mode`, or equivalent flag. For local testing with a self-signed certificate, pass the CA bundle via `ssl_params: { ca_file: "/path/to/ca-cert.pem" }` instead.
+    :::
   </TabItem>
 </Tabs>
 
@@ -361,7 +559,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClusterClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -378,10 +576,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
         AdvancedGlideClientConfiguration
     )
 
-    cert_data = b"""-----BEGIN CERTIFICATE-----
-    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-    ...
-    -----END CERTIFICATE-----"""
+    cert_data = b"""-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode..."""
 
     tls_config = TlsAdvancedConfiguration(root_pem_cacerts=cert_data)
 
@@ -393,7 +588,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClient.create(client_config)
@@ -431,7 +626,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     client_config = GlideClusterClientConfiguration(
         addresses,
         use_tls=True,
-        advanced_configuration=advanced_config
+        advanced_config=advanced_config
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -439,21 +634,219 @@ You can provide custom root certificates for TLS connections. This is useful whe
   </TabItem>
 
   <TabItem label="Java">
-    :::note[Coming soon]
-    Custom root certificate documentation for Java is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `rootCertificates` is not set (default), the system's default certificate trust store is used
+    * If `rootCertificates` is an empty byte array, an error will be returned
+    * Certificates must be in PEM format as a byte array
+    * Multiple certificates can be provided by concatenating them in PEM format
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+
+    byte[] rootCaBytes = Files.readAllBytes(Paths.get("/path/to/ca-cert.pem"));
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
+        .rootCertificates(rootCaBytes)
+        .build();
+
+    AdvancedGlideClusterClientConfiguration advancedConfig =
+        AdvancedGlideClusterClientConfiguration.builder()
+            .tlsAdvancedConfiguration(tlsConfig)
+            .build();
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+
+    #### Example - Using Certificate as Bytes
+
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.AdvancedGlideClientConfiguration;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+    import java.nio.charset.StandardCharsets;
+
+    byte[] rootCert = "-----BEGIN CERTIFICATE-----MIIDXTCCAkWg...".getBytes(StandardCharsets.UTF_8);
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
+        .rootCertificates(rootCert)
+        .build();
+
+    AdvancedGlideClientConfiguration advancedConfig = AdvancedGlideClientConfiguration.builder()
+        .tlsAdvancedConfiguration(tlsConfig)
+        .build();
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder().host("primary.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+
+    #### Example - Connecting with Custom Root Certificates from KeyStore
+
+    `TlsAdvancedConfiguration.fromKeyStore` is a static factory that pulls trusted certificate entries out of a Java `KeyStore` (JKS or PKCS12) and returns a fully-configured `TlsAdvancedConfiguration`.
+
+    ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+    TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.fromKeyStore(
+        "/path/to/truststore.p12",
+        "changeit".toCharArray(),
+        "PKCS12");
+
+    AdvancedGlideClusterClientConfiguration advancedConfig =
+        AdvancedGlideClusterClientConfiguration.builder()
+            .tlsAdvancedConfiguration(tlsConfig)
+            .build();
+
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
+        .useTLS(true)
+        .advancedConfiguration(advancedConfig)
+        .build();
+
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Custom root certificate documentation for Node.js is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `rootCertificates` is not set (default), the system's default certificate trust store is used
+    * If `rootCertificates` is empty, an error will be returned
+    * Certificates must be in PEM format, provided as a `Buffer` or a raw PEM `string`
+    * Multiple certificates can be provided by concatenating them in PEM format
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```typescript
+    import { readFileSync } from "node:fs";
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const rootCertificates = readFileSync("/path/to/ca-cert.pem");
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { rootCertificates },
+        },
+    });
+    ```
+
+    #### Example - Using Certificate as Bytes
+
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const rootCertificates = Buffer.from("-----BEGIN CERTIFICATE-----MIIDXTCCAkWg...");
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { rootCertificates },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
-    :::note[Coming soon]
-    Custom root certificate documentation for Go is coming soon.
-    :::
+    **Certificate Behavior:**
+
+    * If `WithRootCertificates` is not called (default), the system's default certificate trust store is used
+    * Certificates must be in PEM format as a byte slice
+    * Multiple certificates can be provided by concatenating them in PEM format
+    * `config.LoadRootCertificatesFromFile` reads a PEM file and returns the bytes, ready to pass to `WithRootCertificates`
+
+    #### Example - Connecting with Custom Root Certificate from File
+
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithCustomRootCA() error {
+        rootCerts, err := config.LoadRootCertificatesFromFile("/path/to/ca-cert.pem")
+        if err != nil {
+            return err
+        }
+
+        tlsConfig := config.NewTlsConfiguration().WithRootCertificates(rootCerts)
+
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
+
+    #### Example - Using Certificate as Bytes
+
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectStandaloneWithCustomRootCABytes() error {
+        rootCerts := []byte("-----BEGIN CERTIFICATE-----MIIDXTCCAkWg...")
+
+        tlsConfig := config.NewTlsConfiguration().WithRootCertificates(rootCerts)
+
+        advancedConfig := config.NewAdvancedClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
+
+        clientConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithAdvancedConfiguration(advancedConfig)
+
+        client, err := glide.NewClient(clientConfig)
+        if err != nil {
+            return err
+        }
+        defer client.Close()
+
+        return nil
+    }
+    ```
   </TabItem>
 
   <TabItem label="C#">
@@ -486,12 +879,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
 
-    var certData = Encoding.UTF8.GetBytes(
-        "-----BEGIN CERTIFICATE-----\n"
-        + "MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
-        + "...\n"
-        + "-----END CERTIFICATE-----\n"
-    );
+    var certData = Encoding.UTF8.GetBytes("-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...");
 
     var config = new StandaloneClientConfigurationBuilder()
         .WithTls()
@@ -537,12 +925,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     #### Example - Using Certificate as String
 
     ```php
-    $certData = <<<'CERT'
-    -----BEGIN CERTIFICATE-----
-    MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-    ...
-    -----END CERTIFICATE-----
-    CERT;
+    $certData = '-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...';
 
     $client = new ValkeyGlideCluster(
         addresses: [['host' => 'address.example.com', 'port' => 6379]],
@@ -575,12 +958,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
     #### Example - Using Certificate as String
 
     ```ruby
-    cert_data = <<~CERT
-      -----BEGIN CERTIFICATE-----
-      MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-      ...
-      -----END CERTIFICATE-----
-    CERT
+    cert_data = "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode..."
 
     client = Valkey.new(
       host: "address.example.com",
@@ -599,8 +977,8 @@ You can provide custom root certificates for TLS connections. This is useful whe
       ssl: true,
       ssl_params: {
         ca_file: "/path/to/ca-cert.pem",
-        cert: "/path/to/client-cert.pem",
-        key: "/path/to/client-key.pem"
+        cert: "/etc/glide/client.pem",
+        key: "/etc/glide/client.key"
       }
     )
     ```
@@ -618,18 +996,56 @@ Prefer path-based mTLS with a key file whose read permissions are restricted to 
 In-memory PEM bytes must come from a secret store, not from source.
 :::
 
-mTLS still requires `use_tls=True` on the top-level configuration.
-The advanced TLS configuration only supplies the client-side material.
+mTLS still requires TLS to be enabled on the top-level client configuration (`use_tls=True` in Python, `.useTLS(true)` in Java, `useTLS: true` in Node.js, `.WithUseTLS(true)` in Go).
+The advanced TLS configuration only supplies the client-side material; it does not enable TLS on its own.
+
+Reload behavior applies to path-based modes only.
+The GLIDE core reads the certificate and key from disk at connect time and re-reads them on a schedule so a rotated certificate is picked up on the next reconnect.
+Open connections keep their current material.
+If a reload fails (missing file, mismatched key, unreadable), the last known-good material is kept until a subsequent read succeeds.
+Byte-based mTLS is inherently static: the material is read once at connect time and does not reload.
+
+Path-based and byte-based mTLS are mutually exclusive within a single configuration.
+Supplying both is rejected at configuration time in every SDK.
+
+A custom reload interval must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years).
+Sub-second, zero, negative, and oversized values are rejected at configuration time.
 
 #### In-memory PEM (static)
 
-Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) when the client certificate and key are already loaded as PEM bytes.
+Use the byte-based entry point when the client certificate and key are already loaded as PEM bytes (for example, fetched from a secret store).
+The material is read once at connect time and does not reload.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        AdvancedGlideClusterClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+    )
+
+    # Load PEM bytes from a secret store.
+    client_cert = b"""-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode..."""
+    client_key = b"""-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD..."""
+
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_pem=client_cert,
+        client_key_pem=client_key,
+    )
+
+    advanced_config = AdvancedGlideClusterClientConfiguration(tls_config=tls_config)
+
+    client_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="address.example.com", port=6379)],
+        use_tls=True,
+        advanced_config=advanced_config,
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -639,9 +1055,11 @@ Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) whe
     import glide.api.models.configuration.GlideClusterClientConfiguration;
     import glide.api.models.configuration.NodeAddress;
     import glide.api.models.configuration.TlsAdvancedConfiguration;
+    import java.nio.charset.StandardCharsets;
 
-    byte[] clientCert = /* PEM-encoded certificate bytes from a secret store */;
-    byte[] clientKey  = /* PEM-encoded private key bytes from a secret store */;
+    // Load PEM bytes from a secret store.
+    byte[] clientCert = "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...".getBytes(StandardCharsets.UTF_8);
+    byte[] clientKey = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD...".getBytes(StandardCharsets.UTF_8);
 
     TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
         .useMutualTls(clientCert, clientKey)
@@ -663,9 +1081,27 @@ Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) whe
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
+
+    // Load PEM bytes from a secret store.
+    const clientCertificate: Buffer = Buffer.from("-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...");
+    const clientKey: Buffer = Buffer.from("-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD...");
+
+    const mutualTls: MutualTls = {
+        kind: "bytes",
+        clientCertificate,
+        clientKey,
+    };
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { mutualTls },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -673,39 +1109,29 @@ Use `WithMutualTLS(cert, key)` (Go) or `useMutualTls(byte[], byte[])` (Java) whe
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
-        "log"
     )
 
     func ConnectClusterWithMutualTLSBytes() error {
-        // Load certificate and key bytes from a secret store (not from source).
-        clientCert := []byte(`-----BEGIN CERTIFICATE-----
-MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKmzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-...
------END CERTIFICATE-----`)
-        clientKey := []byte(`-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
------END PRIVATE KEY-----`)
+        // Load PEM bytes from a secret store.
+        clientCert := []byte("-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...")
+        clientKey := []byte("-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD...")
 
-        // Create TLS configuration with in-memory client cert and key.
-        // The cert and key are loaded once at connection time (static, no reload).
         tlsConfig, err := config.NewTlsConfiguration().WithMutualTLS(clientCert, clientKey)
         if err != nil {
-            log.Fatalf("Failed to create TLS config: %v", err)
+            return err
         }
 
-        // Set up advanced configuration with TLS.
-        advancedConfig := config.NewAdvancedClientConfiguration().WithTlsConfiguration(tlsConfig)
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
 
-        // Create cluster client configuration.
-        myConfig := config.NewClusterClientConfiguration().
+        clientConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithUseTLS(true).
             WithAdvancedConfiguration(advancedConfig)
 
-        // Create the client.
-        client, err := glide.NewClusterClient(myConfig)
+        client, err := glide.NewClusterClient(clientConfig)
         if err != nil {
-            log.Fatalf("Failed to create cluster client: %v", err)
+            return err
         }
         defer client.Close()
 
@@ -715,27 +1141,63 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7...
   </TabItem>
 
   <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
+    ```csharp
+    using System.Text;
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Load PEM bytes from a secret store.
+    byte[] clientCert = Encoding.UTF8.GetBytes("-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----");
+    byte[] clientKey = Encoding.UTF8.GetBytes("-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----");
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithClientCertificate(clientCert, clientKey)
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
   </TabItem>
 
   <TabItem label="PHP">
     :::note[Coming soon]
-    Mutual TLS configuration documentation for PHP is coming soon.
+    Mutual TLS is not yet available in the PHP client.
     :::
   </TabItem>
 </Tabs>
 
 #### Path-based with automatic reload
 
-Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(certPath, keyPath)` (Java) to point at files on disk; the core re-reads the material at its default cadence (currently 300 seconds).
+Point at PEM files on disk and let the core reload them at its default cadence.
+Rotated material is picked up on the next reconnect after a successful reload.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        AdvancedGlideClusterClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+    )
+
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_path="/etc/glide/client.pem",
+        client_key_path="/etc/glide/client.key",
+    )
+
+    advanced_config = AdvancedGlideClusterClientConfiguration(tls_config=tls_config)
+
+    client_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="address.example.com", port=6379)],
+        use_tls=True,
+        advanced_config=advanced_config,
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -747,7 +1209,7 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
     import glide.api.models.configuration.TlsAdvancedConfiguration;
 
     TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
-        .useMutualTlsWithReload("/path/to/client-cert.pem", "/path/to/client-key.pem")
+        .useMutualTlsWithReload("/etc/glide/client.pem", "/etc/glide/client.key")
         .build();
 
     AdvancedGlideClusterClientConfiguration advancedConfig =
@@ -766,9 +1228,23 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
+
+    const mutualTls: MutualTls = {
+        kind: "path",
+        clientCertPath: "/etc/glide/client.pem",
+        clientKeyPath: "/etc/glide/client.key",
+    };
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { mutualTls },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -776,33 +1252,28 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
-        "log"
     )
 
-    func ConnectStandaloneWithMutualTLSFilesDefaultReload() error {
-        // Create TLS configuration with client cert/key file paths.
-        // The core will re-read the files at the default cadence (currently 300 seconds).
+    func ConnectClusterWithMutualTLSFromFiles() error {
         tlsConfig, err := config.NewTlsConfiguration().WithMutualTLSFromFiles(
-            "/path/to/client-cert.pem",
-            "/path/to/client-key.pem",
+            "/etc/glide/client.pem",
+            "/etc/glide/client.key",
         )
         if err != nil {
-            log.Fatalf("Failed to create TLS config: %v", err)
+            return err
         }
 
-        // Set up advanced configuration with TLS.
-        advancedConfig := config.NewAdvancedClientConfiguration().WithTlsConfiguration(tlsConfig)
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
 
-        // Create standalone client configuration.
-        myConfig := config.NewClientConfiguration().
-            WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithUseTLS(true).
             WithAdvancedConfiguration(advancedConfig)
 
-        // Create the client.
-        client, err := glide.NewClient(myConfig)
+        client, err := glide.NewClusterClient(clientConfig)
         if err != nil {
-            log.Fatalf("Failed to create client: %v", err)
+            return err
         }
         defer client.Close()
 
@@ -812,27 +1283,58 @@ Use `WithMutualTLSFromFiles(certPath, keyPath)` (Go) or `useMutualTlsWithReload(
   </TabItem>
 
   <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithClientCertificate("/etc/glide/client.pem", "/etc/glide/client.key")
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
   </TabItem>
 
   <TabItem label="PHP">
     :::note[Coming soon]
-    Mutual TLS configuration documentation for PHP is coming soon.
+    Mutual TLS is not yet available in the PHP client.
     :::
   </TabItem>
 </Tabs>
 
 #### Path-based with a custom reload interval
 
-Pass a positive interval in seconds to override the core default. In Java, use `useMutualTlsWithReload(certPath, keyPath, intervalSecs)`. In Go, pass `config.WithReloadInterval(d)` to `WithMutualTLSFromFiles()`.
+Pass a positive whole number of seconds to override the core default cadence.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        AdvancedGlideClusterClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+    )
+
+    tls_config = TlsAdvancedConfiguration(
+        client_cert_path="/etc/glide/client.pem",
+        client_key_path="/etc/glide/client.key",
+        cert_reload_interval_seconds=60,
+    )
+
+    advanced_config = AdvancedGlideClusterClientConfiguration(tls_config=tls_config)
+
+    client_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress(host="address.example.com", port=6379)],
+        use_tls=True,
+        advanced_config=advanced_config,
+    )
+
+    client = await GlideClusterClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -844,7 +1346,7 @@ Pass a positive interval in seconds to override the core default. In Java, use `
     import glide.api.models.configuration.TlsAdvancedConfiguration;
 
     TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
-        .useMutualTlsWithReload("/path/to/client-cert.pem", "/path/to/client-key.pem", 60)
+        .useMutualTlsWithReload("/etc/glide/client.pem", "/etc/glide/client.key", 60)
         .build();
 
     AdvancedGlideClusterClientConfiguration advancedConfig =
@@ -863,9 +1365,24 @@ Pass a positive interval in seconds to override the core default. In Java, use `
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
+
+    const mutualTls: MutualTls = {
+        kind: "path",
+        clientCertPath: "/etc/glide/client.pem",
+        clientKeyPath: "/etc/glide/client.key",
+        reloadIntervalSeconds: 60,
+    };
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { mutualTls },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -873,35 +1390,29 @@ Pass a positive interval in seconds to override the core default. In Java, use `
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
-        "log"
-        "time"
     )
 
-    func ConnectClusterWithMutualTLSFilesCustomReload() error {
-        // Create TLS configuration with client cert/key file paths and custom reload interval.
-        // The core will re-read the files every 60 seconds.
+    func ConnectClusterWithMutualTLSCustomInterval() error {
         tlsConfig, err := config.NewTlsConfiguration().WithMutualTLSFromFiles(
-            "/path/to/client-cert.pem",
-            "/path/to/client-key.pem",
-            config.WithReloadInterval(60*time.Second),
+            "/etc/glide/client.pem",
+            "/etc/glide/client.key",
+            config.WithReloadInterval(60),
         )
         if err != nil {
-            log.Fatalf("Failed to create TLS config: %v", err)
+            return err
         }
 
-        // Set up advanced configuration with TLS.
-        advancedConfig := config.NewAdvancedClientConfiguration().WithTlsConfiguration(tlsConfig)
+        advancedConfig := config.NewAdvancedClusterClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
 
-        // Create cluster client configuration.
-        myConfig := config.NewClusterClientConfiguration().
+        clientConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithUseTLS(true).
             WithAdvancedConfiguration(advancedConfig)
 
-        // Create the client.
-        client, err := glide.NewClusterClient(myConfig)
+        client, err := glide.NewClusterClient(clientConfig)
         if err != nil {
-            log.Fatalf("Failed to create cluster client: %v", err)
+            return err
         }
         defer client.Close()
 
@@ -911,27 +1422,66 @@ Pass a positive interval in seconds to override the core default. In Java, use `
   </TabItem>
 
   <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithTls()
+        .WithClientCertificate(
+            "/etc/glide/client.pem",
+            "/etc/glide/client.key",
+            TimeSpan.FromSeconds(60))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
   </TabItem>
 
   <TabItem label="PHP">
     :::note[Coming soon]
-    Mutual TLS configuration documentation for PHP is coming soon.
+    Mutual TLS is not yet available in the PHP client.
     :::
   </TabItem>
 </Tabs>
 
 #### Loading PEM material from files
 
-Helpers exist to read PEM bytes from disk and feed the in-memory mode.
+When static, byte-based mTLS is desired but the material lives on disk, each SDK offers a helper that reads the PEM files and returns the bytes.
+Feed those bytes into the byte-based entry point shown above.
+
+The same file-loading helpers work for both `GlideClient` (standalone) and `GlideClusterClient` (cluster-mode). The examples below show the standalone client; substitute the cluster variant if you are connecting to a cluster.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Python is coming soon.
-    :::
+    ```python
+    from glide import (
+        AdvancedGlideClientConfiguration,
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        TlsAdvancedConfiguration,
+    )
+    from glide import load_client_certificate_and_key_from_file
+
+    cert, key = load_client_certificate_and_key_from_file(
+        "/etc/glide/client.pem",
+        "/etc/glide/client.key",
+    )
+
+    tls_config = TlsAdvancedConfiguration(client_cert_pem=cert, client_key_pem=key)
+
+    advanced_config = AdvancedGlideClientConfiguration(tls_config=tls_config)
+
+    client_config = GlideClientConfiguration(
+        addresses=[NodeAddress(host="primary.example.com", port=6379)],
+        use_tls=True,
+        advanced_config=advanced_config,
+    )
+
+    client = await GlideClient.create(client_config)
+    ```
   </TabItem>
 
   <TabItem label="Java">
@@ -943,8 +1493,8 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
     import glide.api.models.configuration.TlsAdvancedConfiguration;
     import glide.api.models.configuration.TlsAdvancedConfiguration.TlsAdvancedConfigurationBuilder;
 
-    byte[] cert = TlsAdvancedConfigurationBuilder.loadClientCertificateFromFile("/path/to/client-cert.pem");
-    byte[] key  = TlsAdvancedConfigurationBuilder.loadClientKeyFromFile("/path/to/client-key.pem");
+    byte[] cert = TlsAdvancedConfigurationBuilder.loadClientCertificateFromFile("/etc/glide/client.pem");
+    byte[] key  = TlsAdvancedConfigurationBuilder.loadClientKeyFromFile("/etc/glide/client.key");
 
     TlsAdvancedConfiguration tlsConfig = TlsAdvancedConfiguration.builder()
         .useMutualTls(cert, key)
@@ -965,9 +1515,32 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
   </TabItem>
 
   <TabItem label="Node">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for Node.js is coming soon.
-    :::
+    ```typescript
+    import {
+        GlideClient,
+        MutualTls,
+        loadClientCertificateAndKeyFromFile,
+    } from "@valkey/valkey-glide";
+
+    const { cert, key } = await loadClientCertificateAndKeyFromFile(
+        "/etc/glide/client.pem",
+        "/etc/glide/client.key",
+    );
+
+    const mutualTls: MutualTls = {
+        kind: "bytes",
+        clientCertificate: cert,
+        clientKey: key,
+    };
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "primary.example.com", port: 6379 }],
+        useTLS: true,
+        advancedConfiguration: {
+            tlsAdvancedConfiguration: { mutualTls },
+        },
+    });
+    ```
   </TabItem>
 
   <TabItem label="Go">
@@ -975,38 +1548,33 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
-        "log"
     )
 
     func ConnectStandaloneWithMutualTLSFromFileLoader() error {
-        // Use the helper to load both cert and key from files.
         cert, key, err := config.LoadClientCertificateAndKeyFromFile(
-            "/path/to/client-cert.pem",
-            "/path/to/client-key.pem",
+            "/etc/glide/client.pem",
+            "/etc/glide/client.key",
         )
         if err != nil {
-            log.Fatalf("Failed to load certificates: %v", err)
+            return err
         }
 
-        // Create TLS configuration with the loaded in-memory bytes (static, no reload).
         tlsConfig, err := config.NewTlsConfiguration().WithMutualTLS(cert, key)
         if err != nil {
-            log.Fatalf("Failed to create TLS config: %v", err)
+            return err
         }
 
-        // Set up advanced configuration with TLS.
-        advancedConfig := config.NewAdvancedClientConfiguration().WithTlsConfiguration(tlsConfig)
+        advancedConfig := config.NewAdvancedClientConfiguration().
+            WithTlsConfiguration(tlsConfig)
 
-        // Create standalone client configuration.
-        myConfig := config.NewClientConfiguration().
+        clientConfig := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "primary.example.com", Port: 6379}).
             WithUseTLS(true).
             WithAdvancedConfiguration(advancedConfig)
 
-        // Create the client.
-        client, err := glide.NewClient(myConfig)
+        client, err := glide.NewClient(clientConfig)
         if err != nil {
-            log.Fatalf("Failed to create client: %v", err)
+            return err
         }
         defer client.Close()
 
@@ -1016,30 +1584,40 @@ Helpers exist to read PEM bytes from disk and feed the in-memory mode.
   </TabItem>
 
   <TabItem label="C#">
-    :::note[Coming soon]
-    Mutual TLS configuration documentation for C# is coming soon.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Read PEM-encoded certificate and key bytes from files.
+    byte[] clientCert = File.ReadAllBytes("/etc/glide/client.pem");
+    byte[] clientKey  = File.ReadAllBytes("/etc/glide/client.key");
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("primary.example.com", 6379)
+        .WithTls()
+        .WithClientCertificate(clientCert, clientKey)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
   </TabItem>
 
   <TabItem label="PHP">
     :::note[Coming soon]
-    Mutual TLS configuration documentation for PHP is coming soon.
+    Mutual TLS is not yet available in the PHP client.
     :::
   </TabItem>
 </Tabs>
 
 #### Common Pitfalls
 
-* **File permissions:** the process user must have read access on the cert and key files.
-  A path that becomes unreadable mid-run causes the reload to fail; the last known-good material is kept until a subsequent read succeeds.
-* **Reload cadence:** the interval is a lower bound on how fresh the material will be at the next reconnect.
-  Newly picked-up material takes effect at the next connection attempt, not immediately.
-* **Path vs bytes are exclusive:** do not mix modes on the same builder.
-  In Go, calling both `WithMutualTLS` and `WithMutualTLSFromFiles` on the same `TlsConfiguration` will replace the previous setting (the last call wins).
-  To switch modes, create a new `TlsConfiguration`.
-* **Sub-second and non-positive intervals are rejected:** in Go these fail with an error at configuration time.
-  If you want static mTLS from files, load the bytes yourself using `LoadClientCertificateAndKeyFromFile` and use `WithMutualTLS(cert, key)`.
-* **mTLS still needs `use_tls=True`:** the advanced TLS configuration only fills in the client-side material and does not enable TLS by itself.
+* **mTLS still needs TLS enabled at the top level.** The advanced TLS configuration only supplies the client-side material; without TLS on the base client configuration (`use_tls=True`, `.useTLS(true)`, `useTLS: true`, or `.WithUseTLS(true)`), the client connects in plaintext and the mTLS material is not used.
+* **Path-based and byte-based mTLS are mutually exclusive.** Supplying both a certificate/key path and inline PEM bytes on the same configuration is a configuration error in every SDK.
+* **Sub-second, zero, negative, and oversized reload intervals are rejected.** The custom interval is validated at configuration time: it must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years). If you want static mTLS from files, load the bytes yourself with the file-loading helper and use the byte-based mode.
+* **Byte-based mTLS is static.** The material is read once at connect time and never reloads. Use a path-based mode when the certificate rotates.
+* **Reload cadence is a lower bound.** The interval bounds how stale the on-disk material can be before the next reload attempt; the next successful reload takes effect on the next reconnect, not on open connections.
+* **Reload failures keep the last known-good material.** A path that becomes unreadable, a mismatched key, or a corrupt certificate causes the reload to fail. The core keeps the last successfully loaded material and retries at the next tick.
+* **File permissions matter.** The process user must have read access to the certificate and key files. Restrict the key file to that user; do not commit it or log it.
 
 ### TLS Certificate Format
 
