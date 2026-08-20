@@ -147,8 +147,7 @@ GLIDE clients generally provide two modes for consuming monitor messages:
   </TabItem>
 
   <TabItem label="C#">
-    
-    The C# client returns an [`IAsyncEnumerable`](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1) 
+    The C# client returns an [`IAsyncEnumerable`](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1)
     stream instead of providing separate callback and queue modes. Similar functionality to other clients can easily be implemented using
     the stream directly - see examples below.
 
@@ -160,7 +159,7 @@ GLIDE clients generally provide two modes for consuming monitor messages:
 
     void OnMessage(MonitorMessage msg) =>
         Console.WriteLine($"{msg.Timestamp:O} [{msg.Database}] {msg.ClientAddress} {msg.Command} {string.Join(" ", msg.Args)}");
-   
+
     // Callback using delegate.
     await using var callbackMonitor = await MonitorClient.CreateClient(config);
 
@@ -172,7 +171,7 @@ GLIDE clients generally provide two modes for consuming monitor messages:
 
     // Queue using channel.
     await using var queueMonitor = await MonitorClient.CreateClient(config);
-    
+
     var queue = Channel.CreateUnbounded<MonitorMessage>();
     using var queueCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
     _ = Task.Run(async () =>
