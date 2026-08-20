@@ -330,4 +330,4 @@ When your application shuts down, close the pool to release all connections.
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
-- **State reset always sends DISCARD:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` even if no `MULTI` transaction was active. This adds a small round-trip on each release.
+- **State reset on release:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` only if the connection has dirty state (e.g., an active `MULTI` or `WATCH`). Clean connections are returned directly to the idle set with no round-trip.
