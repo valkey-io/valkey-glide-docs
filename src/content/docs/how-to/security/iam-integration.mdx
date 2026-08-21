@@ -34,7 +34,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 :::note
-Calling `refreshIamToken` requires IAM to be configured. If called without an active `IamAuthConfig`, a `ConfigurationError` is raised.
+If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time.
 :::
 
 ## Examples
@@ -247,7 +247,6 @@ The method always returns `"OK"`. If AWS token generation fails, errors are logg
   <TabItem label="Node">
     ```ts
     // Pre-warm the token cache before a maintenance window
-    // Note: does not immediately re-auth connections — new token is applied on next command
     await client.refreshIamToken();
     ```
   </TabItem>
