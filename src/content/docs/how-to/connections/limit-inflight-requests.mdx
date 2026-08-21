@@ -13,9 +13,15 @@ Inflight requests limit can be configured through the general client configurati
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="C#">
-    :::note
-    This feature is not yet available in GLIDE C#.
-    :::
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    // Limit to 1000 inflight requests per connection
+    var clusterConfig = new ClusterClientConfigurationBuilder()
+        .WithInflightRequestsLimit(1000)
+        .Build();
+    ```
   </TabItem>
 
   <TabItem label="Go">

@@ -1005,13 +1005,6 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     var blockFor = TimeSpan.FromSeconds(5);
 
@@ -1081,10 +1074,6 @@ Use `get_subscriptions()` to inspect the current subscription state. It returns 
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var state = await client.GetSubscriptionsAsync();
     Console.WriteLine($"Desired: {state.Desired}");

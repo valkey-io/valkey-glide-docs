@@ -206,10 +206,6 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var productKey = "product:shoe:stock";
     var buyQuantity = "3";
@@ -298,10 +294,6 @@ values directly into the script would create unique scripts each time, preventin
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var productKey = "product:shoe:stock";
     var buyQuantity = "3";
@@ -547,10 +539,6 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     // This works the same in cluster mode
     using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
@@ -626,10 +614,6 @@ GLIDE provide options for explicit control over script routing in cluster mode.
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     using var script = new Script("return 'Hello'");
 
@@ -776,10 +760,6 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     // Script with keys and arguments
     var batch = new Batch(isAtomic: true);

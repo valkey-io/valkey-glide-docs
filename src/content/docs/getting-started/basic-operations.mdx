@@ -303,10 +303,6 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     // Set multiple keys at once
     await client.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
@@ -384,10 +380,6 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
   <TabItem label="C#">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var count = await client.DeleteAsync(["user:1001", "user:1002", "user:1003"]);
     Console.WriteLine($"✓ Deleted {count} keys");
