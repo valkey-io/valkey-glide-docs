@@ -1,0 +1,333 @@
+---
+title: Use Client Pool
+description: Manage a pool of reusable GLIDE client connections for high-concurrency workloads, blocking commands, and connection isolation.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The Client Pool manages a set of reusable GLIDE client instances that can be borrowed and returned on demand. Use it when your application needs high concurrency, runs blocking commands like `BLPOP`, `BRPOP`, or `XREAD BLOCK` that tie up a connection, or requires connection isolation between independent workflows.
+
+## Configuration
+
+The pool is configured with a `PoolConfig` object. All parameters are optional and have sensible defaults.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `max_size` / `maxSize` / `MaxSize` | int | 10 | Maximum number of client instances in the pool |
+| `min_idle` / `minIdle` / `MinIdle` | int | 1 | Number of clients to pre-warm at creation |
+| `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min | How long an idle client stays in the pool before eviction |
+| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (DISCARD, UNWATCH) when returning a client |
+| `acquire_timeout_s` / `acquireTimeoutS` / `AcquireTimeout` | duration | 5 sec | How long to wait for a client when the pool is exhausted |
+| `abandon_timeout_ms` / `abandonTimeoutMs` / `AbandonTimeout` | duration | 5 min (300000 ms) | Maximum inactivity time for a borrowed client before the pool reclaims it. The timer resets on every command sent. The abandon monitor skips clients executing blocking commands. Set to 0 to disable (in Go, set to a negative value to disable; 0 means use default). |
+
+## Create a Pool
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClientConfiguration, NodeAddress
+    from glide import AsyncClientPool, PoolConfig
+
+    pool_config = PoolConfig(
+        max_size=10,
+        min_idle=2,
+        acquire_timeout_s=5.0,
+    )
+    client_config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
+    pool = await AsyncClientPool.create(client_config, pool_config)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.pool.ClientPool;
+    import glide.api.models.pool.ClientPoolConfig;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .maxSize(10)
+        .minIdle(2)
+        .acquireTimeout(Duration.ofSeconds(5))
+        .clientConfig(GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .build())
+        .build();
+
+    ClientPool pool = ClientPool.create(poolConfig);
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { ClientPool, GlideClientConfiguration } from '@valkey/valkey-glide';
+
+    const clientConfig: GlideClientConfiguration = {
+        addresses: [{ host: 'localhost', port: 6379 }],
+    };
+
+    const pool = await ClientPool.create(clientConfig, {
+        maxSize: 10,
+        minIdle: 2,
+        acquireTimeoutS: 5,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+        "time"
+    )
+
+    poolCfg := glide.PoolConfig{
+        MaxSize:        10,
+        MinIdle:        2,
+        AcquireTimeout: 5 * time.Second,
+    }
+    clientCfg := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
+
+    pool, err := glide.NewClientPool(clientCfg, poolCfg)
+    ```
+  </TabItem>
+</Tabs>
+
+## Borrow and Return Clients
+
+Acquire a client from the pool before use, and always release it when done. Use context managers or try/finally blocks to guarantee the client is returned even if an error occurs.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    async with pool.borrow() as client:
+        await client.set("key", "value")
+        result = await client.get("key")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    try (PooledGlideClient client = pool.acquire().get()) {
+        client.set("key", "value").get();
+        String result = client.get("key").get();
+    }
+    // client is automatically returned to the pool on close
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    Using `borrow()` (recommended):
+
+    ```typescript
+    const result = await pool.borrow(async (client) => {
+        await client.set('key', 'value');
+        return await client.get('key');
+    });
+    ```
+
+    Manual acquire/release:
+
+    ```typescript
+    const client = await pool.acquire();
+    try {
+        await client.set('key', 'value');
+        const result = await client.get('key');
+    } finally {
+        await pool.release(client);
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    clientID, err := pool.Acquire(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    client, err := pool.GetClient(clientID)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Close() // returns to pool
+
+    client.Set(ctx, "key", "value")
+    result, _ := client.Get(ctx, "key")
+    ```
+  </TabItem>
+</Tabs>
+
+## Pool Metrics
+
+Check the current state of the pool to monitor utilization and diagnose capacity issues.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    metrics = pool.metrics()
+    print(f"Idle: {metrics['idle']}, Active: {metrics['active']}, Total: {metrics['total']}")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    PoolMetrics metrics = pool.getMetrics();
+    System.out.println("Idle: " + metrics.getIdle()
+        + ", Active: " + metrics.getActive()
+        + ", Total: " + metrics.getTotal());
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const metrics = pool.getMetrics();
+    console.log(`Idle: ${metrics.idle}, Active: ${metrics.active}, Total: ${metrics.total}`);
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    fmt.Printf("Idle: %d, Active: %d, Total: %d\n",
+        pool.IdleCount(), pool.ActiveCount(), pool.TotalCount())
+    ```
+  </TabItem>
+</Tabs>
+
+## Abandon Detection
+
+The pool runs a background monitor that reclaims borrowed clients when they have been inactive beyond a configurable timeout. This prevents connection leaks when application code forgets to return a client.
+
+**How it works:**
+
+- The monitor scans at half the timeout interval (e.g., every 2.5 minutes with the default 5-minute timeout).
+- A borrowed client is reclaimed if no command has been sent to it within the threshold.
+- The inactivity timer resets on every command sent to the borrowed client.
+- Blocking commands (`BLPOP`, `BRPOP`, `XREAD BLOCK`, etc.) are automatically detected and excluded from reclaim.
+- When a client is reclaimed, the connection is discarded and a fresh one is created on the next `acquire()`.
+
+### Configure a Custom Timeout
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import PoolConfig
+
+    # Set abandon timeout to 1 minute
+    pool_config = PoolConfig(abandon_timeout_ms=60000)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.models.pool.ClientPoolConfig;
+    import java.time.Duration;
+
+    // Set abandon timeout to 1 minute
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .abandonTimeout(Duration.ofMinutes(1))
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Set abandon timeout to 1 minute
+    const pool = await ClientPool.create({
+        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+        abandonTimeoutMs: 60000,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Set abandon timeout to 1 minute
+    poolCfg := glide.PoolConfig{
+        AbandonTimeout: 1 * time.Minute,
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Disable Abandon Detection
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Disable abandon detection
+    pool_config = PoolConfig(abandon_timeout_ms=0)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Disable abandon detection
+    ClientPoolConfig poolConfig = ClientPoolConfig.builder()
+        .abandonTimeout(Duration.ZERO)
+        .build();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    // Disable abandon detection
+    const pool = await ClientPool.create({
+        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
+        abandonTimeoutMs: 0,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Disable abandon detection (use a negative value in Go)
+    poolCfg := glide.PoolConfig{
+        AbandonTimeout: -1 * time.Second,
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Close the Pool
+
+When your application shuts down, close the pool to release all connections.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    pool.close()
+
+    # Or use as an async context manager:
+    async with AsyncClientPool.create(config, pool_config) as pool:
+        async with pool.borrow() as client:
+            await client.set("key", "value")
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    pool.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    pool.close();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    pool.Close()
+    ```
+  </TabItem>
+</Tabs>
+
+## Limitations
+
+- **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
+- **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
+- **State reset on release:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` only if the connection has dirty state (e.g., an active `MULTI` or `WATCH`). Clean connections are returned directly to the idle set with no round-trip.
