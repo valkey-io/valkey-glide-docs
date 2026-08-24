@@ -17,7 +17,7 @@ Valkey GLIDE provides support for the following read strategies, allowing you to
 | [Prefer Replica](#prefer-replica)                                                   | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                          |
 | [AZ Affinity](#az-affinity)                                                         | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                    |
 | [AZ Affinity Replicas and Primary](#az-affinity-replicas-and-primary-read-strategy) | Spread the read requests among nodes within the client's availability zone in a round robin manner, prioritizing local replicas, then the local primary, and falling back to other replicas or the primary if needed. |
-| [AZ Affinity All Nodes](#az-affinity-all-nodes)                                     | Spread the read requests equally among all nodes (primary and replicas) within the client's availability zone in a round robin manner, falling back to a round robin across all nodes if none exist in the client's availability zone. |
+| [AZ Affinity All Nodes](#az-affinity-all-nodes)                                     | Spread the read requests equally among all nodes (primary and replicas) within the client's availability zone in a round robin manner, falling back to a round robin across all nodes if no node in the client's availability zone is available. |
 
 ### Prefer Replica
 
@@ -475,7 +475,7 @@ When using the AZ Affinity All Nodes read strategy, the `clientAz` setting is re
 
     client = await GlideClusterClient.create(client_config)
     await client.set("key1", "val1")
-    # get will be spread equally across the nodes (primary and replicas) in the same client's availability zone if they exist
+    # get will read from one of the nodes (primary or replicas) in the same client's availability zone if they exist
     await client.get("key1")
     ```
   </TabItem>
