@@ -121,3 +121,224 @@ The following are the configuration references for each Glide clients:
     ```
   </TabItem>
 </Tabs>
+
+### Client library identification
+
+Standalone and cluster configurations can customize the library name reported by `CLIENT INFO`.
+The library-name override replaces the binding’s default base name, while the client
+information tag appends attribution in parentheses. Non-empty library-name overrides and
+client information tags must contain only printable ASCII characters from `!` (U+0021)
+through `~` (U+007E), excluding `(` and `)`.
+
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Client</th>
+      <th scope="col">Default library name</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>Go</td>
+      <td><code>GlideGo</code></td>
+    </tr>
+
+    <tr>
+      <td>Java</td>
+      <td><code>GlideJava</code></td>
+    </tr>
+
+    <tr>
+      <td>Python async</td>
+      <td><code>GlidePy</code></td>
+    </tr>
+
+    <tr>
+      <td>Python sync</td>
+      <td><code>GlidePySync</code></td>
+    </tr>
+
+    <tr>
+      <td>Node.js</td>
+      <td><code>GlideJS</code></td>
+    </tr>
+  </tbody>
+</table>
+
+Choose the option that matches how the connection should be identified:
+
+* **Client information tag only (`client_info_tag` or `clientInfoTag`)** — Appends a
+  parenthesized tag while retaining GLIDE’s default identity, for example
+  `GlidePy(my-framework:1.2.3)`. This is recommended for libraries and frameworks that embed
+  GLIDE because it attributes the embedding layer while the connection still counts toward
+  GLIDE-level adoption metrics.
+* **Library-name override only (`lib_name` or `libName`)** — Replaces the default name, for
+  example `custom-client`. Use this only when the connection should be presented as a different
+  client, such as through a compatibility layer. The reported name no longer indicates that
+  GLIDE is underneath.
+* **Both** — Uses the library-name override as the base and appends the client information tag,
+  for example `custom-client(my-framework:1.2.3)`. This combination is uncommon.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    The asynchronous and synchronous clients use the same configuration fields:
+
+    ```python
+    from glide import (
+        GlideClientConfiguration,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+    )
+
+    standalone_config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        lib_name="custom-client",
+        client_info_tag="framework:1.2",
+    )
+
+    cluster_config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("localhost", 7001)],
+        lib_name="custom-client",
+        client_info_tag="framework:1.2",
+    )
+    ```
+
+    Invalid values raise `ValueError` when the configuration is constructed.
+
+    A dedicated asynchronous standalone monitor uses the same configuration:
+
+    ```python
+    from glide import MonitorClient
+
+    monitor = await MonitorClient.create(standalone_config)
+    try:
+        # Consume monitor messages.
+        pass
+    finally:
+        await monitor.aclose()
+    ```
+
+    The synchronous client provides the equivalent API:
+
+    ```python
+    from glide_sync import GlideClientConfiguration, MonitorClient, NodeAddress
+
+    standalone_config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        lib_name="custom-client",
+        client_info_tag="framework:1.2",
+    )
+
+    with MonitorClient.create(standalone_config) as monitor:
+        # Consume monitor messages.
+        pass
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    The asynchronous and synchronous clients use the same configuration methods:
+
+    ```java
+    GlideClientConfiguration standaloneConfig =
+            GlideClientConfiguration.builder()
+                    .address(
+                            NodeAddress.builder()
+                                    .host("localhost")
+                                    .port(6379)
+                                    .build())
+                    .libName("custom-client")
+                    .clientInfoTag("framework:1.2")
+                    .build();
+
+    GlideClusterClientConfiguration clusterConfig =
+            GlideClusterClientConfiguration.builder()
+                    .address(
+                            NodeAddress.builder()
+                                    .host("localhost")
+                                    .port(7001)
+                                    .build())
+                    .libName("custom-client")
+                    .clientInfoTag("framework:1.2")
+                    .build();
+    ```
+
+    Invalid values raise `IllegalArgumentException` when `libName` or `clientInfoTag` is called.
+
+    A dedicated standalone monitor uses the same configuration:
+
+    ```java
+    try (MonitorClient monitor = MonitorClient.create(standaloneConfig)) {
+        // Consume monitor messages.
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    The asynchronous and synchronous clients use the same configuration fields:
+
+    ```typescript
+    import {
+        GlideClientConfiguration,
+        GlideClusterClientConfiguration,
+    } from "@valkey/valkey-glide";
+
+    const standaloneConfig: GlideClientConfiguration = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        libName: "custom-client",
+        clientInfoTag: "framework:1.2",
+    };
+
+    const clusterConfig: GlideClusterClientConfiguration = {
+        addresses: [{ host: "localhost", port: 7001 }],
+        libName: "custom-client",
+        clientInfoTag: "framework:1.2",
+    };
+    ```
+
+    Invalid values cause client creation to reject with a `ConfigurationError`.
+
+    A dedicated standalone monitor uses the same configuration:
+
+    ```typescript
+    import { GlideMonitorClient } from "@valkey/valkey-glide";
+
+    const monitor = await GlideMonitorClient.create(standaloneConfig);
+
+    try {
+        // Consume monitor messages.
+    } finally {
+        await monitor.close();
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    The asynchronous and synchronous clients use the same configuration functions:
+
+    ```go
+    standaloneConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithLibName("custom-client").
+        WithClientInfoTag("framework:1.2")
+
+    clusterConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 7001}).
+        WithLibName("custom-client").
+        WithClientInfoTag("framework:1.2")
+    ```
+
+    Invalid values cause client creation to return an error.
+
+    A dedicated standalone monitor uses the same configuration:
+
+    ```go
+    monitor, err := glide.NewMonitorClient(standaloneConfig, nil)
+    if err != nil {
+        // Handle the connection error.
+        return
+    }
+    defer monitor.Close()
+    ```
+  </TabItem>
+</Tabs>
