@@ -131,7 +131,6 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     Console.WriteLine(result); // Hello, Valkey!
     ```
   </TabItem>
-
 </Tabs>
 
 ## Handling Inputs with KEYS and ARGV
@@ -219,7 +218,6 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
     var result = await client.ScriptInvokeAsync(script, options);
     ```
   </TabItem>
-
 </Tabs>
 
 #### Why Use KEYS and ARGV
@@ -311,7 +309,6 @@ values directly into the script would create unique scripts each time, preventin
     var result = await client.ScriptInvokeAsync(goodScript, options);
     ```
   </TabItem>
-
 </Tabs>
 
 :::tip[Large Data]
@@ -364,7 +361,6 @@ GLIDE then automatically caches scripts with each `invoke_script()` call.
     Console.WriteLine($"Script hash: {script.Hash}"); // SHA1 hash of the script
     ```
   </TabItem>
-
 </Tabs>
 
 Scripts with identical code produce identical hashes, enabling efficient caching and reuse.
@@ -411,7 +407,6 @@ Scripts with identical code produce identical hashes, enabling efficient caching
     System.Diagnostics.Debug.Assert(script1.Hash == script2.Hash); // Same hash
     ```
   </TabItem>
-
 </Tabs>
 
 :::caution[Script hashing is content-sensitive]
@@ -549,7 +544,6 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
             .WithArgs("John"));
     ```
   </TabItem>
-
 </Tabs>
 
 ### Explicit Routing
@@ -669,7 +663,6 @@ Adding a hash tag `{}` in the key allow you to specify the specific slot.
     var keys = new[] { "user:{1000}:name", "user:{1000}:email" };
     ```
   </TabItem>
-
 </Tabs>
 
 To lean more about hash tags, see the [documentation](https://valkey.io/topics/cluster-spec/#hash-tags).
@@ -777,7 +770,6 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     Console.WriteLine($"GET result: {results[1]}");  // script-value
     ```
   </TabItem>
-
 </Tabs>
 
 ## What's Next

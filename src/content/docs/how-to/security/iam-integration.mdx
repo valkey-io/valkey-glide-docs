@@ -14,10 +14,12 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 ## How It Works
 
 * GLIDE automatically generates **temporary authentication tokens** that are valid for **15 minutes**
-* GLIDE **refreshes the token every 5 minutes**. On failure, it retries with **exponential backoff** and keeps using the **last valid token** until refreshed
-* Each connection remains valid for up to **12 hours**. GLIDE automatically handles the **re-authentication**
-* GLIDE handles all **token management**, **refresh operations** and **re-authentication** behind the scenes
-* Manual option available via **`refreshIamToken`**
+* GLIDE **refreshes the token every 5 minutes** (default). On failure, it retries with **exponential backoff** and keeps using the **last valid token** until a new one is obtained
+* When a new token is available, GLIDE **updates the connection credentials on the next command** after a token refresh. The actual re-authentication (AUTH command) only happens during reconnection
+* During reconnection, GLIDE **checks whether the cached token has expired** (age ≥ 15 minutes). If so, it generates a fresh token before attempting to reconnect — ensuring a valid credential is used even when connections have been idle
+* GLIDE handles **re-authentication** automatically when required — for example, when ElastiCache or MemoryDB terminates a session after its maximum lifetime
+* GLIDE handles all **token management**, **refresh operations**, and **re-authentication** behind the scenes
+* On-demand token refresh is available via **`refreshIamToken`** (see [On-Demand Refresh](#on-demand-refresh) below)
 
 ## Required Setup
 
@@ -30,6 +32,10 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **service**: Either **ElastiCache** or **MemoryDB**
 * **region**: The AWS region where your cluster runs
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
+
+:::note
+If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time.
+:::
 
 ## Examples
 
@@ -149,9 +155,6 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
         }
       }
     });
-
-    // You can manually refresh the token too
-    await client.refreshIamToken();
     ```
   </TabItem>
 
@@ -212,6 +215,53 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 
     $client->close();
     ...
+    ```
+  </TabItem>
+</Tabs>
+
+## On-Demand Refresh
+
+You can call `refreshIamToken` (or language equivalent) at any time to immediately request a fresh token from AWS and update the internal token cache.
+
+:::note[What this does and does not do]
+`refreshIamToken` **generates a new token and caches it**. It does **not** immediately re-authenticate existing connections — the new token is applied on the next command or reconnection, whichever comes first.
+
+The method always returns `"OK"`. If AWS token generation fails, errors are logged internally and the previously cached token remains in use.
+:::
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    # Pre-warm the token cache before a maintenance window
+    await client.refresh_iam_token()
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    // Pre-warm the token cache before a maintenance window
+    client.refreshIamToken().get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```ts
+    // Pre-warm the token cache before a maintenance window
+    await client.refreshIamToken();
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    // Pre-warm the token cache before a maintenance window
+    _, err := client.RefreshIamToken(ctx)
+    ```
+  </TabItem>
+
+  <TabItem label="C#">
+    ```csharp
+    // Pre-warm the token cache before a maintenance window
+    await client.RefreshIamTokenAsync();
     ```
   </TabItem>
 </Tabs>
