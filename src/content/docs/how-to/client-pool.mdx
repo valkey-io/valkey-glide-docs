@@ -16,7 +16,7 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 | `max_size` / `maxSize` / `MaxSize` | int | 10 | Maximum number of client instances in the pool |
 | `min_idle` / `minIdle` / `MinIdle` | int | 1 | Number of clients to pre-warm at creation |
 | `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min | How long an idle client stays in the pool before eviction |
-| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (DISCARD, UNWATCH) when returning a client |
+| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (`DISCARD`, `SELECT`) when returning a client |
 | `acquire_timeout_s` / `acquireTimeoutS` / `AcquireTimeout` | duration | 5 sec | How long to wait for a client when the pool is exhausted |
 | `abandon_timeout_ms` / `abandonTimeoutMs` / `AbandonTimeout` | duration | 5 min (300000 ms) | Maximum inactivity time for a borrowed client before the pool reclaims it. The timer resets on every command sent. The abandon monitor skips clients executing blocking commands. Set to 0 to disable (in Go, set to a negative value to disable; 0 means use default). |
 
@@ -330,4 +330,5 @@ When your application shuts down, close the pool to release all connections.
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
-- **State reset on release:** When a client is returned, the pool sends `DISCARD` and `UNWATCH` only if the connection has dirty state (e.g., an active `MULTI` or `WATCH`). Clean connections are returned directly to the idle set with no round-trip.
+- **State reset is unconditional:** When a client is returned, the pool always sends `DISCARD` followed by `SELECT <configured database>`, even if the connection was never mutated. `DISCARD` also cancels any active `WATCH`. Skipping the round-trip for provably clean connections is planned but not yet implemented.
+- **Scopes do not outlive the pool:** Closing the pool invalidates any isolated scope still open on a borrowed client. Commands on such a scope fail rather than continuing to run on a connection the pool no longer owns.

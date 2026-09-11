@@ -181,6 +181,22 @@ The classic optimistic concurrency control pattern works as follows:
   </TabItem>
 </Tabs>
 
+## Blocking Commands
+
+Blocking commands honor their own blocking timeout rather than the client's request timeout, so `BLPOP key 0` blocks until an element arrives instead of failing when the request timeout elapses.
+
+If a blocking command does time out or its caller cancels it, the scope's connection is discarded on release instead of being returned to the pool. A server-side waiter may still be armed on it, and a later borrower could otherwise receive an element it never asked for.
+
+## Concurrent Scopes
+
+Each client keeps its own pool of scope connections, holding up to 64 concurrent scopes. Acquiring beyond that limit waits for one to be released rather than failing immediately, so release each scope as soon as its transaction completes — a context manager or `try`/`finally` is the safest way to guarantee that.
+
+## IAM Authentication
+
+When the parent client is configured for IAM authentication, a scope authenticates as the same IAM identity, and re-authenticates on its next command after the token rotates.
+
+Re-authentication is deferred while it cannot be sent — inside an open `MULTI` (where it would be queued and corrupt the `EXEC` reply) — and resumes afterwards. If re-authentication fails, the connection is discarded rather than reused, so a scope never continues on a connection that can no longer authenticate.
+
 ## Cluster Mode
 
 When using isolated scopes with a cluster client, keep the following in mind:
@@ -227,11 +243,14 @@ All keys used within a scope must hash to the same slot. If you attempt a cross-
 
 ### MOVED Handling
 
-If a `MOVED` redirect occurs during an active scope (for example, during a cluster rebalance), the `WATCH` detects this as a conflict and `EXEC` returns `null`. Your retry loop will handle this naturally — simply retry and the scope will connect to the new node for that slot.
+A scope's connection is pinned to the node that owned its slot when the scope was acquired. If the slot moves afterwards (for example during a rebalance), commands return a `MOVED` error rather than being redirected: a scope carries per-connection state such as `WATCH` keys and queued `MULTI` commands, and that state cannot follow a redirect to another node.
+
+Treat it like any other scope failure — release the scope and acquire a new one, which connects to the slot's current owner. The retry loop shown above handles this without special-casing.
 
 ## Limitations
 
-- **Blocking commands do not honor their timeout:** Blocking commands (`BLPOP key 0`, `BRPOP`, `XREAD BLOCK`, etc.) executed on a scoped connection currently time out at the client's configured request timeout instead of respecting the command's blocking timeout. This means `BLPOP key 0` (block forever) will fail after the request timeout expires. This will be fixed in a future release.
-- **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE` or `PSUBSCRIBE`. Use the main client for Pub/Sub.
-- **No MOVED/ASK redirects:** By design, scoped connections hold per-connection state and cannot follow redirects. Conflicts are surfaced as `EXEC` returning `null`.
+- **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE`, `PSUBSCRIBE`, or `SSUBSCRIBE`. Entering subscribed mode requires a dedicated message handler that a scope does not set up, so messages could never be delivered. Use the main client for Pub/Sub.
+- **No MOVED/ASK redirects:** By design, as described above — the error surfaces to the caller and the scope must be replaced.
+- **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
+- **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
