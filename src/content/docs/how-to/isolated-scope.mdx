@@ -3,7 +3,11 @@ title: Use Isolated Execution Scopes
 description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with optimistic concurrency control.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Preview Feature">
+Isolated Execution Scopes are in preview. The API may change in a future release without following normal semantic versioning guarantees, and known limitations are listed below.
+</Aside>
 
 An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
 
