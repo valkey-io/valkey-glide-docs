@@ -1,0 +1,260 @@
+---
+title: Use Isolated Execution Scopes
+description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with optimistic concurrency control.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="Preview Feature">
+Isolated Execution Scopes are in preview. The API may change in a future release without following normal semantic versioning guarantees, and known limitations are listed below.
+</Aside>
+
+An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
+
+Use isolated scopes when you need optimistic concurrency control (OCC) — for example, incrementing a counter only if no other client modified it, or implementing compare-and-swap patterns.
+
+## Acquire a Scope
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient
+
+    client = await GlideClient.create(config)
+
+    async with await client.scoped_connection(routing_key="my-key") as scope:
+        # Use scope for WATCH/MULTI/EXEC
+        pass
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.scope.IsolatedScope;
+
+    GlideClient client = GlideClient.createClient(config).get();
+
+    try (IsolatedScope scope = client.scopedConnection(
+            Duration.ofSeconds(5), "my-key").get()) {
+        // Use scope for WATCH/MULTI/EXEC
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
+    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
+
+    const client = await GlideClient.createClient(config);
+
+    // Build connection request bytes from the same config
+    const req = connection_request.ConnectionRequest.create({
+        addresses: [{ host: 'localhost', port: 6379 }],
+        requestTimeout: 5000,
+    });
+    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
+
+    const scope = await IsolatedScope.acquire(client, connReqBytes, 'my-key');
+    try {
+        // Use scope for WATCH/MULTI/EXEC
+    } finally {
+        scope.release();
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    scope, err := client.ScopedConnection(ctx, 5*time.Second, "my-key")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer scope.Close()
+    // Use scope for WATCH/MULTI/EXEC
+    ```
+  </TabItem>
+</Tabs>
+
+## Optimistic Locking with WATCH/MULTI/EXEC
+
+The classic optimistic concurrency control pattern works as follows:
+
+1. Acquire a scope
+2. `WATCH` the key(s) you intend to modify
+3. Read the current value
+4. Begin a `MULTI` transaction
+5. Write the new value
+6. `EXEC` — returns `null` if any watched key was modified by another client
+7. Retry if `EXEC` returned `null`
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient
+
+    client = await GlideClient.create(config)
+
+    max_retries = 10
+    for attempt in range(max_retries):
+        async with await client.scoped_connection(routing_key="counter") as scope:
+            await scope.watch("counter")
+            val = await scope.get("counter")
+            new_val = str(int(val or "0") + 1)
+            await scope.multi()
+            await scope.set("counter", new_val)
+            result = await scope.exec()
+            if result is not None:
+                break  # Success
+            # WATCH conflict — retry
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.scope.IsolatedScope;
+
+    GlideClient client = GlideClient.createClient(config).get();
+
+    for (int attempt = 0; attempt < 10; attempt++) {
+        try (IsolatedScope scope = client.scopedConnection(
+                Duration.ofSeconds(5), "counter").get()) {
+            scope.watch("counter").get();
+            String val = scope.get("counter").get();
+            int newVal = (val != null ? Integer.parseInt(val) : 0) + 1;
+            scope.multi().get();
+            scope.set("counter", String.valueOf(newVal)).get();
+            Object result = scope.exec().get();
+            if (result != null) break; // Success
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
+    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
+
+    const client = await GlideClient.createClient(config);
+    const req = connection_request.ConnectionRequest.create({
+        addresses: [{ host: 'localhost', port: 6379 }],
+        requestTimeout: 5000,
+    });
+    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const scope = await IsolatedScope.acquire(client, connReqBytes, 'counter');
+        try {
+            await scope.watch('counter');
+            const val = await scope.get('counter');
+            const newVal = String((parseInt(val ?? '0', 10)) + 1);
+            await scope.multi();
+            await scope.set('counter', newVal);
+            const result = await scope.exec();
+            if (result !== null) break; // Success
+        } finally {
+            scope.release();
+        }
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    for attempt := 0; attempt < 10; attempt++ {
+        scope, err := client.ScopedConnection(ctx, 5*time.Second, "counter")
+        if err != nil {
+            log.Fatal(err)
+        }
+
+        scope.Watch(ctx, "counter")
+        val, _ := scope.Get(ctx, "counter")
+        newVal := strconv.Itoa(atoi(val) + 1)
+        scope.Multi(ctx)
+        scope.Set(ctx, "counter", newVal)
+        result, _ := scope.Exec(ctx)
+        scope.Close()
+        if result != "" {
+            break // Success
+        }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Blocking Commands
+
+Blocking commands honor their own blocking timeout rather than the client's request timeout, so `BLPOP key 0` blocks until an element arrives instead of failing when the request timeout elapses.
+
+If a blocking command does time out or its caller cancels it, the scope's connection is discarded on release instead of being returned to the pool. A server-side waiter may still be armed on it, and a later borrower could otherwise receive an element it never asked for.
+
+## Concurrent Scopes
+
+Each client keeps its own pool of scope connections, holding up to 64 concurrent scopes. Acquiring beyond that limit waits for one to be released rather than failing immediately, so release each scope as soon as its transaction completes — a context manager or `try`/`finally` is the safest way to guarantee that.
+
+## IAM Authentication
+
+When the parent client is configured for IAM authentication, a scope authenticates as the same IAM identity, and re-authenticates on its next command after the token rotates.
+
+Re-authentication is deferred while it cannot be sent — inside an open `MULTI` (where it would be queued and corrupt the `EXEC` reply) — and resumes afterwards. If re-authentication fails, the connection is discarded rather than reused, so a scope never continues on a connection that can no longer authenticate.
+
+## Cluster Mode
+
+When using isolated scopes with a cluster client, keep the following in mind:
+
+### Routing Key
+
+Pass a `routing_key` when acquiring the scope. The key is used to determine which cluster node (via CRC16 slot hashing) the scope's dedicated connection targets.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    async with await client.scoped_connection(routing_key="user:123") as scope:
+        await scope.watch("user:123")
+        # ...
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    try (IsolatedScope scope = client.scopedConnection(
+            Duration.ofSeconds(5), "user:123").get()) {
+        scope.watch("user:123").get();
+        // ...
+    }
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    const scope = await IsolatedScope.acquire(client, connReqBytes, 'user:123');
+    ```
+  </TabItem>
+
+  <TabItem label="Go">
+    ```go
+    scope, _ := client.ScopedConnection(ctx, 5*time.Second, "user:123")
+    ```
+  </TabItem>
+</Tabs>
+
+### Same-Slot Requirement
+
+All keys used within a scope must hash to the same slot. If you attempt a cross-slot operation, the command will be rejected. Use hash tags (e.g., `{user:123}:name` and `{user:123}:email`) to ensure related keys land in the same slot.
+
+### MOVED Handling
+
+A scope's connection is pinned to the node that owned its slot when the scope was acquired. If the slot moves afterwards (for example during a rebalance), commands return a `MOVED` error rather than being redirected: a scope carries per-connection state such as `WATCH` keys and queued `MULTI` commands, and that state cannot follow a redirect to another node.
+
+Treat it like any other scope failure — release the scope and acquire a new one, which connects to the slot's current owner. The retry loop shown above handles this without special-casing.
+
+## Limitations
+
+- **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE`, `PSUBSCRIBE`, or `SSUBSCRIBE`. Entering subscribed mode requires a dedicated message handler that a scope does not set up, so messages could never be delivered. Use the main client for Pub/Sub.
+- **No MOVED/ASK redirects:** By design, as described above — the error surfaces to the caller and the scope must be replaced.
+- **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
+- **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
+- **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
