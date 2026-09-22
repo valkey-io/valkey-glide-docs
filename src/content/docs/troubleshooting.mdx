@@ -235,3 +235,68 @@ extension=valkey_glide
 ```
 
 Find your `php.ini` location with `php --ini` and restart your PHP service after making changes.
+
+## Using GLIDE with Forked Processes (Python)
+
+The GLIDE Python client is fork-safe. After `fork()`, child processes can create and use GLIDE clients normally. This is relevant when using frameworks that fork worker processes, such as:
+
+- PySpark workers
+- Python `multiprocessing` module
+- Celery with prefork pool
+- Gunicorn prefork workers
+
+:::caution
+Clients created **before** `fork()` cannot be reused in child processes. You must create a new client in each child process.
+:::
+
+### The Problem
+
+Previously, using GLIDE in forked child processes (e.g., PySpark, `multiprocessing`) would cause commands to hang indefinitely. GLIDE now detects forks and handles them properly.
+
+If you attempt to use a pre-fork client in a child process, you'll receive:
+
+```
+ClosingError: Cannot use a client created before fork(). Create a new client in the child process.
+```
+
+### Correct Pattern
+
+Each child process must create its own client instance:
+
+```python
+import asyncio
+import multiprocessing
+import os
+from glide import GlideClusterClient, GlideClusterClientConfiguration, NodeAddress
+
+def child_worker(addresses):
+    """Each child process must create its own client."""
+    async def run():
+        config = GlideClusterClientConfiguration(
+            addresses=[NodeAddress(host=h, port=p) for h, p in addresses],
+            request_timeout=5000,
+        )
+        client = await GlideClusterClient.create(config)
+        # Use the client normally
+        await client.set(f"key:{os.getpid()}", "value")
+        result = await client.get(f"key:{os.getpid()}")
+        await client.close()
+    asyncio.run(run())
+
+if __name__ == "__main__":
+    addresses = [("localhost", 6379)]
+
+    # Spawn child processes — each creates its own client
+    processes = []
+    for _ in range(4):
+        p = multiprocessing.Process(target=child_worker, args=(addresses,))
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
+```
+
+:::tip
+Do **not** pass a `GlideClusterClient` or `GlideClient` object to child processes or attempt to reuse one created in the parent. Always create a fresh client after forking.
+:::
