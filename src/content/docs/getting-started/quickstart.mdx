@@ -204,11 +204,14 @@ For testing against a live instance, update the `GlideClient` configurations.
   <TabItem label="Python">
     ```python
     import asyncio
-    from glide import GlideClient, NodeAddress
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
     async def main():
         # Create client configuration
-        client = GlideClient([NodeAddress("localhost", 6379)])
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = await GlideClient.create(config)
         
         try:
             # Test the connection
@@ -267,7 +270,7 @@ For testing against a live instance, update the `GlideClient` configurations.
 
     async function main() {
         // Create client configuration
-        const client = GlideClient.createClient({
+        const client = await GlideClient.createClient({
             addresses: [{ host: 'localhost', port: 6379 }]
         });
         
@@ -425,8 +428,6 @@ These options, and other interfaces, stay consistent between languages.
         addresses=[NodeAddress("localhost", 6379)],
         # Connection timeout (milliseconds)
         request_timeout=5000,
-        # Connection pool size
-        connection_backoff_max_delay=1000,
         # TLS configuration (if needed)
         use_tls=False,
         # Database selection (0-15 for Redis/Valkey)
@@ -444,9 +445,9 @@ These options, and other interfaces, stay consistent between languages.
             .port(6379)
             .build())
         // Connection timeout
-        .requestTimeout(Duration.ofSeconds(5))
+        .requestTimeout(5000)
         // TLS configuration (if needed)
-        .useTls(false)
+        .useTLS(false)
         // Database selection
         .databaseId(0)
         .build();
@@ -461,7 +462,7 @@ These options, and other interfaces, stay consistent between languages.
         // Connection timeout (milliseconds)
         requestTimeout: 5000,
         // TLS configuration (if needed)
-        useTls: false,
+        useTLS: false,
         // Database selection (0-15 for Redis/Valkey)
         databaseId: 0
     }
@@ -510,8 +511,7 @@ These options, and other interfaces, stay consistent between languages.
         ],
         // Advanced configuration
         advanced_config: [
-            'connection_timeout' => 5000,
-            'socket_timeout' => 3000
+            'connection_timeout' => 5000
         ]
     );
     ```

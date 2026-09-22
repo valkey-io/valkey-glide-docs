@@ -31,10 +31,13 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
   <TabItem label="Python">
     ```python
     import asyncio
-    from glide import GlideClient, NodeAddress
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
     async def string_operations():
-        client = GlideClient([NodeAddress("localhost", 6379)])
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = await GlideClient.create(config)
         
         try:
             # Set a key-value pair
@@ -88,7 +91,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     const { GlideClient } = require('@valkey/valkey-glide');
 
     async function stringOperations() {
-        const client = GlideClient.createClient({
+        const client = await GlideClient.createClient({
             addresses: [{ host: 'localhost', port: 6379 }]
         });
         
