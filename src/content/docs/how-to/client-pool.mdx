@@ -333,6 +333,7 @@ When your application shuts down, close the pool to release all connections.
 ## Limitations
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
+- **No per-client callbacks:** A pooled client config cannot use a custom IAM credentials provider (Java) or a custom address resolver (Java and Go). These are language-side callbacks the pool cannot forward to the connections it manages, so pool creation fails fast rather than silently signing with the default credential chain or connecting to an unresolved address. Resolve addresses ahead of time, and configure IAM without a custom provider.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
 - **State reset is unconditional:** When a client is returned, the pool always sends `DISCARD` followed by `SELECT <configured database>`, even if the connection was never mutated. `DISCARD` also cancels any active `WATCH`. Skipping the round-trip for provably clean connections is planned but not yet implemented.
 - **Scopes do not outlive the pool:** Closing the pool invalidates any isolated scope still open on a borrowed client. Commands on such a scope fail rather than continuing to run on a connection the pool no longer owns.
