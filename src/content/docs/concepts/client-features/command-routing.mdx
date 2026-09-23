@@ -47,7 +47,7 @@ Round-robin distributes requests, not measured CPU utilization. Concurrency, ret
 
 In standalone mode, AZ Affinity uses local replicas, then any available replicas, then the primary. AZ Affinity Replicas and Primary uses local replicas, then the local primary, but its final fallback rotates across **all** available primary and replica nodes. AZ Affinity All Nodes rotates equally across local primary and replicas, then all available nodes if no local node is available. Thus, equal local-primary participation alongside local replicas is new with AZ Affinity All Nodes; including the primary in the final standalone fallback pool is not.
 
-AZ Affinity All Nodes is included in Java and Python in **2.5.3-rc1**; the Go and Node implementations on `main` are not included in that RC. The AZ-independent All Nodes strategy is available in Java, Python, Go, and Node in 2.4.0 and later. For configuration examples and AZ requirements, see [Specify a Read Strategy](/how-to/connections/read-strategy/).
+AZ Affinity All Nodes is included in Java and Python in **2.5.3**; Go and Node support is planned for **2.6.0**. The AZ-independent All Nodes strategy is available in Java, Python, Go, and Node in 2.4.0 and later. For configuration examples and AZ requirements, see [Specify a Read Strategy](/how-to/connections/read-strategy/).
 
 ## Automatic Redirect Handling (MOVED and ASK)
 

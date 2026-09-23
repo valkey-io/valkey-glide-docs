@@ -269,8 +269,8 @@ When using the AZ Affinity read strategy, the `clientAz` setting is required to 
 All AZ strategies require the application's AZ: `clientAZ` in Java, `clientAz` in Node, `client_az` in Python, or `WithClientAZ` in Go. The value must match the node AZ information reported by the server. An incorrect nonempty AZ can match no nodes and cause cross-AZ fallback. AZ strategies are incompatible with standalone `readOnly` mode.
 :::
 
-:::caution[Java AZ validation in 2.5.3-rc1]
-Java 2.5.3-rc1 validates `clientAZ` for `AZ_AFFINITY`, `AZ_AFFINITY_REPLICAS_AND_PRIMARY`, and `AZ_AFFINITY_ALL_NODES`. A missing or empty value, including one that becomes empty after Java's `String.trim()`, causes `createClient` to throw `ConfigurationError` synchronously. Padded values such as `" us-east-1a "` are trimmed before use.
+:::caution[Java AZ validation in 2.5.3]
+Java 2.5.3 validates `clientAZ` for `AZ_AFFINITY`, `AZ_AFFINITY_REPLICAS_AND_PRIMARY`, and `AZ_AFFINITY_ALL_NODES`. A missing or empty value, including one that becomes empty after Java's `String.trim()`, causes `createClient` to throw `ConfigurationError` synchronously. Padded values such as `" us-east-1a "` are trimmed before use.
 
 When upgrading, correct existing configurations that omit the AZ: they could previously fall back silently to `PreferReplica`. Padded values could fail to match the intended AZ. Python, Go, and Node already reject missing or empty AZ values for their supported AZ strategies; Java additionally normalizes surrounding whitespace.
 :::
@@ -422,7 +422,7 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
 
 ### AZ Affinity Replicas and Primary Read Strategy
 
-When using the AZ Affinity Replicas and Primary read strategy, the `clientAz` setting is required to ensure that readonly commands are directed to replicas or the primary within the specified availability zone if they exist. Local replicas take priority over the local primary. In cluster mode, if neither is available, reads rotate across any available replicas and use the primary only when no replica is available. If the only available local node is the primary, it receives reads even when remote replicas are available.
+When using the AZ Affinity Replicas and Primary read strategy, the `clientAz` setting is required to ensure that readonly commands are directed to replicas or the primary within the specified availability zone if they exist. In cluster mode, reads prefer local replicas, then the local primary, then any available replica, and use the primary only when no replica is available. If the only available local node is the primary, it receives reads even when remote replicas are available.
 
 In standalone mode, the final fallback instead rotates across all available primary and replica nodes. Local replicas still take priority over the local primary.
 
@@ -584,7 +584,7 @@ Compared with AZ Affinity Replicas and Primary in cluster mode:
 Standalone clients use the same local-first, all-node rotation. However, including the primary in the final fallback pool is already the behavior of standalone AZ Affinity Replicas and Primary. See [command routing](/concepts/client-features/command-routing/#read-strategy) for the comparison.
 
 :::note[Release availability]
-AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3-rc1**. It is not available in their 2.5.0–2.5.2 releases. The examples below use the release candidate's API.
+AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3**. It is not available in their 2.5.0–2.5.2 releases.
 :::
 
 <Tabs syncKey="progLangInExamples">
@@ -634,13 +634,13 @@ AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3
 
   <TabItem label="Node">
     :::note[Release availability]
-    AZ Affinity All Nodes is not included in the Node 2.5.3-rc1 client. Its implementation has merged into `main` in [#7104](https://github.com/valkey-io/valkey-glide/pull/7104); use a release that includes it before configuring this strategy.
+    AZ Affinity All Nodes is not included in the Node 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#7104](https://github.com/valkey-io/valkey-glide/pull/7104).
     :::
   </TabItem>
 
   <TabItem label="Go">
     :::note[Release availability]
-    AZ Affinity All Nodes is not included in the Go 2.5.3-rc1 client. Its implementation has merged into `main` in [#6927](https://github.com/valkey-io/valkey-glide/pull/6927); use a release that includes it before configuring this strategy.
+    AZ Affinity All Nodes is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6927](https://github.com/valkey-io/valkey-glide/pull/6927).
     :::
   </TabItem>
 
