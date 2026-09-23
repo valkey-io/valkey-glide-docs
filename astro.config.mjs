@@ -181,6 +181,7 @@ export default defineConfig({
                 "how-to/connections/limit-inflight-requests",
                 "how-to/connections/periodic-checks",
                 "how-to/connections/read-strategy",
+                "how-to/connections/recovery-queue",
                 "how-to/connections/resilience-best-practices",
                 "how-to/connections/timeouts-and-reconnect-strategy",
               ],
