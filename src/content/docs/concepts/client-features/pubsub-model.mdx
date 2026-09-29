@@ -74,7 +74,7 @@ Dynamic subscriptions allow you to subscribe and unsubscribe at runtime without 
 | Unsubscribe from patterns | `punsubscribe(patterns, timeout_ms)` | `punsubscribe_lazy(patterns)` |
 | Unsubscribe from sharded channels (cluster only) | `sunsubscribe(channels, timeout_ms)` | `sunsubscribe_lazy(channels)` |
 
-*NOTE: Method naming varies by language (e.g., `subscribeLazy` in Java/Node.js/Go, `subscribe_lazy` in Python). To unsubscribe from all channels/patterns, pass `None`/`null`/empty or use the constants `ALL_CHANNELS`, `ALL_PATTERNS`, `ALL_SHARDED_CHANNELS`.*
+*NOTE: Method naming varies by language (e.g., `subscribeLazy` in Java/Node.js/Go, `subscribe_lazy` in Python and Ruby). To unsubscribe from all channels/patterns, pass `None`/`null`/empty or use the constants `ALL_CHANNELS`, `ALL_PATTERNS`, `ALL_SHARDED_CHANNELS`.
 
 Dynamic subscriptions work with both static and dynamic subscriptions — you can use `unsubscribe` to remove a channel that was originally defined in the static config.
 
