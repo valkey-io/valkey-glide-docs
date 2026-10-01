@@ -305,12 +305,12 @@
   {
     "group": "Search",
     "commands": [
-      { "command": "FT.AGGREGATE", "valkey-io": "/commands/ft.aggregate", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" },
-      { "command": "FT.CREATE", "valkey-io": "/commands/ft.create", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" },
-      { "command": "FT.DROPINDEX", "valkey-io": "/commands/ft.dropindex", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" },
-      { "command": "FT.INFO", "valkey-io": "/commands/ft.info", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" },
-      { "command": "FT.SEARCH", "valkey-io": "/commands/ft.search", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" },
-      { "command": "FT._LIST", "valkey-io": "/commands/ft._list", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby-href": "https://github.com/valkey-io/valkey-glide-ruby/issues/234", "ruby": "not_available" }
+      { "command": "FT.AGGREGATE", "valkey-io": "/commands/ft.aggregate", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.CREATE", "valkey-io": "/commands/ft.create", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.DROPINDEX", "valkey-io": "/commands/ft.dropindex", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.INFO", "valkey-io": "/commands/ft.info", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.SEARCH", "valkey-io": "/commands/ft.search", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT._LIST", "valkey-io": "/commands/ft._list", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" }
     ]
   },
   {
