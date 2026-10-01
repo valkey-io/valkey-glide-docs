@@ -362,10 +362,6 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
   </TabItem>
 
   <TabItem label="Ruby">
-    :::note
-    Search is available starting in the Ruby client 1.1. In cluster mode, `ft_create` and `ft_drop_index` run on all primaries. `ft_search` and `ft_aggregate` return matches from the whole cluster only when the Search module runs with `--use-coordinator`; otherwise they return matches from the receiving shard only.
-    :::
-
     ```ruby
     require "valkey"
 
