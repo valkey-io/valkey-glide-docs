@@ -340,6 +340,36 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
   </TabItem>
 </Tabs>
 
+### Configure node discovery in PHP
+
+For standalone PHP clients, use `node_discovery_mode` to control how the client identifies the primary and replicas:
+
+* `ValkeyGlide::NODE_DISCOVERY_MODE_STANDARD` is the default. It verifies node roles with `INFO REPLICATION` and uses only the addresses you provide.
+* `ValkeyGlide::NODE_DISCOVERY_MODE_STATIC` trusts the provided addresses without checking their roles. The first address is treated as the primary. Use this mode when connecting through a proxy such as Envoy or HAProxy that does not support `INFO`.
+* `ValkeyGlide::NODE_DISCOVERY_MODE_DISCOVER_ALL` discovers the primary and all replicas from any starting node.
+
+To connect through a proxy without role discovery:
+
+```php
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'proxy.example.com', 'port' => 6379]],
+    node_discovery_mode: ValkeyGlide::NODE_DISCOVERY_MODE_STATIC
+);
+```
+
+To discover the complete standalone topology from one node:
+
+```php
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'node.example.com', 'port' => 6379]],
+    node_discovery_mode: ValkeyGlide::NODE_DISCOVERY_MODE_DISCOVER_ALL
+);
+```
+
+`node_discovery_mode` applies only to `ValkeyGlide` standalone clients. When using `STATIC` mode through a proxy, do not set `client_name`.
+
 ## Configuration Options
 
 GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface
