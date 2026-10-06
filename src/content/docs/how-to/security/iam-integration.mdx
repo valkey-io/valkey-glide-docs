@@ -34,7 +34,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 :::note
-If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time.
+If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time (`Valkey::CommandError` in Ruby).
 :::
 
 ## Examples
@@ -217,6 +217,29 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
     ...
     ```
   </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    require "valkey"
+
+    # Configure IAM authentication
+    # Automatically regenerates the token every 5 mins (default: 300 seconds)
+    iam_config = Valkey::IamAuthConfig.new(
+      cluster_name: "clustername",
+      service: Valkey::ServiceType::ELASTICACHE, # or Valkey::ServiceType::MEMORYDB
+      region: "us-east-1"
+      # refresh_interval_seconds: 100 # Optional, default is 300 seconds
+    )
+
+    client = Valkey.new(
+      nodes: [{ host: "endpoint.example.com", port: 6379 }],
+      cluster_mode: true,
+      ssl: true,
+      username: "username",
+      iam_config: iam_config # cannot be combined with password:
+    )
+    ```
+  </TabItem>
 </Tabs>
 
 ## On-Demand Refresh
@@ -262,6 +285,13 @@ The method always returns `"OK"`. If AWS token generation fails, errors are logg
     ```csharp
     // Pre-warm the token cache before a maintenance window
     await client.RefreshIamTokenAsync();
+    ```
+  </TabItem>
+
+  <TabItem label="Ruby">
+    ```ruby
+    # Pre-warm the token cache before a maintenance window
+    client.refresh_iam_token
     ```
   </TabItem>
 </Tabs>
