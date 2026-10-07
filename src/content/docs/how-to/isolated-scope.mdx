@@ -6,7 +6,7 @@ description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with op
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Preview Feature">
-Isolated Execution Scopes are in preview. The API may change in a future release without following normal semantic versioning guarantees, and known limitations are listed below.
+Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
 </Aside>
 
 An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
@@ -253,8 +253,22 @@ Treat it like any other scope failure — release the scope and acquire a new on
 
 ## Limitations
 
+The following apply to the preview release.
+
+### By design
+
+These are intentional constraints for this release. Design your application around them.
+
 - **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE`, `PSUBSCRIBE`, or `SSUBSCRIBE`. Entering subscribed mode requires a dedicated message handler that a scope does not set up, so messages could never be delivered. Use the main client for Pub/Sub.
 - **No MOVED/ASK redirects:** By design, as described above — the error surfaces to the caller and the scope must be replaced.
+- **Single slot per scope in cluster mode:** Once a scope issues `WATCH`, it is pinned to the slot it acquired. Commands that route to a different slot are rejected, matching the server's requirement that `WATCH` and its `MULTI`/`EXEC` target the same slot.
 - **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
 - **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
+
+### Known issues
+
+These are being tracked and are expected to be resolved in a future release.
+
+- **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a scope, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.
+- **TLS is not yet enforced for IAM authentication:** IAM-authenticated scoped connections are not required to use TLS. Configure TLS explicitly when using IAM auth.

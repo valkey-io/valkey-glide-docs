@@ -6,7 +6,7 @@ description: Manage a pool of reusable GLIDE client connections for high-concurr
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Preview Feature">
-Client Pool is in preview. The API may change in a future release without following normal semantic versioning guarantees, and known limitations are listed below.
+Client Pool is a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
 </Aside>
 
 The Client Pool manages a set of reusable GLIDE client instances that can be borrowed and returned on demand. Use it when your application needs high concurrency, runs blocking commands like `BLPOP`, `BRPOP`, or `XREAD BLOCK` that tie up a connection, or requires connection isolation between independent workflows.
@@ -332,8 +332,25 @@ When your application shuts down, close the pool to release all connections.
 
 ## Limitations
 
-- **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation because `UNSUBSCRIBE` cannot be reliably sent during state reset.
-- **No per-client callbacks:** A pooled client config cannot use a custom IAM credentials provider (Java) or a custom address resolver (Java and Go). These are language-side callbacks the pool cannot forward to the connections it manages, so pool creation fails fast rather than silently signing with the default credential chain or connecting to an unresolved address. Resolve addresses ahead of time, and configure IAM without a custom provider.
+The following apply to the preview release.
+
+### By design
+
+These are intentional constraints for this release. Design your application around them.
+
+- **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation, because subscription state cannot be reliably reset when the client is returned. Use a dedicated client for Pub/Sub.
+- **No custom per-client callbacks:** A pooled client config cannot use a language-side callback such as a custom IAM credentials provider or a custom address resolver. Pool creation fails fast rather than silently signing with the default credential chain or connecting to an unresolved address. Resolve addresses ahead of time, and configure IAM without a custom provider.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
-- **State reset is unconditional:** When a client is returned, the pool always sends `DISCARD` followed by `SELECT <configured database>`, even if the connection was never mutated. `DISCARD` also cancels any active `WATCH`. Skipping the round-trip for provably clean connections is planned but not yet implemented.
+- **No automatic pool sharing:** Each call that creates a pool produces an independent pool. Two pools built from the same configuration are not deduplicated or shared. Hold and reuse the pool you created wherever you need it.
 - **Scopes do not outlive the pool:** Closing the pool invalidates any isolated scope still open on a borrowed client. Commands on such a scope fail rather than continuing to run on a connection the pool no longer owns.
+
+### Known issues
+
+These are being tracked and are expected to be resolved in a future release.
+
+- **Cluster pools do not reuse connections yet:** In cluster mode, a borrowed client's connection is currently discarded on release instead of being returned to the pool for reuse. Standalone pools reuse connections as expected.
+- **State reset is unconditional:** When a client is returned, the pool resets connection state even if the connection was never mutated. Skipping this work for provably clean connections is planned but not yet implemented.
+- **Python can hang after release in cluster mode:** A routed command issued on an ordinary cluster client can hang after a pool borrow is released. Avoid reusing a cluster client for routed commands immediately after returning a borrow.
+- **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a borrowed client, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.
+- **Java `close()` affects shared runtime state:** Closing a pool in Java can tear down JVM-wide GLIDE runtime state and affect unrelated clients. Avoid closing a pool while other GLIDE clients are in use in the same process.
+- **TLS is not yet enforced for IAM authentication:** IAM-authenticated connections are not required to use TLS. Configure TLS explicitly when using IAM auth.
