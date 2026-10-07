@@ -1,0 +1,118 @@
+---
+title: Supported Features
+description: A list of supported features in the GLIDE Jedis 4.x Compatibility Layer.
+sidebar:
+  order: 3
+
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Supported Features
+
+### Client Types
+
+* ✅ `Jedis` — Basic client
+* ✅ `JedisPool` — Connection pooling with `GenericObjectPoolConfig<Jedis>`
+* ✅ `JedisPooled` — Pooled client with `GenericObjectPoolConfig<Connection>` (Jedis 4.x style)
+* ✅ `JedisCluster` — Cluster client with `Set<HostAndPort>` initialization
+* ✅ `UnifiedJedis` — Unified interface for standalone and cluster operations
+
+### Core Commands
+
+* ✅ Basic string operations (GET, SET, MGET, MSET, APPEND, INCR, DECR, etc.)
+* ✅ Hash operations (HGET, HSET, HMGET, HMSET, HDEL, HGETALL, etc.)
+* ✅ List operations (LPUSH, RPUSH, LPOP, RPOP, LRANGE, LLEN, etc.)
+* ✅ Set operations (SADD, SREM, SMEMBERS, SISMEMBER, etc.)
+* ✅ Sorted set operations (ZADD, ZREM, ZRANGE, ZSCORE, etc.)
+* ✅ Key operations (DEL, EXISTS, EXPIRE, TTL, KEYS, SCAN, etc.)
+* ✅ Connection commands (PING, SELECT, AUTH)
+* ✅ Generic commands via `sendCommand()` (Protocol.Command types only)
+
+### Advanced Features
+
+* ✅ Transactions (MULTI/EXEC)
+* ✅ Pipelining
+* ✅ Pub/Sub (publish/subscribe)
+* ✅ Cluster mode (standalone and cluster deployment)
+
+### Configuration
+
+* ✅ Host and port configuration
+* ✅ Basic authentication (username/password)
+* ✅ Database selection
+* ✅ Connection timeout
+* ✅ Socket timeout
+* ✅ SSL/TLS via `ssl(true)` and `rediss://` URIs (system trust store)
+
+<Aside type="note" title="Pool configuration">
+  Connection pool settings (`maxTotal`, `maxIdle`, `minIdle`, eviction policies, etc.) are accepted for API compatibility but **ignored at runtime**. GLIDE manages connection pooling internally with its own optimized strategy.
+</Aside>
+
+## Key Differences from Jedis 5.x Compatibility Layer
+
+| Feature | Jedis 4.x Layer | Jedis 5.x Layer |
+|---|---|---|
+| `JedisPooled` generic type | `GenericObjectPoolConfig<Connection>` | `GenericObjectPoolConfig<Object>` |
+| Protocol | RESP2 only | RESP2 (default) or RESP3 |
+| `.protocol()` / `getRedisProtocol()` | Present for source compatibility; **ignored** | Honored |
+| Target Jedis version | 4.0.x – 4.4.x | 5.0.x – 5.2.x |
+| Platform classifier | Required | Not required (since 2.4.0) |
+
+## Unsupported Features
+
+### SSL/TLS Limitations
+
+* ❌ Custom `SSLSocketFactory`
+* ❌ Custom `HostnameVerifier`
+* ❌ Keystore / truststore resources on `SslOptions`
+* ❌ Custom cipher suites
+* ❌ TLS protocol version selection
+* ❌ Client-auth flags on `SSLParameters`
+* ❌ Endpoint identification algorithms (custom)
+
+<Aside type="caution" title="Unsupported SSL throws at creation time">
+  If your Jedis 4.x app sets any of the unsupported SSL/TLS options above, client creation will throw `JedisConfigurationException`. Migrate those call sites to system-truststore TLS or to native GLIDE client configuration before swapping the dependency.
+</Aside>
+
+### Authentication Limitations
+
+* ❌ `AuthXManager` — Not supported
+* ❌ Custom `RedisCredentialsProvider` implementations
+
+### Connection Management
+
+* ⚠️ Pool configuration values are accepted but **ignored** (GLIDE manages pooling internally)
+* ❌ Custom `JedisSocketFactory` implementations (accepted but not used)
+* ❌ Connection validation / health checks (Jedis-style)
+
+### Protocol Limitations
+
+* ❌ RESP3 protocol — Always uses RESP2
+* ⚠️ `.protocol(RESP3)` compiles but is ignored; connection always negotiates RESP2
+
+### Other Limitations
+
+* ❌ Custom serializers
+* ❌ Jedis-specific retry logic
+* ❌ Custom `ProtocolCommand` implementations (only `Protocol.Command` types via `sendCommand()`)
+
+## Deployment Modes
+
+| Mode | Supported |
+|---|---|
+| Standalone | ✅ |
+| Cluster | ✅ |
+| Sentinel | ⚠️ Limited |
+
+## Platform Support
+
+The Jedis 4.x compatibility layer requires a platform-specific classifier:
+
+| Platform | Classifier |
+|---|---|
+| macOS ARM64 (Apple Silicon) | `osx-aarch_64` |
+| macOS x86_64 (Intel) | `osx-x86_64` |
+| Linux ARM64 | `linux-aarch_64` |
+| Linux x86_64 | `linux-x86_64` |
+| Windows x86_64 | `win32-x86-64` |

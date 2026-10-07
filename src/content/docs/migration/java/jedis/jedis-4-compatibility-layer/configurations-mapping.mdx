@@ -1,0 +1,104 @@
+---
+title: Configuration Mapping
+description: Configuration mapping between Jedis 4.x and the GLIDE Jedis 4.x Compatibility Layer.
+sidebar:
+  order: 4
+
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page describes how Jedis 4.x configuration parameters map to Valkey GLIDE configuration when using the Jedis 4.x Compatibility Layer.
+
+## Configuration Overview
+
+The following Jedis 4.x configuration parameters are:
+
+* **Successfully Mapped**: user, password, clientName, ssl, connectionTimeoutMillis, socketTimeoutMillis, database.
+* **Accepted but Ignored**: redisProtocol (always RESP2), pool configuration values.
+* **Not Supported**: Custom SSLSocketFactory, HostnameVerifier, keystore/truststore, cipher suites, TLS protocol versions, client-auth, AuthXManager, custom RedisCredentialsProvider.
+
+## Parameter Mappings
+
+### `DefaultJedisClientConfig` Parameters
+
+| Jedis 4.x Parameter | GLIDE Mapping | Notes |
+|---|---|---|
+| `user` | `ServerCredentials.username` | Fully supported |
+| `password` | `ServerCredentials.password` | Fully supported |
+| `clientName` | `BaseClientConfiguration.clientName` | Fully supported |
+| `ssl` | `BaseClientConfiguration.useTLS` | System trust store only |
+| `connectionTimeoutMillis` | `AdvancedBaseClientConfiguration.connectionTimeout` | Fully supported |
+| `socketTimeoutMillis` | `BaseClientConfiguration.requestTimeout` | Fully supported |
+| `database` | Handled via SELECT command after connection | Fully supported |
+| `redisProtocol` / `getRedisProtocol()` | Ignored | Always RESP2; exists for source compatibility |
+
+### Pool Configuration Parameters
+
+<Aside type="note" title="Pool config is accepted but ignored">
+  GLIDE manages connection pooling internally. Apache Commons Pool settings are accepted at the API level for compatibility but have no effect on GLIDE's behavior.
+</Aside>
+
+| Jedis 4.x Pool Parameter | GLIDE Behavior |
+|---|---|
+| `maxTotal` | Ignored — GLIDE manages pool size internally |
+| `maxIdle` | Ignored |
+| `minIdle` | Ignored |
+| `maxWaitMillis` | Ignored |
+| `testOnBorrow` | Ignored |
+| `testOnReturn` | Ignored |
+| `testWhileIdle` | Ignored |
+| `timeBetweenEvictionRunsMillis` | Ignored |
+| `numTestsPerEvictionRun` | Ignored |
+| `minEvictableIdleTimeMillis` | Ignored |
+| `blockWhenExhausted` | Ignored |
+
+### Pool Type Differences
+
+| Client | Jedis 4.x Pool Type | Jedis 5.x Pool Type |
+|---|---|---|
+| `JedisPool` | `GenericObjectPoolConfig<Jedis>` | `GenericObjectPoolConfig<Jedis>` |
+| `JedisPooled` | `GenericObjectPoolConfig<Connection>` | `GenericObjectPoolConfig<Object>` |
+
+Both types are accepted by this compatibility layer and both are ignored internally.
+
+## SSL/TLS Configuration
+
+### Supported
+
+| Configuration | Example |
+|---|---|
+| Enable TLS (system trust store) | `DefaultJedisClientConfig.builder().ssl(true).build()` |
+| `rediss://` URI scheme | `new JedisPooled("rediss://localhost:6380")` |
+| Insecure mode (testing only) | `SslOptions.builder().sslVerifyMode(SslVerifyMode.INSECURE).build()` |
+
+### Not Supported (throws `JedisConfigurationException`)
+
+| Configuration | Alternative |
+|---|---|
+| Custom `SSLSocketFactory` | Use system trust store or native GLIDE config |
+| Custom `HostnameVerifier` | Use system trust store or `SslVerifyMode.INSECURE` for testing |
+| Keystore / truststore on `SslOptions` | Install certificates in the system trust store |
+| Custom cipher suites | GLIDE auto-selects secure ciphers |
+| TLS protocol version selection | GLIDE auto-selects TLS 1.2+ |
+| Client-auth flags on `SSLParameters` | Use username/password authentication |
+
+## Cluster Configuration
+
+### `JedisCluster` Constructor Parameters
+
+| Parameter | GLIDE Mapping | Notes |
+|---|---|---|
+| `Set<HostAndPort> nodes` | Cluster node addresses | Fully supported |
+| `connectionTimeout` | Connection timeout | Fully supported |
+| `soTimeout` | Socket/request timeout | Fully supported |
+| `maxAttempts` | Retry configuration | Mapped to GLIDE retry strategy |
+| `password` | Authentication credentials | Fully supported |
+| `clientName` | Client name | Fully supported |
+
+## Key Migration Insights
+
+1. **Pool configuration doesn't matter**: GLIDE's internal connection management is optimized and ignores pool settings. This is usually an improvement over manually tuned pools.
+2. **Protocol is always RESP2**: The `.protocol()` method exists for source compatibility with shared config types, but GLIDE always negotiates RESP2 in this layer. For RESP3, use the Jedis 5.x layer.
+3. **SSL simplified**: GLIDE uses system certificate stores with secure defaults (TLS 1.2+, modern cipher suites). Custom SSL configuration must be migrated to system-level trust or to native GLIDE APIs.
+4. **Timeouts map directly**: Connection and socket timeouts are mapped to GLIDE's equivalent timeout settings with the same semantics.
