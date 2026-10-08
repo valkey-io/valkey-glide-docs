@@ -12,9 +12,9 @@
 #   timeout         — per-request network timeout in seconds.
 #
 # With these values lychee will spend up to ~7 minutes retrying a single URL
-# before giving up, instead of giving up after ~93 seconds. The CI workflow
-# *also* retries the whole step once on top of this, so a real broken link
-# still fails the build promptly while a transient network issue doesn't.
+# before giving up, instead of giving up after ~93 seconds. The external-link
+# workflow *also* retries the whole step once on top of this, so a real broken
+# link still fails the check while a transient network issue doesn't.
 max_retries     = 6
 retry_wait_time = 10
 timeout         = 60
