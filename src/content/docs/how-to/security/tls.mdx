@@ -996,8 +996,9 @@ Prefer path-based mTLS with a key file whose read permissions are restricted to 
 In-memory PEM bytes must come from a secret store, not from source.
 :::
 
-mTLS still requires TLS to be enabled on the top-level client configuration (`use_tls=True` in Python, `.useTLS(true)` in Java, `useTLS: true` in Node.js, `.WithUseTLS(true)` in Go).
+mTLS still requires TLS to be enabled on the top-level client configuration (`use_tls=True` in Python, `.useTLS(true)` in Java, `useTLS: true` in Node.js, `.WithUseTLS(true)` in Go, or `use_tls: true` in PHP).
 The advanced TLS configuration only supplies the client-side material; it does not enable TLS on its own.
+In PHP, configure mTLS through `advanced_config['tls_config']`; client certificates and keys in a PHP stream context are not used for mTLS.
 
 Reload behavior applies to path-based modes only.
 The GLIDE core reads the certificate and key from disk at connect time and re-reads them on a schedule so a rotated certificate is picked up on the next reconnect.
@@ -1161,9 +1162,22 @@ The material is read once at connect time and does not reload.
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Coming soon]
-    Mutual TLS is not yet available in the PHP client.
-    :::
+    ```php
+    // Load PEM strings from a secret store.
+    $clientCert = "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...";
+    $clientKey = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD...";
+
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: [
+            'tls_config' => [
+                'client_cert' => $clientCert,
+                'client_key' => $clientKey,
+            ]
+        ]
+    );
+    ```
   </TabItem>
 </Tabs>
 
@@ -1298,9 +1312,18 @@ Rotated material is picked up on the next reconnect after a successful reload.
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Coming soon]
-    Mutual TLS is not yet available in the PHP client.
-    :::
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: [
+            'tls_config' => [
+                'client_cert_path' => '/etc/glide/client.pem',
+                'client_key_path' => '/etc/glide/client.key',
+            ]
+        ]
+    );
+    ```
   </TabItem>
 </Tabs>
 
@@ -1440,9 +1463,19 @@ Pass a positive whole number of seconds to override the core default cadence.
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Coming soon]
-    Mutual TLS is not yet available in the PHP client.
-    :::
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: [
+            'tls_config' => [
+                'client_cert_path' => '/etc/glide/client.pem',
+                'client_key_path' => '/etc/glide/client.key',
+                'cert_reload_interval_seconds' => 60,
+            ]
+        ]
+    );
+    ```
   </TabItem>
 </Tabs>
 
@@ -1603,15 +1636,28 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
   </TabItem>
 
   <TabItem label="PHP">
-    :::note[Coming soon]
-    Mutual TLS is not yet available in the PHP client.
-    :::
+    ```php
+    $clientCert = file_get_contents('/etc/glide/client.pem');
+    $clientKey = file_get_contents('/etc/glide/client.key');
+
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'primary.example.com', 'port' => 6379]],
+        use_tls: true,
+        advanced_config: [
+            'tls_config' => [
+                'client_cert' => $clientCert,
+                'client_key' => $clientKey,
+            ]
+        ]
+    );
+    ```
   </TabItem>
 </Tabs>
 
 #### Common Pitfalls
 
-* **mTLS still needs TLS enabled at the top level.** The advanced TLS configuration only supplies the client-side material; without TLS on the base client configuration (`use_tls=True`, `.useTLS(true)`, `useTLS: true`, or `.WithUseTLS(true)`), the client connects in plaintext and the mTLS material is not used.
+* **mTLS still needs TLS enabled at the top level.** The advanced TLS configuration only supplies the client-side material; without TLS on the base client configuration (`use_tls=True`, `.useTLS(true)`, `useTLS: true`, `.WithUseTLS(true)`, or `use_tls: true` in PHP), the client connects in plaintext and the mTLS material is not used.
 * **Path-based and byte-based mTLS are mutually exclusive.** Supplying both a certificate/key path and inline PEM bytes on the same configuration is a configuration error in every SDK.
 * **Sub-second, zero, negative, and oversized reload intervals are rejected.** The custom interval is validated at configuration time: it must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years). If you want static mTLS from files, load the bytes yourself with the file-loading helper and use the byte-based mode.
 * **Byte-based mTLS is static.** The material is read once at connect time and never reloads. Use a path-based mode when the certificate rotates.
