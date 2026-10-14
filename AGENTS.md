@@ -201,3 +201,89 @@ pnpm run format:check
 pnpm run format:check:non-mdx   # Non-content files only
 pnpm run format:check:mdx       # Markdown/MDX content only
 ```
+
+## Supported Client Features Page
+
+The supported client features page is **reference** content comparing high-level capabilities and dedicated APIs across GLIDE clients.
+
+### Files
+
+- `src/content/docs/reference/supported-features.mdx` — validates the data and renders the client comparison tables
+- `src/data/supported-features/features.json` — canonical feature catalog
+- `src/data/supported-features/<language>.json` — one support manifest per client
+- `astro.config.mjs` — contains the Reference sidebar entry
+
+### Feature Catalog (`src/data/supported-features/features.json`)
+
+The catalog controls group membership, display order, names, descriptions, and documentation links:
+
+```json
+{
+  "schemaVersion": 1,
+  "groups": {
+    "core": {
+      "displayName": "General",
+      "description": "Standalone client capabilities.",
+      "docs": null,
+      "features": {
+        "batching": {
+          "displayName": "Batching",
+          "description": "Executes multiple commands through the Batch API.",
+          "docs": "/concepts/client-features/batch-commands/"
+        }
+      }
+    }
+  }
+}
+```
+
+- Group and feature keys use `snake_case`.
+- Feature keys must be unique across the entire catalog because client manifests use a flat list.
+- Catalog order determines group and feature order on the page.
+- Adding a catalog feature makes it appear as unsupported for every client until its manifest includes the feature key.
+- Documentation paths are site-relative. Feature links are not currently rendered.
+
+Group headings in the MDX page are static H3 headings so Starlight includes them in the page navigation. When adding, removing, or renaming a catalog group, update the corresponding heading and `<FeatureTable>` call in `supported-features.mdx`.
+
+### Client Manifests (`src/data/supported-features/<language>.json`)
+
+Each client manifest contains metadata and a flat list of supported feature keys:
+
+```json
+{
+  "schemaVersion": 6,
+  "featureCatalogVersion": 1,
+  "language": "java",
+  "displayName": "Java",
+  "version": "2.5.3",
+  "async": true,
+  "features": ["batching", "cluster_scan"]
+}
+```
+
+- A feature is supported when its key is present in `features`.
+- A missing feature key means the feature is not supported.
+- Do not copy catalog groups or store boolean support values in a client manifest.
+- `featureCatalogVersion` must match `features.json` `schemaVersion`.
+- The order of keys in `features` does not affect page rendering.
+- Keep `version` current because support status is version-specific.
+
+### Rendering and Validation
+
+The MDX page builds the complete grouped feature model from the catalog, then annotates each feature with support from every client manifest. The `clientManifests` array controls which clients appear and their column order.
+
+The page fails at build time when it finds:
+
+- Duplicate feature keys in the catalog
+- Duplicate client language identifiers
+- Duplicate keys in a client feature list
+- Client feature keys that are not in the catalog
+- A client manifest targeting a different catalog version
+
+### Adding a Client
+
+1. Add `src/data/supported-features/<language>.json`.
+2. Import the manifest in `supported-features.mdx`.
+3. Add it to `clientManifests` in the desired column order.
+4. Run the MDX and JSON formatting checks.
+5. Render `/reference/supported-features/` and verify the new client column.
