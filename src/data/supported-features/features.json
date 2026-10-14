@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "groups": {
+    "core": {
+      "displayName": "General",
+      "description": "Standalone client capabilities that do not belong to a broader feature group.",
+      "docs": null,
+      "features": {
+        "batching": {
+          "displayName": "Batching",
+          "description": "Executes multiple commands together through the Batch API.",
+          "docs": "/concepts/client-features/batch-commands/"
+        },
+        "client_side_caching": {
+          "displayName": "Client-side Caching",
+          "description": "Caches eligible read responses in client memory.",
+          "docs": "/concepts/client-features/client-side-caching/"
+        },
+        "cluster_scan": {
+          "displayName": "Cluster Scan",
+          "description": "Scans keys across all nodes in a cluster while tracking topology changes.",
+          "docs": "/concepts/client-features/cluster-scan/"
+        },
+        "data_compression": {
+          "displayName": "Data Compression",
+          "description": "Compresses supported values in the client before sending them to the server.",
+          "docs": "/concepts/client-features/compression/"
+        },
+        "custom_commands": {
+          "displayName": "Custom Commands",
+          "description": "Executes commands that do not have a dedicated client method.",
+          "docs": "/concepts/client-features/custom-commands/"
+        },
+        "multi_slot_command_handling": {
+          "displayName": "Multi-slot Command Handling",
+          "description": "Splits supported multi-key commands by hash slot and routes them to the appropriate shards.",
+          "docs": "/concepts/client-features/multi-slot-command-handling/"
+        },
+        "pubsub": {
+          "displayName": "Pub/Sub",
+          "description": "Publishes messages and manages channel or pattern subscriptions.",
+          "docs": "/concepts/client-features/pubsub-model/"
+        },
+        "zero_copy_buffers": {
+          "displayName": "Zero-copy Buffers",
+          "description": "Writes returned values into caller-provided buffers to reduce intermediate allocations.",
+          "docs": "/how-to/synchronous-connection/#zero-copy-buffers"
+        },
+        "lua_scripting_api": {
+          "displayName": "Lua Scripting",
+          "description": "Exposes a dedicated interface for loading and invoking Lua scripts.",
+          "docs": "/concepts/client-features/valkey-scripting/"
+        }
+      }
+    },
+    "cluster_awareness": {
+      "displayName": "Cluster Awareness",
+      "description": "Capabilities for discovering and maintaining an accurate view of cluster topology.",
+      "docs": "/concepts/client-features/cluster-aware/",
+      "features": {
+        "custom_address_resolution": {
+          "displayName": "Custom Address Resolution",
+          "description": "Maps addresses announced by the cluster to addresses reachable by the client.",
+          "docs": "/how-to/connections/address-resolver/"
+        },
+        "periodic_topology_checks": {
+          "displayName": "Periodic Topology Checks",
+          "description": "Configures or disables periodic refreshes of the client's cluster topology.",
+          "docs": "/how-to/connections/periodic-checks/"
+        }
+      }
+    },
+    "command_routing": {
+      "displayName": "Command Routing",
+      "description": "Capabilities that determine which cluster node receives a command.",
+      "docs": "/concepts/client-features/command-routing/",
+      "features": {
+        "az_affinity": {
+          "displayName": "AZ Affinity",
+          "description": "Prefers read targets in the client's availability zone.",
+          "docs": "/how-to/connections/read-strategy/"
+        },
+        "request_routing": {
+          "displayName": "Request Routing",
+          "description": "Routes requests to a specified node or set of nodes.",
+          "docs": "/concepts/client-features/command-routing/"
+        },
+        "read_strategies": {
+          "displayName": "Read Strategies",
+          "description": "Controls whether reads target primary nodes, replicas, or affinity-based replicas.",
+          "docs": "/how-to/connections/read-strategy/"
+        }
+      }
+    },
+    "high_availability": {
+      "displayName": "High Availability",
+      "description": "Capabilities that protect and recover requests during failures or topology changes.",
+      "docs": "/concepts/client-features/high-availability/",
+      "features": {
+        "circuit_breaker": {
+          "displayName": "Circuit Breaker",
+          "description": "Rejects requests quickly when sustained failures indicate that the client is unhealthy.",
+          "docs": "/how-to/connections/circuit-breaker/"
+        },
+        "in_flight_request_limits": {
+          "displayName": "In-flight Request Limits",
+          "description": "Limits the number of concurrent requests awaiting completion.",
+          "docs": "/how-to/connections/limit-inflight-requests/"
+        },
+        "lazy_connections": {
+          "displayName": "Lazy Connections",
+          "description": "Defers physical connections until the first command is executed.",
+          "docs": "/how-to/connections/configure-lazy-connection/"
+        },
+        "recovery_request_queue": {
+          "displayName": "Recovery Request Queue",
+          "description": "Temporarily queues requests while a cluster client refreshes topology during recovery.",
+          "docs": "/how-to/connections/recovery-queue/"
+        }
+      }
+    },
+    "security": {
+      "displayName": "Security",
+      "description": "Authentication and encrypted transport capabilities.",
+      "docs": null,
+      "features": {
+        "aws_iam_authentication": {
+          "displayName": "AWS IAM Authentication",
+          "description": "Authenticates to supported AWS services using IAM credentials.",
+          "docs": "/how-to/security/iam-integration/"
+        },
+        "dynamic_credential_rotation": {
+          "displayName": "Dynamic Credential Rotation",
+          "description": "Updates authentication credentials without recreating the client.",
+          "docs": "/how-to/security/dynamic-authentication/"
+        },
+        "mutual_tls": {
+          "displayName": "Mutual TLS",
+          "description": "Authenticates both the client and server with TLS certificates.",
+          "docs": "/how-to/security/tls/#mutual-tls-mtls"
+        }
+      }
+    },
+    "observability": {
+      "displayName": "Observability",
+      "description": "Logging, command monitoring, metrics, and tracing capabilities.",
+      "docs": null,
+      "features": {
+        "glide_logging": {
+          "displayName": "GLIDE Logging",
+          "description": "Emits GLIDE client logs with configurable levels and destinations.",
+          "docs": "/how-to/monitoring/logging/"
+        },
+        "monitor_streaming": {
+          "displayName": "Monitor Streaming",
+          "description": "Streams commands observed through the Valkey MONITOR command.",
+          "docs": "/how-to/monitoring/monitor-command/"
+        },
+        "opentelemetry": {
+          "displayName": "OpenTelemetry",
+          "description": "Exports client metrics and distributed traces through OpenTelemetry.",
+          "docs": "/concepts/client-features/open-telemetry/"
+        }
+      }
+    },
+    "modules_api": {
+      "displayName": "Modules API",
+      "description": "Dedicated client interfaces for supported Valkey modules.",
+      "docs": "/concepts/client-features/modules/",
+      "features": {
+        "json": {
+          "displayName": "JSON",
+          "description": "Provides typed methods for the Valkey JSON module.",
+          "docs": "/how-to/modules-api/json-module/"
+        },
+        "bloom": {
+          "displayName": "Bloom",
+          "description": "Provides typed methods for Bloom filter operations.",
+          "docs": "/concepts/client-features/modules/"
+        },
+        "search": {
+          "displayName": "Search",
+          "description": "Provides typed methods for Valkey Search operations.",
+          "docs": "/how-to/modules-api/search-module/"
+        }
+      }
+    }
+  }
+}
