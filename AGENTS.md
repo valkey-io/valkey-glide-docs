@@ -201,3 +201,21 @@ pnpm run format:check
 pnpm run format:check:non-mdx   # Non-content files only
 pnpm run format:check:mdx       # Markdown/MDX content only
 ```
+
+## Supported client features
+
+The supported features page uses:
+
+- `src/data/supported-features/features.json` as the feature catalog and source of grouping and display order
+- `src/data/supported-features/<language>.json` for client metadata and a flat list of supported feature keys
+- `src/content/docs/reference/supported-features.mdx` to validate and render the data
+
+A feature is supported when its key is present in a client manifest. Missing keys are rendered as unsupported.
+
+To add a client, create its manifest, import it in `supported-features.mdx`, and add it to `clientManifests`.
+
+Group headings are static so Starlight includes them in the page navigation. Update the heading and `<FeatureTable>` call when catalog groups change.
+
+Features are client capabilities beyond basic connections and command executions. We split the features into:
+- Passive features: always-on functionalities.
+- Active features: functionalities that requires explicit configurations to take effect.

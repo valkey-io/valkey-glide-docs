@@ -56,6 +56,37 @@
   .card {
     border-radius: 0.75rem;
   }
+
+  .feature-status-cell {
+    text-align: center;
+    position: relative;
+  }
+
+  .feature-status-cell[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-gray-5);
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .feature-status-cell a {
+    text-decoration: none;
+  }
+
+  .feature-status-cell a:hover {
+    text-decoration: underline;
+  }
 }
 
 .hero {

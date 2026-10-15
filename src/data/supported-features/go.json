@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 6,
+  "featureCatalogVersion": 1,
+  "language": "go",
+  "displayName": "Go",
+  "version": "2.5.3",
+  "async": false,
+  "features": [
+    "batching",
+    "client_side_caching",
+    "cluster_scan",
+    "data_compression",
+    "custom_commands",
+    "multi_slot_command_handling",
+    "pubsub",
+    "lua_scripting_api",
+    "custom_address_resolution",
+    "periodic_topology_checks",
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "circuit_breaker",
+    "lazy_connections",
+    "recovery_request_queue",
+    "aws_iam_authentication",
+    "dynamic_credential_rotation",
+    "monitor_streaming",
+    "opentelemetry",
+    "json",
+    "search"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 6,
+  "featureCatalogVersion": 1,
+  "language": "php",
+  "displayName": "PHP",
+  "version": "1.1.2",
+  "async": false,
+  "features": [
+    "batching",
+    "client_side_caching",
+    "cluster_scan",
+    "data_compression",
+    "custom_commands",
+    "multi_slot_command_handling",
+    "pubsub",
+    "lua_scripting_api",
+    "custom_address_resolution",
+    "periodic_topology_checks",
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "lazy_connections",
+    "aws_iam_authentication",
+    "dynamic_credential_rotation",
+    "glide_logging",
+    "opentelemetry",
+    "json",
+    "search"
+  ]
+}

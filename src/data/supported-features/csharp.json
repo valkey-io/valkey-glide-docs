@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 6,
+  "featureCatalogVersion": 1,
+  "language": "csharp",
+  "displayName": "C#",
+  "version": "1.1.0",
+  "async": true,
+  "features": [
+    "batching",
+    "client_side_caching",
+    "cluster_scan",
+    "data_compression",
+    "custom_commands",
+    "multi_slot_command_handling",
+    "pubsub",
+    "lua_scripting_api",
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "lazy_connections",
+    "aws_iam_authentication",
+    "dynamic_credential_rotation",
+    "glide_logging",
+    "opentelemetry",
+    "json",
+    "search"
+  ]
+}
