@@ -1,0 +1,104 @@
+---
+/**
+ * Renders GLIDE client examples in the canonical language order.
+ *
+ * Pass example content through named slots such as `python`, `java`, or
+ * `csharp`. Labels, cross-page synchronization, and `?lang=<language>` URL
+ * selection are applied automatically.
+ */
+import { TabItem } from "@astrojs/starlight/components";
+import ParamTabs from "./ParamTabs.astro";
+
+interface Props {
+    param?: string;
+}
+
+const { param = "lang" } = Astro.props;
+
+const labels = {
+    java: "Java",
+    python: "Python",
+    node: "Node",
+    go: "Go",
+    php: "PHP",
+    csharp: "C#",
+    ruby: "Ruby",
+} as const;
+
+const suppliedSlots = Object.keys(Astro.slots).filter(
+    (slot) => slot !== "default",
+);
+const supportedSlots = new Set(Object.keys(labels));
+const unknownSlots = suppliedSlots.filter((slot) => !supportedSlots.has(slot));
+const defaultContent = Astro.slots.has("default")
+    ? (await Astro.slots.render("default")).trim()
+    : "";
+
+if (defaultContent.length > 0) {
+    throw new Error(
+        "<ClientTabs> content must use named client language slots.",
+    );
+}
+
+if (unknownSlots.length > 0) {
+    throw new Error(
+        `Unsupported <ClientTabs> slot: ${unknownSlots.join(", ")}.`,
+    );
+}
+
+if (suppliedSlots.length === 0) {
+    throw new Error("<ClientTabs> requires at least one client language slot.");
+}
+---
+
+<ParamTabs param={param} syncKey="progLangInExamples">
+    {
+        Astro.slots.has("java") && (
+            <TabItem label={labels.java}>
+                <slot name="java" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("python") && (
+            <TabItem label={labels.python}>
+                <slot name="python" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("node") && (
+            <TabItem label={labels.node}>
+                <slot name="node" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("go") && (
+            <TabItem label={labels.go}>
+                <slot name="go" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("php") && (
+            <TabItem label={labels.php}>
+                <slot name="php" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("csharp") && (
+            <TabItem label={labels.csharp}>
+                <slot name="csharp" />
+            </TabItem>
+        )
+    }
+    {
+        Astro.slots.has("ruby") && (
+            <TabItem label={labels.ruby}>
+                <slot name="ruby" />
+            </TabItem>
+        )
+    }
+</ParamTabs>
