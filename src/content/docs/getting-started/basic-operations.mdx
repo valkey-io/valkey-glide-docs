@@ -31,12 +31,17 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
   <TabItem label="Python">
     ```python
     import asyncio
-    from glide import GlideClient, NodeAddress
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
     async def string_operations():
-        client = GlideClient([NodeAddress("localhost", 6379)])
-        
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = None
+
         try:
+            client = await GlideClient.create(config)
+
             # Set a key-value pair
             await client.set("user:1000", "john_doe")
             print("✓ Key set successfully")
@@ -45,8 +50,12 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
             value = await client.get("user:1000")
             print(f"✓ Retrieved value: {value}")
 
+        except Exception as e:
+            print(f"Operation failed: {e}")
+
         finally:
-            await client.close()
+            if client is not None:
+                await client.close()
 
     if __name__ == "__main__":
         asyncio.run(string_operations())
@@ -88,11 +97,12 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     const { GlideClient } = require('@valkey/valkey-glide');
 
     async function stringOperations() {
-        const client = GlideClient.createClient({
-            addresses: [{ host: 'localhost', port: 6379 }]
-        });
-        
+        let client;
+
         try {
+            client = await GlideClient.createClient({
+                addresses: [{ host: 'localhost', port: 6379 }]
+            });
             // Set a key-value pair
             await client.set('user:1000', 'john_doe');
             console.log('✓ Key set successfully');
@@ -100,9 +110,13 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
             // Get the value
             const value = await client.get('user:1000');
             console.log(`✓ Retrieved value: ${value}`);
-            
+
+        } catch (error) {
+            console.error(`Operation failed: ${error.message}`);
         } finally {
-            client.close();
+            if (client) {
+                client.close();
+            }
         }
     }
 
@@ -135,14 +149,16 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         // Set a key-value pair
         _, err = client.Set(context.Background(), "user:1000", "john_doe")
         if err != nil {
-            log.Fatalf("Set failed: %v", err)
+            log.Printf("Set failed: %v", err)
+            return
         }
         fmt.Println("✓ Key set successfully")
 
         // Get the value
         value, err := client.Get(context.Background(), "user:1000")
         if err != nil {
-            log.Fatalf("Get failed: %v", err)
+            log.Printf("Get failed: %v", err)
+            return
         }
         fmt.Printf("✓ Retrieved value: %v\n", value)
     }
@@ -153,9 +169,10 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     ```php
     // Create ValkeyGlide client
     $client = new ValkeyGlide();
-    $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
 
     try {
+        $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+
         // Set a key-value pair
         $client->set('user:1000', 'john_doe');
         echo "✓ Key set successfully\n";
@@ -163,7 +180,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         // Get the value
         $value = $client->get('user:1000');
         echo "✓ Retrieved value: {$value}\n";
-        
+
+    } catch (ValkeyGlideException $e) {
+        echo "Operation failed: {$e->getMessage()}\n";
     } finally {
         $client->close();
     }
@@ -176,15 +195,22 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     using static Valkey.Glide.ConnectionConfiguration;
 
     var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
+    try
+    {
+        await using var client = await GlideClient.CreateClient(config);
 
-    // Set a key-value pair
-    await client.SetAsync("user:1000", "john_doe");
-    Console.WriteLine("✓ Key set successfully");
+        // Set a key-value pair
+        await client.SetAsync("user:1000", "john_doe");
+        Console.WriteLine("✓ Key set successfully");
 
-    // Get the value
-    ValkeyValue value = await client.GetAsync("user:1000");
-    Console.WriteLine($"✓ Retrieved value: {value}");
+        // Get the value
+        ValkeyValue value = await client.GetAsync("user:1000");
+        Console.WriteLine($"✓ Retrieved value: {value}");
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Operation failed: {e.Message}");
+    }
     ```
   </TabItem>
 
@@ -192,9 +218,11 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     ```ruby
     require "valkey"
 
-    client = Valkey.new(host: "localhost", port: 6379)
+    client = nil
 
     begin
+      client = Valkey.new(host: "localhost", port: 6379)
+
       # Set a key-value pair
       client.set("user:1000", "john_doe")
       puts "✓ Key set successfully"
@@ -202,12 +230,16 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
       # Get the value
       value = client.get("user:1000")
       puts "✓ Retrieved value: #{value}"
+    rescue StandardError => e
+      puts "Operation failed: #{e.message}"
     ensure
-      client.close
+      client&.close
     end
     ```
   </TabItem>
 </Tabs>
+
+The remaining examples assume that `client` was created with the error handling and cleanup pattern shown above.
 
 ## Making Multiple Atomic Operations
 
