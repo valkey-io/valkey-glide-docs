@@ -16,6 +16,11 @@
           "description": "Caches eligible read responses in client memory.",
           "docs": "/concepts/client-features/client-side-caching/"
         },
+        "server_assisted_cache_invalidation": {
+          "displayName": "Server-assisted Cache Invalidation",
+          "description": "Invalidates cached entries from server tracking notifications when data changes outside the client.",
+          "docs": "/concepts/client-features/client-side-caching/#server-assisted-invalidation"
+        },
         "cluster_scan": {
           "displayName": "Cluster Scan",
           "description": "Scans keys across all nodes in a cluster while tracking topology changes.",
@@ -41,6 +46,11 @@
           "description": "Publishes messages and manages channel or pattern subscriptions.",
           "docs": "/concepts/client-features/pubsub-model/"
         },
+        "pubsub_reconciliation": {
+          "displayName": "Pub/Sub Reconciliation",
+          "description": "Restores and reconciles desired subscriptions after disconnects and topology changes.",
+          "docs": "/concepts/client-features/pubsub-model/#pubsub-synchronizer"
+        },
         "zero_copy_buffers": {
           "displayName": "Zero-copy Buffers",
           "description": "Writes returned values into caller-provided buffers to reduce intermediate allocations.",
@@ -58,6 +68,11 @@
       "description": "Capabilities for discovering and maintaining an accurate view of cluster topology.",
       "docs": "/concepts/client-features/cluster-aware/",
       "features": {
+        "automatic_topology_and_redirect_handling": {
+          "displayName": "Automatic Topology and Redirect Handling",
+          "description": "Discovers topology changes and transparently handles MOVED and ASK redirects.",
+          "docs": "/concepts/client-features/high-availability/#automatic-topology-updates"
+        },
         "custom_address_resolution": {
           "displayName": "Custom Address Resolution",
           "description": "Maps addresses announced by the cluster to addresses reachable by the client.",
@@ -67,6 +82,11 @@
           "displayName": "Periodic Topology Checks",
           "description": "Configures or disables periodic refreshes of the client's cluster topology.",
           "docs": "/how-to/connections/periodic-checks/"
+        },
+        "standalone_node_discovery_modes": {
+          "displayName": "Standalone Node Discovery Modes",
+          "description": "Controls whether standalone clients use only configured endpoints or discover primary and replica nodes.",
+          "docs": "/how-to/client-initialization/#standalone"
         }
       }
     },
@@ -89,6 +109,11 @@
           "displayName": "Read Strategies",
           "description": "Controls whether reads target primary nodes, replicas, or affinity-based replicas.",
           "docs": "/how-to/connections/read-strategy/"
+        },
+        "standalone_read_only_mode": {
+          "displayName": "Standalone Read-only Mode",
+          "description": "Restricts standalone clients to read-only commands and supports replica-only deployments.",
+          "docs": "/how-to/connections/read-strategy/"
         }
       }
     },
@@ -97,6 +122,16 @@
       "description": "Capabilities that protect and recover requests during failures or topology changes.",
       "docs": "/concepts/client-features/high-availability/",
       "features": {
+        "automatic_reconnection": {
+          "displayName": "Automatic Reconnection",
+          "description": "Reconnects dropped connections without requiring the application to recreate the client.",
+          "docs": "/concepts/client-features/high-availability/#timeout-and-reconnect-strategy"
+        },
+        "timeout_and_reconnect_configuration": {
+          "displayName": "Timeout and Reconnect Configuration",
+          "description": "Configures request and connection timeouts and exponential reconnection backoff.",
+          "docs": "/how-to/connections/timeouts-and-reconnect-strategy/"
+        },
         "circuit_breaker": {
           "displayName": "Circuit Breaker",
           "description": "Rejects requests quickly when sustained failures indicate that the client is unhealthy.",
@@ -134,6 +169,11 @@
           "description": "Updates authentication credentials without recreating the client.",
           "docs": "/how-to/security/dynamic-authentication/"
         },
+        "custom_tls_trust_roots": {
+          "displayName": "Custom TLS Trust Roots",
+          "description": "Trusts caller-provided CA certificates when validating TLS servers.",
+          "docs": "/how-to/security/tls/#custom-root-certificates"
+        },
         "mutual_tls": {
           "displayName": "Mutual TLS",
           "description": "Authenticates both the client and server with TLS certificates.",
@@ -146,6 +186,16 @@
       "description": "Logging, command monitoring, metrics, and tracing capabilities.",
       "docs": null,
       "features": {
+        "client_statistics": {
+          "displayName": "Client Statistics",
+          "description": "Reports client and connection resource counts from the GLIDE core.",
+          "docs": "/how-to/monitoring/tracking-resources/"
+        },
+        "client_cache_metrics": {
+          "displayName": "Client Cache Metrics",
+          "description": "Reports cache hits, misses, entries, evictions, expirations, and lookups.",
+          "docs": "/concepts/client-features/client-side-caching/#cache-metrics"
+        },
         "glide_logging": {
           "displayName": "GLIDE Logging",
           "description": "Emits GLIDE client logs with configurable levels and destinations.",

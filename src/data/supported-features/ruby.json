@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 6,
+  "featureCatalogVersion": 1,
+  "language": "ruby",
+  "displayName": "Ruby",
+  "version": "1.0.0",
+  "async": false,
+  "features": [
+    "batching",
+    "custom_commands",
+    "pubsub",
+    "lua_scripting_api",
+    "periodic_topology_checks",
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "in_flight_request_limits",
+    "lazy_connections",
+    "mutual_tls",
+    "client_statistics",
+    "opentelemetry",
+    "search"
+  ]
+}
