@@ -3,7 +3,7 @@ title: Specify a Read Strategy
 description: Guide for configuring read strategies to route read commands to primary or replica nodes.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 By default, Valkey GLIDE directs read commands to the primary node that owns a specific slot. For applications that prioritize read throughput and can tolerate possibly stale data, Valkey GLIDE provides the flexibility to route reads to replica nodes.
 
@@ -30,8 +30,8 @@ Strategies that include replicas can return stale data. The `set`/`get` examples
 
 Use All Nodes to share reads between the primary and replicas without preferring an AZ. This strategy is available in Java, Python, Node, and Go in 2.4.0 and later. It does not require a client AZ.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -48,9 +48,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     # get rotates across available primary and replicas for the key's shard
     await client.get("key1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -71,9 +71,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // get rotates across available primary and replicas for the key's shard
     client.get("key1").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -92,9 +92,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // get rotates across available primary and replicas for the key's shard
     await client.get("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -116,13 +116,13 @@ Use All Nodes to share reads between the primary and replicas without preferring
         client.Get(context.Background(),"key1")
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Prefer Replica
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -139,9 +139,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     # get will read from one of the replicas
     await client.get("key1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -162,9 +162,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // get will read from one of the replicas
     client.get("key1").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -183,9 +183,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // get will read from one of the replicas
     await client.get("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -207,9 +207,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
         client.Get(context.Background(),"key1")
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -225,9 +225,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // GetAsync will read from one of the replicas
     await client.GetAsync("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -242,9 +242,9 @@ Use All Nodes to share reads between the primary and replicas without preferring
     // get will read from one of the replicas
     $client->get('key1');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -258,8 +258,8 @@ Use All Nodes to share reads between the primary and replicas without preferring
     # get will read from one of the replicas
     client.get("key1")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### AZ Affinity
 
@@ -275,8 +275,8 @@ Java 2.5.3 validates `clientAZ` for `AZ_AFFINITY`, `AZ_AFFINITY_REPLICAS_AND_PRI
 When upgrading, correct existing configurations that omit the AZ: they could previously fall back silently to `PreferReplica`. Padded values could fail to match the intended AZ. Python, Go, and Node already reject missing or empty AZ values for their supported AZ strategies; Java additionally normalizes surrounding whitespace.
 :::
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -293,9 +293,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     # get will read from one of the replicas in the same client's availability zone if they exist
     await client.get("key1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -317,9 +317,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     // get will read from one of the replicas in the same client's availability zone if they exist
     client.get("key1").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -339,9 +339,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     // get will read from one of the replicas in the same client's availability zone if they exist
     await client.get("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -364,9 +364,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
         client.Get(context.Background(),"key1")
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -382,9 +382,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     // GetAsync will read from one of the replicas in the same client's availability zone if they exist
     await client.GetAsync("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -400,9 +400,9 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     // get will read from one of the replicas in the same client's availability zone if they exist
     $client->get('key1');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -417,8 +417,8 @@ When upgrading, correct existing configurations that omit the AZ: they could pre
     # get will read from one of the replicas in the same client's availability zone if they exist
     client.get("key1")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### AZ Affinity Replicas and Primary Read Strategy
 
@@ -426,8 +426,8 @@ When using the AZ Affinity Replicas and Primary read strategy, the `clientAz` se
 
 In standalone mode, the final fallback instead rotates across all available primary and replica nodes. Local replicas still take priority over the local primary.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -444,9 +444,9 @@ In standalone mode, the final fallback instead rotates across all available prim
     # get prefers local replicas, then the local primary, then remote replicas, then the primary
     await client.get("key1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -468,9 +468,9 @@ In standalone mode, the final fallback instead rotates across all available prim
     // get prefers local replicas, then the local primary, then remote replicas, then the primary
     client.get("key1").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -490,9 +490,9 @@ In standalone mode, the final fallback instead rotates across all available prim
     // get prefers local replicas, then the local primary, then remote replicas, then the primary
     await client.get("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -515,9 +515,9 @@ In standalone mode, the final fallback instead rotates across all available prim
         client.Get(context.Background(),"key1")
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -533,9 +533,9 @@ In standalone mode, the final fallback instead rotates across all available prim
     // GetAsync prefers local replicas, then the local primary, then remote replicas, then the primary
     await client.GetAsync("key1");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -551,9 +551,9 @@ In standalone mode, the final fallback instead rotates across all available prim
     // get prefers local replicas, then the local primary, then remote replicas, then the primary
     $client->get('key1');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -568,8 +568,8 @@ In standalone mode, the final fallback instead rotates across all available prim
     # get prefers local replicas, then the local primary, then remote replicas, then the primary
     client.get("key1")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### AZ Affinity All Nodes
 
@@ -587,8 +587,8 @@ Standalone clients use the same local-first, all-node rotation. However, includi
 AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3**. It is not available in their 2.5.0–2.5.2 releases.
 :::
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -605,9 +605,9 @@ AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3
     # get will read from one of the nodes (primary or replicas) in the same client's availability zone if they exist
     await client.get("key1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -630,35 +630,35 @@ AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3
     // rotate across all available primary and replicas for the key's shard.
     client.get("key1").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     :::note[Release availability]
     AZ Affinity All Nodes is not included in the Node 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#7104](https://github.com/valkey-io/valkey-glide/pull/7104).
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     :::note[Release availability]
     AZ Affinity All Nodes is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6927](https://github.com/valkey-io/valkey-glide/pull/6927).
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     :::note[Coming soon]
     The AZ Affinity All Nodes read strategy is not yet available in the C# client.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     :::note[Coming soon]
     The AZ Affinity All Nodes read strategy is not yet available in the PHP client.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     :::note[Coming soon]
     The AZ Affinity All Nodes read strategy is not yet available in the Ruby client.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

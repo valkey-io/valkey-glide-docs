@@ -3,7 +3,7 @@ title: Configure TLS
 description: Guide for configuring TLS connections with Valkey GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE supports secure TLS connections to a data store.
 
@@ -15,8 +15,8 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
 ### Cluster Mode
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -29,9 +29,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -47,9 +47,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -65,9 +65,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         useTLS: true
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -88,9 +88,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -102,9 +102,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -115,9 +115,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         use_tls: true
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -125,13 +125,13 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     client = Valkey.new(nodes: nodes, cluster_mode: true, ssl: true)
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Standalone
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClient,
@@ -148,9 +148,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     client = await GlideClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -166,9 +166,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClient} from "@valkey/valkey-glide";
 
@@ -184,9 +184,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         useTLS: true
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -207,9 +207,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -223,9 +223,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'primary.example.com', 'port' => 6379],
@@ -236,9 +236,9 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     $client = new ValkeyGlide();
     $client->connect(addresses: $addresses, use_tls: true);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -250,8 +250,8 @@ Enabling TLS is as simple as setting `use_tls=True` in your configuration. The c
     ```ruby
     client = Valkey.new(url: "rediss://primary.example.com:6379")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Advanced TLS Configurations
 
@@ -265,8 +265,8 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
 #### Cluster Mode
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClusterClientConfiguration,
@@ -288,9 +288,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -315,9 +315,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -329,9 +329,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -358,9 +358,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -373,9 +373,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlideCluster(
         addresses: [['host' => 'address.example.com', 'port' => 6379]],
@@ -383,19 +383,19 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     :::note[Not currently supported]
     The Ruby client (`valkey-glide-rb`) does not currently expose a way to skip TLS certificate verification. Its TLS options accept a CA bundle and client key material through `ssl_params`, but there is no `insecure`, `verify_mode`, or equivalent flag. For local testing with a self-signed certificate, pass the CA bundle via `ssl_params: { ca_file: "/path/to/ca-cert.pem" }` instead.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Standalone
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClientConfiguration,
@@ -417,9 +417,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     client = await GlideClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.AdvancedGlideClientConfiguration;
@@ -443,9 +443,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from "@valkey/valkey-glide";
 
@@ -457,9 +457,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -486,9 +486,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -501,9 +501,9 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlide();
     $client->connect(
@@ -512,21 +512,21 @@ Insecure TLS mode bypasses certificate verification. This is useful when connect
         advanced_config: ['tls_config' => ['use_insecure_tls' => true]]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     :::note[Not currently supported]
     The Ruby client (`valkey-glide-rb`) does not currently expose a way to skip TLS certificate verification. Its TLS options accept a CA bundle and client key material through `ssl_params`, but there is no `insecure`, `verify_mode`, or equivalent flag. For local testing with a self-signed certificate, pass the CA bundle via `ssl_params: { ca_file: "/path/to/ca-cert.pem" }` instead.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Custom Root Certificates
 
 You can provide custom root certificates for TLS connections. This is useful when connecting to servers with self-signed certificates or corporate certificate authorities.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     **Certificate Behavior:**
 
     * If `root_pem_cacerts` is `None` (default), the system's default certificate trust store is used
@@ -631,9 +631,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     **Certificate Behavior:**
 
     * If `rootCertificates` is not set (default), the system's default certificate trust store is used
@@ -731,9 +731,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     **Certificate Behavior:**
 
     * If `rootCertificates` is not set (default), the system's default certificate trust store is used
@@ -773,9 +773,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     **Certificate Behavior:**
 
     * If `WithRootCertificates` is not called (default), the system's default certificate trust store is used
@@ -847,9 +847,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     **Certificate Behavior:**
 
     * If no trusted certificates are provided, the system's default certificate trust store is used.
@@ -905,9 +905,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     #### Example - Connecting with Custom Root Certificate
 
     ```php
@@ -933,9 +933,9 @@ You can provide custom root certificates for TLS connections. This is useful whe
         advanced_config: ['tls_config' => ['root_certs' => $certData]]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     **Certificate Behavior:**
 
     * If `ssl_params` is not provided, the system's default certificate trust store is used
@@ -982,8 +982,8 @@ You can provide custom root certificates for TLS connections. This is useful whe
       }
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Mutual TLS (mTLS)
 
@@ -1017,8 +1017,8 @@ Sub-second, zero, negative, and oversized values are rejected at configuration t
 Use the byte-based entry point when the client certificate and key are already loaded as PEM bytes (for example, fetched from a secret store).
 The material is read once at connect time and does not reload.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClusterClientConfiguration,
@@ -1047,9 +1047,9 @@ The material is read once at connect time and does not reload.
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -1079,9 +1079,9 @@ The material is read once at connect time and does not reload.
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
 
@@ -1103,9 +1103,9 @@ The material is read once at connect time and does not reload.
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -1139,9 +1139,9 @@ The material is read once at connect time and does not reload.
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using System.Text;
     using Valkey.Glide;
@@ -1159,9 +1159,9 @@ The material is read once at connect time and does not reload.
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Load PEM strings from a secret store.
     $clientCert = "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode...";
@@ -1178,16 +1178,16 @@ The material is read once at connect time and does not reload.
         ]
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Path-based with automatic reload
 
 Point at PEM files on disk and let the core reload them at its default cadence.
 Rotated material is picked up on the next reconnect after a successful reload.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClusterClientConfiguration,
@@ -1212,9 +1212,9 @@ Rotated material is picked up on the next reconnect after a successful reload.
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -1239,9 +1239,9 @@ Rotated material is picked up on the next reconnect after a successful reload.
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
 
@@ -1259,9 +1259,9 @@ Rotated material is picked up on the next reconnect after a successful reload.
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -1294,9 +1294,9 @@ Rotated material is picked up on the next reconnect after a successful reload.
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -1309,9 +1309,9 @@ Rotated material is picked up on the next reconnect after a successful reload.
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlideCluster(
         addresses: [['host' => 'address.example.com', 'port' => 6379]],
@@ -1324,15 +1324,15 @@ Rotated material is picked up on the next reconnect after a successful reload.
         ]
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Path-based with a custom reload interval
 
 Pass a positive whole number of seconds to override the core default cadence.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClusterClientConfiguration,
@@ -1358,9 +1358,9 @@ Pass a positive whole number of seconds to override the core default cadence.
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -1385,9 +1385,9 @@ Pass a positive whole number of seconds to override the core default cadence.
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient, MutualTls } from "@valkey/valkey-glide";
 
@@ -1406,9 +1406,9 @@ Pass a positive whole number of seconds to override the core default cadence.
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -1442,9 +1442,9 @@ Pass a positive whole number of seconds to override the core default cadence.
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -1460,9 +1460,9 @@ Pass a positive whole number of seconds to override the core default cadence.
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlideCluster(
         addresses: [['host' => 'address.example.com', 'port' => 6379]],
@@ -1476,8 +1476,8 @@ Pass a positive whole number of seconds to override the core default cadence.
         ]
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Loading PEM material from files
 
@@ -1486,8 +1486,8 @@ Feed those bytes into the byte-based entry point shown above.
 
 The same file-loading helpers work for both `GlideClient` (standalone) and `GlideClusterClient` (cluster-mode). The examples below show the standalone client; substitute the cluster variant if you are connecting to a cluster.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         AdvancedGlideClientConfiguration,
@@ -1515,9 +1515,9 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
 
     client = await GlideClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.AdvancedGlideClientConfiguration;
@@ -1545,9 +1545,9 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
 
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {
         GlideClient,
@@ -1574,9 +1574,9 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -1614,9 +1614,9 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
         return nil
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -1633,9 +1633,9 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $clientCert = file_get_contents('/etc/glide/client.pem');
     $clientKey = file_get_contents('/etc/glide/client.key');
@@ -1652,8 +1652,8 @@ The same file-loading helpers work for both `GlideClient` (standalone) and `Glid
         ]
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Common Pitfalls
 

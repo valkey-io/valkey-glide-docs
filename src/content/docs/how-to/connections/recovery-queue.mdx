@@ -3,7 +3,7 @@ title: Recovery Request Queue
 description: Buffer requests during cluster topology-refresh reconnects instead of failing them immediately
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 When a cluster client detects a circular MOVED redirect, it enters a recovery state to refresh the cluster topology. During this window, incoming requests would normally fail immediately with a `ClientError("Connection in recovery")`. The **recovery request queue** introduces a bounded buffer that holds those requests and retries them transparently once reconnection completes.
 
@@ -11,23 +11,23 @@ When a cluster client detects a circular MOVED redirect, it enters a recovery st
 
 Configure the recovery request queue size through the cluster client configuration.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="C#">
+<ClientTabs>
+  <ClientTab slot="csharp">
     :::note
     This feature is not yet available in GLIDE C#.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Buffer up to 2000 requests during cluster recovery
     clientConfig := config.NewClusterClientConfiguration().
         WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
         WithRecoveryRequestsQueueSize(2000)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Buffer up to 2000 requests during cluster recovery
     GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
@@ -35,9 +35,9 @@ Configure the recovery request queue size through the cluster client configurati
         .recoveryRequestsQueueSize(2000)
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Buffer up to 2000 requests during cluster recovery
     const config: GlideClusterClientConfiguration = {
@@ -45,15 +45,15 @@ Configure the recovery request queue size through the cluster client configurati
         recoveryRequestsQueueSize: 2000,
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     :::note
     This feature is not yet available in GLIDE PHP.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
     # Buffer up to 2000 requests during cluster recovery
     config = GlideClusterClientConfiguration(
@@ -61,8 +61,8 @@ Configure the recovery request queue size through the cluster client configurati
         recovery_requests_queue_size=2000,
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## How It Works
 

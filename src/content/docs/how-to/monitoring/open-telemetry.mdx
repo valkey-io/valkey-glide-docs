@@ -3,7 +3,7 @@ title: Configure OpenTelemetry
 description: A guide on integrating OpenTelemetry observability with Valkey GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE 2.0 introduces support for [OpenTelemetry (OTel)](https://opentelemetry.io/), enabling developers to gain deep insights into client-side performance and behavior in distributed systems.
 
@@ -19,8 +19,8 @@ GLIDE does not export data directly to third-party services—instead, it sends 
 
 ## Example
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig
 
@@ -35,9 +35,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
         flush_interval_ms=1000  # Optional, defaults to 5000
     ))
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.OpenTelemetry;
 
@@ -58,9 +58,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
             .build()
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { OpenTelemetry, OpenTelemetryConfig, OpenTelemetryTracesConfig, OpenTelemetryMetricsConfig } from "@valkey/valkey-glide";
 
@@ -85,9 +85,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
     // Initialize OpenTelemetry (can only be called once per process)
     OpenTelemetry.init(openTelemetryConfig);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2"
 
@@ -107,9 +107,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
     	log.Fatalf("Failed to initialize OpenTelemetry: %v", err)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -130,9 +130,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
             .Build()
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     use ValkeyGlide\OpenTelemetry\{OpenTelemetryConfig, TracesConfig, MetricsConfig};
 
@@ -158,9 +158,9 @@ GLIDE does not export data directly to third-party services—instead, it sends 
         advanced_config: ['otel' => $otelConfig]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -178,8 +178,8 @@ GLIDE does not export data directly to third-party services—instead, it sends 
 
     client = Valkey.new(host: "localhost", port: 6379)
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::tip
 Both traces and metrics are optional in the configuration, but at least one must be provided. You can configure only traces, only metrics, or both depending on your observability needs.
