@@ -3,7 +3,9 @@ title: Working With JSON Data
 description: Learn how to use the Valkey JSON module with GLIDE.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
+import { Aside } from '@astrojs/starlight/components';
 
 The Valkey JSON module provides an efficient way to store and manipulate structured data. With GLIDE, Valkey modules are supported
 as built-in APIs, allowing you to interact with JSON module commands through dedicated client methods.
@@ -21,8 +23,8 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
 ## Examples
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/Json.html).
     :::
@@ -52,9 +54,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
         assert getResponse.equals("{\"a\": 1.0, \"b\": 2}");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/nodejs/api/modules/server-modules_GlideJson.html).
     :::
@@ -78,9 +80,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     const jsonGetResponse = await GlideJson.get(client, "doc", {path: "$"});
     console.log(JSON.stringify(jsonGetResponse)); //  [{"a": 1.0, "b": 2}] # JSON object retrieved from the key `doc`
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/glide_json/).
     :::
@@ -104,9 +106,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     print(get_response) # b"[{\"a\":1.0,\"b\":2}]" 
     json.loads(str(get_response)) # [{"a": 1.0, "b" :2}] - JSON object retrieved from the key `doc` using json.loads()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -133,9 +135,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     getResponse, err := glidejson.JsonGet(client, ctx, key)
     // getResponse contains {"a":1.0,"b":2}
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlide();
     $client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
@@ -151,9 +153,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     $result = $client->jsonGet($key); // '[{"a":1.0,"b":2}]'
     $decoded = json_decode($result, true);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.ServerModules;
@@ -175,14 +177,14 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     var response = await GlideJson.GetAsync(client, key);
     Console.WriteLine($"Output: {response}");  // Output: {"a":1.0,"b":2}
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     :::note
     The JSON module is not yet available in the Ruby client. Support is tracked upstream in the [valkey-glide-ruby](https://github.com/valkey-io/valkey-glide-ruby) repository.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

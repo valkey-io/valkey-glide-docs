@@ -3,7 +3,7 @@ title: Client Initialization
 description: Guide for initializing Valkey GLIDE clients in cluster and standalone configurations.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE provides support for both [Cluster](#cluster) and [Standalone](#standalone) configurations. Please refer to the relevant section based on your specific setup.
 
@@ -17,8 +17,8 @@ To initialize a cluster client, you need to provide a configuration that include
 
 The `NodeAddress` type represents the host and port of a cluster node. The host can be either an IP address, a hostname, or a fully qualified domain name (FQDN).
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -31,9 +31,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -50,9 +50,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
 
     GlideClusterClient clusterClient = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -67,9 +67,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
         addresses: addresses
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -83,9 +83,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
         client, err := glide.NewClusterClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     try {
         $addresses = [
@@ -97,9 +97,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
         error_log("Failed to connect to cluster: " . $e->getMessage());
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -110,9 +110,9 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -121,8 +121,8 @@ The `NodeAddress` type represents the host and port of a cluster node. The host 
       cluster_mode: true
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Request Routing
 
@@ -130,35 +130,35 @@ In the cluster, data is divided into slots, and each primary node within the clu
 
 For more details on the routing of specific commands:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     Please refer to the documentation within the code.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/configuration/RequestRoutingConfiguration.java) for routing configuration.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     Please refer to the documentation within the code.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/config/request_routing_config.go) for routing configuration.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php#L411-L419) for routing configuration.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/Route.cs) for routing configuration.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-ruby/blob/main/lib/valkey/route.rb) for routing configuration.
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Response Aggregation
 
@@ -166,35 +166,35 @@ When requests are dispatched to multiple shards in a cluster (as discussed in th
 
 To learn more about response aggregation for specific commands:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     Please refer to the documentation within the code.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/java/client/src/main/java/glide/api/models/ClusterValue.java).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     Please refer to the documentation within the code.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide/blob/main/go/models/response_types.go).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-php/blob/main/valkey_glide_cluster.stub.php) for command return types.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     Please refer to [the documentation within the code](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/ClusterValue.cs) for cluster response types.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     Please refer to the documentation within the code.
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Topology Updates
 
@@ -206,8 +206,8 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
 
 ### Connecting to a Standalone Server
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClient,
@@ -224,9 +224,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
 
     client = await GlideClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -249,9 +249,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
 
     GlideClient standaloneClient = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClient} from "@valkey/valkey-glide";
 
@@ -274,9 +274,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
         addresses: addresses
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -292,9 +292,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
         client, err := glide.NewClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     try {
         $addresses = [
@@ -309,9 +309,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
         error_log("Failed to connect to standalone server: " . $e->getMessage());
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -324,9 +324,9 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -337,8 +337,8 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
     # Or connect with a URL
     client = Valkey.new(url: "redis://primary.example.com:6379/0")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Configuration Options
 

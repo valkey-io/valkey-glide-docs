@@ -3,7 +3,7 @@ title: Configure Valkey Authentication
 description: Guide for authenticating with Valkey using GLIDE across all supported languages.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 By default, when connecting to Valkey, Valkey GLIDE operates in an unauthenticated mode.
 
@@ -24,8 +24,8 @@ Both standalone and cluster mode support authentication authentication with user
 
 ### Standalone
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClient,
@@ -44,9 +44,9 @@ Both standalone and cluster mode support authentication authentication with user
 
     client = await GlideClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -66,9 +66,9 @@ Both standalone and cluster mode support authentication authentication with user
 
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClient} from "@valkey/valkey-glide";
     const addresses = [
@@ -88,9 +88,9 @@ Both standalone and cluster mode support authentication authentication with user
         credentials: credentials
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -105,9 +105,9 @@ Both standalone and cluster mode support authentication authentication with user
         client, err := glide.NewClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'primary.example.com', 'port' => 6379],
@@ -123,9 +123,9 @@ Both standalone and cluster mode support authentication authentication with user
     $client = new ValkeyGlide();
     $client->connect(addresses: $addresses, credentials: $credentials);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -142,13 +142,13 @@ Both standalone and cluster mode support authentication authentication with user
     ```ruby
     client = Valkey.new(url: "redis://user1:passwordA@primary.example.com:6379")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Cluster
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -163,9 +163,9 @@ Both standalone and cluster mode support authentication authentication with user
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -185,9 +185,9 @@ Both standalone and cluster mode support authentication authentication with user
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -208,9 +208,9 @@ Both standalone and cluster mode support authentication authentication with user
         credentials: credentials
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -225,9 +225,9 @@ Both standalone and cluster mode support authentication authentication with user
         client, err := glide.NewClusterClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -243,9 +243,9 @@ Both standalone and cluster mode support authentication authentication with user
         credentials: $credentials
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -258,8 +258,8 @@ Both standalone and cluster mode support authentication authentication with user
       password: "passwordA"
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Best Practices
 

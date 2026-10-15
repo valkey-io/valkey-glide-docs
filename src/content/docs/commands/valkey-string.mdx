@@ -3,14 +3,14 @@ title: Working with Strings and Binary Data
 description: Learn how to work with UTF-8 strings and binary data in Valkey GLIDE clients.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey strings store sequences of bytes, which may include text, serialized objects, or binary arrays. GLIDE clients provide language-specific ways to handle both UTF-8 encoded strings and binary data when passing arguments to commands or receiving responses.
 
 ## String API
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     Python uses `TEncodable` as a union type that accepts either:
 
     1. `str`: for UTF-8 encoded strings
@@ -45,9 +45,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     #### Return Values
 
     Most commands return `bytes` by default. Use `.decode()` to convert to `str` when needed.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     Valkey strings can be passed and received in two ways:
 
     1. `String`: for common case UTF-8 converted strings
@@ -76,9 +76,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     client.get(gs(byteKey)).get();              // "GlideString value" as a GlideString
     client.get(gs(byteKey)).get().getString();  // "GlideString value" as a String
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     `GlideString` is a type that maps to Valkey strings and represents either:
 
     1. `string`: as a UTF-8 encoded string
@@ -154,9 +154,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
         valueEncoded,
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     Go uses native `string` type for all Valkey string operations. Go strings can contain arbitrary bytes, including binary data.
 
     #### Usage
@@ -192,9 +192,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     * `[]byte(stringVar)` - Convert `string` to `[]byte`
 
     Go strings are immutable sequences of bytes and can safely represent binary data.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     C# uses `GlideString` as a wrapper type that can hold either a UTF-8 `string` or raw `byte[]` data.
 
     #### Usage
@@ -259,9 +259,9 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     string[] strArr = gsArr1.ToStrings();       // to string[]
     byte[][] bytesArr = gsArr2.ToByteArrays();  // to byte[][]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     PHP uses native `string` type for all Valkey string operations. PHP strings are binary-safe and can contain arbitrary bytes.
 
     #### Usage
@@ -290,5 +290,5 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     * PHP strings are binary-safe and can store any byte sequence
     * No special type or conversion needed for binary data
     * Commands return `string` for string values, `mixed` for commands that may return different types
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

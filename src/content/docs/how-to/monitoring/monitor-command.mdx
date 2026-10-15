@@ -3,7 +3,7 @@ title: MONITOR Command
 description: Use the MONITOR command in Valkey GLIDE to observe all commands processed by the server in real time.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
 
@@ -26,8 +26,8 @@ GLIDE clients generally provide two modes for consuming monitor messages:
 
 ## Examples
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClientConfiguration, NodeAddress
@@ -51,9 +51,9 @@ GLIDE clients generally provide two modes for consuming monitor messages:
 
     asyncio.run(main())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideMonitorClient, MonitorLine } from "@valkey/valkey-glide";
 
@@ -74,9 +74,9 @@ GLIDE clients generally provide two modes for consuming monitor messages:
     console.log(`${line.command} ${line.args.join(" ")}`);
     await queueMonitor.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.MonitorClient;
     import glide.api.models.commands.MonitorMsg;
@@ -101,9 +101,9 @@ GLIDE clients generally provide two modes for consuming monitor messages:
         System.out.printf("%s %s%n", msg.command(), msg.args());
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     package main
 
@@ -144,9 +144,9 @@ GLIDE clients generally provide two modes for consuming monitor messages:
         fmt.Printf("%s %v\n", line.Command, line.Args)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     The C# client returns an [`IAsyncEnumerable`](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1)
     stream instead of providing separate callback and queue modes. Similar functionality to other clients can easily be implemented using
     the stream directly - see examples below.
@@ -186,8 +186,8 @@ GLIDE clients generally provide two modes for consuming monitor messages:
     var next = await queue.Reader.ReadAsync(queueCts.Token);
     OnMessage(next);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Monitor Message Fields
 

@@ -3,7 +3,7 @@ title: "Batch Commands"
 description: Learn about GLIDE batch operations.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 In Valkey GLIDE 2.0, the concept of **Batch** and **ClusterBatch** replaces the previous **Transaction** and **ClusterTransaction** APIs.
 This change provides greater flexibility by supporting both **atomic batches** (Transactions) and **non-atomic batches** (Pipelining), while ensuring easy configuration and clear, detailed examples for each scenario.
@@ -40,8 +40,8 @@ Both modes leverage the same classes— `Batch` (or `StandaloneBatch` in Go) for
 
 For **standalone** (non-cluster, cluster mode disabled) clients.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Batch
 
@@ -52,9 +52,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     pipeline = Batch(False)
     pipeline.set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Batch;
 
@@ -65,9 +65,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     Batch pipeline = new Batch(false);
     pipeline.set("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Batch} from "@valkey/valkey-glide";
 
@@ -78,9 +78,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     const pipeline = new Batch(false);
     pipeline.set("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
@@ -91,9 +91,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     pipe := pipeline.NewStandaloneBatch(false)
     pipe.Set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide.Pipeline;
 
@@ -104,9 +104,9 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     var pipeline = new Batch(false);
     pipeline.SetAsync("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Atomic batch (transaction)
     client.multi do |tx|
@@ -118,8 +118,8 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
       pipe.set("key", "value")
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::note
 Standalone Batches are executed on primary node.
@@ -130,8 +130,8 @@ Standalone Batches are executed on primary node.
 For **cluster** (cluster mode enabled) clients (Mirrors `Batch` but routes commands based on slot ownership,
 splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi-node-support)).
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import ClusterBatch
 
@@ -142,9 +142,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     pipeline = ClusterBatch(False)
     pipeline.set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.ClusterBatch;
 
@@ -155,9 +155,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     ClusterBatch pipelineCluster = new ClusterBatch(false);
     pipelineCluster.set("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {ClusterBatch} from "@valkey/valkey-glide";
 
@@ -168,9 +168,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     const pipeline = new ClusterBatch(false);
     pipeline.set("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
@@ -181,9 +181,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     pipe := pipeline.NewClusterBatch(false)
     pipe.Set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide.Pipeline;
 
@@ -194,9 +194,9 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
     var pipeline = new ClusterBatch(false);
     pipeline.SetAsync("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Atomic cluster batch (must use keys mapping to same slot)
     cluster_client.multi do |tx|
@@ -208,8 +208,8 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
       pipe.set("key", "value")
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::note
 When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](#multi-node-support).
@@ -221,8 +221,8 @@ If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY
 
 Determines how errors are surfaced when calling `exec(...)`. It is passed directly:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Standalone Mode
     async def exec(
@@ -240,9 +240,9 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
         options: Optional[ClusterBatchOptions] = None,
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Standalone Mode
     CompletableFuture<Object[]> exec(Batch batch, boolean raiseOnError);
@@ -251,9 +251,9 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
     CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError);
     CompletableFuture<Object[]> exec(ClusterBatch batch, boolean raiseOnError, ClusterBatchOptions options);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Standalone Mode
     public async exec(
@@ -269,9 +269,9 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
         options?: ClusterBatchOptions & DecoderOption,
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Standalone Mode
     Exec(ctx context.Context, batch pipeline.StandaloneBatch, raiseOnError bool) ([]any, error)
@@ -281,9 +281,9 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
     Exec(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool) ([]any, error)
     ExecWithOptions(ctx context.Context, batch pipeline.ClusterBatch, raiseOnError bool, options pipeline.ClusterBatchOptions) ([]any, error)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```text
     // Standalone Mode
     Task<object?[]?> Exec(Batch batch, bool raiseOnError);
@@ -293,8 +293,8 @@ Determines how errors are surfaced when calling `exec(...)`. It is passed direct
     Task<object?[]?> Exec(ClusterBatch batch, bool raiseOnError);
     Task<object?[]?> Exec(ClusterBatch batch, bool raiseOnError, Options.ClusterBatchOptions options);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 Behavior:
 
@@ -308,8 +308,8 @@ Behavior:
 
 **Example:**
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Cluster pipeline with raiseOnError = False
     batch = ClusterBatch(False)
@@ -339,9 +339,9 @@ Behavior:
         print("Batch execution aborted:", e)
     # Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Cluster pipeline with raiseOnError = false
     ClusterBatch batch = new ClusterBatch(false);
@@ -367,9 +367,9 @@ Behavior:
         // Example output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Cluster pipeline with raiseOnError = false
     const batch = new ClusterBatch(false);
@@ -398,9 +398,9 @@ Behavior:
     }
     // Output: Batch execution aborted:  RequestError: WRONGTYPE: Operation against a key holding the wrong kind of value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Cluster pipeline with raiseOnError = false
     pipeline := pipeline.NewClusterBatch(false).
@@ -422,9 +422,9 @@ Behavior:
     fmt.Printf("Batch execution aborted: %+v\n", err)
     // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     // Cluster pipeline with raiseOnError = false
     using Valkey.Glide;
@@ -463,8 +463,8 @@ Behavior:
     }
     // Output: Batch execution aborted: WRONGTYPE: Operation against a key holding the wrong kind of value
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### BatchOptions
 
@@ -474,16 +474,16 @@ Configuration for **standalone** batches.
 |-----------|-----------|-----------------------------------------------|---------------------------------------------------|
 | `timeout` | `Integer` | Client-level request  timeout (e.g., 5000 ms) | Maximum time in milliseconds to wait for the batch response. If exceeded, a timeout error is returned for the batch. |
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import BatchOptions
 
     batch_options = BatchOptions(timeout=2000) # 2 seconds
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.BatchOptions;
 
@@ -491,9 +491,9 @@ Configuration for **standalone** batches.
         .timeout(2000)         // 2-second timeout
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {BatchOptions} from "@valkey/valkey-glide";
 
@@ -501,26 +501,26 @@ Configuration for **standalone** batches.
         timeout: 2000, // 2 seconds
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
     options := pipeline.NewStandaloneBatchOptions().
     	WithTimeout(2 * time.Second)  // 2-second timeout
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide.Pipeline;
     using static Valkey.Glide.Pipeline.Options;
 
     var options = new BatchOptions(timeout: 2000); // 2 seconds
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### ClusterBatchOptions
 
@@ -540,16 +540,16 @@ Defines retry behavior (only for **non-atomic** cluster batches).
 |   `retryServerError`   | `boolean` | `false` |                 Retry commands that fail with retriable server errors (e.g.`TRYAGAIN`). May cause out-of-order results.                 |
 | `retryConnectionError` | `boolean` | `false` | Retry entire batch on connection failures. May cause duplicate executions since server might have processed the request before failure. |
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import BatchRetryStrategy
 
     retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.BatchRetryStrategy;
 
@@ -558,9 +558,9 @@ Defines retry behavior (only for **non-atomic** cluster batches).
         .retryConnectionError(true)
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {ClusterBatchRetryStrategy} from "@valkey/valkey-glide";
 
@@ -569,9 +569,9 @@ Defines retry behavior (only for **non-atomic** cluster batches).
             retryConnectionError: false,
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
@@ -579,9 +579,9 @@ Defines retry behavior (only for **non-atomic** cluster batches).
     	WithRetryConnectionError(true).
     	WithRetryServerError(true)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using static Valkey.Glide.Pipeline.Options;
 
@@ -590,8 +590,8 @@ Defines retry behavior (only for **non-atomic** cluster batches).
         retryConnectionError: true
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::note
 The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batches. If provided for an atomic cluster batch (a cluster transaction), an error will be thrown.
@@ -599,17 +599,17 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
 
 ### Full usage
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import ClusterBatchOptions, BatchRetryStrategy
 
     retry_strategy = BatchRetryStrategy(retry_server_error=True, retry_connection_error=False)
     options = ClusterBatchOptions(retry_strategy=retry_strategy)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.ClusterBatchOptions;
     import glide.api.models.commands.batch.ClusterBatchRetryStrategy;
@@ -626,9 +626,9 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
         .route(RANDOM) // Route the batch to a random node
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {ClusterBatchOptions} from "@valkey/valkey-glide";
 
@@ -641,9 +641,9 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
         },
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/pipeline"
 
@@ -655,9 +655,9 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
     	).
     	WithRoute(config.RandomRoute)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.Pipeline.Options;
@@ -671,8 +671,8 @@ The ClusterBatchRetryStrategy configuration is only for non-atomic cluster batch
         route: new Route.RandomRoute()
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Configuration Details
 
@@ -763,28 +763,28 @@ OK
 * **Replacement:** Use `Batch` (or `StandaloneBatch` in Go) or `ClusterBatch` with `isAtomic = true` to achieve transaction-like (atomic) behavior.
 * **Migration Tips**:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     - Replace calls to `new Transaction()` with `new Batch(true)`.
     - Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
     - Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     * Replace calls to `new Transaction()` with `new Batch(true)`.
     * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
     * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     * Replace calls to `new Transaction()` with `new Batch(true)`.
     * Replace calls to `new ClusterTransaction()` with `new ClusterBatch(true)`.
     * Replace `client.exec(transaction)` with `client.exec(batch, raiseOnError)` or `client.exec(batch, raiseOnError, options)`.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     * Replace calls to `pipeline.NewTransaction()` with `pipeline.NewStandaloneBatch(true)`.
     * Replace calls to `pipeline.NewClusterTransaction()` with `pipeline.NewClusterBatch(true)`.
     * Replace `client.Exec(transaction)` with `client.Exec(ctx, batch, raiseOnError)` or `client.ExecWithOptions(ctx, batch, raiseOnError, options)`.
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

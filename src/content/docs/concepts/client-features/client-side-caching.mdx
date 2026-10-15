@@ -3,7 +3,9 @@ title: "Client-Side Caching"
 description: Learn about Valkey GLIDE's TTL-based client-side caching feature.
 ---
 
-import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
+import { Aside } from '@astrojs/starlight/components';
 
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
@@ -40,8 +42,8 @@ All other commands bypass the cache entirely. Write commands (`SET`, `HSET`, `SA
 
 To enable client-side caching, pass a `ClientSideCache` configuration when creating a client.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClient,
@@ -75,9 +77,9 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
     )
     cluster_client = await GlideClusterClient.create(cluster_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.GlideClusterClient;
@@ -110,9 +112,9 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         .build();
     GlideClusterClient clusterClient = GlideClusterClient.createClient(clusterConfig).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {
         GlideClient,
@@ -143,9 +145,9 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         clientSideCache: cache,
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/config"
@@ -169,9 +171,9 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         WithClientSideCache(cache)
     clusterClient, err := glide.NewGlideClusterClient(clusterConfig)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     use ValkeyGlide\Cache\ClientSideCache;
 
@@ -197,9 +199,9 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         client_side_cache: $cache->toArray(),
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -223,8 +225,8 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
         .Build();
     var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Configuration Options
 
@@ -249,8 +251,8 @@ When the cache reaches its configured memory limit, it must remove entries to ma
 
 When `enableMetrics` is set to `true`, you can query cache performance statistics at runtime.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Get metrics
     hit_rate = await client.get_cache_hit_rate()         # float 0.0–1.0
@@ -263,9 +265,9 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     print(f"Hit rate: {hit_rate:.2%}")
     print(f"Entries: {entry_count}, Evictions: {evictions}, Expirations: {expirations}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Get metrics
     double hitRate = client.getCacheHitRate().get();         // 0.0–1.0
@@ -278,9 +280,9 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     System.out.printf("Entries: %d, Evictions: %d, Expirations: %d%n",
         entryCount, evictions, expirations);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Get metrics
     const hitRate = await client.getCacheHitRate();         // number 0.0–1.0
@@ -293,9 +295,9 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     console.log(`Hit rate: ${(hitRate * 100).toFixed(2)}%`);
     console.log(`Entries: ${entryCount}, Evictions: ${evictions}, Expirations: ${expirations}`);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Get metrics
     hitRate, err := client.GetCacheHitRate()         // float64 0.0–1.0
@@ -308,9 +310,9 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     fmt.Printf("Entries: %d, Evictions: %d, Expirations: %d\n",
         entryCount, evictions, expirations)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Get metrics
     $hitRate = $client->getCacheHitRate();         // float 0.0–1.0
@@ -324,9 +326,9 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     printf("Entries: %d, Evictions: %d, Expirations: %d\n",
         $entryCount, $evictions, $expirations);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -341,8 +343,8 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
     Console.WriteLine($"Hit rate: {hitRate:P2}");
     Console.WriteLine($"Entries: {entryCount}, Evictions: {evictions}, Expirations: {expirations}");
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 <Aside type="note">
   Calling any metrics method when caching is disabled or when `enableMetrics` is `false` will raise an error. The `getCacheEntryCount` method works regardless of the metrics flag as long as caching is enabled.
@@ -352,8 +354,8 @@ When `enableMetrics` is set to `true`, you can query cache performance statistic
 
 Multiple clients can share the same cache instance by passing the same `ClientSideCache` object to each client. This is useful when you want several connections to benefit from a single pool of cached data.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Both clients share the same cache
     cache = ClientSideCache.create(max_cache_kb=1024, entry_ttl_ms=60_000)
@@ -378,9 +380,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     # client2 gets a cache hit without contacting the server
     result = await client2.get("key")  # Cache hit
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Both clients share the same cache
     const cache = ClientSideCache.create(1024, 60000);
@@ -401,9 +403,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     // client2 gets a cache hit without contacting the server
     const result = await client2.get("key");  // Cache hit
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Both clients share the same cache
     ClientSideCache cache = ClientSideCache.builder()
@@ -432,9 +434,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     // client2 gets a cache hit without contacting the server
     String result = client2.get("key").get();  // Cache hit
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Both clients share the same cache
     cache := config.NewClientSideCache(1024, 60000)
@@ -456,9 +458,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     // client2 gets a cache hit without contacting the server
     result, _ := client2.Get("key")  // Cache hit
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Both clients share the same cache
     $cache = ClientSideCache::builder()
@@ -485,9 +487,9 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     // client2 gets a cache hit without contacting the server
     $result = $client2->get('key');  // Cache hit
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -514,8 +516,8 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
     // client2 gets a cache hit without contacting the server
     var result = await client2.GetAsync("key");  // Cache hit
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 <Aside type="caution">
   When sharing a cache, keep in mind:
@@ -534,8 +536,8 @@ Once enabled, the client receives push invalidation messages from the server whe
 
 ### Enabling server-assisted mode
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -554,28 +556,28 @@ Once enabled, the client receives push invalidation messages from the server whe
         .build();
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     Server-assisted invalidation is not yet available in the Node.js client. Progress is tracked in [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     Server-assisted invalidation is not yet available in the Go client. Progress is tracked in [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     Server-assisted invalidation is not yet available in the PHP client. Progress is tracked in [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 <Aside type="caution" title="RESP3 Required">
   Server-assisted caching requires the RESP3 protocol, which is enforced automatically by glide-core when `serverAssisted(true)` is set. Ensure your Valkey server supports RESP3 (Valkey 7.2+).
@@ -585,8 +587,8 @@ Once enabled, the client receives push invalidation messages from the server whe
 
 The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     ```java
     // Standalone client
     Map<String, Object> info = client.clientTrackingInfo().get();
@@ -601,28 +603,28 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
     // Cluster client — query all nodes
     Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     Not yet available. See [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     Not yet available. See [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     Not yet available. See [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Limitations
 
