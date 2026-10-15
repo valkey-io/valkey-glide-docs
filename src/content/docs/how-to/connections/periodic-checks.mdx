@@ -3,7 +3,7 @@ title: Configure Periodic Checks
 description: Guide for configuring periodic topology checks that keep a cluster client's view of the cluster up to date.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 In cluster mode, Valkey GLIDE periodically checks the cluster topology to detect changes and refreshes its internal slot map when a change is found.
 Periodic checks are enabled by default with a **60 second** interval. You can keep the default, set a custom interval, or disable them.
@@ -20,8 +20,8 @@ Periodic checks are enabled by default with a **60 second** interval. You can ke
 
 The example below sets a custom interval of 30 seconds. Each snippet also shows, as a comment, how to disable periodic checks instead.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -40,9 +40,9 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -61,9 +61,9 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -73,9 +73,9 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
         // To disable instead: periodicChecks: "disabled"
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -98,15 +98,15 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
         client.Ping(context.Background())
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     :::note
     This feature is not yet available in GLIDE PHP.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -119,9 +119,9 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -132,5 +132,5 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
       # To disable instead: periodic_checks: { disabled: true }
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
