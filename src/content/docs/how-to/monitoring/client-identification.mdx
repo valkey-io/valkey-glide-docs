@@ -1,0 +1,127 @@
+---
+title: Client Identification
+description: Customize the library name reported to Valkey for framework attribution and observability.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Frameworks and libraries that embed Valkey GLIDE often need to be identifiable in `CLIENT INFO` and `CLIENT LIST` output. This is useful for adoption tracking, observability, and debugging — letting operators see exactly which library or framework is responsible for each connection.
+
+## client_name vs lib_name
+
+Valkey exposes two separate identification fields per connection:
+
+| Option | Valkey command | Purpose |
+|--------|---------------|---------|
+| `client_name` | `CLIENT SETNAME` | Identifies the **application** (e.g. `"order-service"`) |
+| `lib_name` / `client_info_tag` | `CLIENT SETINFO LIB-NAME` | Identifies the **library or framework** (e.g. `"GlidePy(my-framework:1.2.3)"`) |
+
+Use `client_name` to label your application instance. Use `lib_name` and `client_info_tag` when you are building a library or framework on top of GLIDE and want that layer to be visible in server diagnostics.
+
+## Configuration Options
+
+GLIDE provides two options for controlling the `LIB-NAME` value:
+
+- **`client_info_tag`** (recommended) — appends a parenthesized tag to the default library name, preserving GLIDE's identity. For example, setting `client_info_tag="my-framework:1.2.3"` produces `GlidePy(my-framework:1.2.3)`.
+- **`lib_name`** — fully overrides the default library name. Use this only when you need complete control over the reported name.
+
+### Behavior Matrix
+
+| Configuration | Resulting `lib-name` (async) | Resulting `lib-name` (sync) |
+|---|---|---|
+| _(none)_ | `GlidePy` | `GlidePySync` |
+| `client_info_tag="lmcache:1.2"` | `GlidePy(lmcache:1.2)` | `GlidePySync(lmcache:1.2)` |
+| `lib_name="custom"` | `custom` | `custom` |
+| `lib_name="custom"`, `client_info_tag="lmcache:1.2"` | `custom(lmcache:1.2)` | `custom(lmcache:1.2)` |
+
+## Examples
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    **Async client (cluster mode):**
+
+    ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress
+    )
+
+    # Recommended: use client_info_tag to preserve GLIDE identity
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        client_info_tag="my-framework:1.2.3",
+    )
+    client = await GlideClusterClient.create(config)
+    # lib-name in CLIENT INFO: GlidePy(my-framework:1.2.3)
+
+    # Full override (replaces the default library name entirely)
+    config = GlideClusterClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        lib_name="custom-lib",
+    )
+    client = await GlideClusterClient.create(config)
+    # lib-name in CLIENT INFO: custom-lib
+    ```
+
+    **Sync client (standalone mode):**
+
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress
+    )
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress("localhost", 6379)],
+        client_info_tag="my-framework:1.2.3",
+    )
+    client = GlideClient(config)
+    # lib-name in CLIENT INFO: GlidePySync(my-framework:1.2.3)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    :::note[Coming soon]
+    The `client_info_tag` option is not yet available in Java. Java already supports `libName` for overriding the library name, but the tag-append behavior will be added in a future release.
+    :::
+  </TabItem>
+
+  <TabItem label="Node">
+    :::note[Coming soon]
+    Client identification options (`lib_name` and `client_info_tag`) are not yet available in the Node.js client. Support is planned for a future release.
+    :::
+  </TabItem>
+
+  <TabItem label="Go">
+    :::note[Coming soon]
+    Client identification options (`lib_name` and `client_info_tag`) are not yet available in the Go client.
+    :::
+  </TabItem>
+
+  <TabItem label="PHP">
+    :::note[Coming soon]
+    Client identification options (`lib_name` and `client_info_tag`) are not yet available in the PHP client.
+    :::
+  </TabItem>
+
+  <TabItem label="C#">
+    :::note[Coming soon]
+    Client identification options (`lib_name` and `client_info_tag`) are not yet available in the C# client.
+    :::
+  </TabItem>
+</Tabs>
+
+## Validation Rules
+
+The `client_info_tag` value **must not contain whitespace**. This constraint comes from the Valkey `CLIENT SETINFO` command, which does not allow spaces in values. If you pass a tag containing spaces, the client will reject it.
+
+Valid examples:
+- `"my-framework:1.2.3"`
+- `"lmcache:2.0"`
+- `"analytics-sdk"`
+
+Invalid examples:
+- `"my framework"` (contains a space)
+- `"lmcache 1.2"` (contains a space)
