@@ -3,7 +3,7 @@ title: Address Resolver
 description: Intercept host/port resolution at connection time using a custom callback
 ---
 
-import { TabItem, Tabs } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 The **address resolver** is a callback that intercepts host/port resolution when a GLIDE client connects to Valkey. It's useful for DNS overrides, service mesh scenarios, or testing with fake addresses.
 
@@ -15,8 +15,8 @@ The address resolver is available in the Node.js, Python, Java, Go, C#, and PHP 
 
 Pass a callable to the address resolver parameter. The callable receives the original host and port, and returns the resolved address.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
@@ -36,9 +36,9 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     # Client is now connected to 127.0.0.1:6379
     await client.set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.AddressResolver;
@@ -63,9 +63,9 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     // Client is now connected to 127.0.0.1:6379
     client.set("key", "value").get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from "@valkey/valkey-glide";
 
@@ -85,9 +85,9 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     // Client is now connected to 127.0.0.1:6379
     await client.set("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -117,9 +117,9 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     // Client is now connected to 127.0.0.1:6379
     client.Set(context.Background(), "key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -136,9 +136,9 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     // Client is now connected to 127.0.0.1:6379
     await client.SetAsync("key", "value");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $realHost = '127.0.0.1';
     $realPort = 6379;
@@ -156,15 +156,15 @@ Pass a callable to the address resolver parameter. The callable receives the ori
     // Client is now connected to 127.0.0.1:6379
     $client->set('key', 'value');
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Fallback Behavior
 
 If the resolver throws an exception or returns invalid data, the client falls back to the original address.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
@@ -182,9 +182,9 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     # Still connects to localhost:6379
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.AddressResolver;
@@ -207,9 +207,9 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     // Still connects to localhost:6379
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from "@valkey/valkey-glide";
 
@@ -223,9 +223,9 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     // Still connects to localhost:6379
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -250,9 +250,9 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     // Still connects to localhost:6379
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -266,9 +266,9 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     // Still connects to localhost:6379
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // This resolver throws — the client will use the original address
     $client = new ValkeyGlide();
@@ -281,15 +281,15 @@ If the resolver throws an exception or returns invalid data, the client falls ba
 
     // Still connects to localhost:6379
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Cluster Client
 
 The cluster client supports the same resolver signature.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClusterClient, GlideClusterClientConfiguration, NodeAddress
 
@@ -303,9 +303,9 @@ The cluster client supports the same resolver signature.
         )
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AddressResolver;
@@ -323,9 +323,9 @@ The cluster client supports the same resolver signature.
                     .build())
             .get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -336,9 +336,9 @@ The cluster client supports the same resolver signature.
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -359,9 +359,9 @@ The cluster client supports the same resolver signature.
     }
     defer client.Close()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -375,9 +375,9 @@ The cluster client supports the same resolver signature.
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $cluster = new ValkeyGlideCluster(
         addresses: [['host' => 'internal-dns.service', 'port' => 7000]],
@@ -386,8 +386,8 @@ The cluster client supports the same resolver signature.
         },
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Notes
 

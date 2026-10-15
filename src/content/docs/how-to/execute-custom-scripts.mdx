@@ -3,7 +3,8 @@ title: Execute Custom Scripts
 description: A guide on sending custom Lua scripts to Valkey using GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Steps } from '@astrojs/starlight/components';
 
 Valkey scripting allows you to execute Lua code directly on the Valkey server.
@@ -18,8 +19,8 @@ This guide will go over executing custom Lua scripts with GLIDE.
 
 The following steps shows how to run a simple a custom Lua script using GLIDE.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     <Steps>
       1. Define the lua script
 
@@ -73,9 +74,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
           asyncio.run(main())
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     <Steps>
       1. Define the lua script
 
@@ -143,9 +144,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
       }
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     <Steps>
       1. Define the lua script
 
@@ -201,9 +202,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
       main();
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     <Steps>
       1. Define the lua script
 
@@ -277,9 +278,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
       }
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     <Steps>
       1. Define the Lua script as a string.
       2. Create a `Script` object with the Lua code.
@@ -314,9 +315,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
       Console.WriteLine(result); // username: John Doe
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     :::caution
     The `invokeScript` command is not supported in Valkey GLIDE PHP.
 
@@ -379,9 +380,9 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
     :::tip[Script API vs eval/evalSha]
     Other GLIDE clients provide a `Script` API that automatically handles script caching and SHA1 management. In PHP, you manually manage this using `eval()` and `evalsha()`. For detailed patterns and best practices, see the [Valkey Scripting Reference](/reference/scripting-reference).
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     <Steps>
       1. Define the lua script
 
@@ -438,8 +439,8 @@ The following steps shows how to run a simple a custom Lua script using GLIDE.
     result = client.invoke_script(sha, keys: ["username"], args: ["John Doe"])
     puts result # username: John Doe
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

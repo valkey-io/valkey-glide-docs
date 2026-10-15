@@ -3,7 +3,7 @@ title: Logging
 description: Configure logging in Valkey GLIDE clients with custom log levels, file output, and synchronized message handling.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 This guide will go over how the GLIDE clients logger works and how to configure it.
 
@@ -22,8 +22,8 @@ The logger is currently available for C#, Python, Node, Java, and PHP clients.
 
 The following examples show how to configure the logger in GLIDE clients.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClientConfiguration, NodeAddress, GlideClient, Logger, LogLevel
@@ -45,9 +45,9 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference](https://glide.valkey.io/languages/python/api/glide_async/logger/?h=logger) for the full logger interface.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient, Logger } from "@valkey/valkey-glide";
 
@@ -70,9 +70,9 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference](https://glide.valkey.io/languages/nodejs/api/classes/Logger.Logger.html) for the full logger interface.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -94,9 +94,9 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference](https://github.com/valkey-io/valkey-glide-csharp/blob/main/sources/Valkey.Glide/Logger.cs#L33) for the full logger interface.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     package com.example;
 
@@ -138,9 +138,9 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the API [reference](https://glide.valkey.io/languages/java/api/glide/api/logging/Logger.html) for the full logger interface.
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Configure the log level and the output file name
     valkey_glide_logger_set_config("debug", "./glide_logs");
@@ -160,8 +160,8 @@ The following examples show how to configure the logger in GLIDE clients.
     ```
 
     Refer to the [logger functions](https://github.com/valkey-io/valkey-glide-php/blob/main/logger.stub.php) for the full logger interface.
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Log Files
 

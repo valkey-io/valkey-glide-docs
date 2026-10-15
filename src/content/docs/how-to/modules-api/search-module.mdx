@@ -3,7 +3,9 @@ title: Work with Valkey Search
 description: Learn how to use the high-performance Valkey Search module with GLIDE.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
+import { Aside } from '@astrojs/starlight/components';
 
 Valkey-Search (BSD-3-Clause), provided as a Valkey module, is a high-performance Search engine optimized for AI-driven / Search / Analytics / Recommendation System related workloads.
 
@@ -22,8 +24,8 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
 
 ## Examples
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     :::tip[Javadoc]
     The API reference can be found [here](https://glide.valkey.io/languages/java/api/glide/api/commands/servermodules/FT.html).
     :::
@@ -96,9 +98,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     // searchResponse[0] == 2L
     // searchResponse[1] contains a map with "{hash}:0" and "{hash}:1" vector search results
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/nodejs/api/modules/server-modules_GlideFt.html).
     :::
@@ -149,9 +151,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     console.log(searchResult[0]); // Output: 1
     console.log(searchResult[1]); // Output: search result containing "{json}:1"
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     :::tip[API Reference]
     The API reference can be found [here](https://glide.valkey.io/languages/python/api/reference/glide/async_commands/ft/).
     :::
@@ -211,9 +213,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     # search_result[0] == 2
     # search_result[1] contains results with "{json}:1" and "{json}:2"
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -262,9 +264,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     // result.TotalResults == 2
     // result.Documents contains "{hash}:0" and "{hash}:1" with their vector values
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     use ValkeyGlide\Search\{FtCreateBuilder, FtVectorField, FtSearchBuilder};
 
@@ -301,9 +303,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     // $result[0] == 2
     // $result[1] contains "{hash}:0" and "{hash}:1" with their vector values
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.ServerModules;
@@ -359,9 +361,9 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     Console.WriteLine($"Total results: {result.TotalResults}");     // Total results: 2
     Console.WriteLine($"Vectors: [{string.Join(", ", vectors)}]");  // Vectors: [0000000000000000, 00000000000080BF]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -395,8 +397,8 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     # result.total_results == 2
     # result.documents contains "{hash}:0" and "{hash}:1" with their vector values
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

@@ -3,7 +3,7 @@ title: Valkey Scripting Reference
 description: Reference guide for working with custom Lua scripting in Valkey GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 This page contains code references for working with custom Lua scripts in Valkey GLIDE.
 
@@ -26,8 +26,8 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
 
 ### Direct EVAL (Before)
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Old approach with custom commands (not recommended)
     result = await client.custom_command([
@@ -38,9 +38,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         "myvalue"
     ])
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Old approach with custom commands (not recommended)
     Object result = client.customCommand(new String[]{
@@ -51,9 +51,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         "myvalue"
     }).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Old approach with custom commands (not recommended)
     const result = await client.customCommand([
@@ -64,9 +64,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         "myvalue"
     ]);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Old approach with custom commands (not recommended)
     result, err := client.CustomCommand(context.Background(), []string{
@@ -77,9 +77,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         "myvalue",
     })
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -92,13 +92,13 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         "myvalue"
     });
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Script Class (After)
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # New approach with Script class (recommended)
     from glide import Script
@@ -110,9 +110,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         args=["myvalue"]
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // New approach with Script class (recommended)
     import glide.api.models.Script;
@@ -128,9 +128,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
         ).get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // New approach with Script class (recommended)
     import {Script} from "@valkey/valkey-glide";
@@ -142,9 +142,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
     });
     script.release();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // New approach with Script class (recommended)
     import "github.com/valkey-io/valkey-glide/go/v2/options"
@@ -159,9 +159,9 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
             Build(),
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     // New approach with Script class (recommended)
     using Valkey.Glide;
@@ -170,8 +170,8 @@ The following shows how to covert your `EVAL` command to GLIDE's `Script` interf
     var options = new ScriptOptions().WithKeys("mykey").WithArgs("myvalue");
     var result = await client.ScriptInvokeAsync(script, options);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Common Script Patterns
 
@@ -202,8 +202,8 @@ else
 end
 ```
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -220,9 +220,9 @@ end
         args=["10", "60"]  # 10 requests per 60 seconds
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.commands.ScriptOptions;
@@ -244,9 +244,9 @@ end
         ).get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
     import {readFileSync} from "fs";
@@ -261,9 +261,9 @@ end
         args: ["10", "60"]  // 10 requests per 60 seconds
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/options"
@@ -284,9 +284,9 @@ end
             Build(),
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -301,9 +301,9 @@ end
             .WithKeys("rate_limit:user:123")
             .WithArgs("10", "60")); // 10 requests per 60 seconds
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Read script from file
     $rateLimit = file_get_contents('rate_limit.lua');
@@ -315,9 +315,9 @@ end
         1  // num_keys
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Read script from file
     rate_limit = File.read("rate_limit.lua")
@@ -329,8 +329,8 @@ end
       args: ["10", "60"]  # 10 requests per 60 seconds
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Distributed Lock
 
@@ -350,8 +350,8 @@ else
 end
 ```
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -383,9 +383,9 @@ end
                 args=["unique_token"]
             )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.commands.ScriptOptions;
@@ -425,9 +425,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
     import {readFileSync} from "fs";
@@ -457,9 +457,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/options"
@@ -498,9 +498,9 @@ end
         // Do work while holding lock
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -535,9 +535,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Read scripts from files
     $acquireLock = file_get_contents('acquire_lock.lua');
@@ -563,9 +563,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Read scripts from files
     acquire_lock = File.read("acquire_lock.lua")
@@ -591,8 +591,8 @@ end
       end
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Conditional Update
 
@@ -606,8 +606,8 @@ end
     end
 ```
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -624,9 +624,9 @@ end
         args=["pending", "active"]  # Change from "pending" to "active"
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.commands.ScriptOptions;
@@ -648,9 +648,9 @@ end
         ).get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
     import {readFileSync} from "fs";
@@ -665,9 +665,9 @@ end
         args: ["pending", "active"]  // Change from "pending" to "active"
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/options"
@@ -688,9 +688,9 @@ end
             Build(),
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -705,9 +705,9 @@ end
             .WithKeys("user:123:status")
             .WithArgs("pending", "active")); // Change from "pending" to "active"
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Read script from file
     $conditionalUpdate = file_get_contents('conditional_update.lua');
@@ -719,9 +719,9 @@ end
         1  // num_keys
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Read script from file
     conditional_update = File.read("conditional_update.lua")
@@ -733,15 +733,15 @@ end
       args: ["pending", "active"]  # Change from "pending" to "active"
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Error Handling Patterns
 
 ### Common Script Errors
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script, RequestError
 
@@ -760,9 +760,9 @@ end
         else:
             print(f"Script error: {e}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.exceptions.RequestException;
@@ -788,9 +788,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script, RequestError} from "@valkey/valkey-glide";
 
@@ -814,9 +814,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/options"
@@ -840,9 +840,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.Errors;
@@ -867,9 +867,9 @@ end
             Console.WriteLine($"Script error: {message}");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Handle script execution errors
     $script = "return redis.call('INCR', 'not_a_number')";
@@ -889,9 +889,9 @@ end
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Handle script execution errors
     script = "return redis.call('INCR', 'not_a_number')"
@@ -911,8 +911,8 @@ end
       end
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Script Timeout Handling
 
@@ -920,8 +920,8 @@ end
 When a client timeout occurs, the client stops waiting for a response, but the script continues running on the server. To stop a read-only script that's still executing, use `SCRIPT KILL`.
 :::
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient, GlideClientConfiguration, NodeAddress, Script, RequestError
 
@@ -953,9 +953,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         else:
             print(f"Script error: {e}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -999,9 +999,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClient, GlideClientConfiguration, Script, RequestError} from "@valkey/valkey-glide";
 
@@ -1039,9 +1039,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -1080,9 +1080,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         fmt.Printf("Script completed: %v\n", result)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.Errors;
@@ -1122,9 +1122,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             Console.WriteLine($"Script error: {message}");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     **Requirements:** PHP 8.1+
 
     ```php
@@ -1159,9 +1159,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -1196,13 +1196,13 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       end
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Cluster-Specific Errors
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import RequestError
 
@@ -1217,9 +1217,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             print("Keys are in different slots")
             # Use hash tags or route explicitly
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.exceptions.RequestException;
 
@@ -1240,9 +1240,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {RequestError} from "@valkey/valkey-glide";
 
@@ -1258,9 +1258,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Handle cluster routing errors
     result, err := clusterClient.InvokeScriptWithOptions(
@@ -1275,9 +1275,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         // Use hash tags or route explicitly
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.Errors;
@@ -1295,9 +1295,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         // Use hash tags or route explicitly
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Handle cluster routing errors
     try {
@@ -1313,9 +1313,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Handle cluster routing errors
     begin
@@ -1330,15 +1330,15 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       end
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Best Practices
 
 ### 1. Use Scripts for Atomic Non-primitive Operations
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -1363,9 +1363,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         args=["100", "50", "86400"]  # new score, threshold, expire in 1 day
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.commands.ScriptOptions;
@@ -1397,9 +1397,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         ).get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
 
@@ -1423,9 +1423,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         args: ["100", "50", "86400"]  // new score, threshold, expire in 1 day
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -1453,9 +1453,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             Build(),
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -1484,9 +1484,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             .WithKeys("user:score", "user:history")
             .WithArgs("100", "50", "86400")); // new score, threshold, expire in 1 day
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Good: Conditional update with multiple data structures
     $conditionalUpdate = <<<'LUA'
@@ -1509,9 +1509,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         2  // num_keys
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Good: Conditional update with multiple data structures
     conditional_update = <<~LUA
@@ -1534,13 +1534,13 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       args: ["100", "50", "86400"]  # new score, threshold, expire in 1 day
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### 2. Handle Nil Values Properly
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -1554,9 +1554,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         end
     """)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
 
@@ -1572,9 +1572,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         // Use script
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
 
@@ -1588,9 +1588,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         end
     `);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -1604,9 +1604,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         end
     `)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -1620,9 +1620,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         end
     ");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Good: Proper nil handling
     $safeScript = <<<'LUA'
@@ -1634,9 +1634,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     end
     LUA;
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Good: Proper nil handling
     safe_script = <<~LUA
@@ -1648,13 +1648,13 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       end
     LUA
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### 3. Use Appropriate Data Types
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -1664,9 +1664,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     """)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
 
@@ -1678,9 +1678,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         // Use script
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
 
@@ -1690,9 +1690,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     `);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -1702,9 +1702,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     `)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -1714,9 +1714,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     ");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Good: Return appropriate types
     $typedScript = <<<'LUA'
@@ -1724,9 +1724,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
     return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     LUA;
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Good: Return appropriate types
     typed_script = <<~LUA
@@ -1734,13 +1734,13 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       return tonumber(value) or 0  -- Ensure numeric return, default to 0 if nil
     LUA
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### 4. Consider Cluster Constraints
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script
 
@@ -1758,9 +1758,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         args=["John", "john@example.com"]
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.Script;
     import glide.api.models.commands.ScriptOptions;
@@ -1784,9 +1784,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         ).get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Script} from "@valkey/valkey-glide";
 
@@ -1803,9 +1803,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         args: ["John", "john@example.com"]
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -1826,9 +1826,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             Build(),
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -1846,9 +1846,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
             .WithKeys("user:{123}:name", "user:{123}:email")
             .WithArgs("John", "john@example.com"));
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Good: Use hash tags for related keys
     $clusterScript = <<<'LUA'
@@ -1864,9 +1864,9 @@ When a client timeout occurs, the client stops waiting for a response, but the s
         2  // num_keys
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Good: Use hash tags for related keys
     cluster_script = <<~LUA
@@ -1882,5 +1882,5 @@ When a client timeout occurs, the client stops waiting for a response, but the s
       args: ["John", "john@example.com"]
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
