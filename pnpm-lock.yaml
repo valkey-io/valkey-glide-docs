@@ -28,6 +28,9 @@ importers:
       mermaid:
         specifier: ^11.10.1
         version: 11.10.1
+      rehype:
+        specifier: ^13.0.2
+        version: 13.0.2
       sharp:
         specifier: ^0.34.2
         version: 0.34.3

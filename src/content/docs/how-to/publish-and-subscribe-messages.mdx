@@ -3,7 +3,8 @@ title: Pub/Sub Messaging
 description: Learn how to publish, subscribe, and manage Pub/Sub with Valkey GLIDE clients.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import ClientTabs from '@components/ClientTabs.astro';
+import ClientTab from '@components/ClientTab.astro';
 
 Valkey GLIDE PubSub aims to unify various nuances into a coherent interface, minimizing differences between Sharded, Cluster, and Standalone configurations.
 Additionally, GLIDE is responsible for tracking topology changes in real time, ensuring the client remains subscribed regardless of any connectivity issues.
@@ -25,8 +26,8 @@ Since the RESP protocol does not guarantee strong delivery semantics for PubSub 
 
 To publish a message, create a separate client to your Valkey instance. Both Standalone and Cluster are supported.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     GlideClientConfiguration publisherConfig = GlideClientConfiguration.builder()
             .address(NodeAddress.builder().port(6379).build())
@@ -36,9 +37,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
         publisher.publish("Test message", "ch1").get();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     const publisherConfig = {
         addresses: [{ host: "localhost", port: 6379 }],
@@ -50,9 +51,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
 
     publisher.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     publisher_config = GlideClientConfiguration(
         [NodeAddress("localhost", 6379)]
@@ -63,9 +64,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     # Publish message on 'ch1' channel
     await publisher.publish("Test message", "ch1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     publisher, _ := NewGlideClient(NewGlideClientConfiguration().
         WithAddress(&NodeAddress{}))
@@ -73,9 +74,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     // Publish message on 'ch1' channel
     publisher.Publish("ch1", "Hello from ch1")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     ```php
     $publisher = new ValkeyGlide();
     $publisher->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
@@ -83,9 +84,9 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     // Publish message on 'ch1' channel
     $publisher->publish('ch1', 'Test message');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -99,17 +100,17 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     // Publish message on 'ch1' channel
     await publisher.PublishAsync("ch1", "Test message");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     publisher = Valkey.new(host: "localhost", port: 6379, protocol: :resp3)
 
     # Publish message on 'ch1' channel
     publisher.publish("Test message", "ch1")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Subscribing
 
@@ -124,8 +125,8 @@ Starting with GLIDE 2.3, you can subscribe to channels and patterns at any point
 
 No special configuration is needed at client creation time — you can subscribe dynamically on any client. Messages are buffered and retrievable via polling by default. If you want callback-based delivery instead (explained [below](#callback)), provide a subscription configuration with a callback at client creation time (the initial channel set can be empty).
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     // Create a regular client — no subscription configuration needed
     GlideClientConfiguration config = GlideClientConfiguration.builder()
@@ -160,9 +161,9 @@ No special configuration is needed at client creation time — you can subscribe
 
     } // remaining subscriptions cleaned up on close
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     // Create a regular client — no subscription configuration needed
     const config = {
@@ -195,9 +196,9 @@ No special configuration is needed at client creation time — you can subscribe
 
     await client.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     # Create a regular client — no subscription configuration needed
     config = GlideClientConfiguration(
@@ -230,9 +231,9 @@ No special configuration is needed at client creation time — you can subscribe
 
     await client.close()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     ctx := context.Background()
 
@@ -268,9 +269,9 @@ No special configuration is needed at client creation time — you can subscribe
         fmt.Printf("Received: %s on %s\n", msg.Message, msg.Channel)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     ```php
     // Note: PHP uses the PHPRedis-style API where subscribe() is BLOCKING.
     // It enters a message loop and the callback fires for each message.
@@ -305,9 +306,9 @@ No special configuration is needed at client creation time — you can subscribe
 
     $client->close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -340,9 +341,9 @@ No special configuration is needed at client creation time — you can subscribe
     var queue = client.PubSubQueue!;
     var msg = await queue.GetMessageAsync();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     # Create a regular client with RESP3. No subscription configuration needed.
     client = Valkey.new(host: "localhost", port: 6379, protocol: :resp3)
@@ -372,15 +373,15 @@ No special configuration is needed at client creation time — you can subscribe
 
     client.close
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Config-Based Subscriptions (All Versions)
 
 For GLIDE versions prior to 2.3, or when your subscriptions are known at startup, you can define them in the client configuration. These subscriptions are applied immediately when the client connects.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     // Define callback and context
     MessageCallback callback =
@@ -406,9 +407,9 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
         // Do some work/wait - the callback will be invoked on incoming messages
     } // Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     // Define callback and context
     const callback = (msg: PubSubMsg, ctx: any) => {
@@ -438,9 +439,9 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     listeningClient.close();    // Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     # Define callback and context
     def callback(msg: CoreCommands.PubSubMsg, ctx: Any):
@@ -469,9 +470,9 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     await listening_client.close()    # Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     // Define callback and context
     callback := func(message *PubSubMessage, context any) {
@@ -494,15 +495,15 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     // Do some work/wait - the callback will be invoked on incoming messages
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     :::note
     PHP GLIDE does not use config-based subscriptions. It uses the PHPRedis-style API where `subscribe()` and `psubscribe()` are called at runtime. See [Dynamic Subscriptions](#dynamic-subscriptions-glide-23) above.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -529,9 +530,9 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     // Do some work/wait - the callback will be invoked on incoming messages
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     # Define callback and context
     callback = ->(msg, ctx) { puts "Received #{msg.message}, context #{ctx}" }
@@ -554,8 +555,8 @@ For GLIDE versions prior to 2.3, or when your subscriptions are known at startup
 
     listening_client.close    # Unsubscribe happens here
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Receiving Messages
 
@@ -569,8 +570,8 @@ When a callback is configured, all incoming messages are sent to that callback. 
 
 To use callback-based delivery, provide a subscription configuration with a callback at client creation time. The callback fires for every incoming message — from both config-based and dynamic subscriptions.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     List<String> received = Collections.synchronizedList(new ArrayList<>());
     MessageCallback callback = (msg, context) -> {
@@ -597,9 +598,9 @@ To use callback-based delivery, provide a subscription configuration with a call
         assert received.contains("Hello!");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     const received: string[] = [];
     const callback = (msg: PubSubMsg, context: any) => {
@@ -629,9 +630,9 @@ To use callback-based delivery, provide a subscription configuration with a call
 
     client.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     received = []
 
@@ -661,9 +662,9 @@ To use callback-based delivery, provide a subscription configuration with a call
 
     await client.close()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     var received []string
     var mu sync.Mutex
@@ -695,15 +696,15 @@ To use callback-based delivery, provide a subscription configuration with a call
     fmt.Println("Received messages:", received)
     mu.Unlock()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     :::note
     PHP GLIDE uses inline callbacks with `subscribe()` / `psubscribe()`. See the [Dynamic Subscriptions](#dynamic-subscriptions-glide-23) examples above.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -740,9 +741,9 @@ To use callback-based delivery, provide a subscription configuration with a call
       System.Diagnostics.Debug.Assert(received.Contains("Hello!"));
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     received = Thread::Queue.new
 
@@ -771,8 +772,8 @@ To use callback-based delivery, provide a subscription configuration with a call
 
     client.close
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Polling
 
@@ -781,8 +782,8 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 * **Async wait:** `getPubSubMessage()` / `get_pubsub_message()` — blocks until a message is available.
 * **Non-blocking poll:** `tryGetPubSubMessage()` / `try_get_pubsub_message()` — returns the next message or `null`/`None`/`nil` immediately.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     // Configure the client to receive messages published to 'ch1'
     // and 'ch2' and to channels matched by 'chat*' glob pattern.
@@ -805,9 +806,9 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
         Message msg = listeningClient.getPubSubMessage().get();
     } // Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     // Configure the client to receive messages published to 'ch1'
     // and 'ch2' and to channels matched by 'chat*' glob pattern.
@@ -833,9 +834,9 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 
     listeningClient.close();    // Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     # Configure the client to receive messages published to 'ch1'
     # and 'ch2' and to channels matched by 'chat*' glob pattern.
@@ -861,9 +862,9 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 
     await listening_client.close()    # Unsubscribe happens here
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     // Create a signal channel to receive notifications of new messages
     signalCh := make(chan struct{}, 1)
@@ -916,16 +917,16 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
     // The main application can continue running...
     // When it's time to stop, just call cancel() or close the client
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     :::caution
     GLIDE PHP does not support polling/async message retrieval.
     Only callback-based PubSub is available. See the [PHP dynamic subscriptions example](#dynamic-subscriptions-glide-23) above.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -955,9 +956,9 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
     // Async: waits for the next message
     var message = await queue.GetMessageAsync();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     # Configure the client to receive messages published to 'ch1'
     # and 'ch2' and to channels matched by 'chat*' glob pattern.
@@ -978,8 +979,8 @@ If no callback is configured, messages are buffered in an unbounded queue. You r
 
     listening_client.close    # Unsubscribe happens here
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Unsubscribing (GLIDE 2.3+)
 
@@ -992,8 +993,8 @@ To unsubscribe from **all** channels/patterns of a given type, pass `None`/`null
 Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are removed automatically when the client is closed.
 :::
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     // Unsubscribe from specific exact channels (blocking)
     client.unsubscribe(Set.of("news"), 5000).get();
@@ -1018,9 +1019,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // clusterClient.sunsubscribeLazy(Set.of("shard-ch2")).get();
     // clusterClient.sunsubscribe(PubSubClusterCommands.ALL_SHARDED_CHANNELS, 5000).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     // Unsubscribe from specific exact channels (blocking)
     await client.unsubscribe(new Set(["news"]), 5000);
@@ -1045,9 +1046,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // await clusterClient.sunsubscribeLazy(new Set(["shard-ch2"]));
     // await clusterClient.sunsubscribe(ALL_SHARDED_CHANNELS, 5000);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     # Unsubscribe from specific exact channels (blocking)
     await client.unsubscribe({"news"}, timeout_ms=5000)
@@ -1072,9 +1073,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     # await cluster_client.sunsubscribe_lazy({"shard-ch2"})
     # await cluster_client.sunsubscribe(ALL_SHARDED_CHANNELS, timeout_ms=5000)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     // Unsubscribe from specific exact channels (blocking)
     err := client.Unsubscribe(ctx, []string{"news"}, 5000)
@@ -1098,9 +1099,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     // err = clusterClient.SUnsubscribe(ctx, []string{"shard-ch1"}, 5000)
     // err = clusterClient.SUnsubscribeLazy(ctx, []string{"shard-ch2"})
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab lang="php">
     ```php
     // In PHP, unsubscribe is called from within the subscribe callback.
 
@@ -1120,9 +1121,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
         // $client->punsubscribe();
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -1151,9 +1152,9 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     await clusterClient.SUnsubscribeLazyAsync("shard-ch2");
     await clusterClient.SUnsubscribeAsync(blockFor);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     # Unsubscribe from specific exact channels (blocking)
     client.unsubscribe("news", timeout_ms: 5000)
@@ -1178,47 +1179,47 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
     # cluster_client.sunsubscribe_lazy("shard-ch2")
     # cluster_client.sunsubscribe(timeout_ms: 5000)
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Subscription State Introspection (GLIDE 2.3+)
 
 Use `get_subscriptions()` to inspect the current subscription state. It returns both the **desired** subscriptions (what you've requested) and the **actual** subscriptions (what the server has confirmed). This is useful for verifying that lazy subscriptions have been fully applied.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab lang="java">
     ```java
     PubSubState state = client.getSubscriptions().get();
     System.out.println("Desired: " + state.getDesiredSubscriptions());
     System.out.println("Actual: " + state.getActualSubscriptions());
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab lang="node">
     ```typescript
     const state = await client.getSubscriptions();
     console.log("Desired:", state.desiredSubscriptions);
     console.log("Actual:", state.actualSubscriptions);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab lang="python">
     ```py
     state = await client.get_subscriptions()
     print(f"Desired: {state.desired_subscriptions}")
     print(f"Actual: {state.actual_subscriptions}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab lang="go">
     ```go
     state, err := client.GetSubscriptions(ctx)
     fmt.Println("Desired:", state.DesiredSubscriptions)
     fmt.Println("Actual:", state.ActualSubscriptions)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab lang="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -1226,16 +1227,16 @@ Use `get_subscriptions()` to inspect the current subscription state. It returns 
     Console.WriteLine($"Desired: {state.Desired}");
     Console.WriteLine($"Actual: {state.Actual}");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab lang="ruby">
     ```ruby
     state = client.get_subscriptions
     puts "Desired: #{state.desired_subscriptions}"
     puts "Actual: #{state.actual_subscriptions}"
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Next Steps
 

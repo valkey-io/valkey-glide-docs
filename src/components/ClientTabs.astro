@@ -1,0 +1,96 @@
+---
+/**
+ * ClientTabs - GLIDE Client Language Tabs Component
+ *
+ * Wraps Astro Starlight's Tabs component for per-client-language code examples:
+ *
+ * - Sorts tabs into the canonical language order (Python, Java, Node, Go, PHP, C#, Ruby),
+ *   regardless of authored order. Tabs that are not client languages are placed after
+ *   the known ones, keeping their relative order.
+ * - Uses the `progLangInExamples` sync key by default (override with `syncKey`).
+ * - Normalizes known language labels (e.g. "Node.js" -> "Node") so tabs sync across pages.
+ * - Optionally adds language icons (`icons`) and URL parameter selection (`param`, see `ParamTabs`).
+ *
+ * Language order, labels, aliases and icons are defined in `src/data/client-languages.ts`.
+ *
+ * Example:
+ *
+ *   <ClientTabs>
+ *     <ClientTab lang="java">Java content</ClientTab>
+ *     <ClientTab lang="python">Python content</ClientTab>
+ *   </ClientTabs>
+ *
+ *  Renders the "Python" tab first, then "Java". Plain `<TabItem label="...">` children are
+ *  also supported. Only direct children are reordered; nested tabs are left untouched.
+ */
+import { Tabs } from "@astrojs/starlight/components";
+import { rehype } from "rehype";
+import ParamTabs from "./ParamTabs.astro";
+import {
+    CLIENT_TABS_SYNC_KEY,
+    clientLanguageRank,
+    resolveClientLanguage,
+} from "@data/client-languages";
+
+interface Props {
+    /** Sync key shared with other tabs. Defaults to `progLangInExamples`. */
+    syncKey?: string;
+    /** URL parameter used to select a tab on page load (see `ParamTabs`). */
+    param?: string;
+    /** Show language icons next to known language labels. */
+    icons?: boolean;
+}
+
+const { syncKey = CLIENT_TABS_SYNC_KEY, param, icons = false } = Astro.props;
+
+// Must match the tag name rendered by Starlight's `<TabItem>`.
+const TAB_ITEM_TAG_NAME = "starlight-tab-item";
+
+const processor = rehype().data("settings", { fragment: true });
+const tree = processor.parse(await Astro.slots.render("default"));
+
+type Node = (typeof tree.children)[number];
+type Element = Extract<Node, { type: "element" }>;
+
+const isTabItem = (node: Node): node is Element =>
+    node.type === "element" && node.tagName === TAB_ITEM_TAG_NAME;
+
+const tabItems = tree.children.filter(isTabItem);
+
+for (const item of tabItems) {
+    const language = resolveClientLanguage(String(item.properties.dataLabel));
+    if (!language) continue;
+    item.properties.dataLabel = language.label;
+    if (icons && !item.properties.dataIcon) {
+        item.properties.dataIcon = language.icon;
+    }
+}
+
+// `Array.prototype.sort` is stable, so unknown tabs keep their relative order.
+const sortedTabItems = [...tabItems].sort(
+    (a, b) =>
+        clientLanguageRank(String(a.properties.dataLabel)) -
+        clientLanguageRank(String(b.properties.dataLabel)),
+);
+
+// Put the sorted tab items back into the positions occupied by tab items, leaving
+// any other top-level nodes (e.g. whitespace) where they were.
+let nextTabItem = 0;
+tree.children = tree.children.map((node) =>
+    isTabItem(node) ? sortedTabItems[nextTabItem++]! : node,
+);
+
+const html = processor.stringify(tree);
+---
+
+{
+    param ? (
+        <ParamTabs param={param} syncKey={syncKey}>
+            <Fragment set:html={html} />
+        </ParamTabs>
+    ) : (
+        <Tabs syncKey={syncKey}>
+            <Fragment set:html={html} />
+        </Tabs>
+    )
+}

@@ -1,0 +1,39 @@
+---
+/**
+ * ClientTab - A single GLIDE client language tab
+ *
+ * Wraps Astro Starlight's TabItem, deriving the canonical tab label from a
+ * language identifier so labels stay consistent (and tabs stay synced) across pages.
+ * Meant to be used inside `ClientTabs`.
+ *
+ * Example:
+ *
+ *   <ClientTab lang="csharp">C# content</ClientTab>
+ *
+ *  Renders a tab labeled "C#". Accepted values are the ids and aliases defined in
+ *  `src/data/client-languages.ts` (e.g. `python`, `java`, `node`, `nodejs`, `go`,
+ *  `php`, `csharp`, `c#`, `ruby`). Unknown values fail the build.
+ */
+import { TabItem } from "@astrojs/starlight/components";
+import {
+    resolveClientLanguage,
+    type ClientLanguageKey,
+} from "@data/client-languages";
+
+interface Props {
+    lang: ClientLanguageKey;
+}
+
+const { lang } = Astro.props;
+const language = resolveClientLanguage(lang);
+
+if (!language) {
+    throw new Error(
+        `Unknown client language \`${lang}\` on \`<ClientTab>\` component.`,
+    );
+}
+---
+
+<TabItem label={language.label}>
+    <slot />
+</TabItem>
