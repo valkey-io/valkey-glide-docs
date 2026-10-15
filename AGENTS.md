@@ -124,20 +124,6 @@ Contains the automated audit of command implementations across all clients:
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
 
-### Language Tabs
-
-Per-language code examples use Starlight tabs synced across pages:
-
-```mdx
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">...</TabItem>
-  ...
-</Tabs>
-```
-
-- Tab labels (in this order): `Python`, `Java`, `Node`, `Go`, `PHP`, `C#`, `Ruby`
-- Examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow
-
 ## Commit Requirements
 
 - All commits must include `--signoff` (`git commit --signoff -m "message"`) for DCO compliance
