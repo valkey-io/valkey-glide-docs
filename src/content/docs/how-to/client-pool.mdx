@@ -338,6 +338,7 @@ The following apply to the preview release.
 These are intentional constraints for this release. Design your application around them.
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation, because subscription state cannot be reliably reset when the client is returned. Use a dedicated client for Pub/Sub.
+- **Close any `WATCH` before releasing a client:** On release the pool resets state with `DISCARD` and `SELECT`, which does not clear a `WATCH` that was set without a following `MULTI`. The next borrower inherits that `WATCH`, so its `EXEC` can abort over a key it never watched. Always end a `WATCH` with `EXEC`, `DISCARD`, or `UNWATCH` before returning the client.
 - **Limited support for custom per-client callbacks:** Support for a language-side custom IAM credentials provider or custom address resolver on a pooled client config varies by binding. Java rejects both at pool creation; Go rejects a custom address resolver; Node.js supports a custom address resolver; Python does not validate either. Where a callback is unsupported, resolve addresses ahead of time and configure IAM without a custom provider.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
 - **No automatic pool sharing:** Each call that creates a pool produces an independent pool. Two pools built from the same configuration are not deduplicated or shared. Hold and reuse the pool you created wherever you need it.

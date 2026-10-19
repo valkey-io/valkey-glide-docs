@@ -180,7 +180,7 @@ If a blocking command does time out or its caller cancels it, the scope's connec
 
 ## Concurrent Scopes
 
-Each client keeps its own pool of scope connections, holding up to 64 concurrent scopes. Acquiring beyond that limit waits for one to be released rather than failing immediately, so release each scope as soon as its transaction completes — a context manager or `try`/`finally` is the safest way to guarantee that.
+Each client keeps its own pool of scope connections, holding up to 64 concurrent scopes. Acquiring beyond that limit waits for one to be released rather than failing immediately, so release each scope as soon as its transaction completes — a context manager or `try`/`finally` is the safest way to guarantee that. The wait ends at the acquire timeout (default 5 s) with a timeout error; causes that waiting cannot fix, such as a closed parent client or an invalid configuration, fail immediately instead of waiting.
 
 ## IAM Authentication
 
@@ -194,7 +194,7 @@ When using isolated scopes with a cluster client, keep the following in mind:
 
 ### Routing Key
 
-Pass a `routing_key` when acquiring the scope. The key is used to determine which cluster node (via CRC16 slot hashing) the scope's dedicated connection targets.
+Pass a `routing_key` when acquiring the scope. The key is used to determine which cluster node (via CRC16 slot hashing) the scope's dedicated connection targets. If you omit it, the scope connects to the primary that owns slot 0 and is pinned to the slot of its first keyed command — which is not the same as passing a key that hashes to slot 0, since that constrains the scope to slot 0 from the start.
 
 <Tabs syncKey="progLangInExamples">
   <TabItem label="Python">
