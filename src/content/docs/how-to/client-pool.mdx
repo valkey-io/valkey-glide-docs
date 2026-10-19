@@ -19,8 +19,8 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 |-----------|------|---------|-------------|
 | `max_size` / `maxSize` / `MaxSize` | int | 10 | Maximum number of client instances in the pool |
 | `min_idle` / `minIdle` / `MinIdle` | int | 1 | Number of clients to pre-warm at creation |
-| `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min | How long an idle client stays in the pool before eviction |
-| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Timeout for state reset (`DISCARD`, `SELECT`) when returning a client |
+| `idle_timeout_ms` / `idleTimeout` / `IdleTimeout` | duration | 5 min (Node.js: 30 sec) | How long an idle client stays in the pool before eviction |
+| `request_timeout_ms` / `requestTimeout` / `RequestTimeout` | duration | 5 sec | Base timeout for state reset (`DISCARD`, `SELECT`) when returning a client; the reset is abandoned and the connection discarded after 2× this value. (Node.js has no pool field; it uses the client config's `requestTimeout`.) |
 | `acquire_timeout_s` / `acquireTimeoutS` / `AcquireTimeout` | duration | 5 sec | How long to wait for a client when the pool is exhausted |
 | `abandon_timeout_ms` / `abandonTimeoutMs` / `AbandonTimeout` | duration | 5 min (300000 ms) | Maximum inactivity time for a borrowed client before the pool reclaims it. The timer resets on every command sent. The abandon monitor skips clients executing blocking commands. Set to 0 to disable (in Go, set to a negative value to disable; 0 means use default). |
 
@@ -178,10 +178,9 @@ Check the current state of the pool to monitor utilization and diagnose capacity
 
   <TabItem label="Java">
     ```java
-    PoolMetrics metrics = pool.getMetrics();
-    System.out.println("Idle: " + metrics.getIdle()
-        + ", Active: " + metrics.getActive()
-        + ", Total: " + metrics.getTotal());
+    System.out.println("Idle: " + pool.getIdleCount()
+        + ", Active: " + pool.getActiveCount()
+        + ", Total: " + pool.getTotalCount());
     ```
   </TabItem>
 
@@ -239,10 +238,10 @@ The pool runs a background monitor that reclaims borrowed clients when they have
   <TabItem label="Node">
     ```typescript
     // Set abandon timeout to 1 minute
-    const pool = await ClientPool.create({
-        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
-        abandonTimeoutMs: 60000,
-    });
+    const pool = await ClientPool.create(
+        { addresses: [{ host: 'localhost', port: 6379 }] },
+        { abandonTimeoutMs: 60000 },
+    );
     ```
   </TabItem>
 
@@ -278,10 +277,10 @@ The pool runs a background monitor that reclaims borrowed clients when they have
   <TabItem label="Node">
     ```typescript
     // Disable abandon detection
-    const pool = await ClientPool.create({
-        clientConfig: { addresses: [{ host: 'localhost', port: 6379 }] },
-        abandonTimeoutMs: 0,
-    });
+    const pool = await ClientPool.create(
+        { addresses: [{ host: 'localhost', port: 6379 }] },
+        { abandonTimeoutMs: 0 },
+    );
     ```
   </TabItem>
 
@@ -305,7 +304,7 @@ When your application shuts down, close the pool to release all connections.
     pool.close()
 
     # Or use as an async context manager:
-    async with AsyncClientPool.create(config, pool_config) as pool:
+    async with await AsyncClientPool.create(config, pool_config) as pool:
         async with pool.borrow() as client:
             await client.set("key", "value")
     ```
@@ -339,7 +338,7 @@ The following apply to the preview release.
 These are intentional constraints for this release. Design your application around them.
 
 - **No Pub/Sub subscriptions:** Clients with active subscriptions are rejected at pool creation, because subscription state cannot be reliably reset when the client is returned. Use a dedicated client for Pub/Sub.
-- **No custom per-client callbacks:** A pooled client config cannot use a language-side callback such as a custom IAM credentials provider or a custom address resolver. Pool creation fails fast rather than silently signing with the default credential chain or connecting to an unresolved address. Resolve addresses ahead of time, and configure IAM without a custom provider.
+- **Limited support for custom per-client callbacks:** Support for a language-side custom IAM credentials provider or custom address resolver on a pooled client config varies by binding. Java rejects both at pool creation; Go rejects a custom address resolver; Node.js supports a custom address resolver; Python does not validate either. Where a callback is unsupported, resolve addresses ahead of time and configure IAM without a custom provider.
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
 - **No automatic pool sharing:** Each call that creates a pool produces an independent pool. Two pools built from the same configuration are not deduplicated or shared. Hold and reuse the pool you created wherever you need it.
 - **Scopes do not outlive the pool:** Closing the pool invalidates any isolated scope still open on a borrowed client. Commands on such a scope fail rather than continuing to run on a connection the pool no longer owns.
@@ -349,7 +348,7 @@ These are intentional constraints for this release. Design your application arou
 These are being tracked and are expected to be resolved in a future release.
 
 - **Cluster pools do not reuse connections yet:** In cluster mode, a borrowed client's connection is currently discarded on release instead of being returned to the pool for reuse. Standalone pools reuse connections as expected.
-- **The pool may briefly exceed its maximum size under concurrent load:** On Node.js and Go, when many clients are acquired at the same time the pool can create a few more connections than `max_size` and hold them. The excess does not grow without bound. Allow some headroom if you size the pool against a hard server-side connection limit.
+- **The pool can exceed its maximum size under concurrent load:** On Node.js and Go, concurrent acquires can create more connections than `max_size`, and the surplus stays in the pool as idle connections until idle eviction. Allow headroom if you size the pool against a hard server-side connection limit.
 - **State reset is unconditional:** When a client is returned, the pool resets connection state even if the connection was never mutated. Skipping this work for provably clean connections is planned but not yet implemented.
 - **Python can hang after release in cluster mode:** A routed command issued on an ordinary cluster client can hang after a pool borrow is released. Avoid reusing a cluster client for routed commands immediately after returning a borrow.
 - **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a borrowed client, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.

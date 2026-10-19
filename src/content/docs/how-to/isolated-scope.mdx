@@ -44,19 +44,11 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
 
   <TabItem label="Node">
     ```typescript
-    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
-    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
+    import { GlideClient } from '@valkey/valkey-glide';
 
     const client = await GlideClient.createClient(config);
 
-    // Build connection request bytes from the same config
-    const req = connection_request.ConnectionRequest.create({
-        addresses: [{ host: 'localhost', port: 6379 }],
-        requestTimeout: 5000,
-    });
-    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
-
-    const scope = await IsolatedScope.acquire(client, connReqBytes, 'my-key');
+    const scope = await client.scopedConnection('my-key');
     try {
         // Use scope for WATCH/MULTI/EXEC
     } finally {
@@ -135,18 +127,12 @@ The classic optimistic concurrency control pattern works as follows:
 
   <TabItem label="Node">
     ```typescript
-    import { GlideClient, IsolatedScope } from '@valkey/valkey-glide';
-    import { connection_request } from '@valkey/valkey-glide/build-ts/ProtobufMessage';
+    import { GlideClient } from '@valkey/valkey-glide';
 
     const client = await GlideClient.createClient(config);
-    const req = connection_request.ConnectionRequest.create({
-        addresses: [{ host: 'localhost', port: 6379 }],
-        requestTimeout: 5000,
-    });
-    const connReqBytes = connection_request.ConnectionRequest.encode(req).finish();
 
     for (let attempt = 0; attempt < 10; attempt++) {
-        const scope = await IsolatedScope.acquire(client, connReqBytes, 'counter');
+        const scope = await client.scopedConnection('counter');
         try {
             await scope.watch('counter');
             const val = await scope.get('counter');
@@ -172,7 +158,8 @@ The classic optimistic concurrency control pattern works as follows:
 
         scope.Watch(ctx, "counter")
         val, _ := scope.Get(ctx, "counter")
-        newVal := strconv.Itoa(atoi(val) + 1)
+        n, _ := strconv.Atoi(val)
+        newVal := strconv.Itoa(n + 1)
         scope.Multi(ctx)
         scope.Set(ctx, "counter", newVal)
         result, _ := scope.Exec(ctx)
@@ -230,7 +217,7 @@ Pass a `routing_key` when acquiring the scope. The key is used to determine whic
 
   <TabItem label="Node">
     ```typescript
-    const scope = await IsolatedScope.acquire(client, connReqBytes, 'user:123');
+    const scope = await client.scopedConnection('user:123');
     ```
   </TabItem>
 
@@ -261,15 +248,15 @@ These are intentional constraints for this release. Design your application arou
 
 - **No Pub/Sub:** Scoped connections do not support `SUBSCRIBE`, `PSUBSCRIBE`, or `SSUBSCRIBE`. Entering subscribed mode requires a dedicated message handler that a scope does not set up, so messages could never be delivered. Use the main client for Pub/Sub.
 - **No MOVED/ASK redirects:** By design, as described above — the error surfaces to the caller and the scope must be replaced.
-- **Single slot per scope in cluster mode:** Once a scope issues `WATCH`, it is pinned to the slot it acquired. Commands that route to a different slot are rejected, matching the server's requirement that `WATCH` and its `MULTI`/`EXEC` target the same slot.
+- **Single slot per scope in cluster mode:** A scope is pinned to the slot of its routing key, or, when none was passed, to the slot of its first keyed command. Later commands that route to a different slot are rejected with `CROSSSLOT`, matching the server's requirement that `WATCH` and its `MULTI`/`EXEC` target the same slot.
 - **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
 - **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
-- **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Concurrent access to the same scope leads to undefined behavior.
+- **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Commands on one scope are serialized, but a scope has a single `WATCH`/`MULTI` state, so two callers sharing it will see each other's queued commands and conflicts. Use one scope per caller.
 
 ### Known issues
 
 These are being tracked and are expected to be resolved in a future release.
 
 - **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a scope, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.
-- **A scope keeps its original password after a credential update:** If you call `updateConnectionPassword` on a client while a scope is open on it, the scope's connection continues using the password it was created with. Acquire a new scope after rotating credentials so it picks up the new password.
+- **Scope connections keep the password the client was created with:** `updateConnectionPassword` does not reach them — newly acquired scopes still send the old password, and idle scope connections are not re-authenticated. IAM auth is unaffected (scopes use the parent's live token). Until this is fixed, rotate the password only while the old one is still accepted, or recreate the client.
 - **TLS is not yet enforced for IAM authentication:** IAM-authenticated scoped connections are not required to use TLS. Configure TLS explicitly when using IAM auth.
