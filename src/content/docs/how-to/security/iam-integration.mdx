@@ -34,7 +34,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
 :::note
-If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time (`Valkey::CommandError` in Ruby).
+If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, an error is raised at call time.
 :::
 
 ## Examples
@@ -228,7 +228,6 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       cluster_name: "clustername",
       service: Valkey::ServiceType::ELASTICACHE, # or Valkey::ServiceType::MEMORYDB
       region: "us-east-1"
-      # refresh_interval_seconds: 100 # Optional, default is 300 seconds
     )
 
     client = Valkey.new(
@@ -236,7 +235,7 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       cluster_mode: true,
       ssl: true,
       username: "username",
-      iam_config: iam_config # cannot be combined with password:
+      iam_config: iam_config # cannot be combined with password
     )
     ```
   </TabItem>
