@@ -1,0 +1,41 @@
+name: Bedrock smoke test
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
+      CLAUDE_CODE_USE_BEDROCK: "1"
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: valkey-glide-docs-bedrock-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.175
+
+      - name: Invoke Claude through Bedrock
+        shell: bash
+        run: |
+          response="$(
+            claude --print \
+              --model us.anthropic.claude-fable-5 \
+              --max-turns 1 \
+              --tools "" \
+              --output-format text \
+              "Reply with exactly: BEDROCK_OK"
+          )"
+          echo "${response}"
+          test "${response}" = "BEDROCK_OK"
