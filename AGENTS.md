@@ -132,11 +132,11 @@ All code examples across tabs on the same page should be equivalent: same key na
 
 Per-language code examples should use the <ClientTabs> and <ClientTab>.
 
-```html
+```mdx
 <ClientTabs>
   <ClientTab slot="java"> ... </ClientTab>
   <ClientTab slot="node"> ... </ClientTab>
-<ClientTabs>
+</ClientTabs>
 ```
 
 See `ClientTabs.astro` for supported slot names.
