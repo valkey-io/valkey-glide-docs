@@ -43,7 +43,7 @@ if (suppliedSlots.length === 0) {
 }
 ---
 
-<ParamTabs param="lang" syncKey="progLangInExamples">
+<ParamTabs param="lang" syncKey="progLangInExamples" aliases={labels}>
     {
         Astro.slots.has("java") && (
             <TabItem label={labels.java}>

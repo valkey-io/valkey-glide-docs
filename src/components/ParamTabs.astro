@@ -1,6 +1,6 @@
 ---
 /**
- * ParamTabs - URL Parameter-Aware Tabs Component
+ * URL Parameter-Aware Tabs
  *
  * Wraps Astro Starlight's Tabs component to enable tab selection via URL parameters.
  *
@@ -12,24 +12,36 @@
  *   </ParamTabs>
  *
  *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
- *  Tabs with the same `syncKey` will also sync to the "Node" tab.
+ *  The component will maps the param's value to a tab's label. To provide a specify specific 
+ *  mapping, pass in an alias mapping of <label, alias>.
+ * 
+ *  To provide keep tabs in sync with other tabs, use `syncKey`.
  */
 import { Tabs } from "@astrojs/starlight/components";
 
-const props = Astro.props;
+interface Props {
+    /* A mapping of <label, alias> */
+    aliases?: Readonly<Record<string, string>>;
+    param?: string;
+    syncKey?: string;
+}
 
-const paramName = props.param || "";
+const { aliases = {}, param: paramName = "", ...tabsProps } = Astro.props;
 ---
 
 {
     paramName ? (
-        <div class="param-tabs" data-param={paramName}>
-            <Tabs {...props}>
+        <div
+            class="param-tabs"
+            data-param={paramName}
+            data-aliases={JSON.stringify(aliases)}
+        >
+            <Tabs {...tabsProps}>
                 <slot />
             </Tabs>
         </div>
     ) : (
-        <Tabs {...props}>
+        <Tabs {...tabsProps}>
             <slot />
         </Tabs>
     )
@@ -51,19 +63,19 @@ const paramName = props.param || "";
 
         if (!targetValue) return;
 
-        // This allows use of ?lang=<alias>
-        const aliases: Record<string, string> = {
-            csharp: "c#",
-        };
-        const finalTarget =
-            aliases[targetValue.toLowerCase()] ?? targetValue.toLowerCase();
+        const aliases = JSON.parse(wrapper.dataset.aliases ?? "{}") as Record<
+            string,
+            string
+        >;
+        const targetLabel = targetValue.toLowerCase();
+        const requestedLabel = (aliases[targetLabel] ?? targetLabel).toLowerCase();
 
         const tabs = wrapper.querySelectorAll('[role="tab"]');
 
         for (const tab of tabs) {
             const label = tab.textContent?.trim().toLowerCase();
 
-            if (label === finalTarget) {
+            if (label === requestedLabel) {
                 // Wait on the next animation frame to ensure Starlight Tabs is ready
                 requestAnimationFrame(() => {
                     const element = tab as HTMLElement;
