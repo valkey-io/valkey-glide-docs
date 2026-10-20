@@ -12,9 +12,9 @@
  *   </ParamTabs>
  *
  *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
- *  The component will maps the param's value to a tab's label. To provide a specify specific 
+ *  The component will maps the param's value to a tab's label. To provide a specify specific
  *  mapping, pass in an alias mapping of <label, alias>.
- * 
+ *
  *  To provide keep tabs in sync with other tabs, use `syncKey`.
  */
 import { Tabs } from "@astrojs/starlight/components";
@@ -68,7 +68,9 @@ const { aliases = {}, param: paramName = "", ...tabsProps } = Astro.props;
             string
         >;
         const targetLabel = targetValue.toLowerCase();
-        const requestedLabel = (aliases[targetLabel] ?? targetLabel).toLowerCase();
+        const requestedLabel = (
+            aliases[targetLabel] ?? targetLabel
+        ).toLowerCase();
 
         const tabs = wrapper.querySelectorAll('[role="tab"]');
 
