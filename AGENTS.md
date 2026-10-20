@@ -124,6 +124,23 @@ Contains the automated audit of command implementations across all clients:
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
 
+### Code Examples
+
+All code examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow.
+
+### Language Tabs
+
+Per-language code examples should use the <ClientTabs> and <ClientTab>.
+
+```html
+<ClientTabs>
+  <ClientTab slot="java"> ... </ClientTab>
+  <ClientTab slot="node"> ... </ClientTab>
+<ClientTabs>
+```
+
+See `ClientTabs.astro` for supported slot names.
+
 ## Commit Requirements
 
 - All commits must include `--signoff` (`git commit --signoff -m "message"`) for DCO compliance
