@@ -1,10 +1,8 @@
 ---
 /**
- * Renders GLIDE client examples in the canonical language order.
+ * Renders GLIDE client examples in the canonical labels and order.
  *
- * Pass example content through named slots such as `python`, `java`, or
- * `csharp`. Labels, cross-page synchronization, and `?lang=<language>` URL
- * selection are applied automatically.
+ * Uses ParamTabs underneath, so tabs are fully compatible with ?lang URL parameter.
  */
 import { TabItem } from "@astrojs/starlight/components";
 import ParamTabs from "./ParamTabs.astro";

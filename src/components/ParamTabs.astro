@@ -51,12 +51,19 @@ const paramName = props.param || "";
 
         if (!targetValue) return;
 
+        // This allows use of ?lang=<alias>
+        const aliases: Record<string, string> = {
+            csharp: "c#",
+        };
+        const finalTarget =
+            aliases[targetValue.toLowerCase()] ?? targetValue.toLowerCase();
+
         const tabs = wrapper.querySelectorAll('[role="tab"]');
 
         for (const tab of tabs) {
             const label = tab.textContent?.trim().toLowerCase();
 
-            if (label === targetValue.toLowerCase()) {
+            if (label === finalTarget) {
                 // Wait on the next animation frame to ensure Starlight Tabs is ready
                 requestAnimationFrame(() => {
                     const element = tab as HTMLElement;
