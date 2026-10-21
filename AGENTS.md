@@ -124,19 +124,22 @@ Contains the automated audit of command implementations across all clients:
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
 
+### Code Examples
+
+All code examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow.
+
 ### Language Tabs
 
-Per-language code examples use Starlight tabs synced across pages:
+Per-language code examples should use the <ClientTabs> and <ClientTab>.
 
 ```mdx
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">...</TabItem>
-  ...
-</Tabs>
+<ClientTabs>
+  <ClientTab slot="java"> ... </ClientTab>
+  <ClientTab slot="node"> ... </ClientTab>
+</ClientTabs>
 ```
 
-- Tab labels (in this order): `Python`, `Java`, `Node`, `Go`, `PHP`, `C#`, `Ruby`
-- Examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow
+See `ClientTabs.astro` for supported slot names.
 
 ## Commit Requirements
 
