@@ -3,7 +3,7 @@ title: Compressing Data
 description: Learn how to enable and configure GLIDE's compression feature.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 :::caution[Experimental Feature]
 Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
@@ -14,8 +14,8 @@ When enabled, values are transparently compressed before being sent to the serve
 
 ## Usage
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClient,
@@ -38,9 +38,9 @@ When enabled, values are transparently compressed before being sent to the serve
     )
     client = await GlideClient.create(config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.*;
@@ -59,9 +59,9 @@ When enabled, values are transparently compressed before being sent to the serve
 
     GlideClient client = GlideClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient, CompressionBackend } from "@valkey/valkey-glide";
 
@@ -75,9 +75,9 @@ When enabled, values are transparently compressed before being sent to the serve
         },
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/v2/config"
@@ -95,9 +95,9 @@ When enabled, values are transparently compressed before being sent to the serve
 
     client, err := glide.NewClient(clientConfig)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -114,9 +114,9 @@ When enabled, values are transparently compressed before being sent to the serve
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlide();
     $client->connect(
@@ -129,8 +129,8 @@ When enabled, values are transparently compressed before being sent to the serve
         ],
     );
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## When to use compression
 

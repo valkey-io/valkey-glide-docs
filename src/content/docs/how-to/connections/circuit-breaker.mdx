@@ -3,7 +3,7 @@ title: Configure a Circuit Breaker
 description: Protect your application from thread explosion during degraded conditions by enabling the client-side circuit breaker.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 The circuit breaker is an opt-in feature that detects when the GLIDE core is unhealthy (sustained error rate) and rejects requests at the FFI boundary before threads stall. This prevents thread explosion under degraded conditions by failing fast instead of queueing requests indefinitely.
 
@@ -11,8 +11,8 @@ The circuit breaker is an opt-in feature that detects when the GLIDE core is unh
 
 The circuit breaker option is defined on the base client configuration, so it applies to both standalone and cluster clients. The examples below use the standalone client; pass the same configuration to the cluster client configuration to enable it for a cluster client.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClientConfiguration, ClientCircuitBreakerConfiguration, NodeAddress
 
@@ -30,9 +30,9 @@ The circuit breaker option is defined on the base client configuration, so it ap
         client_circuit_breaker=circuit_breaker,
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.configuration.ClientCircuitBreakerConfiguration;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -52,9 +52,9 @@ The circuit breaker option is defined on the base client configuration, so it ap
         .clientCircuitBreakerConfiguration(circuitBreaker)
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient, GlideClientConfiguration } from '@valkey/valkey-glide';
 
@@ -70,9 +70,9 @@ The circuit breaker option is defined on the base client configuration, so it ap
         },
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/config"
 
@@ -89,9 +89,9 @@ The circuit breaker option is defined on the base client configuration, so it ap
         WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
         WithClientCircuitBreaker(circuitBreaker)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlide();
     $client->connect(
@@ -106,9 +106,9 @@ The circuit breaker option is defined on the base client configuration, so it ap
         ]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -128,8 +128,8 @@ The circuit breaker option is defined on the base client configuration, so it ap
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## How It Works
 
@@ -167,8 +167,8 @@ In cluster mode, a dead or unreachable node typically produces only one initial 
 
 When the circuit breaker is open, requests throw immediately. Catch these exceptions to implement fallback logic or surface appropriate errors to callers.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import CircuitBreakerError
 
@@ -178,9 +178,9 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         # Circuit breaker is open — use fallback or back off
         pass
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.exceptions.CircuitBreakerException;
     import java.util.concurrent.ExecutionException;
@@ -193,9 +193,9 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { CircuitBreakerError } from '@valkey/valkey-glide';
 
@@ -207,9 +207,9 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "context"
@@ -226,9 +226,9 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     try {
         $value = $client->get("key");
@@ -236,9 +236,9 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         // Circuit breaker is open — use fallback or back off
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using static Valkey.Glide.Errors;
 
@@ -251,8 +251,8 @@ When the circuit breaker is open, requests throw immediately. Catch these except
         // Circuit breaker is open — use fallback or back off
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Configuration Parameters
 

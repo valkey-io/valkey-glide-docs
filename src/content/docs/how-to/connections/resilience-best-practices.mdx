@@ -3,7 +3,7 @@ title: Resilience Best Practices
 description: Guidance for configuring Valkey GLIDE for resilient operation under server outages, failovers, and high-load scenarios.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 This guide covers configuration and operational practices that help Valkey GLIDE clients remain responsive during server outages, failovers, and high-load scenarios.
 
@@ -11,8 +11,8 @@ This guide covers configuration and operational practices that help Valkey GLIDE
 
 A resilient client combines request timeout, inflight limiting, and the circuit breaker:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -30,9 +30,9 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
     )
     client = await GlideClusterClient.create(config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -50,9 +50,9 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
             .build()
     ).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -64,9 +64,9 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
         clientCircuitBreaker: {},
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "time"
@@ -84,9 +84,9 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
 
     client, err := glide.NewClusterClient(clientConfig)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -101,8 +101,8 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
     :::note
     The client circuit breaker is not yet available in GLIDE Ruby.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Single Client Instance
 

@@ -3,7 +3,8 @@ title: Load and Execute Functions
 description: A guide working with Valkey Functions using GLIDE
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Steps } from '@astrojs/starlight/components';
 
 Valkey scripting allows you to execute Lua code directly on the Valkey server.
@@ -19,8 +20,8 @@ This guide will go over executing custom Lua scripts with GLIDE.
 Valkey Functions is an alternative for persistent server-side Lua code.
 The following example shows a simple example of loading and executing a Valkey Function using GLIDE.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     <Steps>
       1. Define the lua script.
 
@@ -80,9 +81,9 @@ The following example shows a simple example of loading and executing a Valkey F
 
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     <Steps>
       1. Define the lua script.
 
@@ -154,9 +155,9 @@ The following example shows a simple example of loading and executing a Valkey F
       }
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     <Steps>
       1. Define the lua script.
 
@@ -218,9 +219,9 @@ The following example shows a simple example of loading and executing a Valkey F
       main();
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     <Steps>
       1. Define the lua script.
 
@@ -311,9 +312,9 @@ The following example shows a simple example of loading and executing a Valkey F
       }
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     <Steps>
       1. Define the Lua script as a string.
       2. Load the function to Valkey using `FunctionLoadAsync`.
@@ -351,9 +352,9 @@ The following example shows a simple example of loading and executing a Valkey F
       Console.WriteLine(result); // 1
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     <Steps>
       1. Define the lua script.
 
@@ -408,9 +409,9 @@ The following example shows a simple example of loading and executing a Valkey F
       echo $result;  // 1
       ```
     </details>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     <Steps>
       1. Define the lua script.
 
@@ -467,15 +468,15 @@ The following example shows a simple example of loading and executing a Valkey F
       client.close
       ```
     </details>
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Read-Only Functions
 
 GLIDE clients implement `FCALL_RO` command to execute read-only functions.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     result = await client.fcall_ro("get_value", keys=["mykey"])
     ```
@@ -494,9 +495,9 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     # Route to a random node
     result = await client.fcall_ro_route("get_value", RandomNode())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Object result = client.fcallReadOnly("get_value", new String[]{"mykey"}).get();
     ```
@@ -513,9 +514,9 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     // Route to all primary nodes
     ClusterValue<Object> result = client.fcallReadOnly("get_value", ALL_PRIMARIES).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const result = await client.fcallReadonly("get_value", ["mykey"]);
     ```
@@ -532,9 +533,9 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     // Route to a random node
     const result = await client.fcallReadonlyWithRoute("get_value", [], { route: "randomNode" });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     result, err := client.FCallReadOnly(ctx, "get_value")
     ```
@@ -556,9 +557,9 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     route := config.SimpleNodeRoute(config.RandomNode)
     result, err := client.FCallReadOnlyWithRoute(ctx, "get_value", route)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -574,9 +575,9 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     var allPrimariesResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.AllPrimaries);
     var randomResult = await clusterClient.FCallReadOnlyAsync("get_value", Route.Random);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $result = $client->fcall_ro('get_value', ['mykey']);
     ```
@@ -593,14 +594,14 @@ GLIDE clients implement `FCALL_RO` command to execute read-only functions.
     // Route to a random node
     $result = $client->fcall_ro('get_value', [], [], 'randomNode');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     result = client.fcall_ro("get_value", keys: ["mykey"])
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

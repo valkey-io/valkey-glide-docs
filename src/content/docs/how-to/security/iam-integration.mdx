@@ -3,7 +3,7 @@ title: Configure AWS IAM Authentication
 description: Guide on using Valkey GLIDE built-in IAM support for secure authentication.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 GLIDE 2.2+ provides built-in support for **AWS Identity and Access Management (IAM)** authentication when connecting to **Amazon ElastiCache** and **MemoryDB** clusters. This feature automatically handles token generation and rotation, making it simple to maintain secure connections.
 
@@ -39,8 +39,8 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
 ## Examples
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="C#">
+<ClientTabs>
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -63,9 +63,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -100,9 +100,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
     client = GlideClusterClient.create_sync(config)
     ...
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
 
       import java.util.Collections;
@@ -138,9 +138,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ...
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```ts
     // Automatically regenerates the token every 5 mins
     const client = await GlideClusterClient.createClient({
@@ -156,9 +156,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       }
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
 
@@ -188,9 +188,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
     client, err := api.NewGlideClusterClient(&clientConfig)
     ...
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Create ValkeyGlide client with IAM authentication
     // Automatically regenerates the token every 5 mins (default: 300 seconds)
@@ -216,8 +216,8 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
     $client->close();
     ...
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## On-Demand Refresh
 
@@ -229,39 +229,39 @@ You can call `refreshIamToken` (or language equivalent) at any time to immediate
 The method always returns `"OK"`. If AWS token generation fails, errors are logged internally and the previously cached token remains in use.
 :::
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Pre-warm the token cache before a maintenance window
     await client.refresh_iam_token()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Pre-warm the token cache before a maintenance window
     client.refreshIamToken().get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```ts
     // Pre-warm the token cache before a maintenance window
     await client.refreshIamToken();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Pre-warm the token cache before a maintenance window
     _, err := client.RefreshIamToken(ctx)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     // Pre-warm the token cache before a maintenance window
     await client.RefreshIamTokenAsync();
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

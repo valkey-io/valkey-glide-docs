@@ -3,7 +3,9 @@ title: "Connection Options"
 description: Available connection configuration options across all Valkey GLIDE clients
 ---
 
-import { Tabs, TabItem, Badge } from '@astrojs/starlight/components'
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
+import { Badge } from '@astrojs/starlight/components';
 
 Valkey GLIDE maintains consistent and intuitive configuration across all supported languages.
 This guides will go over how connection configurations are handled across clients and listing the available options.
@@ -27,8 +29,8 @@ The following are the configuration references for each Glide clients:
 
 ### Example
 
-<Tabs>
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClientConfiguration, NodeAddress
 
@@ -39,9 +41,9 @@ The following are the configuration references for each Glide clients:
         client_name="python_app"
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClientOptions } from "@valkey/valkey-glide";
 
@@ -52,9 +54,9 @@ The following are the configuration references for each Glide clients:
         clientName: "node_app"
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.configuration.GlideClientConfiguration;
     import glide.api.models.configuration.NodeAddress;
@@ -66,9 +68,9 @@ The following are the configuration references for each Glide clients:
         .clientName("java_app")
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/config"
 
@@ -78,9 +80,9 @@ The following are the configuration references for each Glide clients:
         WithRequestTimeout(1000).
         WithClientName("go_app")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     **Requirements:** PHP 8.1+
 
     ```php
@@ -92,9 +94,9 @@ The following are the configuration references for each Glide clients:
         client_name: 'php_app'
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -105,9 +107,9 @@ The following are the configuration references for each Glide clients:
         .WithClientName("csharp_app")
         .Build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -119,8 +121,8 @@ The following are the configuration references for each Glide clients:
       client_name: "ruby_app"
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Client library identification
 
@@ -180,8 +182,8 @@ Choose the option that matches how the connection should be identified:
 * **Both** — Uses the library-name override as the base and appends the client information tag,
   for example `custom-client(my-framework:1.2.3)`. This combination is uncommon.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     The asynchronous and synchronous clients use the same configuration fields:
 
     ```python
@@ -234,9 +236,9 @@ Choose the option that matches how the connection should be identified:
         # Consume monitor messages.
         pass
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     The asynchronous and synchronous clients use the same configuration methods:
 
     ```java
@@ -272,9 +274,9 @@ Choose the option that matches how the connection should be identified:
         // Consume monitor messages.
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     The asynchronous and synchronous clients use the same configuration fields:
 
     ```typescript
@@ -311,9 +313,9 @@ Choose the option that matches how the connection should be identified:
         await monitor.close();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     The asynchronous and synchronous clients use the same configuration functions:
 
     ```go
@@ -340,5 +342,5 @@ Choose the option that matches how the connection should be identified:
     }
     defer monitor.Close()
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
