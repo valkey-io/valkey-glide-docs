@@ -76,6 +76,29 @@ Valkey strings store sequences of bytes, which may include text, serialized obje
     client.get(gs(byteKey)).get();              // "GlideString value" as a GlideString
     client.get(gs(byteKey)).get().getString();  // "GlideString value" as a String
     ```
+
+    #### Zero-Copy Access
+
+    `GlideString` provides two ways to access the underlying bytes:
+
+    * `getBytes()` — returns a **defensive copy** of the byte array.
+    * `asReadOnlyByteBuffer()` — returns a read-only `java.nio.ByteBuffer` view of the underlying bytes **without copying**.
+
+    Use `asReadOnlyByteBuffer()` in high-performance scenarios where you need to read large binary values without allocation overhead. The returned buffer is read-only; attempting to write to it throws `ReadOnlyBufferException`.
+
+    ```java
+    GlideString gs = client.get(gs(byteKey)).get();
+
+    // Defensive copy (allocates a new byte[])
+    byte[] copied = gs.getBytes();
+
+    // Zero-copy read-only view (no allocation)
+    ByteBuffer buffer = gs.asReadOnlyByteBuffer();
+    byte[] data = new byte[buffer.remaining()];
+    buffer.get(data);
+
+    // buffer.isReadOnly() == true
+    ```
   </TabItem>
 
   <TabItem label="Node">
