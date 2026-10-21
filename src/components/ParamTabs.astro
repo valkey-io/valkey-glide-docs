@@ -12,8 +12,9 @@
  *   </ParamTabs>
  *
  *  The "Node" labeled tab can now be selected using `https://glide.valkey.io/page?lang=node`.
- *  The component will maps the param's value to a tab's label. To provide a specify specific
- *  mapping, pass in an alias mapping of <label, alias>.
+ *  The component will maps the URL's parameter value (node) to a tab's label.
+ *
+ *  To specify addition mapping pass in an alias mapping object of <label, alias>.
  *
  *  To provide keep tabs in sync with other tabs, use `syncKey`.
  */
@@ -50,26 +51,26 @@ const { aliases = {}, param: paramName = "", ...tabsProps } = Astro.props;
 <script>
     await customElements.whenDefined("starlight-tabs");
 
-    const paramTabs = document.querySelectorAll(".param-tabs");
+    const paramTabs = document.querySelectorAll<HTMLElement>(".param-tabs");
 
     paramTabs.forEach((wrapper) => {
-        const paramKey = (wrapper as HTMLElement).dataset.param;
+        const paramKey = wrapper.dataset.param;
         if (!paramKey) {
             return;
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const targetValue = urlParams.get(paramKey);
+        let paramValue = urlParams.get(paramKey);
 
-        if (!targetValue) return;
+        if (!paramValue) return;
+        paramValue = paramValue.toLocaleLowerCase();
 
         const aliases = JSON.parse(wrapper.dataset.aliases ?? "{}") as Record<
             string,
             string
         >;
-        const targetLabel = targetValue.toLowerCase();
         const requestedLabel = (
-            aliases[targetLabel] ?? targetLabel
+            aliases[paramValue] ?? paramValue
         ).toLowerCase();
 
         const tabs = wrapper.querySelectorAll('[role="tab"]');
