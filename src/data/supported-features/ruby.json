@@ -1,0 +1,80 @@
+{
+  "language": "ruby",
+  "displayName": "Ruby",
+  "version": "1.0.0",
+  "async": false,
+  "features": [
+    {
+      "feature": "batching",
+      "status": "partial",
+      "hover": {
+        "text": "Missing route option, timeout, and retry controls.",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/releases/tag/v1.0.0"
+      }
+    },
+    "topology_awareness",
+    {
+      "feature": "data_compression",
+      "status": "not_available",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/102"
+      }
+    },
+    "custom_commands",
+    "multi_slot_command_handling",
+    {
+      "feature": "request_routing",
+      "hover": {
+        "text": "since 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/releases/tag/v1.0.0"
+      }
+    },
+    {
+      "feature": "read_strategies",
+      "status": "partial",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/365"
+      }
+    },
+    {
+      "feature": "az_affinity",
+      "status": "partial",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/294"
+      }
+    },
+    {
+      "feature": "standalone_read_only_mode",
+      "status": "not_available",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/370"
+      }
+    },
+    "automatic_reconnection",
+    {
+      "feature": "timeout_and_reconnect_configuration",
+      "status": "partial",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/371"
+      }
+    },
+    "in_flight_request_limits",
+    "lazy_connections",
+    {
+      "feature": "recovery_request_queue",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/367"
+      }
+    },
+    "custom_tls_trust_roots",
+    {
+      "feature": "mutual_tls",
+      "hover": {
+        "text": "since 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/releases/tag/v1.0.0"
+      }
+    },
+    "client_statistics",
+    "opentelemetry"
+  ]
+}

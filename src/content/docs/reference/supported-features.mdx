@@ -3,10 +3,24 @@ title: Client Supported Features
 description: Compare the features and dedicated APIs supported by each Valkey GLIDE client.
 ---
 
+import pythonFeatures from '../../../data/supported-features/python.json';
+import nodeFeatures from '../../../data/supported-features/node.json';
 import javaFeatures from '../../../data/supported-features/java.json';
+import goFeatures from '../../../data/supported-features/go.json';
+import csharpFeatures from '../../../data/supported-features/csharp.json';
+import phpFeatures from '../../../data/supported-features/php.json';
+import rubyFeatures from '../../../data/supported-features/ruby.json';
 import featureCatalog from '../../../data/supported-features/features.json';
 
-export const clientManifests = [javaFeatures];
+export const clientManifests = [
+  pythonFeatures,
+  nodeFeatures,
+  javaFeatures,
+  goFeatures,
+  csharpFeatures,
+  phpFeatures,
+  rubyFeatures,
+];
 
 export const findDuplicateKeys = (keys) =>
   keys.filter((key, index) => keys.indexOf(key) !== index);
