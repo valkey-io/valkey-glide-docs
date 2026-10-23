@@ -204,3 +204,19 @@ pnpm run format:check
 pnpm run format:check:non-mdx   # Non-content files only
 pnpm run format:check:mdx       # Markdown/MDX content only
 ```
+
+## Supported client features
+
+The supported features page uses:
+
+- `src/data/supported-features/features.json` as the feature catalog and source of grouping and display order
+- `src/data/supported-features/<language>.json` for client metadata and a flat list of supported feature keys
+- `src/content/docs/reference/supported-features.mdx` to validate and render the data
+
+Supported statuses are:
+
+- available: fully functional
+- not_available: not functional
+- partial: functional but missing some capabilities.
+
+Short hand: a feature name string appearing in a client feature list means it is supported.
