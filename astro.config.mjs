@@ -333,6 +333,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             "commands/supported-commands",
+            "reference/supported-features",
             "reference/access-control",
             "reference/scripting-reference",
             "reference/client-comparisons",

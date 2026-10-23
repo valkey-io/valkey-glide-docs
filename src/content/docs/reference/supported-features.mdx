@@ -1,0 +1,319 @@
+---
+title: Client Supported Features
+description: Compare the features and dedicated APIs supported by each Valkey GLIDE client.
+---
+
+import javaFeatures from '../../../data/supported-features/java.json';
+import featureCatalog from '../../../data/supported-features/features.json';
+
+export const clientManifests = [javaFeatures];
+
+export const findDuplicateKeys = (keys) =>
+  keys.filter((key, index) => keys.indexOf(key) !== index);
+
+export const normalizeFeature = (feature) =>
+  typeof feature === 'string' ? { feature } : feature;
+
+export const hoverValue = (value) =>
+  typeof value === 'string' && value.trim() ? value.trim() : undefined;
+
+export const isValidFeature = (feature) =>
+  typeof feature === 'object' &&
+  feature !== null &&
+  typeof feature.feature === 'string' &&
+  Boolean(feature.feature) &&
+  (feature.status == null ||
+    feature.status === 'available' ||
+    feature.status === 'partial' ||
+    feature.status === 'not_available') &&
+  (feature.hover == null ||
+    (typeof feature.hover === 'object' &&
+      (feature.hover.text == null ||
+        typeof feature.hover.text === 'string') &&
+      (feature.hover.href == null ||
+        typeof feature.hover.href === 'string')));
+
+export const catalogFeatureKeys = Object.values(featureCatalog.groups).flatMap(
+  (group) => Object.keys(group.features),
+);
+
+export const validatedClients = (() => {
+  const duplicateCatalogKeys = findDuplicateKeys(catalogFeatureKeys);
+  const duplicateClientLanguages = findDuplicateKeys(
+    clientManifests.map((client) => client.language),
+  );
+  const validationErrors = [];
+
+  if (duplicateCatalogKeys.length) {
+    validationErrors.push(
+      `Duplicate catalog keys: ${duplicateCatalogKeys.join(', ')}.`,
+    );
+  }
+
+  if (duplicateClientLanguages.length) {
+    validationErrors.push(
+      `Duplicate client languages: ${duplicateClientLanguages.join(', ')}.`,
+    );
+  }
+
+  const normalizedClients = clientManifests.map((client) => {
+    const normalizedFeatures = client.features.map(normalizeFeature);
+    const invalidFeatures = normalizedFeatures.filter(
+      (feature) => !isValidFeature(feature),
+    );
+    const validFeatures = normalizedFeatures.filter(isValidFeature);
+    const featureKeys = validFeatures.map((feature) => feature.feature);
+    const duplicateFeatureKeys = findDuplicateKeys(featureKeys);
+    const unknownFeatureKeys = featureKeys.filter(
+      (key) => !catalogFeatureKeys.includes(key),
+    );
+
+    if (invalidFeatures.length) {
+      validationErrors.push(
+        `Invalid ${client.displayName} feature entries: ${JSON.stringify(invalidFeatures)}.`,
+      );
+    }
+
+    if (duplicateFeatureKeys.length) {
+      validationErrors.push(
+        `Duplicate ${client.displayName} feature keys: ${duplicateFeatureKeys.join(', ')}.`,
+      );
+    }
+
+    if (unknownFeatureKeys.length) {
+      validationErrors.push(
+        `Unknown ${client.displayName} feature keys: ${unknownFeatureKeys.join(', ')}.`,
+      );
+    }
+
+    return {
+      ...client,
+      normalizedFeatures: validFeatures,
+    };
+  });
+
+  if (validationErrors.length) {
+    throw new Error(
+      ['Invalid supported feature data.', ...validationErrors].join(' '),
+    );
+  }
+
+  return normalizedClients.map((client) => ({
+    ...client,
+    featureSupport: new Map(
+      client.normalizedFeatures.map((feature) => [feature.feature, feature]),
+    ),
+  }));
+})();
+
+export const buildFeature = (featureKey, metadata) => {
+  const support = {};
+
+  for (const client of validatedClients) {
+    support[client.language] = client.featureSupport.get(featureKey);
+  }
+
+  return {
+    key: featureKey,
+    ...metadata,
+    support,
+  };
+};
+
+export const buildFeatureGroup = (group) => {
+  const features = [];
+
+  for (const featureKey of Object.keys(group.features)) {
+    features.push(buildFeature(featureKey, group.features[featureKey]));
+  }
+
+  return {
+    ...group,
+    features,
+  };
+};
+
+{/*
+ * Build the feature group from the json data.
+ *
+ * Example `groups` shape with one group, one feature, and one client:
+ * const groups = {
+ *   command_routing: {
+ *     displayName: 'Command Routing',
+ *     description: 'Capabilities that determine which cluster node receives a command.',
+ *     docs: '/concepts/client-features/command-routing/',
+ *     features: [{
+ *       key: 'read_strategies',
+ *       displayName: 'Read Strategies',
+ *       description: 'Controls whether reads target primary nodes, replicas, or affinity-based replicas.',
+ *       docs: '/how-to/connections/read-strategy/',
+ *       support: {
+ *         java: { feature: 'read_strategies' },
+ *       },
+ *     }],
+ *   },
+ * };
+ */}
+export const buildFeatureGroups = () => {
+  const groups = {};
+
+  for (const groupKey of Object.keys(featureCatalog.groups)) {
+    groups[groupKey] = buildFeatureGroup(featureCatalog.groups[groupKey]);
+  }
+
+  return groups;
+};
+
+export const featureGroups = buildFeatureGroups();
+
+export const supportStatus = (support) =>
+  support ? (support.status ?? 'available') : 'not_available';
+
+export const supportIcon = (status) =>
+  ({
+    available: '✅',
+    partial: '◐',
+    not_available: '➖',
+  })[status];
+
+export const supportLabel = (status) =>
+  ({
+    available: 'Available',
+    partial: 'Partial',
+    not_available: 'Not Available',
+  })[status];
+
+export const supportTooltip = (support) => {
+  const status = supportStatus(support);
+  const detail = hoverValue(support?.hover?.text);
+
+  if (status === 'partial') {
+    return detail ? `Partial — ${detail}` : 'Partial';
+  }
+
+  return detail ?? supportLabel(status);
+};
+
+export const FeatureTable = ({ features }) => (
+  <table style="display: table; width: 100%; table-layout: fixed">
+    <thead>
+      <tr>
+        <th style="width: 30%; text-align: left">Feature</th>
+        {validatedClients.map((client) => (
+          <th style="text-align: center">{client.displayName}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {features.map((feature) => (
+        <tr>
+          <td>
+            {feature.docs ? (
+              <a href={feature.docs}>{feature.displayName}</a>
+            ) : (
+              feature.displayName
+            )}
+          </td>
+          {validatedClients.map((client) => {
+            const support = feature.support[client.language];
+            const status = supportStatus(support);
+            const label = supportLabel(status);
+            const tooltip = supportTooltip(support);
+            const icon = supportIcon(status);
+            const href = hoverValue(support?.hover?.href);
+            const accessibleLabel =
+              status === 'partial' || tooltip === label
+                ? tooltip
+                : `${label} — ${tooltip}`;
+
+            return (
+              <td
+                class="feature-status-cell"
+                data-tooltip={tooltip}
+                aria-label={accessibleLabel}
+              >
+                {href ? (
+                  <a href={href} aria-label={accessibleLabel}>
+                    <span aria-hidden="true">{icon}</span>
+                  </a>
+                ) : (
+                  <span aria-hidden="true">{icon}</span>
+                )}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+Use this reference to check whether a feature or dedicated API is supported by each GLIDE client.
+
+:::note
+Feature support is version-specific. This page describes the client versions shown below.
+:::
+
+<table>
+  <thead>
+    <tr>
+      <th>Client</th>
+      <th>Version</th>
+      <th>API style</th>
+    </tr>
+  </thead>
+  <tbody>
+    {validatedClients.map((client) => (
+      <tr>
+        <td>{client.displayName}</td>
+        <td>{client.version}</td>
+        <td>{client.async ? 'Asynchronous' : 'Synchronous'}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+## Legend
+
+| Icon | Status        |
+| ---- | ------------- |
+| ✅   | Available     |
+| ◐    | Partial       |
+| ➖   | Not Available |
+
+## Features
+
+The groups and features below are generated from the feature catalog. Each client manifest determines its support status.
+
+{/*
+While we would like to generate these h3 feature groups dynamically,
+doing so would omit them from the table of contents on the right side.
+*/}
+
+### General
+
+<FeatureTable features={featureGroups.general.features} />
+
+### Client-side Caching
+
+<FeatureTable features={featureGroups.client_side_caching.features} />
+
+### Command Routing
+
+<FeatureTable features={featureGroups.command_routing.features} />
+
+### High Availability
+
+<FeatureTable features={featureGroups.high_availability.features} />
+
+### Security
+
+<FeatureTable features={featureGroups.security.features} />
+
+### Observability
+
+<FeatureTable features={featureGroups.observability.features} />
+
+### Modules API
+
+<FeatureTable features={featureGroups.modules_api.features} />
