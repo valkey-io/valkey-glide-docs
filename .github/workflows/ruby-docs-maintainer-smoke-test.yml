@@ -1,0 +1,258 @@
+name: Ruby docs maintainer GitHub smoke test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+concurrency:
+  group: ruby-docs-maintainer-smoke-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  github-access:
+    if: >-
+      github.repository == 'valkey-io/valkey-glide-docs' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'agent/docs-maintainer' &&
+      github.actor == 'Aryex'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ISSUE_MARKER: "<!-- ruby-docs-maintainer-github-smoke:v1 -->"
+      OUTPUT_BRANCH: automation/ruby-docs-maintainer-smoke
+      SMOKE_ISSUE_NUMBER: "358"
+
+    steps:
+      - name: Create documentation repository token
+        id: docs-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GLIDE_DOCS_APP_ID }}
+          private-key: ${{ secrets.GLIDE_DOCS_APP_PRIVATE_KEY }}
+          owner: valkey-io
+          repositories: valkey-glide-docs
+          permission-contents: write
+          permission-issues: write
+          permission-metadata: read
+          permission-pull-requests: write
+
+      - name: Create Ruby source token
+        id: source-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GLIDE_DOCS_APP_ID }}
+          private-key: ${{ secrets.GLIDE_DOCS_APP_PRIVATE_KEY }}
+          owner: valkey-io
+          repositories: valkey-glide-ruby
+          permission-contents: read
+          permission-metadata: read
+
+      - name: Check out Ruby source
+        uses: actions/checkout@v6
+        with:
+          repository: valkey-io/valkey-glide-ruby
+          ref: main
+          fetch-depth: 1
+          path: ruby
+          token: ${{ steps.source-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Record Ruby source commit
+        id: ruby
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sha="$(git -C ruby rev-parse HEAD)"
+          url="${GITHUB_SERVER_URL}/valkey-io/valkey-glide-ruby/commit/${sha}"
+          echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
+          echo "url=${url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Read smoke-test issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          issue_json="$(
+            gh issue view "${SMOKE_ISSUE_NUMBER}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json number,title,state,body,url
+          )"
+
+          jq -e \
+            --arg marker "${ISSUE_MARKER}" \
+            --argjson number "${SMOKE_ISSUE_NUMBER}" \
+            '.number == $number and .state == "OPEN" and (.body | contains($marker))' \
+            <<< "${issue_json}" \
+            > /dev/null
+
+      - name: Comment before draft PR creation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          RUBY_SHA: ${{ steps.ruby.outputs.sha }}
+          RUBY_URL: ${{ steps.ruby.outputs.url }}
+          TRIGGER_PR: ${{ github.event.pull_request.number }}
+          WORKFLOW_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          comment_file="${RUNNER_TEMP}/smoke-started.md"
+          {
+            echo "<!-- ruby-docs-maintainer-github-smoke-run:${GITHUB_RUN_ID}:started -->"
+            echo
+            echo "Ruby documentation maintainer smoke test started."
+            echo
+            echo "- Ruby commit: [\`${RUBY_SHA}\`](${RUBY_URL})"
+            echo "- Trigger PR: #${TRIGGER_PR}"
+            echo "- Workflow run: ${WORKFLOW_RUN}"
+          } > "${comment_file}"
+
+          gh issue comment "${SMOKE_ISSUE_NUMBER}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body-file "${comment_file}"
+
+      - name: Find existing output PR
+        id: existing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          pr_url="$(
+            gh pr list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --head "${OUTPUT_BRANCH}" \
+              --state open \
+              --json url \
+              --jq '.[0].url // empty'
+          )"
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out trusted documentation base
+        if: steps.existing.outputs.url == ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          path: output
+          token: ${{ steps.docs-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Create smoke-test commit
+        if: steps.existing.outputs.url == ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          RUBY_SHA: ${{ steps.ruby.outputs.sha }}
+          RUBY_URL: ${{ steps.ruby.outputs.url }}
+          TRIGGER_PR: ${{ github.event.pull_request.number }}
+          WORKFLOW_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          gh auth setup-git
+          git -C output switch -c "${OUTPUT_BRANCH}"
+          git -C output config user.name "github-actions[bot]"
+          git -C output config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          output_file="output/ruby-docs-maintainer-smoke-test.md"
+          {
+            echo "# Ruby documentation maintainer smoke test"
+            echo
+            echo "This disposable file verifies GitHub issue and draft pull request access."
+            echo
+            echo "- Ruby commit: [\`${RUBY_SHA}\`](${RUBY_URL})"
+            echo "- Trigger PR: #${TRIGGER_PR}"
+            echo "- Workflow run: ${WORKFLOW_RUN}"
+          } > "${output_file}"
+
+          git -C output add ruby-docs-maintainer-smoke-test.md
+          git -C output commit --signoff -m "chore: test Ruby docs maintainer GitHub access"
+
+          remote_sha="$(
+            git -C output ls-remote \
+              --heads origin "refs/heads/${OUTPUT_BRANCH}" \
+              | awk '{print $1}'
+          )"
+          if [[ -n "${remote_sha}" ]]; then
+            git -C output push \
+              --force-with-lease="refs/heads/${OUTPUT_BRANCH}:${remote_sha}" \
+              --set-upstream origin "${OUTPUT_BRANCH}"
+          else
+            git -C output push --set-upstream origin "${OUTPUT_BRANCH}"
+          fi
+
+      - name: Open draft pull request
+        if: steps.existing.outputs.url == ''
+        id: create
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          RUBY_SHA: ${{ steps.ruby.outputs.sha }}
+          RUBY_URL: ${{ steps.ruby.outputs.url }}
+          TRIGGER_PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          body_file="${RUNNER_TEMP}/smoke-pr.md"
+          {
+            echo "Disposable draft PR created by the Ruby documentation maintainer smoke test."
+            echo
+            echo "- Smoke-test issue: #${SMOKE_ISSUE_NUMBER}"
+            echo "- Ruby commit: [\`${RUBY_SHA}\`](${RUBY_URL})"
+            echo "- Trigger PR: #${TRIGGER_PR}"
+          } > "${body_file}"
+
+          pr_url="$(
+            gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft \
+              --base "${{ github.event.pull_request.base.ref }}" \
+              --head "${OUTPUT_BRANCH}" \
+              --title "chore: test Ruby docs maintainer GitHub access" \
+              --body-file "${body_file}"
+          )"
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Comment with smoke-test result
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          CREATED_URL: ${{ steps.create.outputs.url }}
+          EXISTING_URL: ${{ steps.existing.outputs.url }}
+          RUBY_SHA: ${{ steps.ruby.outputs.sha }}
+          RUBY_URL: ${{ steps.ruby.outputs.url }}
+          WORKFLOW_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          pr_url="${CREATED_URL:-${EXISTING_URL}}"
+          comment_file="${RUNNER_TEMP}/smoke-completed.md"
+          {
+            echo "<!-- ruby-docs-maintainer-github-smoke-run:${GITHUB_RUN_ID}:completed -->"
+            echo
+            echo "Ruby documentation maintainer smoke test completed."
+            echo
+            echo "- Ruby commit: [\`${RUBY_SHA}\`](${RUBY_URL})"
+            echo "- Draft PR: ${pr_url}"
+            echo "- Workflow run: ${WORKFLOW_RUN}"
+          } > "${comment_file}"
+
+          gh issue comment "${SMOKE_ISSUE_NUMBER}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --body-file "${comment_file}"
+
+          {
+            echo "## Ruby docs maintainer GitHub smoke test"
+            echo
+            echo "- Issue: #${SMOKE_ISSUE_NUMBER}"
+            echo "- Ruby commit: [\`${RUBY_SHA}\`](${RUBY_URL})"
+            echo "- Draft PR: ${pr_url}"
+          } >> "${GITHUB_STEP_SUMMARY}"
