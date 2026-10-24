@@ -1,0 +1,144 @@
+name: Claude code example review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  review-code-examples:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
+      CLAUDE_CODE_USE_BEDROCK: "1"
+
+    steps:
+      - name: Checkout documentation pull request
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          path: docs
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Collect changed documentation
+        id: changes
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          git -C docs diff --name-only \
+            "${BASE_SHA}...${HEAD_SHA}" \
+            -- src/content/docs \
+            > docs/changed-doc-files.txt
+
+          git -C docs diff --unified=80 \
+            "${BASE_SHA}...${HEAD_SHA}" \
+            -- src/content/docs \
+            > docs/code-example-review.diff
+
+          if [[ -s docs/changed-doc-files.txt ]]; then
+            echo "has_docs_changes=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_docs_changes=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Report no documentation changes
+        if: steps.changes.outputs.has_docs_changes != 'true'
+        run: |
+          {
+            echo "## Claude code-example review"
+            echo
+            echo "No documentation files changed; no examples to review."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Checkout GLIDE client source
+        if: steps.changes.outputs.has_docs_changes == 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: valkey-io/valkey-glide
+          ref: main
+          path: client
+          persist-credentials: false
+
+      - name: Configure AWS credentials
+        if: steps.changes.outputs.has_docs_changes == 'true'
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: docs-example-review-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install Claude Code
+        if: steps.changes.outputs.has_docs_changes == 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.305
+
+      - name: Review changed code examples
+        if: steps.changes.outputs.has_docs_changes == 'true'
+        shell: bash
+        env:
+          REVIEW_SCHEMA: >-
+            {"type":"object","properties":{"verdict":{"type":"string","enum":["pass","fail","no_examples"]},"summary":{"type":"string"},"examples":{"type":"array","items":{"type":"object","properties":{"location":{"type":"string"},"language":{"type":"string","enum":["java","node","python"]},"status":{"type":"string","enum":["valid","invalid"]},"reason":{"type":"string"},"client_evidence":{"type":"string"}},"required":["location","language","status","reason","client_evidence"],"additionalProperties":false}}},"required":["verdict","summary","examples"],"additionalProperties":false}
+        run: |
+          set -euo pipefail
+
+          claude --print \
+            --bare \
+            --restricted \
+            --no-session-persistence \
+            --permission-prompts none \
+            --model us.anthropic.claude-fable-5 \
+            --max-turns 20 \
+            --tools "Read,Grep,Glob" \
+            --allowedTools "Read,Grep,Glob" \
+            --output-format json \
+            --json-schema "${REVIEW_SCHEMA}" \
+            < docs/.github/prompts/code-example-review.md \
+            > "${RUNNER_TEMP}/claude-code-example-review.json"
+
+          jq -e '.structured_output' \
+            "${RUNNER_TEMP}/claude-code-example-review.json" \
+            > "${RUNNER_TEMP}/review.json"
+
+          jq . "${RUNNER_TEMP}/review.json"
+
+          {
+            echo "## Claude code-example review"
+            echo
+            jq -r '"**Verdict:** `\(.verdict)`\n\n\(.summary)"' \
+              "${RUNNER_TEMP}/review.json"
+            echo
+            echo "**GLIDE client revision:** \`$(git -C client rev-parse HEAD)\`"
+            echo
+            jq -r '
+              if (.examples | length) == 0 then
+                "No Java, Node, or Python client examples were found in the changed documentation."
+              else
+                "### Reviewed examples\n",
+                (.examples[] |
+                  "- `\(.language)` `\(.location)`: **\(.status)** — \(.reason)\n  - Client evidence: \(.client_evidence)")
+              end
+            ' "${RUNNER_TEMP}/review.json"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          verdict="$(jq -r '.verdict' "${RUNNER_TEMP}/review.json")"
+          case "${verdict}" in
+            pass|no_examples)
+              exit 0
+              ;;
+            fail)
+              echo "::error::Claude found an invalid or unverifiable code example."
+              exit 1
+              ;;
+            *)
+              echo "::error::Claude returned an unexpected verdict: ${verdict}"
+              exit 1
+              ;;
+          esac
