@@ -20,36 +20,16 @@ jobs:
       github.actor == 'Aryex'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     env:
       ISSUE_MARKER: "<!-- ruby-docs-maintainer-github-smoke:v1 -->"
       OUTPUT_BRANCH: automation/ruby-docs-maintainer-smoke
       SMOKE_ISSUE_NUMBER: "358"
 
     steps:
-      - name: Create documentation repository token
-        id: docs-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ vars.GLIDE_DOCS_APP_ID }}
-          private-key: ${{ secrets.GLIDE_DOCS_APP_PRIVATE_KEY }}
-          owner: valkey-io
-          repositories: valkey-glide-docs
-          permission-contents: write
-          permission-issues: write
-          permission-metadata: read
-          permission-pull-requests: write
-
-      - name: Create Ruby source token
-        id: source-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ vars.GLIDE_DOCS_APP_ID }}
-          private-key: ${{ secrets.GLIDE_DOCS_APP_PRIVATE_KEY }}
-          owner: valkey-io
-          repositories: valkey-glide-ruby
-          permission-contents: read
-          permission-metadata: read
-
       - name: Check out Ruby source
         uses: actions/checkout@v6
         with:
@@ -57,7 +37,6 @@ jobs:
           ref: main
           fetch-depth: 1
           path: ruby
-          token: ${{ steps.source-token.outputs.token }}
           persist-credentials: false
 
       - name: Record Ruby source commit
@@ -74,7 +53,7 @@ jobs:
       - name: Read smoke-test issue
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -94,7 +73,7 @@ jobs:
       - name: Comment before draft PR creation
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           RUBY_SHA: ${{ steps.ruby.outputs.sha }}
           RUBY_URL: ${{ steps.ruby.outputs.url }}
           TRIGGER_PR: ${{ github.event.pull_request.number }}
@@ -121,7 +100,7 @@ jobs:
         id: existing
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -142,14 +121,13 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 1
           path: output
-          token: ${{ steps.docs-token.outputs.token }}
           persist-credentials: false
 
       - name: Create smoke-test commit
         if: steps.existing.outputs.url == ''
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           RUBY_SHA: ${{ steps.ruby.outputs.sha }}
           RUBY_URL: ${{ steps.ruby.outputs.url }}
           TRIGGER_PR: ${{ github.event.pull_request.number }}
@@ -194,7 +172,7 @@ jobs:
         id: create
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           RUBY_SHA: ${{ steps.ruby.outputs.sha }}
           RUBY_URL: ${{ steps.ruby.outputs.url }}
           TRIGGER_PR: ${{ github.event.pull_request.number }}
@@ -224,7 +202,7 @@ jobs:
       - name: Comment with smoke-test result
         shell: bash
         env:
-          GH_TOKEN: ${{ steps.docs-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           CREATED_URL: ${{ steps.create.outputs.url }}
           EXISTING_URL: ${{ steps.existing.outputs.url }}
           RUBY_SHA: ${{ steps.ruby.outputs.sha }}
