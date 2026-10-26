@@ -45,10 +45,6 @@
           "description": "Publishes messages and manages channel or pattern subscriptions.",
           "docs": "/concepts/client-features/pubsub-model/"
         },
-        "zero_copy_buffers": {
-          "displayName": "Zero-copy Buffers",
-          "description": "Writes returned values into caller-provided buffers to reduce intermediate allocations."
-        },
         "lua_scripting_api": {
           "displayName": "Scripting API",
           "description": "Provide a Script object for executing and managing Lua scripts. Exposing ordinary scripting commands does not count.",
@@ -134,10 +130,6 @@
           "displayName": "Lazy Connections",
           "description": "Defers physical connections until the first command is executed.",
           "docs": "/how-to/connections/configure-lazy-connection/"
-        },
-        "recovery_request_queue": {
-          "displayName": "Recovery Request Queue",
-          "description": "Temporarily queues requests while a cluster client refreshes topology during recovery."
         }
       }
     },

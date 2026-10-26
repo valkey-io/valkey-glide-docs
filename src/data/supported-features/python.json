@@ -54,13 +54,6 @@
     },
     "in_flight_request_limits",
     "lazy_connections",
-    {
-      "feature": "recovery_request_queue",
-      "hover": {
-        "text": "since 2.5.1",
-        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.1"
-      }
-    },
     "aws_iam_authentication",
     "dynamic_credential_rotation",
     "custom_tls_trust_roots",

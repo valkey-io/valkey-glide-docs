@@ -30,7 +30,6 @@
     "circuit_breaker",
     "in_flight_request_limits",
     "lazy_connections",
-    "recovery_request_queue",
     "aws_iam_authentication",
     "dynamic_credential_rotation",
     "custom_tls_trust_roots",

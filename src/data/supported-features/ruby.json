@@ -60,13 +60,6 @@
     },
     "in_flight_request_limits",
     "lazy_connections",
-    {
-      "feature": "recovery_request_queue",
-      "status": "partial",
-      "hover": {
-        "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/367"
-      }
-    },
     "custom_tls_trust_roots",
     {
       "feature": "mutual_tls",

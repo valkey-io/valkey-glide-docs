@@ -103,13 +103,6 @@
       }
     },
     {
-      "feature": "recovery_request_queue",
-      "hover": {
-        "text": "since 2.5.1",
-        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.1"
-      }
-    },
-    {
       "feature": "aws_iam_authentication",
       "hover": {
         "text": "since 2.2.0",
