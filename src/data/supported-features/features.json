@@ -47,8 +47,7 @@
         },
         "zero_copy_buffers": {
           "displayName": "Zero-copy Buffers",
-          "description": "Writes returned values into caller-provided buffers to reduce intermediate allocations.",
-          "docs": "/how-to/synchronous-connection/#zero-copy-buffers"
+          "description": "Writes returned values into caller-provided buffers to reduce intermediate allocations."
         },
         "lua_scripting_api": {
           "displayName": "Scripting API",
@@ -138,8 +137,7 @@
         },
         "recovery_request_queue": {
           "displayName": "Recovery Request Queue",
-          "description": "Temporarily queues requests while a cluster client refreshes topology during recovery.",
-          "docs": "/how-to/connections/recovery-queue/"
+          "description": "Temporarily queues requests while a cluster client refreshes topology during recovery."
         }
       }
     },
