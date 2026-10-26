@@ -62,6 +62,7 @@
     "lazy_connections",
     {
       "feature": "recovery_request_queue",
+      "status": "partial",
       "hover": {
         "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/367"
       }
