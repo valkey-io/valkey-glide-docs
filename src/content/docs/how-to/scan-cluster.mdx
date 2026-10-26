@@ -3,7 +3,7 @@ title: Scan a Cluster
 description: See how to use the Cluster Scan API from GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 GLIDE Cluster Scan API is built on top of the `SCAN` command, making it easier to setup and use in a cluster.
 It also adds support for slot migration, failovers, and cluster rebalancing.
@@ -14,8 +14,8 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
 ## Scan
 
-<Tabs syncKey="progLangExample">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```py
     cursor = ClusterScanCursor()
     all_keys = []
@@ -23,9 +23,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         cursor, keys = await client.scan(cursor)
         all_keys.extend(keys)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     String key = "key:test_cluster_scan_simple" + UUID.randomUUID();
     Map<String, String> expectedData = new LinkedHashMap<>();
@@ -47,9 +47,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     cursor.releaseCursorHandle();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     let cursor = new ClusterScanCursor();
     const allKeys: string[] = [];
@@ -60,9 +60,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         allKeys.push(...keys);
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     cursor := models.NewClusterScanCursor()
     allKeys := []string{}
@@ -76,24 +76,20 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         cursor = result.Cursor
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await foreach (var key in clusterClient.ScanAsync())
     {
         Console.WriteLine($"Key: {key}");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $cursor = new ClusterScanCursor();
     $allKeys = [];
@@ -112,22 +108,22 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         }
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Scan Using Patterns
 
-<Tabs syncKey="progLangExample">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```py
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, match=b"*key*")
     # Returns matching keys such as [b'my_key1', b'my_key2', b'not_my_key']
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
@@ -151,9 +147,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     cursor.releaseCursorHandle();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     await client.mset([
         { key: "my_key1", value: "value1" },
@@ -170,9 +166,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     keysToSet := map[string]string{
         "my_key1":       "value1",
@@ -196,16 +192,12 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
@@ -223,9 +215,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     // Returns matching keys such as ["my_key1", "my_key2", "not_my_key"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
 
@@ -246,22 +238,22 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Returns matching keys such as ['my_key1', 'my_key2', 'not_my_key']
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Scan With The Count Option
 
-<Tabs syncKey="progLangExample">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     await client.mset({b'my_key1': b'value1', b'my_key2': b'value2', b'not_my_key': b'value3', b'something_else': b'value4'})
     cursor = ClusterScanCursor()
     await client.scan(cursor, count=1)
     # Returns around `count` keys: [b'my_key1']
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
@@ -277,9 +269,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     cursor.releaseCursorHandle();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     await client.mset([
         { key: "my_key1", value: "value1" },
@@ -296,9 +288,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Returns around `count` keys per iteration
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     keysToSet := map[string]string{
         "my_key1":       "value1",
@@ -322,16 +314,12 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Returns around `count` keys per iteration
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
@@ -349,9 +337,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     // Returns around `count` keys per iteration
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client->mset(['my_key1' => 'value1', 'my_key2' => 'value2', 'not_my_key' => 'value3', 'something_else' => 'value4']);
 
@@ -359,13 +347,13 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     $keys = $client->scan($cursor, null, 1); // 1 is the count parameter
     // Returns around `count` keys: ['my_key1']
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Scan For a Specific Data Type.
 
-<Tabs syncKey="progLangExample">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```py
     await client.mset({b'key1': b'value1', b'key2': b'value2', b'key3': b'value3'})
     await client.sadd(b"this_is_a_set", [b"value4"])
@@ -376,9 +364,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
         all_keys.extend(keys)
     print(all_keys)  # Output: [b'key1', b'key2', b'key3']
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Set<String> result = new LinkedHashSet<>();
     ClusterScanCursor cursor = ClusterScanCursor.initalCursor();
@@ -401,9 +389,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     cursor.releaseCursorHandle();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     await client.mset([
         { key: "key1", value: "value1" },
@@ -420,9 +408,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Output: ["key1", "key2", "key3"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     keysToSet := map[string]string{
         "key1": "value1",
@@ -446,16 +434,12 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Output: ["key1", "key2", "key3"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Commands.Options;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     await clusterClient.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
     {
@@ -473,9 +457,9 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
 
     // keys: ["key1", "key2", "key3"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client->mset(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3']);
     $client->sadd('this_is_a_set', 'value4');
@@ -497,5 +481,5 @@ For a detailed explanation of Cluster Scan, see our [article](/concepts/client-f
     }
     // Output: ['key1', 'key2', 'key3']
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

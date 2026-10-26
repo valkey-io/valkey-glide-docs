@@ -124,19 +124,22 @@ Contains the automated audit of command implementations across all clients:
 - Internal links are validated at build time by `starlight-links-validator`
 - Use relative links for internal pages, not absolute URLs
 
+### Code Examples
+
+All code examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow.
+
 ### Language Tabs
 
-Per-language code examples use Starlight tabs synced across pages:
+Per-language code examples should use the <ClientTabs> and <ClientTab>.
 
 ```mdx
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">...</TabItem>
-  ...
-</Tabs>
+<ClientTabs>
+  <ClientTab slot="java"> ... </ClientTab>
+  <ClientTab slot="node"> ... </ClientTab>
+</ClientTabs>
 ```
 
-- Tab labels (in this order): `Python`, `Java`, `Node`, `Go`, `PHP`, `C#`, `Ruby`
-- Examples across tabs on the same page should be equivalent: same key names, values, hosts/ports, and flow
+See `ClientTabs.astro` for supported slot names.
 
 ## Commit Requirements
 
@@ -201,3 +204,19 @@ pnpm run format:check
 pnpm run format:check:non-mdx   # Non-content files only
 pnpm run format:check:mdx       # Markdown/MDX content only
 ```
+
+## Supported client features
+
+The supported features page uses:
+
+- `src/data/supported-features/features.json` as the feature catalog and source of grouping and display order
+- `src/data/supported-features/<language>.json` for client metadata and a flat list of supported feature keys
+- `src/content/docs/reference/supported-features.mdx` to validate and render the data
+
+Supported statuses are:
+
+- available: fully functional
+- not_available: not functional
+- partial: functional but missing some capabilities.
+
+Short hand: a feature name string appearing in a client feature list means it is supported.

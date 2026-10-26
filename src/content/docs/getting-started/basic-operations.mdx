@@ -6,9 +6,11 @@ sidebar:
 
 ---
 
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Aside } from '@astrojs/starlight/components';
 
-import { Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+import { LinkCard } from '@astrojs/starlight/components';
 
 Now that you have a working connection, let's explore the fundamental operations you can perform with Valkey GLIDE.
 
@@ -27,8 +29,8 @@ specific features.
 
 To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/) and [GET](https://valkey.io/commands/get/) commands.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClient, NodeAddress
@@ -51,9 +53,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     if __name__ == "__main__":
         asyncio.run(string_operations())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -81,9 +83,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```javascript
     const { GlideClient } = require('@valkey/valkey-glide');
 
@@ -108,9 +110,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
 
     stringOperations().catch(console.error);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     package main
     import (
@@ -147,9 +149,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         fmt.Printf("✓ Retrieved value: %v\n", value)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Create ValkeyGlide client
     $client = new ValkeyGlide();
@@ -168,9 +170,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         $client->close();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -186,9 +188,9 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     ValkeyValue value = await client.GetAsync("user:1000");
     Console.WriteLine($"✓ Retrieved value: {value}");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -206,15 +208,15 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
       client.close
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Making Multiple Atomic Operations
 
 Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which are used to set/get keys and values atomically.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Set multiple keys at once
     await client.mset({"user:1001": "alice", "user:1002": "bob", "user:1003": "charlie"})
@@ -224,9 +226,9 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     values = await client.mget(["user:1001", "user:1002", "user:1003"])
     print(f"✓ Retrieved values: {values}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Set multiple keys at once
     Map<String, String> keyValues = Map.of(
@@ -242,9 +244,9 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     String[] values = client.mget(keys).get();
     System.out.println("✓ Retrieved values: " + Arrays.toString(values));
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```javascript
     // Set multiple keys at once
     await client.mset({
@@ -258,9 +260,9 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     const values = await client.mget(['user:1001', 'user:1002', 'user:1003']);
     console.log(`✓ Retrieved values: ${values}`);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Set multiple keys at once
     keyValues := map[string]string{
@@ -282,9 +284,9 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     }
     fmt.Printf("✓ Retrieved values: %v\n", values)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Set multiple keys at once
     $client->mset([
@@ -298,15 +300,11 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     $values = $client->mget(['user:1001', 'user:1002', 'user:1003']);
     echo "✓ Retrieved values: " . implode(', ', $values) . "\n";
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     // Set multiple keys at once
     await client.SetAsync(new KeyValuePair<ValkeyKey, ValkeyValue>[]
@@ -321,9 +319,9 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     var values = await client.GetAsync(["user:1001", "user:1002", "user:1003"]);
     Console.WriteLine($"✓ Retrieved values: {string.Join(", ", values)}");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Set multiple keys at once
     client.mapped_mset("user:1001" => "alice", "user:1002" => "bob", "user:1003" => "charlie")
@@ -333,37 +331,37 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
     values = client.mget("user:1001", "user:1002", "user:1003")
     puts "✓ Retrieved values: #{values}"
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Removing Keys
 
 Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete a list of keys.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     deleted_count = await client.delete(["user:1001", "user:1002", "user:1003"])
     print(f"✓ Deleted {deleted_count} keys")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     String[] keys = {"user:1001", "user:1002", "user:1003"};
     Long deletedCount = client.del(keys).get();
     System.out.println("✓ Deleted " + deletedCount + " keys");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```javascript
     const deletedCount = await client.del(['user:1001', 'user:1002', 'user:1003']);
     console.log(`✓ Deleted ${deletedCount} keys`);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     keys := []string{"user:1001", "user:1002", "user:1003"}
     deletedCount, err := client.Del(context.Background(), keys)
@@ -372,35 +370,31 @@ Clients can also send [DEL](https://valkey.io/commands/del/) commands to delete 
     }
     fmt.Printf("✓ Deleted %d keys\n", deletedCount)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $deletedCount = $client->del(['user:1001', 'user:1002', 'user:1003']);
     echo "✓ Deleted {$deletedCount} keys\n";
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var count = await client.DeleteAsync(["user:1001", "user:1002", "user:1003"]);
     Console.WriteLine($"✓ Deleted {count} keys");
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     deleted_count = client.del("user:1001", "user:1002", "user:1003")
     puts "✓ Deleted #{deleted_count} keys"
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

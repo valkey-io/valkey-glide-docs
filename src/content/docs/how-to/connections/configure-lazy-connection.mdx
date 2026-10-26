@@ -3,7 +3,7 @@ title: Configure Lazy Connection
 description: Defer connection establishment until the first command is executed
 ---
 
-import { TabItem, Tabs } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 GLIDE supports **lazy connection mode**, which defers the establishment of physical connections to Valkey servers until the first command is executed. This feature reduces startup latency and enables client creation in environments where the server may not be immediately available.
 
@@ -11,8 +11,8 @@ GLIDE supports **lazy connection mode**, which defers the establishment of physi
 
 Lazy connection can be configured through the client configuration object.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Node">
+<ClientTabs>
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient, GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -36,9 +36,9 @@ Lazy connection can be configured through the client configuration object.
     // No connection established yet - this will trigger the connection
     const result = await standaloneClient.ping();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient, GlideClusterClient, NodeAddress
 
@@ -64,9 +64,9 @@ Lazy connection can be configured through the client configuration object.
     # No connection established yet - this will trigger the connection
     result = await standalone_client.ping()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.GlideClusterClient;
@@ -96,9 +96,9 @@ Lazy connection can be configured through the client configuration object.
     // No connection established yet - this will trigger the connection
     String result = standaloneClient.ping().get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "github.com/valkey-io/valkey-glide/go/glide/api"
@@ -131,9 +131,9 @@ Lazy connection can be configured through the client configuration object.
     // No connection established yet - this will trigger the connection
     result, err := standaloneClient.Ping()
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -160,9 +160,9 @@ Lazy connection can be configured through the client configuration object.
     // No connection established yet - this will trigger the connection
     var result = await standaloneClient.PingAsync();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Standalone client with lazy connect
     $standaloneClient = new ValkeyGlide();
@@ -188,9 +188,9 @@ Lazy connection can be configured through the client configuration object.
     $standaloneClient->close();
     $clusterClient->close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -216,8 +216,8 @@ Lazy connection can be configured through the client configuration object.
     # No connection established yet - this will trigger the connection
     result = standalone_client.ping
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## How It Works
 

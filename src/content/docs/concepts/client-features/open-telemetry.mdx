@@ -38,12 +38,12 @@ GLIDE creates a **trace span for each Valkey command**, giving detailed visibili
 This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
 
 :::note
-Some advanced commands are not yet included in tracing instrumentation:
+Some advanced commands have limited or no tracing instrumentation:
 
-* The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN)
-* Lua scripting commands (EVAL, EVALSHA)
+* The SCAN family of commands (SCAN, SSCAN, HSCAN, ZSCAN) — not yet traced in any client.
+* Lua scripting commands — EVALSHA is now traced in the **Python client**.
 
-Support for these commands will be added in a future version as we continue to expand tracing coverage.
+Support for SCAN family tracing will be added in a future version as we continue to expand coverage.
 :::
 
 ## Configurable Sampling (Tracing only)

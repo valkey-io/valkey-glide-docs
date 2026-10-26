@@ -3,7 +3,8 @@ title: Execute Custom Commands
 description: A guide on executing raw Valkey commands using GLIDE's custom command API.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Aside } from '@astrojs/starlight/components';
 
 GLIDE's `custom_command` method lets you execute any Valkey command directly, allowing you to execute custom commands, custom modules, and commands not yet supported by clients' API.
@@ -16,8 +17,8 @@ Some unsupported commands will not work even with `custom_command`. These are ei
 
 Pass the command name and arguments as an array of strings:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClient, GlideClientConfiguration, NodeAddress
@@ -38,9 +39,9 @@ Pass the command name and arguments as an array of strings:
     if __name__ == "__main__":
         asyncio.run(main())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -62,9 +63,9 @@ Pass the command name and arguments as an array of strings:
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node.js">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from "@valkey/valkey-glide";
 
@@ -83,9 +84,9 @@ Pass the command name and arguments as an array of strings:
 
     main();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     package main
 
@@ -118,9 +119,9 @@ Pass the command name and arguments as an array of strings:
         fmt.Println(result) // hello
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     require 'vendor/autoload.php';
 
@@ -135,9 +136,9 @@ Pass the command name and arguments as an array of strings:
     $result = $client->rawCommand("GET", "mykey");
     echo $result; // hello
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -154,9 +155,9 @@ Pass the command name and arguments as an array of strings:
     var result = await client.CustomCommand(["GET", "mykey"]);
     Console.WriteLine(result); // hello
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -176,8 +177,8 @@ Pass the command name and arguments as an array of strings:
 
     client.close
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Limitations
 

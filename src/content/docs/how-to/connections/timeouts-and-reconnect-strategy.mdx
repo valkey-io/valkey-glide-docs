@@ -3,7 +3,7 @@ title: Timeouts and Reconnect Strategy
 description: Guide for configuring timeout settings and reconnection strategies in Valkey GLIDE.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE allows you to configure timeout settings and reconnect strategies. These configurations can be applied through the client configuration parameters.
 
@@ -17,8 +17,8 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 
 ## Setting Request Timeout for Long-Running Commands
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -31,9 +31,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -48,9 +48,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -66,9 +66,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
         requestTimeout: 500
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -83,9 +83,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
         client, err := glide.NewClusterClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -96,9 +96,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
         request_timeout: 500
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -110,9 +110,9 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -122,15 +122,15 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
       timeout: 0.5 # request timeout in seconds (500 ms)
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Setting Connection Timeout
 
 The connection timeout controls how long the client waits for a TCP/TLS connection to establish. This is separate from the request timeout and is configured via the advanced configuration.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -149,9 +149,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.AdvancedGlideClusterClientConfiguration;
@@ -169,9 +169,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -182,9 +182,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         }
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -200,18 +200,18 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         client, err := glide.NewClusterClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $client = new ValkeyGlideCluster(
         addresses: [['host' => 'address.example.com', 'port' => 6379]],
         advanced_config: ['connection_timeout' => 5000]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -223,9 +223,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     await using var client = await GlideClusterClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -235,13 +235,13 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
       connect_timeout: 5.0 # connection timeout in seconds (5000 ms)
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Configuring Reconnect Strategy
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -258,9 +258,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     client = await GlideClusterClient.create(client_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.BackoffStrategy;
@@ -280,9 +280,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     GlideClusterClient client = GlideClusterClient.createClient(config).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClusterClient} from "@valkey/valkey-glide";
 
@@ -302,9 +302,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         }
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -323,9 +323,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         client, err := glide.NewClusterClient(myConfig)
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $addresses = [
         ['host' => 'address.example.com', 'port' => 6379]
@@ -342,9 +342,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         reconnect_strategy: $reconnect_strategy
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -359,9 +359,9 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -375,5 +375,5 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
       reconnect_delay_max: 5.0
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>

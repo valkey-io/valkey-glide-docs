@@ -3,7 +3,7 @@ title: Limit Inflight Requests
 description: Control the maximum number of concurrent requests per connection to prevent OOM errors
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 To ensure system stability and prevent out-of-memory (OOM) errors, Valkey GLIDE limits the maximum number of concurrent (inflight) requests sent through each connection of a GLIDE client.
 
@@ -11,74 +11,126 @@ To ensure system stability and prevent out-of-memory (OOM) errors, Valkey GLIDE 
 
 Inflight requests limit can be configured through the general client configurations.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="C#">
+<ClientTabs>
+  <ClientTab slot="csharp">
+    :::note[Release availability]
+    The inflight requests limit is not included in the C# 1.1.0 client. Support is planned for **1.2.0**; its implementation has merged into `main` in [#509](https://github.com/valkey-io/valkey-glide-csharp/pull/509).
+    :::
+
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
     // Limit to 1000 inflight requests per connection
-    var clusterConfig = new GlideClusterClientConfiguration()
+    var config = new ClusterClientConfigurationBuilder()
         .WithAddress("address.example.com", 6379)
-        .WithInflightRequestsLimit(1000);
-    ```
-  </TabItem>
+        .WithInflightRequestsLimit(1000)
+        .Build();
 
-  <TabItem label="Go">
+    await using var client = await GlideClusterClient.CreateClient(config);
+    ```
+
+    `WithInflightRequestsLimit` takes a `uint` and throws `ArgumentOutOfRangeException` when passed `0`.
+  </ClientTab>
+
+  <ClientTab slot="go">
+    :::note[Release availability]
+    The inflight requests limit is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6580](https://github.com/valkey-io/valkey-glide/pull/6580).
+    :::
+
     ```go
-    // Limit to 1000 inflight requests per connection
-    clusterConfig := config.NewClusterClientConfiguration().
-        WithInflightRequestsLimit(1000)
-    ```
-  </TabItem>
+    import (
+        "context"
 
-  <TabItem label="Java">
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithInflightRequestsLimit() {
+        // Limit to 1000 inflight requests per connection
+        myConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithInflightRequestsLimit(1000)
+
+        client, _ := glide.NewClusterClient(myConfig)
+
+        client.Ping(context.Background())
+    }
+    ```
+  </ClientTab>
+
+  <ClientTab slot="java">
     ```java
+    import glide.api.GlideClusterClient;
+    import glide.api.models.configuration.GlideClusterClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
     // Limit to 1000 inflight requests per connection
-    GlideClusterClientConfiguration clusterConfig = GlideClusterClientConfiguration.builder()
+    GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
+        .address(NodeAddress.builder().host("address.example.com").port(6379).build())
         .inflightRequestsLimit(1000)
         .build();
-    ```
-  </TabItem>
 
-  <TabItem label="Node">
+    GlideClusterClient client = GlideClusterClient.createClient(config).get();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="node">
     ```typescript
-    // Limit to 1000 inflight requests per connection
-    const clusterConfig: GlideClusterClientConfiguration = {
-        inflightRequestsLimit: 1000,
-    };
-    ```
-  </TabItem>
+    import { GlideClusterClient } from "@valkey/valkey-glide";
 
-  <TabItem label="PHP">
+    // Limit to 1000 inflight requests per connection
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        inflightRequestsLimit: 1000,
+    });
+    ```
+  </ClientTab>
+
+  <ClientTab slot="php">
     :::note
     PHP GLIDE uses a synchronous blocking API, which means only one request can be in-flight at a time. Therefore, the inflight request limit configuration is not applicable and is not exposed in the PHP API.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
+    from glide import (
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress,
+    )
+
+    addresses = [NodeAddress(host="address.example.com", port=6379)]
     # Limit to 1000 inflight requests per connection
-    cluster_config = GlideClusterClientConfiguration(
+    client_config = GlideClusterClientConfiguration(
+        addresses,
         inflight_requests_limit=1000,
     )
-    ```
-  </TabItem>
 
-  <TabItem label="Ruby">
+    client = await GlideClusterClient.create(client_config)
+    ```
+  </ClientTab>
+
+  <ClientTab slot="ruby">
     ```ruby
+    require "valkey"
+
     # Limit to 1000 inflight requests per connection
     client = Valkey.new(
-      nodes: [{ host: "localhost", port: 7000 }],
+      nodes: [{ host: "address.example.com", port: 6379 }],
       cluster_mode: true,
       inflight_requests_limit: 1000
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Why Limit Inflight Requests
 
 Excessive inflight requests can lead to queuing within the GLIDE infrastructure, increasing memory usage and potentially causing OOM issues.
 By capping inflight requests per connection, this feature reduces the risk of excessive queuing and helps maintain reliable system performance.
-The default inflight request limit is 1000 per connection, though this value can be configured in all GLIDE wrappers to suit application needs.
+The default inflight request limit is 1000 per connection, though this value can be configured in the GLIDE wrappers that expose it to suit application needs.
 
 The limit is designed based on Little’s Law, ensuring that the system can operate efficiently at peak throughput while allowing a buffer for bursts.
 

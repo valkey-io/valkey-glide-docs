@@ -1,0 +1,58 @@
+name: External Links
+
+on:
+  pull_request:
+    branches: [main, public]
+  schedule:
+    # Run near midnight in the repository's primary Pacific time zone.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-external-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --fetch-retries=5 --fetch-retry-maxtimeout=120000
+
+      - name: Build site
+        run: pnpm build
+
+      - name: Check external links (attempt 1/2)
+        id: lychee-attempt-1
+        uses: lycheeverse/lychee-action@v2.8.0
+        continue-on-error: true
+        with:
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true
+
+      - name: Wait before link check retry
+        if: steps.lychee-attempt-1.outcome == 'failure'
+        run: |
+          echo "First lychee attempt failed (likely a transient network/TLS error against an external site)."
+          echo "Waiting 30s before retry to let the upstream issue clear."
+          sleep 30
+
+      - name: Check external links (attempt 2/2)
+        if: steps.lychee-attempt-1.outcome == 'failure'
+        uses: lycheeverse/lychee-action@v2.8.0
+        with:
+          args: "--config ${{ github.workspace }}/lychee.toml ${{ github.workspace }}/dist --root-dir ${{ github.workspace }}/dist"
+          debug: true

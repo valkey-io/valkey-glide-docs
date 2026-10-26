@@ -3,7 +3,7 @@ title: Resilience Best Practices
 description: Guidance for configuring Valkey GLIDE for resilient operation under server outages, failovers, and high-load scenarios.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 This guide covers configuration and operational practices that help Valkey GLIDE clients remain responsive during server outages, failovers, and high-load scenarios.
 
@@ -11,8 +11,8 @@ This guide covers configuration and operational practices that help Valkey GLIDE
 
 A resilient client combines request timeout, inflight limiting, and the circuit breaker:
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import (
         GlideClusterClient,
@@ -25,13 +25,14 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
         addresses=[NodeAddress(host="localhost", port=6379)],
         request_timeout=500,
         inflight_requests_limit=1000,
+        recovery_requests_queue_size=1000,
         client_circuit_breaker=ClientCircuitBreakerConfiguration(),
     )
     client = await GlideClusterClient.create(config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
@@ -43,14 +44,15 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
             .address(NodeAddress.builder().host("localhost").port(6379).build())
             .requestTimeout(500)
             .inflightRequestsLimit(1000)
+            .recoveryRequestsQueueSize(1000)
             .clientCircuitBreakerConfiguration(
                 ClientCircuitBreakerConfiguration.builder().build())
             .build()
     ).get();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient } from "@valkey/valkey-glide";
 
@@ -58,12 +60,13 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
         addresses: [{ host: "localhost", port: 6379 }],
         requestTimeout: 500,
         inflightRequestsLimit: 1000,
+        recoveryRequestsQueueSize: 1000,
         clientCircuitBreaker: {},
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         "time"
@@ -76,13 +79,18 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
         WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
         WithRequestTimeout(500 * time.Millisecond).
         WithInflightRequestsLimit(1000).
+        WithRecoveryRequestsQueueSize(1000).
         WithClientCircuitBreaker(&config.ClientCircuitBreakerConfiguration{})
 
     client, err := glide.NewClusterClient(clientConfig)
     ```
-  </TabItem>
 
-  <TabItem label="Ruby">
+    :::note[Release availability]
+    `WithInflightRequestsLimit` is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6580](https://github.com/valkey-io/valkey-glide/pull/6580). The other options shown are available in 2.5.3.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -97,8 +105,8 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
     :::note
     The client circuit breaker is not yet available in GLIDE Ruby.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Single Client Instance
 
@@ -201,6 +209,7 @@ Cluster clients additionally benefit from:
 * Per-node routing (commands to healthy nodes are unaffected by one bad node)
 * Topology refresh and failover detection (periodic, enabled by default)
 * Automatic MOVED/ASK redirect handling
+* Recovery request queue: buffers requests during topology-refresh reconnects instead of failing them immediately (see [Recovery Request Queue](/how-to/connections/recovery-queue))
 * `refreshTopologyFromInitialNodes`: when enabled, falls back to seed nodes if existing cluster nodes are unreachable during topology refresh (important when the failed node is the one the client uses for discovery). This is set via the advanced cluster client configuration.
 
 For standalone deployments, the client-wide circuit breaker is the primary protection against a single unresponsive server causing thread pile-up.

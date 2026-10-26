@@ -5,11 +5,11 @@ sidebar:
   order: 1
 ---
 
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Aside } from '@astrojs/starlight/components';
 
 import { Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
-
-import ParamTabs from '@components/ParamTabs.astro';
 
 Valkey GLIDE is the open-source client library for Valkey. Designed for performance and consistency between supported languages.
 This guide will show how to quickly install and set up a simple development environment for Valkey GLIDE.
@@ -68,17 +68,17 @@ Windows support is currently available only for Valkey-GLIDE Java
 
 ## Install Valkey GLIDE
 
-<ParamTabs param="lang" syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     **Requirements:** Python 3.9 to 3.13.
 
     ```bash
     # Install the latest version
     pip3 install valkey-glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     **Requirements:** JDK 11+
 
     Add the following to your build tool. Make sure to specify your classifier for your OS.
@@ -119,24 +119,24 @@ Windows support is currently available only for Valkey-GLIDE Java
         ```
       </TabItem>
 
-      <TabItem label="Maven">
+      <TabItem label="SBT">
         ```scala
         // Specify the OS classifier for your system.
         libraryDependencies += "io.valkey" % "valkey-glide" % "2.+" classifier "<your-classifier>"
         ```
       </TabItem>
     </Tabs>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     **Requirements:** Node 16+
 
     ```bash
     npm install @valkey/valkey-glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     **Requirements:** Go 1.22+
 
     ```bash
@@ -147,9 +147,9 @@ Windows support is currently available only for Valkey-GLIDE Java
     go get github.com/valkey-io/valkey-glide/go/v2
     go mod tidy
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     **Requirements:** PHP 8.1+
 
     ```bash
@@ -165,18 +165,18 @@ Windows support is currently available only for Valkey-GLIDE Java
     # After installation, enable the extension:
     extension=valkey_glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     **Requirements:** .NET 8.0+
 
     ```bash
     dotnet add package Valkey.Glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
-    **Requirements:** Ruby 2.6+
+  <ClientTab slot="ruby">
+    **Requirements:** Ruby 3.0+
 
     ```bash
     gem install valkey-glide-rb
@@ -187,8 +187,8 @@ Windows support is currently available only for Valkey-GLIDE Java
     ```ruby
     gem "valkey-glide-rb"
     ```
-  </TabItem>
-</ParamTabs>
+  </ClientTab>
+</ClientTabs>
 
 :::tip[Installation Guides]
 For more detailed instructions, refer to our installation [guides](/how-to/installation).
@@ -200,8 +200,8 @@ The following code snippet performs a simple "ping" command to our docker Valkey
 GLIDE was able to send and receive commands from Valkey.
 For testing against a live instance, update the `GlideClient` configurations.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClient, NodeAddress
@@ -228,9 +228,9 @@ For testing against a live instance, update the `GlideClient` configurations.
     if __name__ == "__main__":
         asyncio.run(main())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.configuration.GlideClientConfiguration;
@@ -259,9 +259,9 @@ For testing against a live instance, update the `GlideClient` configurations.
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```javascript
     const { GlideClient } = require('@valkey/valkey-glide');
 
@@ -289,9 +289,9 @@ For testing against a live instance, update the `GlideClient` configurations.
     // Run the function
     main().catch(console.error);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     package main
     import (
@@ -324,9 +324,9 @@ For testing against a live instance, update the `GlideClient` configurations.
         client.Close()
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Create ValkeyGlide client
     $client = new ValkeyGlide();
@@ -350,9 +350,9 @@ For testing against a live instance, update the `GlideClient` configurations.
         $client->close();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -377,9 +377,9 @@ For testing against a live instance, update the `GlideClient` configurations.
         Console.WriteLine($"Connection failed: {e.Message}");
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     require "valkey"
 
@@ -399,8 +399,8 @@ For testing against a live instance, update the `GlideClient` configurations.
       client.close
     end
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 Running the above snippet should give you this response.
 
@@ -417,8 +417,8 @@ Always close/dispose GLIDE clients to cleanup resources when the instance is no 
 GLIDE offers many configuration options to connect to Valkey through its configuration `objects`.
 These options, and other interfaces, stay consistent between languages.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Setting up connection configuration
     config = GlideClientConfiguration(
@@ -433,9 +433,9 @@ These options, and other interfaces, stay consistent between languages.
         database_id=0
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Setting up connection configuration
     GlideClientConfiguration config = GlideClientConfiguration.builder()
@@ -451,9 +451,9 @@ These options, and other interfaces, stay consistent between languages.
         .databaseId(0)
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```javascript
     // Setting up connection configuration
     const configs = {
@@ -466,9 +466,9 @@ These options, and other interfaces, stay consistent between languages.
         databaseId: 0
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Setting up connection configuration
     host := "localhost"
@@ -486,9 +486,9 @@ These options, and other interfaces, stay consistent between languages.
         return
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Setting up connection configuration
     $client = new ValkeyGlide();
@@ -515,9 +515,9 @@ These options, and other interfaces, stay consistent between languages.
         ]
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -531,9 +531,9 @@ These options, and other interfaces, stay consistent between languages.
 
     await using var client = await GlideClient.CreateClient(config);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
+  <ClientTab slot="ruby">
     ```ruby
     # Setting up connection configuration
     client = Valkey.new(
@@ -547,8 +547,8 @@ These options, and other interfaces, stay consistent between languages.
       db: 0
     )
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::tip
 For a full list of connection options, take a look at the connection options [guides](/reference/connection-options).

@@ -18,16 +18,36 @@ to the primary node containing the slot for the key `user:100`.
 
 ## Read Strategy
 
-By default, GLIDE routes all read commands to the primary nodes. While this guarantees strong consistency it can lead to higher load especially if
+By default, GLIDE routes all read commands to the primary nodes. This can lead to higher load especially if
 there are many write operations on the primary node.
 To optimize read performance and distribute the load, GLIDE clients support different read strategies that allow reads to be directed to replica nodes.
 
-| Strategy                      | Description                                                                                                                                                                                                             |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Primary` (Default)           | Always read from primary, in order to get the freshest data.                                                                                                                                                            |
-| `PreferReplica`               | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                            |
-| `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other replicas or the primary if needed.                                                      |
-| `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any replica or the primary if needed. |
+Reads from replicas can return stale data, including immediately after a write.
+
+The table describes ordinary cluster reads governed by the client's read strategy. Candidates are available connections for the key's shard, not arbitrary nodes across the cluster. “Local” means the AZ configured for the client. Writes and commands that require a primary continue to use the primary; explicit routing options are separate from these defaults.
+
+| Strategy                      | Description                                                                                                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Primary` (Default)           | Always read from primary, in order to get the freshest data.                                                                                                                                                                           |
+| `AllNodes` | Rotate across available primary and replicas, without an AZ preference. |
+| `PreferReplica`               | Spread requests between all replicas in a round robin manner. If no replica is available, route the requests to the primary.                                                                                                           |
+| `AZAffinity`                  | Spread the read requests between replicas in the same client's availability zone in a round robin manner, falling back to other available replicas, then to the primary only if no replica is available.                                                                     |
+| `AzAffinityReplicaAndPrimary` | Spread the read requests among nodes within the client's Availability Zone (AZ) in a round robin manner, prioritizing local replicas, then the local primary, and falling back to any available replica, then to the primary only if no replica is available.                |
+| `AZAffinityAllNodes`          | Spread the read requests equally among all nodes (primary and replicas) within the client's availability zone in a round robin manner, falling back to a round robin across all nodes if no node in the client's availability zone is available. |
+
+### Primary participation with AZ affinity
+
+With both AZ Affinity Replicas and Primary and AZ Affinity All Nodes, an available local primary receives reads if it is the only available local node, even when remote replicas are available.
+
+AZ Affinity All Nodes differs in two cases: the local primary shares the rotation while local replicas are available, and, when no local node is available, the remote primary shares the fallback rotation with remote replicas. AZ Affinity Replicas and Primary instead prefers replicas in each of those groups. A remote primary does not join the rotation while a local node remains available.
+
+Round-robin distributes requests, not measured CPU utilization. Concurrency, retries, and topology changes can affect the observed distribution.
+
+### Standalone fallback
+
+In standalone mode, AZ Affinity uses local replicas, then any available replicas, then the primary. AZ Affinity Replicas and Primary uses local replicas, then the local primary, but its final fallback rotates across **all** available primary and replica nodes. AZ Affinity All Nodes rotates equally across local primary and replicas, then all available nodes if no local node is available. Thus, equal local-primary participation alongside local replicas is new with AZ Affinity All Nodes; including the primary in the final standalone fallback pool is not.
+
+AZ Affinity All Nodes is included in Java and Python in **2.5.3**; Go and Node support is planned for **2.6.0**. The AZ-independent All Nodes strategy is available in Java, Python, Go, and Node in 2.4.0 and later. For configuration examples and AZ requirements, see [Specify a Read Strategy](/how-to/connections/read-strategy/).
 
 ## Automatic Redirect Handling (MOVED and ASK)
 

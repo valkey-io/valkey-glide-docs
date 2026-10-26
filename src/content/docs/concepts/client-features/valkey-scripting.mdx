@@ -3,7 +3,7 @@ title: Valkey Scripting
 description: Understanding how GLIDE handles Lua scripting, caching, and atomicity.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE provide a scripting interface through the `Script` class, allowing you to manage and execute
 custom logic directly on the server. This page will explain how GLIDE handles Valkey scripting and its features.
@@ -34,8 +34,8 @@ GLIDE script provide the following advantages:
 
 Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua.org/) scripts and handles their execution efficiently.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import Script, GlideClient, GlideClientConfiguration, NodeAddress
 
@@ -50,9 +50,9 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     result = await client.invoke_script(script)
     print(result)  # b'Hello, Valkey!'
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.Script;
@@ -70,9 +70,9 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     CompletableFuture<Object> result = client.invokeScript(script);
     System.out.println(result.get());  // Hello, Valkey!
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {GlideClient, Script} from "@valkey/valkey-glide";
 
@@ -88,9 +88,9 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     const result = await client.invokeScript(script);
     console.log(result);  // 'Hello, Valkey!'
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -110,9 +110,9 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     result, err := client.InvokeScript(context.Background(), *script)
     fmt.Println(result)  // Hello, Valkey!
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -130,9 +130,8 @@ Valkey GLIDE provides a `Script` class that wraps Valkey's [Lua](https://www.lua
     var result = await client.ScriptInvokeAsync(script);
     Console.WriteLine(result); // Hello, Valkey!
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Handling Inputs with KEYS and ARGV
 
@@ -141,8 +140,8 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
 * **KEYS**: Used to pass key names in Valkey (e.g., `product:123`)
 * **ARGV**: Used for general input parameters
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     product_key = "product:shoe:stock"
     buy_quantity = "3" 
@@ -153,9 +152,9 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
         args=[buy_quantity]   # Maps to ARGV[1] in Lua
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.commands.ScriptOptions;
 
@@ -170,9 +169,9 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
             .build()
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const productKey = "product:shoe:stock";
     const buyQuantity = "3";
@@ -182,9 +181,9 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
         args: [buyQuantity]   // Maps to ARGV[1] in Lua
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -201,15 +200,11 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
         *scriptOptions,
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var productKey = "product:shoe:stock";
     var buyQuantity = "3";
@@ -222,9 +217,8 @@ Valkey provides `KEYS` and `ARGV` to handle input parameters:
 
     var result = await client.ScriptInvokeAsync(script, options);
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 #### Why Use KEYS and ARGV
 
@@ -244,8 +238,8 @@ Another benefit is that using `ARGV` and `KEYS` allows for efficient caching of 
 Since Valkey caches scripts based on their SHA1 hash of the code, hardcoding changing
 values directly into the script would create unique scripts each time, preventing effective caching.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Bad: Creates a new hash for each quantity
     bad_script = Script(f"return server.call('DECRBY', {product_key}, {buy_quantity})")
@@ -254,9 +248,9 @@ values directly into the script would create unique scripts each time, preventin
     good_script = Script("return server.call('DECRBY', KEYS[1], ARGV[1])")
     await client.invoke_script(good_script, keys=[product_key], args=[buy_quantity])
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Bad: Creates a new hash for each quantity
     Script badScript = new Script("return redis.call('DECRBY', " + productKey + ", " + buyQuantity + ")", false);
@@ -268,9 +262,9 @@ values directly into the script would create unique scripts each time, preventin
         ScriptOptions.builder().key(productKey).arg(buyQuantity).build()
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Bad: Creates a new hash for each quantity
     const badScript = new Script(`return redis.call('DECRBY', ${productKey}, ${buyQuantity})`);
@@ -279,9 +273,9 @@ values directly into the script would create unique scripts each time, preventin
     const goodScript = new Script("return redis.call('DECRBY', KEYS[1], ARGV[1])");
     await client.invokeScript(goodScript, {keys: [productKey], args: [buyQuantity]});
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Bad: Creates a new hash for each quantity
     badScript := options.NewScript(fmt.Sprintf("return redis.call('DECRBY', %s, %s)", productKey, buyQuantity))
@@ -293,15 +287,11 @@ values directly into the script would create unique scripts each time, preventin
         WithArgs([]string{buyQuantity})
     result, err := client.InvokeScriptWithOptions(context.Background(), *goodScript, *scriptOptions)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     var productKey = "product:shoe:stock";
     var buyQuantity = "3";
@@ -318,9 +308,8 @@ values directly into the script would create unique scripts each time, preventin
 
     var result = await client.ScriptInvokeAsync(goodScript, options);
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::tip[Large Data]
 GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
@@ -331,86 +320,85 @@ GLIDE can handle large `KEYS` and `ARGV` inputs efficiently.
 When you create a `Script` object in GLIDE, it is hashed using SHA1.
 GLIDE then automatically caches scripts with each `invoke_script()` call.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     script = Script("return 'Hello'")
     hash_value = script.get_hash()
     print(f"Script hash: {hash_value}")  # SHA1 hash of the script
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Script script = new Script("return 'Hello'", false);
     String hashValue = script.getHash();
     System.out.println("Script hash: " + hashValue);  // SHA1 hash of the script
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const script = new Script("return 'Hello'");
     const hashValue = script.getHash();
     console.log(`Script hash: ${hashValue}`);  // SHA1 hash of the script
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     script := options.NewScript("return 'Hello'")
     hashValue := script.GetHash()
     fmt.Printf("Script hash: %sn", hashValue)  // SHA1 hash of the script
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
     using var script = new Script("return 'Hello'");
     Console.WriteLine($"Script hash: {script.Hash}"); // SHA1 hash of the script
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 Scripts with identical code produce identical hashes, enabling efficient caching and reuse.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     script1 = Script("return 'Hello'")
     script2 = Script("return 'Hello'")
     assert script1.get_hash() == script2.get_hash()  # Same hash
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     Script script1 = new Script("return 'Hello'", false);
     Script script2 = new Script("return 'Hello'", false);
     assert script1.getHash().equals(script2.getHash());  // Same hash
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const script1 = new Script("return 'Hello'");
     const script2 = new Script("return 'Hello'");
     console.assert(script1.getHash() === script2.getHash());  // Same hash
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     script1 := options.NewScript("return 'Hello'")
     script2 := options.NewScript("return 'Hello'")
     // script1.GetHash() == script2.GetHash()  // Same hash
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
 
@@ -418,9 +406,8 @@ Scripts with identical code produce identical hashes, enabling efficient caching
     using var script2 = new Script("return 'Hello'");
     System.Diagnostics.Debug.Assert(script1.Hash == script2.Hash); // Same hash
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::caution[Script hashing is content-sensitive]
 Script hashes are based on the entire script content, including spaces, line breaks, and all characters.
@@ -490,8 +477,8 @@ slot = CRC16(key) mod 16384
 GLIDE automatically route scripts to the appropriate nodes.
 When executing a script in cluster mode, all `KEYS` must belong to the same shard.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # This works the same in cluster mode
     script = Script("return redis.call('SET', KEYS[1], ARGV[1])")
@@ -501,9 +488,9 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
         args=["John"]
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // This works the same in cluster mode
     Script script = new Script("return redis.call('SET', KEYS[1], ARGV[1])", false);
@@ -515,9 +502,9 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
             .build()
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // This works the same in cluster mode
     const script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
@@ -526,9 +513,9 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
         args: ["John"]
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // This works the same in cluster mode
     script := options.NewScript("return redis.call('SET', KEYS[1], ARGV[1])")
@@ -542,15 +529,11 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
         *scriptOptions,
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     // This works the same in cluster mode
     using var script = new Script("return redis.call('SET', KEYS[1], ARGV[1])");
@@ -560,16 +543,15 @@ When executing a script in cluster mode, all `KEYS` must belong to the same shar
             .WithKeys("user:1000")   // Routed based on key hash
             .WithArgs("John"));
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Explicit Routing
 
 GLIDE provide options for explicit control over script routing in cluster mode.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import SlotKeyRoute, SlotType, AllPrimaries
 
@@ -581,9 +563,9 @@ GLIDE provide options for explicit control over script routing in cluster mode.
 
     await cluster_client.invoke_script_route(script, route=route)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import static glide.api.models.configuration.RequestRoutingConfiguration.Route.ALL_PRIMARIES;
     import glide.api.models.configuration.RequestRoutingConfiguration.SlotKeyRoute;
@@ -595,9 +577,9 @@ GLIDE provide options for explicit control over script routing in cluster mode.
     // Route to all primary nodes
     CompletableFuture<Object> result = clusterClient.invokeScript(script, ALL_PRIMARIES);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import {Routes, SlotType} from "@valkey/valkey-glide";
 
@@ -607,9 +589,9 @@ GLIDE provide options for explicit control over script routing in cluster mode.
     // Route to all primary nodes
     await clusterClient.invokeScriptWithRoute(script, {route: "allPrimaries"});
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import "github.com/valkey-io/valkey-glide/go/v2/options"
 
@@ -621,15 +603,11 @@ GLIDE provide options for explicit control over script routing in cluster mode.
 
     clusterClient.InvokeScriptWithRoute(context.Background(), *script, route)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var clusterConfig = new ClusterClientConfigurationBuilder().Build();
-    await using var clusterClient = await GlideClusterClient.CreateClient(clusterConfig);
 
     using var script = new Script("return 'Hello'");
 
@@ -642,51 +620,50 @@ GLIDE provide options for explicit control over script routing in cluster mode.
     var allRouteOptions = new ClusterScriptOptions().WithRoute(Route.AllPrimaries);
     var allResult = await clusterClient.ScriptInvokeAsync(script, allRouteOptions);
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Multi-Slot Scripts
 
 In cluster mode, scripts that access multiple keys must ensure **all keys belong to the same slot**.
 Adding a hash tag `{}` in the key allow you to specify the specific slot.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Both keys hash to the same slot because of {1000}
     keys = ["user:{1000}:name", "user:{1000}:email"]
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Both keys hash to the same slot because of {1000}
     String[] keys = {"user:{1000}:name", "user:{1000}:email"};
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Both keys hash to the same slot because of {1000}
     const keys = ["user:{1000}:name", "user:{1000}:email"];
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Both keys hash to the same slot because of {1000}
     keys := []string{"user:{1000}:name", "user:{1000}:email"}
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     // Both keys hash to the same slot because of {1000}
     var keys = new[] { "user:{1000}:name", "user:{1000}:email" };
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 To lean more about hash tags, see the [documentation](https://valkey.io/topics/cluster-spec/#hash-tags).
 
@@ -695,8 +672,8 @@ To lean more about hash tags, see the [documentation](https://valkey.io/topics/c
 Currently, `invoke_script` is not supported in batch operations (pipelines/transactions).
 To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use the `EVAL` command with `custom_command`.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Script with keys and arguments
     batch = Batch(is_atomic=True)
@@ -713,9 +690,9 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     print(f"EVAL result: {results[0]}")  # b'OK'
     print(f"GET result: {results[1]}")   # b'script-value'
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Script with keys and arguments
     Transaction transaction = new Transaction();
@@ -732,9 +709,9 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     System.out.println("EVAL result: " + results.get()[0]);  // OK
     System.out.println("GET result: " + results.get()[1]);   // script-value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Script with keys and arguments
     const transaction = new Transaction();
@@ -751,9 +728,9 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     console.log(`EVAL result: ${results[0]}`);  // OK
     console.log(`GET result: ${results[1]}`);   // script-value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Script with keys and arguments
     transaction := options.NewTransaction()
@@ -770,16 +747,12 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     fmt.Printf("EVAL result: %vn", results[0])  // OK
     fmt.Printf("GET result: %vn", results[1])   // script-value
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using Valkey.Glide.Pipeline;
-    using static Valkey.Glide.ConnectionConfiguration;
-
-    var config = new StandaloneClientConfigurationBuilder().Build();
-    await using var client = await GlideClient.CreateClient(config);
 
     // Script with keys and arguments
     var batch = new Batch(isAtomic: true);
@@ -796,9 +769,8 @@ To use Lua scripts within an atomic batch (MULTI/EXEC transaction), you must use
     Console.WriteLine($"EVAL result: {results![0]}"); // OK
     Console.WriteLine($"GET result: {results[1]}");  // script-value
     ```
-  </TabItem>
-
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## What's Next
 

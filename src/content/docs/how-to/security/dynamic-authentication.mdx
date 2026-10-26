@@ -3,7 +3,7 @@ title: Configure Dynamic Password
 description: Set up dynamic password rotation and authentication refresh mechanisms with Valkey GLIDE clients for enhanced security.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 Valkey GLIDE introduces the ability to dynamically update the connection-configured password at runtime.
 This enhancement facilitates seamless password rotations, ensuring uninterrupted access and improved security for your applications.
@@ -16,8 +16,8 @@ The dynamic password update functionality does not rotate the password on the se
 
 Below are examples demonstrating how to utilize the dynamic password update feature in different programming languages using GLIDE.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     ```java
     import com.valkey.glide.GlideClusterClient;
     import com.valkey.glide.GlideClusterClientConfiguration;
@@ -65,9 +65,9 @@ Below are examples demonstrating how to utilize the dynamic password update feat
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClusterClient, GlideClusterClientConfiguration, ServerCredentials } from '@valkey/valkey-glide';
 
@@ -101,9 +101,9 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     client.updateConnectionPassword(null); // Note: This will clear the password from the connection configuration.
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
     import asyncio
     from glide import GlideClusterClientConfiguration, NodeAddress, GlideClusterClient
@@ -136,18 +136,17 @@ Below are examples demonstrating how to utilize the dynamic password update feat
         # Resetting password by passing None
         await client.update_connection_password(None) # Note: This will clear the password from the connection configuration.
 
-
     asyncio.run(main())
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // TODO: Add Example
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using Valkey.Glide;
     using static Valkey.Glide.ConnectionConfiguration;
@@ -173,9 +172,9 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     // Clear password with immediate re-authentication.
     await client.ClearConnectionPasswordAsync(immediateAuth: true);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     // Define your server credentials
     $credentials = [
@@ -206,8 +205,8 @@ Below are examples demonstrating how to utilize the dynamic password update feat
     // Clear password from connection configuration
     $client->clearConnectionPassword(); // Note: This will clear the password from the connection configuration.
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 :::caution
 To avoid authentication errors, update the client's password immediately after any server-side password changes.
@@ -225,38 +224,38 @@ When dynamically switching to a new credential, ensure that it has enough permis
 
 In scenarios where a username is not required (e.g., IAM authentication), you can omit it or set it to `null`.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Java">
+<ClientTabs>
+  <ClientTab slot="java">
     ```java
     ServerCredentials credentials = ServerCredentials.builder()
         .password("your-password-or-token")
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const credentials: ServerCredentials = {
         password: 'your-password-or-token'
     };
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Python">
+  <ClientTab slot="python">
     ```python
     credentials = ServerCredentials(
         password='your-password-or-token'
     )
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // TODO: Add Example
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     ```csharp
     using static Valkey.Glide.ConnectionConfiguration;
 
@@ -265,16 +264,16 @@ In scenarios where a username is not required (e.g., IAM authentication), you ca
         .WithAuthentication("your-password-or-token")
         .Build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     ```php
     $credentials = [
         'password' => 'your-password-or-token'
     ];
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Immediate Re-Auth
 

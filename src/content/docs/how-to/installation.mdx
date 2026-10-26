@@ -5,6 +5,8 @@ sidebar:
   order: 1
 ---
 
+import { ClientTab, ClientTabs } from '@components/client-tabs';
+
 import { Aside, Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import {javaGlideLatest} from '@data/versions.ts'
 
@@ -116,8 +118,8 @@ Windows support is currently available for Valkey GLIDE Java and C#.
 
 ## Installing and Setting Up
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     **Requirements:** Python 3.9 to 3.13.
 
     To get started, GLIDE Python is available on [pypi](https://pypi.org/project/valkey-glide/).
@@ -135,9 +137,9 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     :::note
     Valkey GLIDE transparently supports both the `asyncio` and `trio` concurrency frameworks.
     :::
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     **Requirements:** JDK 11+
 
     To get started, add one of the following snippet into the build file for your tool.
@@ -259,9 +261,9 @@ Windows support is currently available for Valkey GLIDE Java and C#.
         ```
       </TabItem>
     </Tabs>
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     **Requirements:** Node.js 16+
 
     **For npm users on Linux it is recommended to use npm >=11**. It supports optional downloads based on libc. Yarn users should not be concerned.
@@ -275,9 +277,9 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     ```bash
     npm install @valkey/valkey-glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     **Requirements:** Go 1.22+
 
     ```bash
@@ -285,9 +287,9 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     go get github.com/valkey-io/valkey-glide/go/v2
 
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="PHP">
+  <ClientTab slot="php">
     **Requirements:** PHP 8.1+
 
     Install using pie (recommended):
@@ -314,9 +316,9 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     ```bash
     php -m | grep valkey_glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="C#">
+  <ClientTab slot="csharp">
     **Requirements:** .NET 8.0+
 
     To get started, Valkey GLIDE C# is available on [NuGet](https://www.nuget.org/packages/Valkey.Glide).
@@ -324,10 +326,10 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     ```bash
     dotnet add package Valkey.Glide
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Ruby">
-    **Requirements:** Ruby 2.6+ (MRI) or JRuby 3.0+
+  <ClientTab slot="ruby">
+    **Requirements:** Ruby 3.0+
 
     To get started, Valkey GLIDE Ruby is available on [RubyGems](https://rubygems.org/gems/valkey-glide-rb).
 
@@ -350,5 +352,5 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     :::note
     The gem ships prebuilt native libraries for Linux and macOS, including Alpine Linux / musl (3.18+), and depends on the [`ffi`](https://github.com/ffi/ffi) gem.
     :::
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
