@@ -1,0 +1,44 @@
+{
+  "language": "java",
+  "displayName": "Java",
+  "version": "2.5.3",
+  "async": true,
+  "features": [
+    {
+      "feature": "batching",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    "client_side_caching",
+    "server_assisted_cache_invalidation",
+    "cluster_scan",
+    "data_compression",
+    "custom_commands",
+    "multi_slot_command_handling",
+    "pubsub",
+    "lua_scripting_api",
+    "topology_awareness",
+    "custom_address_resolution",
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "standalone_read_only_mode",
+    "automatic_reconnection",
+    "timeout_and_reconnect_configuration",
+    "circuit_breaker",
+    "in_flight_request_limits",
+    "lazy_connections",
+    "aws_iam_authentication",
+    "dynamic_credential_rotation",
+    "custom_tls_trust_roots",
+    "client_statistics",
+    "client_cache_metrics",
+    "glide_logging",
+    "monitor_streaming",
+    "opentelemetry",
+    "json",
+    "search"
+  ]
+}

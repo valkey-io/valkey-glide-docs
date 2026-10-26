@@ -1,0 +1,93 @@
+{
+  "language": "python",
+  "displayName": "Python",
+  "version": "2.5.3",
+  "async": true,
+  "features": [
+    {
+      "feature": "batching",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "client_side_caching",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    {
+      "feature": "server_assisted_cache_invalidation",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    "cluster_scan",
+    "data_compression",
+    "custom_commands",
+    "multi_slot_command_handling",
+    "pubsub",
+    "lua_scripting_api",
+    "topology_awareness",
+    {
+      "feature": "custom_address_resolution",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    "az_affinity",
+    "request_routing",
+    "read_strategies",
+    "standalone_read_only_mode",
+    "automatic_reconnection",
+    "timeout_and_reconnect_configuration",
+    {
+      "feature": "circuit_breaker",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    "in_flight_request_limits",
+    "lazy_connections",
+    "aws_iam_authentication",
+    "dynamic_credential_rotation",
+    "custom_tls_trust_roots",
+    {
+      "feature": "mutual_tls",
+      "hover": {
+        "text": "since 2.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0"
+      }
+    },
+    "client_statistics",
+    {
+      "feature": "client_cache_metrics",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    "glide_logging",
+    {
+      "feature": "monitor_streaming",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    {
+      "feature": "opentelemetry",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    "json",
+    "search"
+  ]
+}

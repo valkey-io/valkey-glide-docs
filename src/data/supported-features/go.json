@@ -1,0 +1,211 @@
+{
+  "language": "go",
+  "displayName": "Go",
+  "version": "2.5.3",
+  "async": false,
+  "features": [
+    {
+      "feature": "batching",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "client_side_caching",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    {
+      "feature": "server_assisted_cache_invalidation",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    {
+      "feature": "cluster_scan",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "data_compression",
+      "hover": {
+        "text": "since 2.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0"
+      }
+    },
+    {
+      "feature": "custom_commands",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "multi_slot_command_handling",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "pubsub",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "lua_scripting_api",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "topology_awareness",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "custom_address_resolution",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    {
+      "feature": "az_affinity",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "request_routing",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "read_strategies",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "standalone_read_only_mode",
+      "hover": {
+        "text": "since 2.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0"
+      }
+    },
+    {
+      "feature": "automatic_reconnection",
+      "hover": {
+        "text": "since 1.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v1.3.0"
+      }
+    },
+    {
+      "feature": "timeout_and_reconnect_configuration",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "circuit_breaker",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    {
+      "feature": "in_flight_request_limits",
+      "hover": {
+        "text": "unreleased",
+        "href": "https://github.com/valkey-io/valkey-glide/pull/6580"
+      }
+    },
+    {
+      "feature": "lazy_connections",
+      "hover": {
+        "text": "since 2.1.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.1.0"
+      }
+    },
+    {
+      "feature": "aws_iam_authentication",
+      "hover": {
+        "text": "since 2.2.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.2.0"
+      }
+    },
+    {
+      "feature": "dynamic_credential_rotation",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "custom_tls_trust_roots",
+      "hover": {
+        "text": "since 2.2.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.2.0"
+      }
+    },
+    {
+      "feature": "client_statistics",
+      "hover": {
+        "text": "since 2.3.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.3.0"
+      }
+    },
+    {
+      "feature": "client_cache_metrics",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    {
+      "feature": "monitor_streaming",
+      "hover": {
+        "text": "since 2.5.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.5.0"
+      }
+    },
+    {
+      "feature": "opentelemetry",
+      "hover": {
+        "text": "since 2.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.0.0"
+      }
+    },
+    {
+      "feature": "json",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    },
+    {
+      "feature": "search",
+      "hover": {
+        "text": "since 2.4.0",
+        "href": "https://github.com/valkey-io/valkey-glide/releases/tag/v2.4.0"
+      }
+    }
+  ]
+}
