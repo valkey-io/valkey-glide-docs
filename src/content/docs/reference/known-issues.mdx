@@ -6,12 +6,11 @@ description: A list of known issues in Valkey GLIDE
 
 import { Aside } from '@astrojs/starlight/components';
 
-GLIDE has a native component as a Rust based library. Currently the native component is not compatible with certain older GLIBC based OS's.
-The most relevant one is Debian 11, which is the base of ubuntu 20, which some other distros are based on, like Mint and Pop!\_OS 20 etc. As a result, the ones mentioned above are incompatible with GLIDE.
+GLIDE has a native component built as a Rust-based library, which links against the system `glibc`. As a result, GLIDE requires a minimum `glibc` version and is not compatible with older `glibc`-based distributions.
 
-Another OS which is known to be incompatible is Amazon Linux 2, which is the previous versions of what [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) is running on (node 18, py \<=11, java \<= 17). Note that this is not affecting MUSL based distros, which are not based on GLIBC.
+The Node.js client requires **`glibc` 2.28 or higher**. The Python, Java, and Go clients require **`glibc` 2.17 or higher**. Amazon Linux 2 (`glibc` 2.26) is therefore not supported for the Node.js client — it is the previous generation of what [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) runs on (node 18, py \<=11, java \<= 17). This does not affect MUSL-based distros, which are not based on `glibc`.
 
-For all the incompatible Linux distros listed, there's at least one newer and stable version available, and it is recommended to use them.
+For every incompatible Linux distribution listed below, there is a newer stable version available, and we recommend using it.
 
 | Incompatible Distro Version | Compatible Successor Version |
 |-----------------------------|------------------------------|
@@ -21,12 +20,10 @@ For all the incompatible Linux distros listed, there's at least one newer and st
 | Pop!\_OS 20.04 LTS           | Pop!\_OS 22.04 LTS            |
 | Amazon Linux 2              | Amazon Linux 2023            |
 
-When running on incompatible systems, the client crashes with one of the following errors:
+When running on an incompatible system, the client fails to load with an error such as:
 
 ```console
-/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found
-/lib64/libm.so.6: version `GLIBC_2.29' not found
+/lib64/libc.so.6: version `GLIBC_2.28' not found
 ```
 
-You can get the `GLIBC` version included in your OS by running `ldd --version`. `GLIBC` versions `2.26`, `2.27`, `2.30`, and `2.31` are not supported.
-We are working hard to resolve this issue. You can track our progress in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).
+You can check the `glibc` version on your system by running `ldd --version`. For the Node.js client, any `glibc` below `2.28` (for example `2.26` or `2.27`) is not supported; for the Python, Java, and Go clients, any `glibc` below `2.17` is not supported. Progress on broader `glibc` compatibility is tracked in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).

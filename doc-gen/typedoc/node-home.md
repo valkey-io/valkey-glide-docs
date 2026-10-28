@@ -29,7 +29,7 @@ The release of Valkey GLIDE was tested on the following platforms:
 
 ### Linux GNU
 
-Linux with **glibc 2.17** or higher.
+Linux with **glibc 2.28** or higher.
 
 ### MacOS (Darwin)
 
