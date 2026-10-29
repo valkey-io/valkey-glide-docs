@@ -134,9 +134,10 @@ When enabled, values are transparently compressed before being sent to the serve
 
 ## When to use compression
 
-Compression works well when you primarily use basic read/write commands (`SET`/`GET` and variants) with large string values.
+Compression works well when you primarily use basic read and write commands with large string values.
+If your application uses commands that read, modify, or compare a stored string, don't use compression.
 
-If your application uses server-side string manipulation on the same keys (append, increment, bit operations), don't compress those keys. The server would operate on compressed bytes and produce garbage. Handle compression at the application level for those cases.
+See [Compatibility](/concepts/client-features/compression/#compatibility)f or the full list of supported and incompatible commands. 
 
 ## Configuration options
 
@@ -147,23 +148,6 @@ If your application uses server-side string manipulation on the same keys (appen
 | `compressionLevel`    | Backend default (ZSTD=3, LZ4=0) | Compression level; valid ranges are backend-specific              |
 | `minCompressionSize`  | 64 bytes                        | Values below this threshold are not compressed (minimum: 6 bytes) |
 | `maxDecompressedSize` | 512 MB                          | Maximum decompressed size; protects against decompression bombs   |
-
-## Supported commands
-
-The following commands are enabled when compression is configured:
-
-* `SET`, `GET`
-* `MGET`, `MSET`
-* `GETEX`, `GETDEL`
-* `SETEX`, `PSETEX`, `SETNX`
-
-## Incompatible commands
-
-The following commands are not supported and will return an error while compression is enabled:
-
-* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
-* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
-* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
 
 ## Learn more
 

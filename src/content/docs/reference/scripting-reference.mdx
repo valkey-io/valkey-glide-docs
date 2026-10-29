@@ -334,6 +334,10 @@ end
 
 ### Distributed Lock
 
+:::tip
+You can release a lock without a script by using [`DELIFEQ`](https://valkey.io/commands/delifeq/), which deletes a key only if its value matches (On Valkey 9.0 and later).
+:::
+
 ```lua title="acquire_lock.lua"
 if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
     return 1
@@ -595,6 +599,10 @@ end
 </ClientTabs>
 
 ### Conditional Update
+
+:::tip
+You can update a value conditionally without a script by using [`SET`](https://valkey.io/commands/set/) with the `IFEQ` (Valkey 8.1 and later) or `IFNE` condition (Valkey 9.2 or later).
+:::
 
 ```lua title="conditional_update.lua"
     local current = redis.call('GET', KEYS[1])

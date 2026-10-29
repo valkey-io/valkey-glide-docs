@@ -52,14 +52,30 @@ Only specific commands support compressions.
 
 These commands work transparently with compressed values:
 
-* `SET`, `GET`, `MGET`, `MSET`, `GETEX`, `GETDEL`, `SETEX`, `PSETEX`, `SETNX`
+* `GET`
+* `GETDEL`
+* `GETEX`
+* `GETSET`
+* `MGET`
+* `MSET`
+* `MSETNX`
+* `PSETEX`
+* `SET`
+* `SETEX`
+* `SETNX`
 
 ### Incompatible commands
 
-The server doesn't know about compression, so commands that transform string data server-side will operate on raw compressed bytes. These are disabled when compression is enabled:
+The server doesn't know about compression, so commands that read, modify, or compare a stored string
+operate on the compressed bytes instead of the original value when compression is enabled.
 
-* String manipulation: `APPEND`, `GETRANGE`, `SETRANGE`, `STRLEN`, `LCS`
-* Numeric operations: `INCR`, `INCRBY`, `INCRBYFLOAT`, `DECR`, `DECRBY`
-* Bit operations: `GETBIT`, `SETBIT`, `BITCOUNT`, `BITPOS`, `BITFIELD`, `BITFIELD_RO`, `BITOP`
+These commands are disabled when compression is enabled:
 
-The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed, operations like `APPEND` would concatenate raw compressed data, and `STRLEN` would return the compressed length rather than the original length.
+* String manipulation: `APPEND`, `GETRANGE`, `LCS`, `SETRANGE`, `STRLEN`, `SUBSTR`
+* Value comparison: `DELIFEQ`, `SET` with the `IFEQ` or `IFNE`
+* Numeric operations: `DECR`, `DECRBY`, `INCR`, `INCRBY`, `INCRBYFLOAT`
+* Bit operations: `BITCOUNT`, `BITFIELD`, `BITFIELD_RO`, `BITOP`, `BITPOS`, `GETBIT`, `SETBIT`
+
+The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed,
+operations like `APPEND` would concatenate compressed data, and `STRLEN` would return the compressed length rather than the original length.
+Comparison commands fail for the same reason. Operations like `DELIFEQ` and `SET ... IFEQ` incorrectly compare the uncompressed comparison value against the compressed data.
