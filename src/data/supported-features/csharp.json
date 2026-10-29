@@ -56,6 +56,13 @@
     "automatic_reconnection",
     "timeout_and_reconnect_configuration",
     {
+      "feature": "in_flight_request_limits",
+      "hover": {
+        "text": "unreleased",
+        "href": "https://github.com/valkey-io/valkey-glide-csharp/pull/509"
+      }
+    },
+    {
       "feature": "lazy_connections",
       "hover": {
         "href": "https://github.com/valkey-io/valkey-glide-csharp/releases/tag/v1.0.0"
