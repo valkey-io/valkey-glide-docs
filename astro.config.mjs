@@ -54,7 +54,10 @@ export default defineConfig({
     starlight({
       title: "Valkey Glide",
       head: [...googleTagManagerHeader],
-      components: { ...googleTagManagerBody },
+      components: {
+        ...googleTagManagerBody,
+        Search: "./src/components/Search.astro",
+      },
       logo: {
         light: "./src/assets/valkey-glide-logo-with-name-light.svg",
         dark: "./src/assets/valkey-glide-logo-with-name-dark.svg",
