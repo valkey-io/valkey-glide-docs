@@ -31,6 +31,13 @@
     "multi_slot_command_handling",
     "pubsub",
     "lua_scripting_api",
+    {
+      "feature": "rdma_transfers",
+      "status": "partial",
+      "hover": {
+        "text": "experimental; synchronous client only; since 2.6.0"
+      }
+    },
     "topology_awareness",
     {
       "feature": "custom_address_resolution",
