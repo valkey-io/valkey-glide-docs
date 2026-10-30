@@ -1,0 +1,111 @@
+---
+title: RDMA Transfers
+description: Learn how Valkey GLIDE moves values directly between server memory and memory you register, using RDMA.
+---
+
+:::caution[Experimental Feature]
+RDMA transfers are an experimental feature of the synchronous Python client. The API may change in future releases.
+:::
+
+:::note[Release availability]
+TODO(release): name the release that includes RDMA (planned for 2.6.0) and link the pull request that merged it.
+:::
+
+RDMA (remote direct memory access) lets the server copy a value straight into or out of memory on the client machine.
+The value never travels in the RESP reply to a command, and the client never copies it: it lands in memory you registered, at the place you chose.
+
+This pays off for large values that an application already keeps in its own buffers, such as model weights or KV-cache blocks.
+For ordinary values, regular commands like `GET` and `SET` are simpler and just as fast.
+
+For setup instructions and code examples, see [Transferring Data with RDMA](/how-to/rdma-transfers/).
+
+## How it works
+
+RESP commands still initiate RDMA transfers and tell the Valkey server where to find the data in client memory, but the actual data transfer bypasses the RESP layer.
+
+### Registering memory
+
+Before any transfer, register a block of client memory with the fabric, the RDMA networking layer on the client machine.
+Registering pins the memory's pages so they cannot move and creates a key that lets the server reach them.
+GLIDE never copies or frees registered memory.
+
+Registering is slow (on EFA, roughly 100 ms for 512 MiB), so register a large block once and reuse it for many transfers.
+
+### Reading a value
+
+When you read a key into registered memory:
+
+1. The first transfer on each connection sends a one-time handshake, so the server knows how to reach this client.
+2. The client sends `BLOB.RDMA_GET` with the key and the location and size of the destination.
+3. The server writes the value directly into that memory, then replies with its length and a CRC-32c checksum.
+   If the key doesn't exist, the server writes nothing and the read returns `None`.
+4. The client checks the bytes that landed against the checksum before returning.
+
+The server refuses a value larger than the destination before writing anything, so the memory around it is never touched.
+
+### Writing a value
+
+Writing works the other way around: the client sends `BLOB.RDMA_SET` with the key and the location of the value, and the server reads the value directly out of your memory.
+Optionally, the client also sends a CRC-32c of the value, and the server refuses to store bytes that don't match it.
+
+## Regions and windows
+
+| Term | What it is |
+| ------ | ---------------------------------------------------------------------------------------------------- |
+| Region | A block of memory registered with the client. You create it once and keep it for many transfers. |
+| Window | A range of bytes inside one region (an offset and a length), chosen for each transfer. |
+
+A region carries **one transfer at a time**.
+During a transfer the server may be writing anywhere in the region, so a second transfer through the same region, even through a different window, is refused with `RdmaError`.
+Closing the region while a transfer is using it is refused the same way.
+Threads that transfer at the same time each need their own region. They can be non-overlapping slices of the same buffer, each registered separately.
+
+## Why some failures close a region
+
+Once the server starts writing into your memory, nothing on the client can stop it.
+The client only knows the server is finished with the memory when the server replies.
+
+So when a transfer ends before the server is known to be done with the memory, the client closes the region.
+Closing it cuts the server off from that memory, so a late write can't land in it after you have reused it.
+This happens when:
+
+* the connection was lost while the transfer was in flight;
+* the client was closed to cancel the transfer;
+* the server's reply was neither a result nor an error. For example, if another thread has a `MULTI` open on the same client, the server answers `QUEUED` and may still run the transfer on `EXEC`.
+
+When the server replies with a result or an error, such as a value too large for the window or a checksum mismatch, the region stays open and can be used again.
+A region also stays open when the transfer was never sent, for example because the handshake failed. That raises `ConnectionError`, and the client reconnects for the next transfer.
+
+The type of the error doesn't tell you whether the region was closed, so check `region.closed` after any error.
+If the region is closed and the client is still open, register the memory again before the next transfer.
+
+## No timeouts
+
+RDMA transfers have no request timeout. A timeout would return control to your code while the server might still be writing into the memory you believe is free.
+
+To give up on a transfer, close the client from another thread.
+That cuts the server off from every region the client registered and the waiting transfer raises `ClosingError`.
+If the server's reply was already arriving, the transfer returns as usual instead.
+Bytes that landed before the close stay, so the window may hold a mix of old and new bytes.
+To run more RDMA transfers, create a new client.
+
+## Providers
+
+The fabric reaches the server through a provider:
+
+| Provider | Use |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| EFA direct | AWS Elastic Fabric Adapter. The provider RDMA is built for. Needs EFA hardware on the client and the server. |
+| TCP | Emulates RDMA over TCP on any machine, for development and tests only. |
+
+With the TCP provider, memory from a region that a transfer closed stays held until the client and all of its regions are closed. With EFA direct it is released at once.
+
+## Requirements and limitations
+
+* The server must serve the `BLOB.*` commands using the [valkey-large-object module](https://github.com/valkey-io/valkey-large-object).
+* The client machine needs [libfabric](https://ofiwg.github.io/libfabric/) 2.4 or newer. It is loaded only when a client asks for RDMA, so the published client runs on machines without it.
+* Only the synchronous Python client supports RDMA. The asynchronous client and client pools refuse an RDMA configuration.
+* RDMA can't be combined with enabled compression, lazy connection, read-only mode, or static node discovery on the same client.
+* Transfers always go to the key's primary, whatever read strategy is configured.
+* A transfer is refused with `RdmaError` while a `MULTI` is open on the client. Send `EXEC` or `DISCARD` first.
+* `BLOB.RDMA_*` commands can only be sent through the RDMA methods, not as custom commands or inside a batch.

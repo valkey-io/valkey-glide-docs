@@ -153,6 +153,7 @@ export default defineConfig({
             "how-to/load-and-execute-functions",
             "how-to/scan-cluster",
             "how-to/compressing-data",
+            "how-to/rdma-transfers",
             {
               label: "Security",
               items: [
