@@ -35,7 +35,7 @@
       "feature": "rdma_transfers",
       "status": "partial",
       "hover": {
-        "text": "experimental; synchronous client only; TODO(release): since 2.6.0"
+        "text": "experimental; synchronous client only; since 2.6.0"
       }
     },
     "topology_awareness",
