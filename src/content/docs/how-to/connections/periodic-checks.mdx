@@ -102,8 +102,19 @@ The example below sets a custom interval of 30 seconds. Each snippet also shows,
 
   <ClientTab slot="php">
     :::note
-    This feature is not yet available in GLIDE PHP.
+    GLIDE PHP can only disable periodic checks. A custom interval is not configurable, and the client does not currently apply the 60 second default described above.
     :::
+
+    ```php
+    $addresses = [
+        ['host' => 'address.example.com', 'port' => 6379]
+    ];
+
+    $client = new ValkeyGlideCluster(
+        addresses: $addresses,
+        periodic_checks: ValkeyGlideCluster::PERIODIC_CHECK_DISABLED
+    );
+    ```
   </ClientTab>
 
   <ClientTab slot="csharp">
