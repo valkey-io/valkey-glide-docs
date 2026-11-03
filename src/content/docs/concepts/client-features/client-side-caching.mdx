@@ -530,7 +530,7 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
   * Metrics (hit rate, miss rate, etc.) are shared across all clients using the same cache instance.
 </Aside>
 
-## Server-assisted invalidation
+## Server-Assisted Invalidation
 
 Python, Java, Node.js, Go, and C# support server-assisted invalidation for standalone and cluster clients. Enable the binding's server-assisted cache option. You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself because GLIDE issues `CLIENT TRACKING ON BCAST` during connection setup.
 
