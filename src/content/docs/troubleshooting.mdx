@@ -20,15 +20,15 @@ To enable logging, you will need to set the logger from within your application.
 <ClientTabs>
   <ClientTab slot="python">
     ```python
-    from glide import Logger, Level
+    from glide import Logger, LogLevel
 
-    Logger.set_logger_config(Level.DEBUG)
+    Logger.set_logger_config(LogLevel.DEBUG)
     ```
   </ClientTab>
 
   <ClientTab slot="java">
     ```java
-    import glide.api.Logger;
+    import glide.api.logging.Logger;
 
     Logger.setLoggerConfig(Logger.Level.DEBUG);
     ```
@@ -43,13 +43,7 @@ To enable logging, you will need to set the logger from within your application.
   </ClientTab>
 
   <ClientTab slot="go">
-    ```go
-    import (
-        "github.com/valkey-io/valkey-glide/go/glide"
-    )
-
-    glide.SetLoggerConfig(glide.LogLevelDebug)
-    ```
+    The Go client does not currently expose a public API for configuring the GLIDE logger. Use application-level logging around returned errors when troubleshooting.
   </ClientTab>
 
   <ClientTab slot="csharp">
@@ -93,13 +87,13 @@ GLIDE reports this as `timeouts` because it keeps retrying against a cluster tha
 
 Received timeout error on startup and failed to create client.
 
-This happens when default connection timeouts (often ~250ms) are too aggressive for VPNs, cross-region links, or high-latency networks.
-To fix this, increase the **connection timeout** which is separate from the **request timeout**.
+This happens when the default 2000 ms connection timeout is too short for VPNs, cross-region links, or high-latency networks. To fix this, increase the **connection timeout** which is separate from the **request timeout**.
 
 <ClientTabs>
   <ClientTab slot="python">
     ```python
     from glide import (
+        GlideClusterClient,
         GlideClusterClientConfiguration,
         AdvancedGlideClusterClientConfiguration,
         NodeAddress
@@ -108,7 +102,7 @@ To fix this, increase the **connection timeout** which is separate from the **re
     config = GlideClusterClientConfiguration(
         addresses=[NodeAddress("localhost", 6379)],
         request_timeout=5000,  # Request timeout in milliseconds
-        advanced_configuration=AdvancedGlideClusterClientConfiguration(
+        advanced_config=AdvancedGlideClusterClientConfiguration(
             connection_timeout=10000  # Connection timeout in milliseconds
         )
     )
@@ -118,6 +112,7 @@ To fix this, increase the **connection timeout** which is separate from the **re
 
   <ClientTab slot="java">
     ```java
+    import glide.api.GlideClusterClient;
     import glide.api.models.configuration.*;
 
     GlideClusterClientConfiguration config = 
@@ -136,6 +131,8 @@ To fix this, increase the **connection timeout** which is separate from the **re
 
   <ClientTab slot="node">
     ```javascript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
     const client = await GlideClusterClient.createClient({
         addresses: [{ host: "localhost", port: 6379 }],
         requestTimeout: 5000,  // Request timeout in milliseconds
@@ -149,19 +146,23 @@ To fix this, increase the **connection timeout** which is separate from the **re
   <ClientTab slot="go">
     ```go
     import (
-        "github.com/valkey-io/valkey-glide/go/glide/config"
         "time"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    cfg := config.NewGlideClusterClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-        WithRequestTimeout(5 * time.Second)
+    func ConnectClusterWithLongerTimeouts() (*glide.ClusterClient, error) {
+        cfg := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+            WithRequestTimeout(5 * time.Second).
+            WithAdvancedConfiguration(
+                config.NewAdvancedClusterClientConfiguration().
+                    WithConnectionTimeout(10 * time.Second),
+            )
 
-    advCfg := config.NewAdvancedGlideClusterClientConfiguration().
-        WithConnectionTimeout(10 * time.Second)
-
-    cfg.WithAdvancedConfiguration(advCfg)
-    client, err := glide.NewGlideClusterClient(cfg)
+        return glide.NewClusterClient(cfg)
+    }
     ```
   </ClientTab>
 
