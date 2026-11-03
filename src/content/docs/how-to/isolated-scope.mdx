@@ -6,7 +6,7 @@ description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with op
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Preview Feature">
-Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
+Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained.
 </Aside>
 
 An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
@@ -176,7 +176,7 @@ The classic optimistic concurrency control pattern works as follows:
 
 Blocking commands honor their own blocking timeout rather than the client's request timeout, so `BLPOP key 0` blocks until an element arrives instead of failing when the request timeout elapses.
 
-If a blocking command does time out or its caller cancels it, the scope's connection is discarded on release instead of being returned to the pool. A server-side waiter may still be armed on it, and a later borrower could otherwise receive an element it never asked for.
+If a blocking command times out or its caller cancels it, the scope's connection is discarded instead of being returned to the pool. Releasing the scope or closing its parent client closes that socket, so a blocked server-side waiter cannot consume a later push.
 
 ## Concurrent Scopes
 
@@ -252,11 +252,3 @@ These are intentional constraints for this release. Design your application arou
 - **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
 - **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Commands on one scope are serialized, but a scope has a single `WATCH`/`MULTI` state, so two callers sharing it will see each other's queued commands and conflicts. Use one scope per caller.
-
-### Known issues
-
-These are being tracked and are expected to be resolved in a future release.
-
-- **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a scope, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.
-- **Scope connections keep the password the client was created with:** `updateConnectionPassword` does not reach them — newly acquired scopes still send the old password, and idle scope connections are not re-authenticated. IAM auth is unaffected (scopes use the parent's live token). Until this is fixed, rotate the password only while the old one is still accepted, or recreate the client.
-- **TLS is not yet enforced for IAM authentication:** IAM-authenticated scoped connections are not required to use TLS. Configure TLS explicitly when using IAM auth.
