@@ -7,8 +7,7 @@ import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 import { Aside } from '@astrojs/starlight/components';
 
-The Valkey JSON module provides an efficient way to store and manipulate structured data. With GLIDE, Valkey modules are supported
-as built-in APIs, allowing you to interact with JSON module commands through dedicated client methods.
+The Valkey JSON module provides an efficient way to store and manipulate structured data. With GLIDE, Valkey modules are supported as built-in APIs, allowing you to interact with JSON module commands through dedicated client methods.
 
 ## Requirements
 
@@ -180,9 +179,27 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
   </ClientTab>
 
   <ClientTab slot="ruby">
-    :::note
-    The JSON module is not yet available in the Ruby client. Support is tracked upstream in the [valkey-glide-ruby](https://github.com/valkey-io/valkey-glide-ruby) repository.
-    :::
+    ```ruby
+    require "json"
+    require "valkey"
+
+    # Both standalone and cluster mode are supported
+    client = Valkey.new(host: "localhost", port: 6379)
+
+    key = "testKey"
+    path = "$"
+    json_value = JSON.generate({ a: 1.0, b: 2 })
+
+    # JSON.SET
+    set_response = client.json_set(key, path, json_value)
+    puts set_response # "OK"
+
+    # JSON.GET
+    get_response = client.json_get(key)
+    puts JSON.parse(get_response) # {"a"=>1.0, "b"=>2}
+
+    client.close
+    ```
   </ClientTab>
 </ClientTabs>
 

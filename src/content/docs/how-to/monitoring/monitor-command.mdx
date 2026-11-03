@@ -7,7 +7,7 @@ import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
 
-MONITOR is supported in Python, Node.js, Java, Go, and C# clients. PHP support is not yet available.
+MONITOR is supported in Python, Node.js, Java, Go, C#, and PHP clients.
 
 ## How It Works
 
@@ -185,6 +185,38 @@ GLIDE clients generally provide two modes for consuming monitor messages:
 
     var next = await queue.Reader.ReadAsync(queueCts.Token);
     OnMessage(next);
+    ```
+  </ClientTab>
+
+  <ClientTab slot="php">
+    ```php
+    $addresses = [['host' => 'localhost', 'port' => 6379]];
+
+    // Callback mode
+    $callbackMonitor = new ValkeyGlideMonitor(addresses: $addresses);
+    // Run commands on a separate client while this listener is active.
+    $callbackMonitor->listen(function (ValkeyGlideMonitorLine $line) {
+        printf(
+            "%.6f [%d] %s %s %s\n",
+            $line->timestamp,
+            $line->db,
+            $line->clientAddr,
+            $line->command,
+            implode(' ', $line->args)
+        );
+
+        return true; // Stop after the first message.
+    });
+    $callbackMonitor->close();
+
+    // Queue mode
+    $queueMonitor = new ValkeyGlideMonitor(addresses: $addresses);
+    // Run commands on a separate client before waiting for the next message.
+    $line = $queueMonitor->getMonitorMessage(timeout: 5.0);
+    if ($line !== null) {
+        printf("%s %s\n", $line->command, implode(' ', $line->args));
+    }
+    $queueMonitor->close();
     ```
   </ClientTab>
 </ClientTabs>
