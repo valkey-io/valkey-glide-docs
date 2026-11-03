@@ -1,0 +1,112 @@
+name: GitHub token draft PR smoke test
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions: {}
+
+jobs:
+  create-dummy-draft-pr:
+    if: >-
+      github.repository == 'valkey-io/valkey-glide-docs' &&
+      github.event.pull_request.number == 351 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'codex/bedrock-smoke-test' &&
+      github.actor == 'Aryex'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      BRANCH_NAME: automation/github-token-draft-pr-smoke
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check for an existing smoke-test PR
+        id: existing
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pr_url="$(
+            gh pr list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --head "${BRANCH_NAME}" \
+              --state open \
+              --json url \
+              --jq '.[0].url // empty'
+          )"
+
+          if [[ -n "${pr_url}" ]]; then
+            echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Check out the trusted base revision
+        if: steps.existing.outputs.url == ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+
+      - name: Create the dummy branch
+        if: steps.existing.outputs.url == ''
+        shell: bash
+        env:
+          SOURCE_PR: ${{ github.event.pull_request.number }}
+          SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          git switch -c "${BRANCH_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          {
+            echo "# GitHub Actions bot smoke test"
+            echo
+            echo "This disposable file verifies that the repository's built-in"
+            echo "\`GITHUB_TOKEN\` can push a branch and open a draft pull request."
+            echo
+            echo "- Source PR: #${SOURCE_PR}"
+            echo "- Source workflow run: ${SOURCE_RUN}"
+          } > github-actions-bot-smoke-test.md
+
+          git add github-actions-bot-smoke-test.md
+          git commit --signoff -m "chore: test GitHub Actions bot PR creation"
+          git push --set-upstream origin "${BRANCH_NAME}"
+
+      - name: Open a dummy draft pull request
+        if: steps.existing.outputs.url == ''
+        id: create
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pr_url="$(
+            gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --draft \
+              --base "${{ github.event.pull_request.base.ref }}" \
+              --head "${BRANCH_NAME}" \
+              --title "chore: test GitHub Actions bot PR creation" \
+              --body "Disposable draft PR created by \`github-actions[bot]\` from PR #351. It can be closed and its branch deleted after verification."
+          )"
+
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Report result
+        shell: bash
+        env:
+          CREATED_URL: ${{ steps.create.outputs.url }}
+          EXISTING_URL: ${{ steps.existing.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          pr_url="${CREATED_URL:-${EXISTING_URL}}"
+          {
+            echo "## GitHub token draft PR smoke test"
+            echo
+            echo "Draft PR: ${pr_url}"
+          } >> "${GITHUB_STEP_SUMMARY}"
