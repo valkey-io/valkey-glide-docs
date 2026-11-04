@@ -165,6 +165,8 @@ jobs:
         uses: withastro/action@v4
         with:
           package-manager: pnpm@10
+          # Also add copies of the search index for other Valkey sites to consume.
+          build-cmd: pnpm build && ./scripts/index-copies.sh build
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
