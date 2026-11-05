@@ -610,7 +610,7 @@ A `VECTOR_RANGE` predicate cannot currently be combined as a pre-filter inside a
 A cursor is a per-process, node-local resource, so cursor traffic is pinned to a specific node regardless of your client's `ReadFrom` setting:
 
 * **Cluster client**: `FT.AGGREGATE`/`FT.HYBRID` with `with_cursor`, and every subsequent `FT.CURSOR READ`/`DEL`, are routed to the **primary** of the index's slot. This is handled for you.
-* **Standalone client**: this pinning gap is **not yet closed**. `FT.AGGREGATE ... WITHCURSOR` is a read-only command and can be routed to a replica under `ReadFrom.PREFER_REPLICA` or AZ affinity, while the follow-up `FT.CURSOR READ`/`DEL` always goes to the primary — this mismatch fails with `Cursor: not found, id: <n>`. **Use a `ReadFrom.PRIMARY` client for any code path that pages cursors on a standalone deployment.** `FT.HYBRID` is unaffected by this gap, since it is not a read-only command and already goes to the primary.
+* **Standalone client**: this pinning gap is **not yet closed**. `FT.AGGREGATE ... WITHCURSOR` is a read-only command and can be routed to a replica under `ReadFrom.PREFER_REPLICA` or AZ affinity, while the follow-up `FT.CURSOR READ`/`DEL` always goes to the primary — this mismatch fails with `Cursor: not found, id: <n>`. **Use a `ReadFrom.PRIMARY` client for any code path that pages cursors on a standalone deployment.** `FT.HYBRID` is unaffected: GLIDE always sends it to the primary.
 
 A primary failover while a cursor is open discards that cursor, the same as any other node-local, cursor-discarding event.
 :::
