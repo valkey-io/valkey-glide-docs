@@ -66,6 +66,7 @@
         "href": "https://github.com/valkey-io/valkey-glide-ruby/issues/367"
       }
     },
+    "aws_iam_authentication",
     "custom_tls_trust_roots",
     {
       "feature": "mutual_tls",
