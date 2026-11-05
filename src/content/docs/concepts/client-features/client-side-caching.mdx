@@ -627,7 +627,9 @@ Each supported binding's `CLIENT TRACKINGINFO` method returns the current tracki
     Map<String, Object> clusterInfo = clusterClient.clientTrackingInfo().get();
 
     // Cluster client — query all nodes
-    Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
+    // import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_NODES;
+    Map<String, Map<String, Object>> allNodesInfo =
+        clusterClient.clientTrackingInfo(ALL_NODES).get().getMultiValue();
     ```
   </ClientTab>
 
@@ -640,6 +642,7 @@ Each supported binding's `CLIENT TRACKINGINFO` method returns the current tracki
 
   <ClientTab slot="node">
     ```typescript
+    // Standalone client; cluster clients return ClusterResponse<ClientTrackingInfo>
     const info = await client.clientTrackingInfo();
     console.log(info.flags, info.redirect, info.prefixes);
     ```

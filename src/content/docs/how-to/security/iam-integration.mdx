@@ -35,7 +35,7 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **region**: The AWS region where your cluster runs
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
-The username, cluster name, and region must not be blank.
+The cluster name and region must not be blank, and the username must not be empty.
 
 :::note
 If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, an error is raised at call time.
@@ -357,7 +357,7 @@ You can call `refreshIamToken` (or language equivalent) at any time to immediate
 :::note[What this does and does not do]
 `refreshIamToken` **generates a new token and caches it**. It does **not** immediately re-authenticate an ordinary established connection. New and reconnecting connections use the refreshed token, while pooled and isolated connections reconcile it before an eligible command.
 
-A successful refresh returns `"OK"`. If the credential provider or token signing fails, the method returns the error to the caller and the previously cached token remains in use.
+A successful refresh returns `"OK"` (in C#, `RefreshIamTokenAsync` completes without a value). If the credential provider or token signing fails, the method returns the error to the caller and the previously cached token remains in use.
 :::
 
 <ClientTabs>

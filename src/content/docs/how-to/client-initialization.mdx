@@ -401,7 +401,7 @@ For standalone clients, the node discovery mode controls how the client identifi
 
 * `STANDARD` is the default. It verifies node roles with `INFO REPLICATION` and uses only the addresses you provide.
 * `STATIC` trusts the provided addresses without checking their roles. The first address is treated as the primary. Use this mode when connecting through a proxy such as Envoy or HAProxy that does not support `INFO`.
-* `DISCOVER_ALL` discovers the primary and all replicas from any starting node.
+* `DISCOVER_ALL` discovers the primary and all replicas from any starting node. Discovery runs once, at client creation. `DISCOVER_ALL` cannot be combined with read-only mode or Unix domain socket addresses.
 
 When using `STATIC` mode through a proxy, do not configure a client name because the proxy might not support `CLIENT SETNAME`. The examples below configure `STATIC` mode; use the corresponding `DISCOVER_ALL` value with any primary or replica address to discover the complete standalone topology.
 

@@ -423,7 +423,7 @@ if ($client->get('nonexistent') === false) {
 
 ### 5. Configuration Options
 
-PHPRedis options such as `OPT_SERIALIZER`, `OPT_PREFIX`, `OPT_SCAN`, and `OPT_COMPRESSION` are not currently supported. Use application-level serialization and key prefixing instead.
+The compatibility layer supports the PHPRedis `OPT_PREFIX` and `OPT_SCAN` options through `setOption()` and `getOption()`. `OPT_SERIALIZER` and `OPT_COMPRESSION` are not currently supported. Use application-level serialization instead.
 
 #### `OPT_REPLY_LITERAL` Support
 
