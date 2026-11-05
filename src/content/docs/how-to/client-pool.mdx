@@ -3,7 +3,8 @@ title: Use Client Pool
 description: Manage a pool of reusable GLIDE client connections for high-concurrency workloads, blocking commands, and connection isolation.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 <Aside type="caution" title="Preview Feature">
 Client Pool is a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
@@ -26,8 +27,8 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 
 ## Create a Pool
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClientConfiguration, NodeAddress
     from glide import AsyncClientPool, PoolConfig
@@ -40,9 +41,9 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
     client_config = GlideClientConfiguration([NodeAddress("localhost", 6379)])
     pool = await AsyncClientPool.create(client_config, pool_config)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.pool.ClientPool;
     import glide.api.models.pool.ClientPoolConfig;
@@ -60,9 +61,9 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 
     ClientPool pool = ClientPool.create(poolConfig);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { ClientPool, GlideClientConfiguration } from '@valkey/valkey-glide';
 
@@ -76,9 +77,9 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
         acquireTimeoutS: 5,
     });
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     import (
         glide "github.com/valkey-io/valkey-glide/go/v2"
@@ -96,23 +97,23 @@ The pool is configured with a `PoolConfig` object. All parameters are optional a
 
     pool, err := glide.NewClientPool(clientCfg, poolCfg)
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Borrow and Return Clients
 
 Acquire a client from the pool before use, and always release it when done. Use context managers or try/finally blocks to guarantee the client is returned even if an error occurs.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     async with pool.borrow() as client:
         await client.set("key", "value")
         result = await client.get("key")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     try (PooledGlideClient client = pool.acquire().get()) {
         client.set("key", "value").get();
@@ -120,9 +121,9 @@ Acquire a client from the pool before use, and always release it when done. Use 
     }
     // client is automatically returned to the pool on close
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     Using `borrow()` (recommended):
 
     ```typescript
@@ -143,9 +144,9 @@ Acquire a client from the pool before use, and always release it when done. Use 
         await pool.release(client);
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     clientID, err := pool.Acquire(ctx)
     if err != nil {
@@ -161,43 +162,43 @@ Acquire a client from the pool before use, and always release it when done. Use 
     client.Set(ctx, "key", "value")
     result, _ := client.Get(ctx, "key")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Pool Metrics
 
 Check the current state of the pool to monitor utilization and diagnose capacity issues.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     metrics = pool.metrics()
     print(f"Idle: {metrics['idle']}, Active: {metrics['active']}, Total: {metrics['total']}")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     System.out.println("Idle: " + pool.getIdleCount()
         + ", Active: " + pool.getActiveCount()
         + ", Total: " + pool.getTotalCount());
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const metrics = pool.getMetrics();
     console.log(`Idle: ${metrics.idle}, Active: ${metrics.active}, Total: ${metrics.total}`);
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     fmt.Printf("Idle: %d, Active: %d, Total: %d\n",
         pool.IdleCount(), pool.ActiveCount(), pool.TotalCount())
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Abandon Detection
 
@@ -213,17 +214,17 @@ The pool runs a background monitor that reclaims borrowed clients when they have
 
 ### Configure a Custom Timeout
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import PoolConfig
 
     # Set abandon timeout to 1 minute
     pool_config = PoolConfig(abandon_timeout_ms=60000)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.models.pool.ClientPoolConfig;
     import java.time.Duration;
@@ -233,9 +234,9 @@ The pool runs a background monitor that reclaims borrowed clients when they have
         .abandonTimeout(Duration.ofMinutes(1))
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Set abandon timeout to 1 minute
     const pool = await ClientPool.create(
@@ -243,38 +244,38 @@ The pool runs a background monitor that reclaims borrowed clients when they have
         { abandonTimeoutMs: 60000 },
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Set abandon timeout to 1 minute
     poolCfg := glide.PoolConfig{
         AbandonTimeout: 1 * time.Minute,
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Disable Abandon Detection
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     # Disable abandon detection
     pool_config = PoolConfig(abandon_timeout_ms=0)
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     // Disable abandon detection
     ClientPoolConfig poolConfig = ClientPoolConfig.builder()
         .abandonTimeout(Duration.ZERO)
         .build();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     // Disable abandon detection
     const pool = await ClientPool.create(
@@ -282,24 +283,24 @@ The pool runs a background monitor that reclaims borrowed clients when they have
         { abandonTimeoutMs: 0 },
     );
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     // Disable abandon detection (use a negative value in Go)
     poolCfg := glide.PoolConfig{
         AbandonTimeout: -1 * time.Second,
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Close the Pool
 
 When your application shuts down, close the pool to release all connections.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     pool.close()
 
@@ -308,26 +309,26 @@ When your application shuts down, close the pool to release all connections.
         async with pool.borrow() as client:
             await client.set("key", "value")
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     pool.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     pool.close();
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     pool.Close()
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Limitations
 
