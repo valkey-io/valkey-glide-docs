@@ -1,1 +1,1 @@
-export const javaGlideLatest = "2.4.0";
+export const javaGlideLatest = "2.6.0";
