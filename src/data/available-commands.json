@@ -278,8 +278,8 @@
     "commands": [
       { "command": "EVAL", "valkey-io": "/commands/eval", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "EVALSHA", "valkey-io": "/commands/evalsha", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
-      { "command": "EVALSHA_RO", "valkey-io": "/commands/evalsha_ro", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
-      { "command": "EVAL_RO", "valkey-io": "/commands/eval_ro", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "EVALSHA_RO", "valkey-io": "/commands/evalsha_ro", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "not_available", "csharp-href": "https://github.com/valkey-io/valkey-glide-csharp/issues/622", "php": "available", "ruby": "available" },
+      { "command": "EVAL_RO", "valkey-io": "/commands/eval_ro", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "not_available", "csharp-href": "https://github.com/valkey-io/valkey-glide-csharp/issues/622", "php": "available", "ruby": "available" },
       { "command": "FCALL", "valkey-io": "/commands/fcall", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "FCALL_RO", "valkey-io": "/commands/fcall_ro", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "FUNCTION", "valkey-io": "/commands/function", "python": "not_available", "node": "not_available", "java": "not_available", "go": "not_available", "csharp": "not_available", "php": "not_available", "href": "#not-applicable", "ruby": "not_available" },
