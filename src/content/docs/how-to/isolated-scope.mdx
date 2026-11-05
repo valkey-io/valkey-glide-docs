@@ -6,7 +6,7 @@ description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with op
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 <Aside type="caution" title="Preview Feature">
-Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained.
+Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
 </Aside>
 
 An Isolated Execution Scope provides a dedicated, per-connection state for running `WATCH`/`MULTI`/`EXEC` transactions. GLIDE clients normally multiplex commands over shared connections, which means per-connection state like `WATCH` cannot be held safely for a single caller. A scope gives you an exclusive connection where your `WATCH` keys remain valid until you call `EXEC`.
@@ -253,6 +253,11 @@ These are intentional constraints for this release. Design your application arou
 - **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Commands on one scope are serialized, but a scope has a single `WATCH`/`MULTI` state, so two callers sharing it will see each other's queued commands and conflicts. Use one scope per caller.
 
-### Known Issues
+### Known issues
 
-Isolated Execution Scopes is a preview feature. See known issues [here](https://github.com/valkey-io/valkey-glide/issues?q=is%3Aissue+state%3Aopen+label%3Apool%2Fscope).
+These are being tracked and are expected to be resolved in a future release.
+
+- **Cluster scopes without a routing key can fail with `MOVED`:** In Go and Node.js, a scope acquired without a routing key is not pinned by its first keyed command. If that key's slot is not on the slot-0 primary, the command fails with `MOVED`. Always pass a routing key in cluster mode.
+- **Scope replies don't match the parent client:** Scope commands return string-typed replies. Binary values are corrupted or raise, array and map replies are returned as strings, and binary arguments are not supported in Java and Python. In Go and Python, `exec()` can't distinguish a `WATCH` abort from an empty transaction. Server errors are not raised as the binding's GLIDE error type. Scope connections use RESP2 even when the parent client uses RESP3. Use scopes with string data, and don't rely on GLIDE error types for errors raised by scope commands.
+- **Some connection state carries over to the next scope:** Release does not reset `AUTH` identity, `HELLO`/`RESET` protocol changes, `CLIENT NO-EVICT`, or `CLIENT NO-TOUCH`. Don't change connection-level state inside a scope.
+- **Go cluster pool clients can't open a scope:** A client borrowed from a Go cluster pool is a standalone client, so `ClusterClient.ScopedConnection()` is not available on it. Open scopes from a cluster client that is not pool-borrowed.
