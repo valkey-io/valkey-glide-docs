@@ -51,14 +51,9 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
 * Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
 * Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64). The Node.js client does not support AL2; see [Known Issues](/reference/known-issues).
 
-:::note[Alpine Linux / MUSL]
-The Node.js, Java, Go, PHP, and Ruby clients support Alpine Linux / MUSL. The Python and C# clients do not.
+#### Alpine Linux / MUSL
 
-* **Java:** use a `linux_musl-*` classifier or the uber jar.
-* **Go:** build with `-tags=musl`.
-* **PHP:** Alpine 3.19+ (x86\_64 and aarch64). See the [PHP client README](https://github.com/valkey-io/valkey-glide-php#readme) for build dependencies.
-* **Ruby:** the gem ships musl libraries for Alpine 3.18+.
-:::
+The Python and C# clients do not support Alpine Linux / MUSL.
 
 ### MacOS
 
