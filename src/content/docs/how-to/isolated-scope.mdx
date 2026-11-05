@@ -176,7 +176,7 @@ The classic optimistic concurrency control pattern works as follows:
 
 Blocking commands honor their own blocking timeout rather than the client's request timeout, so `BLPOP key 0` blocks until an element arrives instead of failing when the request timeout elapses.
 
-If a blocking command does time out or its caller cancels it, the scope's connection is discarded on release instead of being returned to the pool. A server-side waiter may still be armed on it, and a later borrower could otherwise receive an element it never asked for.
+If a blocking command times out or its caller cancels it, the scope's connection is discarded instead of being returned to the pool. Releasing the scope or closing its parent client closes that socket, so a blocked server-side waiter cannot consume a later push.
 
 ## Concurrent Scopes
 
@@ -257,6 +257,7 @@ These are intentional constraints for this release. Design your application arou
 
 These are being tracked and are expected to be resolved in a future release.
 
-- **Resources can leak on cancelled blocking commands:** If an unbounded blocking command (for example `BLPOP` with a timeout of `0`) is cancelled on a scope, the underlying connection may leak. Prefer a non-zero timeout for blocking commands during the preview.
-- **Scope connections keep the password the client was created with:** `updateConnectionPassword` does not reach them — newly acquired scopes still send the old password, and idle scope connections are not re-authenticated. IAM auth is unaffected (scopes use the parent's live token). Until this is fixed, rotate the password only while the old one is still accepted, or recreate the client.
-- **TLS is not yet enforced for IAM authentication:** IAM-authenticated scoped connections are not required to use TLS. Configure TLS explicitly when using IAM auth.
+- **Cluster scopes without a routing key can fail with `MOVED`:** In Go and Node.js, a scope acquired without a routing key is not pinned by its first keyed command. If that key's slot is not on the slot-0 primary, the command fails with `MOVED`. Always pass a routing key in cluster mode.
+- **Scope replies don't match the parent client:** Scope commands return string-typed replies. Binary values are corrupted or raise, array and map replies are returned as strings, and binary arguments are not supported in Java and Python. In Go and Python, `exec()` can't distinguish a `WATCH` abort from an empty transaction. Server errors are not raised as the binding's GLIDE error type. Scope connections use RESP2 even when the parent client uses RESP3. Use scopes with string data, and don't rely on GLIDE error types for errors raised by scope commands.
+- **Some connection state carries over to the next scope:** Release does not reset `AUTH` identity, `HELLO`/`RESET` protocol changes, `CLIENT NO-EVICT`, or `CLIENT NO-TOUCH`. Don't change connection-level state inside a scope.
+- **Go cluster pool clients can't open a scope:** A client borrowed from a Go cluster pool is a standalone client, so `ClusterClient.ScopedConnection()` is not available on it. Open scopes from a cluster client that is not pool-borrowed.

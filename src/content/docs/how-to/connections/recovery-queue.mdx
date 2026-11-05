@@ -1,11 +1,11 @@
 ---
 title: Recovery Request Queue
-description: Buffer requests during cluster topology-refresh reconnects instead of failing them immediately
+description: Buffer requests during circular MOVED connection recovery instead of failing them immediately
 ---
 
 import { ClientTab, ClientTabs } from '@components/client-tabs';
 
-When a cluster client detects a circular MOVED redirect, it enters a recovery state to refresh the cluster topology. During this window, incoming requests would normally fail immediately with a `ClientError("Connection in recovery")`. The **recovery request queue** introduces a bounded buffer that holds those requests and retries them transparently once reconnection completes.
+When a cluster client receives a circular `MOVED` redirect, the target endpoint is redirecting the client back to itself. This can happen when a stable endpoint still leads to a former primary. GLIDE enters recovery to replace the stale connection even if that connection still responds to `PING`. The **recovery request queue** buffers requests only during fast reconnect and `RefreshingSlots` recovery. If recovery escalates to reconnecting through the initial nodes, GLIDE fails new and already buffered requests with `ClientError("Connection in recovery")`.
 
 ## Configuration
 
@@ -66,16 +66,17 @@ Configure the recovery request queue size through the cluster client configurati
 
 ## How It Works
 
-1. **Trigger:** The cluster client detects that the topology has changed when it encounters a circular MOVED redirect (a redirect loop indicating the cached slot map is stale). The client enters a recovery state to refresh its view of the cluster.
-2. **Buffering:** During recovery, incoming requests are placed into a bounded FIFO queue instead of being failed immediately. This happens transparently — callers simply experience a brief delay rather than an error.
-3. **Dispatch:** When recovery completes and the topology is refreshed, buffered requests are dispatched in FIFO order. Each request retains its full retry budget, so transient routing issues after recovery are handled normally.
-4. **Overflow:** If the queue is full (i.e., the number of buffered requests reaches the configured cap), additional requests are failed immediately with an error. This prevents unbounded memory growth during prolonged recovery windows.
+1. **Trigger:** The cluster client encounters a circular `MOVED` redirect or begins a slot-map refresh.
+2. **Recover:** GLIDE starts a fast reconnect for a circular redirect or enters `RefreshingSlots` for a topology refresh.
+3. **Buffering:** During either fast path, incoming requests enter a bounded FIFO queue instead of failing immediately.
+4. **Complete or escalate:** Successful recovery dispatches buffered requests in FIFO order with their full retry budgets. If recovery escalates to reconnecting through the initial nodes, GLIDE fails queued and new requests with `ClientError("Connection in recovery")`.
+5. **Overflow:** If the queue is full, additional requests are failed immediately with an error. This prevents unbounded memory growth during prolonged recovery windows.
 
 ## When to Adjust
 
 | Scenario | Recommendation |
 |----------|---------------|
-| High-throughput workloads with long recovery windows | Increase the queue size to avoid dropping requests during extended topology refreshes |
+| High-throughput workloads with busy fast-recovery windows | Increase the queue size to absorb more requests before the queue fills |
 | Memory-constrained environments | Decrease the queue size to limit memory usage during recovery |
 | Application handles retries at a higher level | Set to `0` to disable the queue and restore fail-fast behavior |
 | Short-lived bursts with fast recovery | The default of 1000 is typically sufficient |
