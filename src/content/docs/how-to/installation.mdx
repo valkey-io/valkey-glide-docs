@@ -87,15 +87,20 @@ The release of Valkey GLIDE was tested on the following platforms:
 ### Linux
 
 * Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
-* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
+* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64). The Node.js client does not support AL2; see [Known Issues](/reference/known-issues).
 
 <details>
   <summary>`glibc` requirements</summary>
   The Node.js client requires `glibc` 2.28 or higher. Check your version with `ldd --version`. See [Known Issues](/reference/known-issues) for supported distributions and the requirements for other clients.
 </details>
 
-:::caution
-Currently Alpine Linux / MUSL is NOT supported.
+:::note[Alpine Linux / MUSL]
+The Node.js, Java, Go, PHP, and Ruby clients support Alpine Linux / MUSL. The Python and C# clients do not.
+
+* **Java:** use a `linux_musl-*` classifier or the uber jar.
+* **Go:** build with `-tags=musl`.
+* **PHP:** Alpine 3.19+ (x86\_64 and aarch64). See the [PHP client README](https://github.com/valkey-io/valkey-glide-php#readme) for build dependencies.
+* **Ruby:** the gem ships musl libraries for Alpine 3.18+.
 :::
 
 ### MacOS
@@ -114,7 +119,7 @@ Windows support is currently available for Valkey GLIDE Java and C#.
 
 <ClientTabs>
   <ClientTab slot="python">
-    **Requirements:** Python 3.9 to 3.13.
+    **Requirements:** Python 3.9 to 3.14.
 
     To get started, GLIDE Python is available on [pypi](https://pypi.org/project/valkey-glide/).
 
@@ -134,7 +139,7 @@ Windows support is currently available for Valkey GLIDE Java and C#.
   </ClientTab>
 
   <ClientTab slot="java">
-    **Requirements:** JDK 11+
+    **Requirements:** JDK 8+ (JDK 11+ recommended)
 
     To get started, add one of the following snippet into the build file for your tool.
 
@@ -258,12 +263,12 @@ Windows support is currently available for Valkey GLIDE Java and C#.
   </ClientTab>
 
   <ClientTab slot="node">
-    **Requirements:** Node.js 16+
+    **Requirements:** Node.js 20+
 
     **For npm users on Linux it is recommended to use npm >=11**. It supports optional downloads based on libc. Yarn users should not be concerned.
 
     :::note
-    The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which adds size to the package. The package is using the protobufjs/minimal version, hence, if size matters, bundlers should be able to strip the unused code. It should reduce the size of the dependency from 19kb gzipped to 6.5kb gzipped.
+    The library is dependent on the [protobufjs library](https://protobufjs.github.io/protobuf.js/#installation), which adds size to the package. The package is using the protobufjs/minimal version, hence, if size matters, bundlers should be able to strip the unused code.
     :::
 
     To get started, Valkey GLIDE Node.js is available on npm for install.
@@ -344,7 +349,7 @@ Windows support is currently available for Valkey GLIDE Java and C#.
     ```
 
     :::note
-    The gem ships prebuilt native libraries for Linux and macOS, including Alpine Linux / musl (3.18+), and depends on the [`ffi`](https://github.com/ffi/ffi) gem.
+    The gem ships prebuilt native libraries for Linux (including Alpine Linux / musl 3.18+) and macOS on Apple silicon, and depends on the [`ffi`](https://github.com/ffi/ffi) gem.
     :::
   </ClientTab>
 </ClientTabs>

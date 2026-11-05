@@ -60,7 +60,7 @@ In general, each language binding is responsible for:
 * **Ensures Safety:** Prevents memory leaks and undefined behavior
 
 <Aside>
-  The FFI layer is implemented using language-specific FFI mechanisms, e.g. Py03 for Python or JNI (Java Native Interface) for Java.
+  The FFI layer is implemented using language-specific FFI mechanisms, e.g. PyO3 (async) and CFFI (sync) for Python, JNI (Java Native Interface) for Java, NAPI-RS for Node.js, and cgo for Go.
 </Aside>
 
 ## The Rust Core
