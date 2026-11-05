@@ -128,10 +128,10 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     )
 
     func main() {
-        config := config.NewClientConfiguration().
+        cfg := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-        client, err := glide.NewClient(config)
+        client, err := glide.NewClient(cfg)
         if err != nil {
             log.Fatalf("NewClient failed: %v", err)
         }
@@ -151,7 +151,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
             log.Printf("Get failed: %v", err)
             return
         }
-        fmt.Printf("✓ Retrieved value: %v\n", value)
+        fmt.Printf("✓ Retrieved value: %v\n", value.Value())
     }
     ```
   </ClientTab>

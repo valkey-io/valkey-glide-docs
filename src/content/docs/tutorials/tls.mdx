@@ -215,6 +215,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
           advanced_config=advanced_config
       )
 
+      client = None
       try:
           # 5. Create the client
           client = await GlideClient.create(client_config)
@@ -225,7 +226,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
       except Exception as e:
           print(f"Failed to connect with custom cert: {e}")
       finally:
-          if 'client' in locals() and client.is_connected():
+          if client is not None:
               await client.close()
 
   if __name__ == "__main__":
