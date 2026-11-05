@@ -361,6 +361,66 @@ if ($client->get('nonexistent') === false) {
 }
 ```
 
+#### Error introspection: `getLastError()` / `clearLastError()`
+
+`ValkeyGlide` and `ValkeyGlideCluster` implement the PHPRedis `getLastError()` and `clearLastError()` methods.
+
+| Method             | Signature                  | Description                                                     |
+| ------------------ | -------------------------- | --------------------------------------------------------------- |
+| `getLastError()`   | `getLastError(): ?string`  | Returns the last command error message, or `NULL` if none is set |
+| `clearLastError()` | `clearLastError(): bool`   | Clears the last error message. Always returns `true`            |
+
+* A command that fails and returns `false` records the server error message.
+* Successful commands do not clear the last error.
+* A new error overwrites the previous one.
+* Only `clearLastError()` resets it.
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    $redis = new Redis();
+    $redis->connect('127.0.0.1', 6379);
+
+    // Force an error: INCR on a list
+    $redis->rPush('mylist', 'a');
+    $redis->incr('mylist'); // returns false
+
+    echo $redis->getLastError(); // contains "WRONGTYPE"
+
+    // Successful commands do not clear the error
+    $redis->set('other', 'value');
+    echo $redis->getLastError(); // still contains "WRONGTYPE"
+
+    $redis->clearLastError(); // returns true
+    var_dump($redis->getLastError()); // NULL
+    ```
+  </TabItem>
+
+  <TabItem label="Valkey GLIDE">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect('127.0.0.1', 6379);
+
+    // Force an error: INCR on a list
+    $client->rPush('mylist', 'a');
+    $client->incr('mylist'); // returns false
+
+    echo $client->getLastError(); // contains "WRONGTYPE"
+
+    // Successful commands do not clear the error
+    $client->set('other', 'value');
+    echo $client->getLastError(); // still contains "WRONGTYPE"
+
+    $client->clearLastError(); // returns true
+    var_dump($client->getLastError()); // NULL
+    ```
+  </TabItem>
+</Tabs>
+
+:::note
+`NOSCRIPT` errors keep the `NOSCRIPT` prefix (for example, `"NOSCRIPT No matching script..."`), so libraries such as Symfony Lock that match on it to reload scripts work unchanged.
+:::
+
 ### 5. Configuration Options
 
 PHPRedis options such as `OPT_SERIALIZER`, `OPT_PREFIX`, `OPT_SCAN`, and `OPT_COMPRESSION` are not currently supported. Use application-level serialization and key prefixing instead.
@@ -505,6 +565,7 @@ Valkey GLIDE PHP supports all major Redis/Valkey features including:
 * [ ] Add exception handling around connection operations
 * [ ] Update return type expectations for consistency
 * [ ] Test cluster operations if using cluster mode
+* [ ] Verify code that depends on `getLastError()` / `clearLastError()`, such as Symfony Lock
 * [ ] Update configuration to use `connect()` method parameters
 * [ ] Verify TLS/SSL configuration if using encrypted connections
 * [ ] Test IAM authentication if using AWS ElastiCache
