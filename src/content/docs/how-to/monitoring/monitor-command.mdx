@@ -7,8 +7,6 @@ import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 The MONITOR command streams every command processed by the Valkey server back to the client in real time. It is intended for debugging and development only.
 
-MONITOR is supported in Python, Node.js, Java, Go, C#, and PHP clients.
-
 ## How It Works
 
 When you create a `MonitorClient`, GLIDE opens a dedicated connection and sends the `MONITOR` command. The server begins streaming command records back over that connection. Each record contains the timestamp, database index, client address, command name, and arguments.
