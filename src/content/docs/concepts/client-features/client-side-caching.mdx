@@ -36,17 +36,13 @@ All other commands bypass the cache entirely. Write commands (`SET`, `HSET`, `SA
 
 ### `MGET` caching
 
-GLIDE caches `MGET` per key rather than as a single response:
+GLIDE caches `MGET` one key at a time. Before it sends anything to the server, it checks each key against the cache.
 
-* **Full hit:** If every key is cached, GLIDE returns the values without contacting the server.
-* **Partial hit:** GLIDE sends an `MGET` for only the missing keys, then merges the server values with the cached values in the original key order.
-* **Storing results:** Each non-NIL value from the server is cached under its own key, so a later `GET` or `MGET` of that key can be served from the cache. NIL values are not cached.
-* **Duplicate keys:** Duplicate keys keep their normal `MGET` semantics.
-* **Metrics:** Each key counts as one cache hit or one cache miss.
+If every key is cached, GLIDE returns the values without contacting the server. If only some keys are cached, GLIDE sends an `MGET` for the missing keys and merges the reply with the cached values. The result keeps the original key order, and duplicate keys behave as they do in a plain `MGET`.
 
-:::caution[Partial hits are not atomic]
-On the server, `MGET` reads all keys at a single point in time. On a partial hit, GLIDE combines cached values, which can be as old as the entry TTL, with values the server reads now, so the result is not a point-in-time snapshot of the keys. Use a client without a cache when you need a consistent read of several keys.
-:::
+GLIDE stores each value from the server under its own key, so a later `GET` or `MGET` can read it from the cache. It does not store NIL values. Cache metrics count each key as one hit or one miss.
+
+**A partial hit is not atomic.** On the server, `MGET` reads every key at the same moment. A partial hit mixes cached values, which can be as old as the entry TTL, with values the server reads now. To get every key from the same moment, read them with a client that has no cache.
 
 ### What Is Not Cached
 
@@ -705,7 +701,7 @@ Each supported binding's `CLIENT TRACKINGINFO` method returns the current tracki
 | **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Python, Java, Node.js, Go, and C# support [server-assisted invalidation](#server-assisted-invalidation). |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `MGET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
-| **`MGET` not atomic on partial hits** | A partially cached `MGET` combines cached and server values, so the result is not a point-in-time snapshot. See [`MGET` caching](#mget-caching). |
+| **`MGET` not atomic on partial hits** | A partial hit combines cached values with a new server read, so the values can come from different moments. See [`MGET` caching](#mget-caching). |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
 | **No invalidation on writes** | In TTL-only mode, writing to a key such as `SET`, `HSET`, `SADD`, or `DEL` does not invalidate the local cache entry, even when the same client issues the write. Subsequent reads return the stale value until its TTL expires or memory pressure evicts it. In [server-assisted mode](#server-assisted-invalidation), the server sends invalidation messages that clear stale entries. |
 
