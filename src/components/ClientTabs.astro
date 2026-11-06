@@ -7,7 +7,7 @@
 import { TabItem } from "@astrojs/starlight/components";
 import ParamTabs from "./ParamTabs.astro";
 
-const labels = {
+export const LABELS = {
     java: "Java",
     python: "Python",
     node: "Node",
@@ -15,12 +15,12 @@ const labels = {
     php: "PHP",
     csharp: "C#",
     ruby: "Ruby",
-} as const;
+};
 
 const suppliedSlots = Object.keys(Astro.slots).filter(
     (slot) => slot !== "default",
 );
-const supportedSlots = new Set(Object.keys(labels));
+const supportedSlots = new Set(Object.keys(LABELS));
 const unknownSlots = suppliedSlots.filter((slot) => !supportedSlots.has(slot));
 const defaultContent = Astro.slots.has("default")
     ? (await Astro.slots.render("default")).trim()
@@ -43,52 +43,52 @@ if (suppliedSlots.length === 0) {
 }
 ---
 
-<ParamTabs param="lang" syncKey="progLangInExamples" aliases={labels}>
+<ParamTabs param="lang" syncKey="progLangInExamples" aliases={LABELS}>
     {
         Astro.slots.has("java") && (
-            <TabItem label={labels.java}>
+            <TabItem label={LABELS.java}>
                 <slot name="java" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("python") && (
-            <TabItem label={labels.python}>
+            <TabItem label={LABELS.python}>
                 <slot name="python" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("node") && (
-            <TabItem label={labels.node}>
+            <TabItem label={LABELS.node}>
                 <slot name="node" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("go") && (
-            <TabItem label={labels.go}>
+            <TabItem label={LABELS.go}>
                 <slot name="go" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("php") && (
-            <TabItem label={labels.php}>
+            <TabItem label={LABELS.php}>
                 <slot name="php" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("csharp") && (
-            <TabItem label={labels.csharp}>
+            <TabItem label={LABELS.csharp}>
                 <slot name="csharp" />
             </TabItem>
         )
     }
     {
         Astro.slots.has("ruby") && (
-            <TabItem label={labels.ruby}>
+            <TabItem label={LABELS.ruby}>
                 <slot name="ruby" />
             </TabItem>
         )
