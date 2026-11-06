@@ -247,7 +247,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
 | `entryTtlMs`      | integer           | —       | Time-to-live per entry in milliseconds. Use `0` to disable TTL (entries persist until evicted).   |
 | `evictionPolicy`   | `LRU` or `LFU`   | `LRU`   | Policy for removing entries when the cache is full.                                               |
 | `enableMetrics`    | boolean           | `false` | When `true`, enables collection of hit/miss/eviction/expiration counters.                         |
-| `serverAssisted` / `server_assisted` / `WithServerAssisted` | boolean | `false` | Enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` mode. Supported by Python, Java, Node.js, Go, and C#. Requires RESP3. |
+| `serverAssisted`   | boolean           | `false` | Enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` mode. Supported by Python, Java, Node.js, Go, and C#. Requires RESP3. |
 
 ## Eviction Policies
 
