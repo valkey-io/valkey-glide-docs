@@ -53,11 +53,14 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
 
 #### Alpine Linux / MUSL
 
-The Python and C# clients do not support Alpine Linux / MUSL. These clients need extra setup on MUSL:
+Valkey GLIDE currently support Alpine Linux / MUSL as following:
 
 * **Java:** use a `linux_musl-x86_64` or `linux_musl-aarch_64` classifier, or the uber jar.
 * **Go:** build with `-tags=musl` (for example, `export GOFLAGS=-tags=musl`).
 * **PHP:** on Alpine 3.19+, install the build dependencies listed in the [PHP client README](https://github.com/valkey-io/valkey-glide-php#readme).
+* **Ruby & Node.js:** Work out of the box.
+
+Python and C# clients currently do not support Alpine Linux / MUSL.
 
 ### MacOS
 
