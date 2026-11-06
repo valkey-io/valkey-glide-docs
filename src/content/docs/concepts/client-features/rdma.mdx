@@ -10,8 +10,8 @@ RDMA transfers were added in Valkey GLIDE 2.6.0 and are currently an experimenta
 RDMA (remote direct memory access) lets the server copy a value straight into or out of memory on the client machine.
 The value never travels in the RESP reply to a command, and the client never copies it: it lands in memory you registered, at the place you chose.
 
-This pays off for large values that an application already keeps in its own buffers, such as model weights or KV-cache blocks.
-For ordinary values, regular commands like `GET` and `SET` are simpler and just as fast.
+This pays off for large values (512 KiB or more) that an application already keeps in its own buffers, such as model weights or KV-cache blocks.
+For values under 512 KiB, regular commands like `GET` and `SET` are simpler.
 
 For setup instructions and code examples, see [Transferring Data with RDMA](/how-to/rdma-transfers/).
 
@@ -48,7 +48,7 @@ Optionally, the client also sends a CRC-32c of the value, and the server refuses
 
 | Term | What it is |
 | ------ | ---------------------------------------------------------------------------------------------------- |
-| Region | A block of memory registered with the client. You create it once and keep it for many transfers. |
+| Region | A block of memory registered with the fabric. You create it once and keep it for many transfers. |
 | Window | A range of bytes inside one region (an offset and a length), chosen for each transfer. |
 
 A region carries **one transfer at a time**.
@@ -67,10 +67,12 @@ This happens when:
 
 * the connection was lost while the transfer was in flight;
 * the client was closed to cancel the transfer;
-* the server's reply was neither a result nor an error. For example, if another thread has a `MULTI` open on the same client, the server answers `QUEUED` and may still run the transfer on `EXEC`.
+* the server's reply was neither a result nor an error. For example, if another thread opens a `MULTI` on the same client after the transfer's own check, the server answers `QUEUED` and may still run the transfer on `EXEC`.
 
 When the server replies with a result or an error, such as a value too large for the window or a checksum mismatch, the region stays open and can be used again.
-A region also stays open when the transfer was never sent, for example because the handshake failed. That raises `ConnectionError`, and the client reconnects for the next transfer.
+A region also stays open when the transfer was refused before it was sent, such as with an open MULTI, or when its handshake failed.
+A handshake the server refuses, such as on a node without the module, raises `RdmaError`. 
+One that leaves the connection unusable raises `ConnectionError`, and the client replaces the connection (the cluster client re-sends the transfer on it).
 
 The type of the error doesn't tell you whether the region was closed, so check `region.closed` after any error.
 If the region is closed and the client is still open, register the memory again before the next transfer.
@@ -91,15 +93,12 @@ The fabric reaches the server through a provider:
 
 | Provider | Use |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| EFA direct | AWS Elastic Fabric Adapter. The provider RDMA is built for. Needs EFA hardware on the client and the server. |
-| TCP | Emulates RDMA over TCP on any machine, for development and tests only. |
-
-With the TCP provider, memory from a region that a transfer closed stays held until the client and all of its regions are closed. With EFA direct it is released at once.
+| EFA direct | AWS Elastic Fabric Adapter. The provider RDMA is built for. Needs EFA hardware on the client and the server.|
 
 ## Requirements and limitations
 
 * The server must serve the `BLOB.*` commands using the [valkey-large-object module](https://github.com/valkey-io/valkey-large-object).
-* The client machine needs [libfabric](https://ofiwg.github.io/libfabric/) 2.4 or newer. It is loaded only when a client asks for RDMA, so the published client runs on machines without it.
+* The client and server machines need [libfabric](https://ofiwg.github.io/libfabric/) 2.4 or a later 2.x version. It is loaded only when a client asks for RDMA or `rdma_usable()` is called, so the published client runs on machines without it.
 * Only the synchronous Python client supports RDMA. The asynchronous client and client pools refuse an RDMA configuration.
 * RDMA can't be combined with enabled compression, lazy connection, read-only mode, or static node discovery on the same client.
 * Transfers always go to the key's primary, whatever read strategy is configured.

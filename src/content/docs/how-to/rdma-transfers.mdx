@@ -12,9 +12,13 @@ For how this works and when it helps, see [RDMA Transfers](/concepts/client-feat
 
 ## Prerequisites
 
-* The synchronous Python client, `valkey-glide-sync`. The published package includes RDMA support.
-* [libfabric](https://ofiwg.github.io/libfabric/) 2.4 or newer on the client machine. On EC2 with EFA, the EFA installer provides it under `/opt/amazon/efa`. Set `GLIDE_LIBFABRIC_PATH` to the library file to use a copy GLIDE does not find on its own.
-* A server that serves the `BLOB.*` commands using the [valkey-large-object module](https://github.com/valkey-io/valkey-large-object).
+* Both client and server machines need: 
+  * Linux on an EC2 instance with an EFA device.
+  * [libfabric](https://ofiwg.github.io/libfabric/) 2.4 or a later 2.x version. On EC2 with EFA, the EFA installer provides it under `/opt/amazon/efa`. Set `GLIDE_LIBFABRIC_PATH` to the library file to use a copy GLIDE does not find on its own.
+* The synchronous Python client, `valkey-glide-sync`. The published package includes RDMA support with an EFA direct provider.
+* A Valkey server with the [valkey-large-object module](https://github.com/valkey-io/valkey-large-object) that serves the `BLOB.*` RDMA commands.
+  * Note: the module's `max-object-size` (default 512 MiB) caps what `rdma_set` can store, so increase it if you need to store larger values.
+* Check `ulimit -l` (or `LimitMEMLOCK=` in the systemd unit) is at least the total you will register with RDMA. Registration pins pages, so `RLIMIT_MEMLOCK` must cover every open region.
 
 ## Check that RDMA can run
 
@@ -50,7 +54,7 @@ config = GlideClientConfiguration(
 client = GlideClient.create(config)
 ```
 
-`GlideClusterClientConfiguration` takes the same `rdma` argument. `RdmaConfiguration` also accepts an `interface`, to choose a fabric device when the machine has more than one.
+`GlideClusterClientConfiguration` takes the same `rdma` argument. `RdmaConfiguration` also accepts an `interface` to choose a fabric device when the machine has more than one. Without it, GLIDE uses the first domain it finds.
 
 The client connects even if the server does not serve the RDMA commands, and ordinary commands keep working. The first transfer reports the missing server support.
 
@@ -67,7 +71,7 @@ region.window(4096, 1024)     # 1 KiB starting 4 KiB in
 region.window()               # the whole region
 ```
 
-Any writable, contiguous buffer works. GLIDE keeps a reference to it while the region is open and never copies or frees it.
+Any writable, C-contiguous, non-empty buffer works. GLIDE keeps a reference to it while the region is open and never copies or frees it.
 
 ## Write a value
 
@@ -140,7 +144,7 @@ except GlideError:
     raise
 ```
 
-GLIDE never retries a transfer on its own, because only your application knows whether sending a value again is safe.
+GLIDE never resends a transfer the server may have run. The cluster client re-sends a transfer the server refused without running it or that was never sent (e.g. MOVED, READONLY after a failover).
 
 Registering the same memory again raises `RdmaError` while GLIDE still holds it. With EFA that only happens after a device error. `region.memory_released` tells you whether the memory is free.
 
