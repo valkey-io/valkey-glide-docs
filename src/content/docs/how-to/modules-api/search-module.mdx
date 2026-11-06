@@ -400,6 +400,348 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
   </ClientTab>
 </ClientTabs>
 
+## Valkey Search 1.3 Features (Python)
+
+[Valkey Search 1.3](https://github.com/valkey-io/valkey-search) adds new aggregation reducers, vector range queries, relevance scoring, cursor-based paging, a hybrid text/vector query (`FT.HYBRID`), and several RediSearch parity options. These features require a valkey-search 1.3 module and are currently available in the Python client only; Node.js, Java and Go support is in progress.
+
+:::caution[Version Requirements]
+Everything on this page requires **valkey-search >= 1.3.0**. Some features additionally require the server's `search.emulate-release` config to be set to `1.3.0` or higher — see [Compatibility with `search.emulate-release`](#compatibility-with-searchemulate-release) below. GLIDE is a pass-through client: it does not emulate or guard these behaviors itself, so the module and config versions on your server determine what you see.
+:::
+
+### New Aggregate Reducers
+
+`FtAggregateReducer` adds three factory methods for `FT.AGGREGATE` `GROUPBY` clauses:
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import (
+        ft,
+        FtAggregateOptions,
+        FtAggregateGroupBy,
+        FtAggregateReducer,
+        OrderBy,
+    )
+
+    # TOLIST: collect unique values of a field into an array per group
+    await ft.aggregate(
+        client,
+        index,
+        "*",
+        options=FtAggregateOptions(
+            clauses=[
+                FtAggregateGroupBy(
+                    ["@category"],
+                    [FtAggregateReducer.to_list("@color", name="colors")],
+                )
+            ]
+        ),
+    )
+    # [{b"category": b"bikes", b"colors": [b"red", b"blue"]}, ...]
+
+    # FIRST_VALUE: pick one record's field value per group, optionally by a tiebreaker
+    await ft.aggregate(
+        client,
+        index,
+        "*",
+        options=FtAggregateOptions(
+            clauses=[
+                FtAggregateGroupBy(
+                    ["@category"],
+                    [
+                        FtAggregateReducer.first_value(
+                            "@title", by="@price", order=OrderBy.DESC, name="most_expensive"
+                        )
+                    ],
+                )
+            ]
+        ),
+    )
+
+    # RANDOM_SAMPLE: up to `size` (max 1000) random values of a field per group
+    await ft.aggregate(
+        client,
+        index,
+        "*",
+        options=FtAggregateOptions(
+            clauses=[
+                FtAggregateGroupBy(
+                    ["@category"],
+                    [FtAggregateReducer.random_sample("@price", 5, name="price_sample")],
+                )
+            ]
+        ),
+    )
+    ```
+  </ClientTab>
+</ClientTabs>
+
+Every other reducer (`COUNT`, `SUM`, `MIN`, `MAX`, `AVG`, `STDDEV`, `COUNT_DISTINCT`) continues to use the generic constructor, e.g. `FtAggregateReducer("SUM", ["@price"], "total")`.
+
+### INKEYS: Restrict `FT.SEARCH` to Specific Keys
+
+`FtSearchOptions(in_keys=...)` filters results to only the given keys. `None` (the default) means no restriction; an empty list `[]` means zero results.
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import ft, FtSearchOptions
+
+    # Only consider these two keys
+    await ft.search(
+        client,
+        index,
+        "*",
+        options=FtSearchOptions(in_keys=["product:1", "product:2"]),
+    )
+
+    # No restriction -- use None, not an empty list
+    allowed_keys: list[str] = []
+    await ft.search(
+        client,
+        index,
+        "*",
+        options=FtSearchOptions(in_keys=allowed_keys if allowed_keys else None),
+    )
+    ```
+  </ClientTab>
+</ClientTabs>
+
+### Vector Range Queries
+
+`VECTOR_RANGE` returns every document within a given radius of a query vector, written directly into the query string (not a typed option). Name the returned distance with `$yield_distance_as`:
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    import struct
+    from glide import ft, FtSearchOptions, ReturnField
+
+    query_vector = struct.pack("2f", 0.0, 0.0)
+
+    # All documents within radius 2.0 of the query vector
+    await ft.search(
+        client,
+        index,
+        "@vec:[VECTOR_RANGE 2 $blob]",
+        options=FtSearchOptions(params={"blob": query_vector}, nocontent=True),
+    )
+
+    # Name the distance and return it
+    await ft.search(
+        client,
+        index,
+        "@vec:[VECTOR_RANGE 2 $blob]=>{$yield_distance_as: dist}",
+        options=FtSearchOptions(
+            params={"blob": query_vector},
+            return_fields=[ReturnField(field_identifier="dist")],
+        ),
+    )
+    ```
+  </ClientTab>
+</ClientTabs>
+
+A `VECTOR_RANGE` predicate cannot currently be combined as a pre-filter inside a KNN query (`"...=>[KNN ...]"`); the server rejects that combination. At most one `VECTOR_RANGE` per query.
+
+### Relevance Scoring
+
+`FT.SEARCH` and `FT.AGGREGATE` can expose each document's relevance score. `"BM25STD"` is currently the only supported scorer.
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import ft, FtSearchOptions, FtAggregateOptions
+
+    # FT.SEARCH: with_scores changes each document's value to [score, field_map]
+    results = await ft.search(
+        client, index, "hello world",
+        options=FtSearchOptions(with_scores=True, scorer="BM25STD"),
+    )
+    for key, (score, fields) in results[1].items():
+        print(key, float(score), fields)
+
+    # FT.AGGREGATE: add_scores exposes the score as the "__score" pipeline field
+    await ft.aggregate(
+        client, index, "hello",
+        options=FtAggregateOptions(
+            add_scores=True,
+            scorer="BM25STD",
+            loadFields=["title"],
+        ),
+    )
+    # each row has b"__score"
+    ```
+  </ClientTab>
+</ClientTabs>
+
+### Paging with WITHCURSOR and FT.CURSOR
+
+`FT.AGGREGATE` and `FT.HYBRID` can page their results instead of returning everything at once. Opening a cursor changes the reply to a `[rows, cursor_id]` pair; `cursor_id == 0` means the query is already exhausted and no cursor was opened.
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import ft, FtAggregateOptions, FtWithCursor
+
+    rows, cursor_id = await ft.aggregate(
+        client,
+        index,
+        "*",
+        options=FtAggregateOptions(
+            loadFields=["__key"],
+            with_cursor=FtWithCursor(count=10, maxidle=30000),
+        ),
+    )
+    while cursor_id != 0:
+        page, cursor_id = await ft.cursor_read(client, index, cursor_id)
+        rows.extend(page)
+
+    # Discard a cursor early instead of letting it exhaust or time out
+    rows, cursor_id = await ft.aggregate(
+        client, index, "*",
+        options=FtAggregateOptions(loadFields=["__key"], with_cursor=FtWithCursor(count=1)),
+    )
+    await ft.cursor_del(client, index, cursor_id)
+    ```
+  </ClientTab>
+</ClientTabs>
+
+:::caution[Cursor Routing]
+A cursor is a per-process, node-local resource, so cursor traffic is pinned to a specific node regardless of your client's `ReadFrom` setting:
+
+* **Cluster client**: `FT.AGGREGATE`/`FT.HYBRID` with `with_cursor`, and every subsequent `FT.CURSOR READ`/`DEL`, are routed to the **primary** of the index's slot. This is handled for you.
+* **Standalone client**: this pinning gap is **not yet closed**. `FT.AGGREGATE ... WITHCURSOR` is a read-only command and can be routed to a replica under `ReadFrom.PREFER_REPLICA` or AZ affinity, while the follow-up `FT.CURSOR READ`/`DEL` always goes to the primary — this mismatch fails with `Cursor: not found, id: <n>`. **Use a `ReadFrom.PRIMARY` client for any code path that pages cursors on a standalone deployment.** `FT.HYBRID` is unaffected: GLIDE always sends it to the primary.
+
+A primary failover while a cursor is open discards that cursor, the same as any other node-local, cursor-discarding event.
+:::
+
+### FT.HYBRID: Combined Text and Vector Search
+
+`FT.HYBRID` fuses a text/tag/numeric query (the SEARCH arm) with a vector similarity search (the VSIM arm) into one ranked result, unlike a filtered KNN query in `FT.SEARCH` where only the vector distance ranks results.
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    import struct
+    from glide import (
+        ft,
+        FtHybridSearchArm,
+        FtHybridVsimArm,
+        FtHybridOptions,
+        FtHybridCombine,
+        FtWithCursor,
+    )
+
+    query_vector = struct.pack("2f", 1.0, 1.0)
+
+    # Basic hybrid query -- default fusion is RRF; rows carry "__key" and "__score"
+    rows = await ft.hybrid(
+        client,
+        index,
+        FtHybridSearchArm("hello world"),
+        FtHybridVsimArm("vec", query_vector, k=10),
+    )
+
+    # Per-arm scores, explicit RRF constant, LOAD clause, and WITHCURSOR paging
+    rows, cursor_id = await ft.hybrid(
+        client,
+        index,
+        FtHybridSearchArm("hello world", yield_score_as="text_score"),
+        FtHybridVsimArm("vec", query_vector, k=10, yield_score_as="vector_score"),
+        options=FtHybridOptions(
+            combine=FtHybridCombine.RRF(constant=60),
+            load_fields=["title"],
+            with_cursor=FtWithCursor(count=10),
+        ),
+    )
+    ```
+  </ClientTab>
+</ClientTabs>
+
+A query vector passed as raw `bytes` is automatically wrapped in a generated `PARAMS` entry. To reference your own `params` entry instead, pass a `str` starting with `$` (e.g. `FtHybridVsimArm("vec", "$myvec", k=10)` with `FtHybridOptions(params={"myvec": query_vector})`). A `LOAD` clause (`load_fields`/`load_all`) replaces the implicit `__key`/`__score` columns -- include `"@__key"` and a `yield_score_as` if you still need them. `FT.HYBRID` always reads from the primary, including when paged with a cursor, so it is unaffected by the standalone cursor-routing gap above.
+
+### RediSearch Parity Options
+
+A handful of `FT.CREATE` and field options exist for RediSearch wire compatibility:
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    import struct
+    from glide import (
+        ft,
+        FtCreateOptions,
+        DataType,
+        TextField,
+        TagField,
+        NumericField,
+        VectorField,
+        VectorFieldAttributesFlat,
+        VectorAlgorithm,
+        DistanceMetricType,
+        VectorType,
+    )
+
+    # FLOAT16 / BFLOAT16 vectors: GLIDE never encodes vectors for you -- pack the bytes yourself
+    values = [0.1, 0.2]
+    float16_bytes = b"".join(struct.pack("<e", v) for v in values)
+    bfloat16_bytes = b"".join(struct.pack("<f", v)[2:4] for v in values)
+
+    await ft.create(
+        client,
+        index,
+        schema=[
+            VectorField(
+                "vec",
+                VectorAlgorithm.FLAT,
+                VectorFieldAttributesFlat(
+                    dimensions=2,
+                    distance_metric=DistanceMetricType.L2,
+                    type=VectorType.FLOAT16,
+                ),
+            ),
+        ],
+        options=FtCreateOptions(data_type=DataType.HASH, prefixes=["vec:"]),
+    )
+
+    # FILTER: only index documents matching an ingestion-time expression
+    # SCORE_FIELD: boost ranking using a per-document numeric field
+    # NOHL: accepted for wire compatibility; valkey-search doesn't support highlighting (no-op)
+    await ft.create(
+        client,
+        "people_idx",
+        schema=[NumericField("age"), TextField("title")],
+        options=FtCreateOptions(
+            data_type=DataType.HASH,
+            prefixes=["person:"],
+            filter="@age > 18",
+            score_field="boost",
+            no_highlight=True,
+        ),
+    )
+
+    # SORTABLE + UNF: preserve the original (un-normalized) case for sorting.
+    # unf requires sortable=True.
+    schema = [
+        TextField("title", sortable=True, unf=True),
+        TagField("category", sortable=True, unf=True),
+    ]
+    ```
+  </ClientTab>
+</ClientTabs>
+
+### Compatibility with `search.emulate-release`
+
+A valkey-search 1.3 module defaults to emulating version `1.0.0` unless `search.emulate-release` is explicitly raised, so a stock 1.3 server still shows 1.2 behavior for a few specific compatibility fixes. GLIDE passes these through without a client-side guard -- the behavior you see depends entirely on the server's configuration:
+
+| Feature | Below `search.emulate-release 1.3.0` | At or above `1.3.0` |
+|---|---|---|
+| `LoadField(alias=...)` (`LOAD ... AS` in `FT.AGGREGATE`/`FT.HYBRID`) | `RequestError`: `Index: field 'AS' does not exist` | Column renamed as requested |
+| An adjacent `FtAggregateLimit` widening `FtAggregateSortBy`'s retained rows | `SORTBY` keeps its own `max` (default 10) | Widens to the `LIMIT`'s `offset + count` |
+| `FT.INFO` reporting `score_field` | Omitted from `index_definition`, even if `FtCreateOptions(score_field=...)` was set | Reported under `index_definition`'s `score_field` key |
+
+Raise the setting with `CONFIG SET search.emulate-release 1.3.0` (accepted because it does not exceed the module's own version). Code that must run correctly on both levels should avoid depending on either branch of a gated behavior -- for example, load a field under its original name and rename it in application code instead of relying on `LoadField(alias=...)`.
+
 ## What's Next
 
 For more details on the Search module, see the [Valkey Search topic](https://valkey.io/topics/search/).
