@@ -8,16 +8,13 @@ import { Aside } from '@astrojs/starlight/components';
 
 GLIDE has a native component built as a Rust-based library, which links against the system `glibc`. As a result, GLIDE requires a minimum `glibc` version and is not compatible with older `glibc`-based distributions.
 
-The Node.js client requires **`glibc` 2.28 or higher**. The Python, Java, and Go clients require **`glibc` 2.17 or higher**. Amazon Linux 2 (`glibc` 2.26) is therefore not supported for the Node.js client — it is the previous generation of what [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) runs on (node 18, py \<=11, java \<= 17). This does not affect MUSL-based distros, which are not based on `glibc`.
+The Node.js client requires **`glibc` 2.28 or higher**. The Python, Java, Go, C#, and Ruby clients require **`glibc` 2.17 or higher**. Amazon Linux 2 (`glibc` 2.26) is therefore not supported for the Node.js client — it is the previous generation of what [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) runs on (node 18, py \<=11, java \<= 17). This does not affect MUSL-based distros, which are not based on `glibc`.
 
 For every incompatible Linux distribution listed below, there is a newer stable version available, and we recommend using it.
 
 | Incompatible Distro Version | Compatible Successor Version |
 |-----------------------------|------------------------------|
-| Debian 11                   | Debian 12 / 13               |
-| Ubuntu 20.04 LTS            | Ubuntu 22.04 LTS / 24.04 LTS |
-| Linux Mint 20               | Linux Mint 21 / 22           |
-| Pop!\_OS 20.04 LTS           | Pop!\_OS 22.04 LTS            |
+| Ubuntu 18.04 LTS            | Ubuntu 22.04 LTS / 24.04 LTS |
 | Amazon Linux 2              | Amazon Linux 2023            |
 
 When running on an incompatible system, the client fails to load with an error such as:
@@ -26,4 +23,4 @@ When running on an incompatible system, the client fails to load with an error s
 /lib64/libc.so.6: version `GLIBC_2.28' not found
 ```
 
-You can check the `glibc` version on your system by running `ldd --version`. For the Node.js client, any `glibc` below `2.28` (for example `2.26` or `2.27`) is not supported; for the Python, Java, and Go clients, any `glibc` below `2.17` is not supported. Progress on broader `glibc` compatibility is tracked in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).
+You can check the `glibc` version on your system by running `ldd --version`. For the Node.js client, any `glibc` below `2.28` (for example `2.26` or `2.27`) is not supported; for the Python, Java, Go, C#, and Ruby clients, any `glibc` below `2.17` is not supported. Progress on broader `glibc` compatibility is tracked in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).
