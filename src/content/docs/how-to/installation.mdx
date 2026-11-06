@@ -94,13 +94,16 @@ The release of Valkey GLIDE was tested on the following platforms:
   The Node.js client requires `glibc` 2.28 or higher. Check your version with `ldd --version`. See [Known Issues](/reference/known-issues) for supported distributions and the requirements for other clients.
 </details>
 
-#### Alpine Linux / MUSL
+### Alpine Linux
 
-The Python and C# clients do not support Alpine Linux / MUSL. These clients need extra setup on MUSL:
+Alpine Linux defaults to using MUSL libc. Valkey GLIDE currently supports it as following:
 
 * **Java:** use a `linux_musl-x86_64` or `linux_musl-aarch_64` classifier, or the uber jar.
 * **Go:** build with `-tags=musl` (for example, `export GOFLAGS=-tags=musl`).
 * **PHP:** on Alpine 3.19+, install the build dependencies listed in the [PHP client README](https://github.com/valkey-io/valkey-glide-php#readme).
+* **Ruby & Node.js:** Work out of the box.
+
+Python and C# clients currently do not support Alpine Linux or distro which uses MUSL.
 
 ### MacOS
 
