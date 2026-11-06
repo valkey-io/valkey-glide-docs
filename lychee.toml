@@ -45,4 +45,7 @@ exclude = [
     'https://valkey\.io/docs/latest/commands/sinter/',
     'https://valkey\.io/docs/latest/commands/function-dump/',
     'https://valkey\.io/docs/latest/commands/function-restore/',
+
+    # TODO #374: Remove once Valkey GLIDE 2.6 is published.
+    'https://github\.com/valkey-io/valkey-glide-csharp/releases/tag/v1\.2\.0',
 ]
