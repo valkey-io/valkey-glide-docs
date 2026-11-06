@@ -48,7 +48,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
             
             # Get the value
             value = await client.get("user:1000")
-            print(f"✓ Retrieved value: {value}")
+            print(f"✓ Retrieved value: {value.decode()}")
 
         finally:
             await client.close()
@@ -229,7 +229,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
 
     # Get multiple keys at once
     values = await client.mget(["user:1001", "user:1002", "user:1003"])
-    print(f"✓ Retrieved values: {values}")
+    print(f"✓ Retrieved values: {[value.decode() for value in values]}")
     ```
   </ClientTab>
 

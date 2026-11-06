@@ -72,21 +72,11 @@ The following are the configuration references for each Glide clients:
 
   <ClientTab slot="go">
     ```go
-    package example
-
-    import (
-        "time"
-
-        "github.com/valkey-io/valkey-glide/go/v2/config"
-    )
-
-    func connectionConfig() *config.ClientConfiguration {
-        return config.NewClientConfiguration().
-            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6380}).
-            WithUseTLS(false).
-            WithRequestTimeout(time.Second).
-            WithClientName("go_app")
-    }
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+        WithUseTLS(false).
+        WithRequestTimeout(time.Second).
+        WithClientName("go_app")
     ```
   </ClientTab>
 

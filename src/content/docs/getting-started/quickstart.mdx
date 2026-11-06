@@ -490,6 +490,7 @@ These options, and other interfaces, stay consistent between languages.
         fmt.Println("There was an error: ", err)
         return
     }
+    defer client.Close()
     ```
   </ClientTab>
 
