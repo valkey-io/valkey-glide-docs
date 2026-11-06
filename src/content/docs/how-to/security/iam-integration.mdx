@@ -348,6 +348,24 @@ Custom IAM credential providers are not supported by client pools. Pool creation
     }
     ```
   </ClientTab>
+
+  <ClientTab slot="csharp">
+    :::note[Not currently supported]
+    The C# client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="php">
+    :::note[Not currently supported]
+    The PHP client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    :::note[Not currently supported]
+    The Ruby client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
 </ClientTabs>
 
 ## On-Demand Refresh
@@ -403,6 +421,13 @@ A successful refresh returns `"OK"` (in C#, `RefreshIamTokenAsync` completes wit
     ```csharp
     // Pre-warm the token cache before a maintenance window
     await client.RefreshIamTokenAsync();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="php">
+    ```php
+    // Pre-warm the token cache before a maintenance window
+    $client->refreshIamToken();
     ```
   </ClientTab>
 
