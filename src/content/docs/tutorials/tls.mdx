@@ -157,7 +157,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
 
   4. **Configure the main client**
 
-     Finally, create your main `GlideClientConfiguration`. This time, you must provide **both** `use_tls=True` and your new `advanced_configuration`.
+     Finally, create your main `GlideClientConfiguration`. This time, you must provide **both** `use_tls=True` and your new `advanced_config`.
 
      ```python
      addresses = [NodeAddress(host="your-self-signed-server.example.com", port=6379)]
@@ -165,7 +165,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
      client_config = GlideClientConfiguration(
          addresses,
          use_tls=True,  # Still required!
-         advanced_configuration=advanced_config
+         advanced_config=advanced_config
      )
      ```
 </Steps>
@@ -212,9 +212,10 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
       client_config = GlideClientConfiguration(
           addresses,
           use_tls=True,  # Don't forget this!
-          advanced_configuration=advanced_config
+          advanced_config=advanced_config
       )
 
+      client = None
       try:
           # 5. Create the client
           client = await GlideClient.create(client_config)
@@ -225,7 +226,7 @@ This is handled by configuring the `TlsAdvancedConfiguration` and `AdvancedGlide
       except Exception as e:
           print(f"Failed to connect with custom cert: {e}")
       finally:
-          if 'client' in locals() and client.is_connected():
+          if client is not None:
               await client.close()
 
   if __name__ == "__main__":

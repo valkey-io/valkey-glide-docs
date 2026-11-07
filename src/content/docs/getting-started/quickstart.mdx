@@ -204,25 +204,30 @@ For testing against a live instance, update the `GlideClient` configurations.
   <ClientTab slot="python">
     ```python
     import asyncio
-    from glide import GlideClient, NodeAddress
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
     async def main():
         # Create client configuration
-        client = GlideClient([NodeAddress("localhost", 6379)])
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = None
         
         try:
+            client = await GlideClient.create(config)
+
             # Test the connection
             response = await client.ping()
 
             # Valkey responds with PONG
-            print(f"Connected! Server responded: {response}")
+            print(f"Connected! Server responded: {response.decode()}")
             
         except Exception as e:
             print(f"Connection failed: {e}")
         
         finally:
-            # Always close the client
-            await client.close()
+            if client is not None:
+                await client.close()
 
     # Run the async function
     if __name__ == "__main__":
@@ -266,12 +271,14 @@ For testing against a live instance, update the `GlideClient` configurations.
     const { GlideClient } = require('@valkey/valkey-glide');
 
     async function main() {
-        // Create client configuration
-        const client = GlideClient.createClient({
-            addresses: [{ host: 'localhost', port: 6379 }]
-        });
+        let client;
         
         try {
+            // Create client configuration
+            client = await GlideClient.createClient({
+                addresses: [{ host: 'localhost', port: 6379 }]
+            });
+
             // Test the connection
             const response = await client.ping();
 
@@ -281,8 +288,9 @@ For testing against a live instance, update the `GlideClient` configurations.
         } catch (error) {
             console.error(`Connection failed: ${error.message}`);
         } finally {
-            // Always close the client
-            client.close();
+            if (client) {
+                client.close();
+            }
         }
     }
 
@@ -305,14 +313,15 @@ For testing against a live instance, update the `GlideClient` configurations.
         host := "localhost"
         port := 6379
 
-        config := config.NewClientConfiguration().
+        cfg := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: host, Port: port})
 
-        client, err := glide.NewClient(config)
+        client, err := glide.NewClient(cfg)
         if err != nil {
             fmt.Println("There was an error: ", err)
             return
         }
+        defer client.Close()
 
         res, err := client.Ping(context.Background())
         if err != nil {
@@ -321,7 +330,6 @@ For testing against a live instance, update the `GlideClient` configurations.
         }
         // Valkey responds with PONG
         fmt.Printf("Connected! Server responded: %s\n", res)
-        client.Close()
     }
     ```
   </ClientTab>
@@ -362,10 +370,10 @@ For testing against a live instance, update the `GlideClient` configurations.
         .WithAddress("localhost", 6379)
         .Build();
 
-    await using var client = await GlideClient.CreateClient(config);
-
     try
     {
+        await using var client = await GlideClient.CreateClient(config);
+
         // Test the connection
         var result = await client.PingAsync();
 
@@ -383,10 +391,10 @@ For testing against a live instance, update the `GlideClient` configurations.
     ```ruby
     require "valkey"
 
-    # Create the client
-    client = Valkey.new(host: "localhost", port: 6379)
-
     begin
+      # Create the client
+      client = Valkey.new(host: "localhost", port: 6379)
+
       # Test the connection
       response = client.ping
 
@@ -395,8 +403,7 @@ For testing against a live instance, update the `GlideClient` configurations.
     rescue StandardError => e
       puts "Connection failed: #{e.message}"
     ensure
-      # Always close the client
-      client.close
+      client&.close
     end
     ```
   </ClientTab>
@@ -423,13 +430,11 @@ These options, and other interfaces, stay consistent between languages.
     # Setting up connection configuration
     config = GlideClientConfiguration(
         addresses=[NodeAddress("localhost", 6379)],
-        # Connection timeout (milliseconds)
+        # Request timeout (milliseconds)
         request_timeout=5000,
-        # Connection pool size
-        connection_backoff_max_delay=1000,
         # TLS configuration (if needed)
         use_tls=False,
-        # Database selection (0-15 for Redis/Valkey)
+        # Database selection
         database_id=0
     )
     ```
@@ -443,10 +448,10 @@ These options, and other interfaces, stay consistent between languages.
             .host("localhost")
             .port(6379)
             .build())
-        // Connection timeout
-        .requestTimeout(Duration.ofSeconds(5))
+        // Request timeout (milliseconds)
+        .requestTimeout(5000)
         // TLS configuration (if needed)
-        .useTls(false)
+        .useTLS(false)
         // Database selection
         .databaseId(0)
         .build();
@@ -458,11 +463,11 @@ These options, and other interfaces, stay consistent between languages.
     // Setting up connection configuration
     const configs = {
         addresses: [{ host: 'localhost', port: 6379 }],
-        // Connection timeout (milliseconds)
+        // Request timeout (milliseconds)
         requestTimeout: 5000,
         // TLS configuration (if needed)
-        useTls: false,
-        // Database selection (0-15 for Redis/Valkey)
+        useTLS: false,
+        // Database selection
         databaseId: 0
     }
     ```
@@ -474,17 +479,18 @@ These options, and other interfaces, stay consistent between languages.
     host := "localhost"
     port := 6379
 
-    config := config.NewClientConfiguration().
+    cfg := config.NewClientConfiguration().
         WithAddress(&config.NodeAddress{Host: host, Port: port}).
         WithRequestTimeout(5 * time.Second).
         WithUseTLS(false).
         WithDatabaseId(0)
 
-    client, err := glide.NewClient(config)
+    client, err := glide.NewClient(cfg)
     if err != nil {
         fmt.Println("There was an error: ", err)
         return
     }
+    defer client.Close()
     ```
   </ClientTab>
 
@@ -494,25 +500,12 @@ These options, and other interfaces, stay consistent between languages.
     $client = new ValkeyGlide();
     $client->connect(
         addresses: [['host' => 'localhost', 'port' => 6379]],
-        // Connection timeout (milliseconds)
+        // Request timeout (milliseconds)
         request_timeout: 5000,
         // TLS configuration (if needed)
         use_tls: false,
-        // Database selection (0-15 for Redis/Valkey)
-        database_id: 0,
-        // Client name for identification
-        client_name: 'my-app-client',
-        // Reconnection strategy
-        reconnect_strategy: [
-            'num_of_retries' => 3,
-            'factor' => 2.0,
-            'exponent_base' => 2
-        ],
-        // Advanced configuration
-        advanced_config: [
-            'connection_timeout' => 5000,
-            'socket_timeout' => 3000
-        ]
+        // Database selection
+        database_id: 0
     );
     ```
   </ClientTab>
