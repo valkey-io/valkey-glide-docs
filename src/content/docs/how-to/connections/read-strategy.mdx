@@ -660,6 +660,9 @@ AZ Affinity All Nodes is included in Java and Python in 2.5.3, Go and Node.js in
 
   <ClientTab slot="csharp">
     ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("address.example.com", 6379)
         .WithReadFrom(new ReadFrom(ReadFromStrategy.AzAffinityAllNodes, "us-east-1a"))
