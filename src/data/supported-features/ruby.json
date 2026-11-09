@@ -25,8 +25,8 @@
     {
       "feature": "pubsub",
       "hover": {
-        "text": "since 1.1.0",
-        "href": "https://github.com/valkey-io/valkey-glide-ruby/releases/tag/v1.1.0"
+        "text": "unreleased; merged after 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/pull/304"
       }
     },
     {
@@ -87,8 +87,8 @@
     {
       "feature": "search",
       "hover": {
-        "text": "since 1.1.0",
-        "href": "https://github.com/valkey-io/valkey-glide-ruby/releases/tag/v1.1.0"
+        "text": "unreleased; merged after 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/pull/295"
       }
     }
   ]
