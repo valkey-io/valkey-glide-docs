@@ -375,7 +375,10 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     # FT.CREATE a Hash index with a vector field
     client.ft_create(
       index,
-      [Valkey::Search::VectorField.hnsw("vec", dim: 2, metric: :l2, as: "VEC")],
+      [
+        Valkey::Search::VectorField.hnsw("vec", dim: 2, metric: :l2, as: "VEC"),
+        Valkey::Search::TagField.new("category")
+      ],
       on: :hash,
       prefixes: [prefix]
     )
@@ -383,8 +386,8 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     # Insert hash data with vector fields (2-dimensional float32 vectors)
     vec0 = [0.0, 0.0].pack("e*")
     vec1 = [0.0, -1.0].pack("e*")
-    client.hset("#{prefix}0", "vec", vec0)
-    client.hset("#{prefix}1", "vec", vec1)
+    client.hset("#{prefix}0", { "vec" => vec0, "category" => "demo" })
+    client.hset("#{prefix}1", { "vec" => vec1, "category" => "demo" })
     sleep 1 # let server digest the data and update index
 
     # FT.SEARCH
@@ -396,7 +399,28 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     )
     # result.total_results == 2
     # result.documents contains "{hash}:0" and "{hash}:1" with their vector values
+
+    # FT.AGGREGATE with structured reducer and pipeline builders
+    aggregate = client.ft_aggregate(
+      index,
+      "@category:{demo}",
+      clauses: [
+        Valkey::Search::GroupBy.new(
+          ["@category"],
+          reducers: [Valkey::Search::Reducer.count(as: "count")]
+        ),
+        Valkey::Search::SortBy.new("@count", :desc)
+      ]
+    )
+
+    # FT.INFO with Valkey cluster options
+    info = client.ft_info(
+      index,
+      Valkey::Search::InfoOptions.new(scope: :cluster)
+    )
     ```
+
+    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, and `FT.INFO`. Use `client.call(...)` for raw Search commands without a builder. `ft_search` and `ft_aggregate` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries.
   </ClientTab>
 </ClientTabs>
 

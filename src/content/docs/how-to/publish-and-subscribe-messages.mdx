@@ -304,7 +304,23 @@ No special configuration is needed at client creation time — you can subscribe
     // $client->punsubscribe();     // all patterns
 
     $client->close();
+
+    // Sharded Pub/Sub requires a cluster client and Valkey 7.0 or later.
+    $cluster = new ValkeyGlideCluster(
+        addresses: [['host' => 'localhost', 'port' => 7001]]
+    );
+
+    // Run the publisher from another process or client.
+    $cluster->spublish('{news}.1', 'hello');
+
+    // Channels in one call must share a hash slot.
+    $cluster->ssubscribe(['{news}.1', '{news}.2'], function ($client, $channel, $message) {
+        echo "Received '$message' on '$channel'\n";
+        $client->sunsubscribe([$channel]);
+    });
     ```
+
+    When `OPT_PREFIX` is set, PHP prefixes shard channels before sending them. The callback receives the prefixed channel name, but `sunsubscribe()` accepts the original unprefixed name passed to `ssubscribe()`.
   </ClientTab>
 
   <ClientTab slot="csharp">
@@ -1118,6 +1134,14 @@ Prior to GLIDE 2.3, runtime unsubscribing is not available. Subscriptions are re
 
         // Or unsubscribe from all patterns at once
         // $client->punsubscribe();
+    });
+
+    $cluster->ssubscribe(['{news}.1', '{news}.2'], function ($client, $channel, $message) {
+        // Unsubscribe from one shard channel.
+        $client->sunsubscribe([$channel]);
+
+        // Or unsubscribe from all shard channels.
+        // $client->sunsubscribe();
     });
     ```
   </ClientTab>

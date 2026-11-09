@@ -16,6 +16,30 @@ For most workloads, **use a single GLIDE client instance for the best performanc
 GLIDE leverages Valkey's [pipelining](https://valkey.io/topics/pipelining/) capabilities to efficiently handle large amounts of requests, even from multiple threads, using a single connection.
 For more on GLIDE's multiplex architecture, take a look at [Asynchronous Execution](/concepts/architecture/async-execution/).
 
+### PHP persistent clients
+
+PHP normally closes a client at the end of each request. In PHP-FPM and other long-lived workers, use `persistent_id`, `pconnect()`, or the cluster constructor's `persistent: true` option to reuse a client in later requests handled by the same process.
+
+```php
+$client = new ValkeyGlide();
+$client->connect(
+    addresses: [['host' => 'localhost', 'port' => 6379]],
+    persistent_id: 'orders'
+);
+
+$phpredisStyle = new ValkeyGlide();
+$phpredisStyle->pconnect('localhost', 6379);
+
+$cluster = new ValkeyGlideCluster(
+    addresses: [['host' => 'localhost', 'port' => 7001]],
+    persistent: true
+);
+```
+
+A client is reused only when its configuration matches and no other object is using it. GLIDE clears an active `WATCH` and restores the configured database before keeping the client. It discards the client if cleanup fails or if the request changed connection state through operations such as `RESET`, `CLIENT SETNAME`, subscriptions, password rotation, or raw `AUTH`, `HELLO`, `MULTI`, or `WATCH`. Persistent clients are not reused across `fork()`, and custom address resolvers disable persistence.
+
+`valkey_glide.max_persistent_clients` limits retained clients per process or per thread in a ZTS build. The default is 32; setting it to 0 disables persistent clients.
+
 ## When to Use Multiple Clients
 
 Due to the multiplex design, a single connection becomes a bottleneck when executing commands that can block the connection. Currently, it is recommended
@@ -41,6 +65,12 @@ Using a blocking command will prevent all subsequent commands on the pipeline fr
 High-throughput Pub/Sub workloads can decrease overall throughput on a shared connection. Consider using a dedicated client for Pub/Sub for the best performance.
 
 For more details on configuring Pub/Sub with GLIDE, see [Pub/Sub Messaging](/how-to/publish-and-subscribe-messages/).
+
+### Ruby processes that fork
+
+Do not use a Ruby `Valkey` instance inherited from a parent process. Commands on an inherited client raise `Valkey::InheritedError`; create a new client in each child, such as in a Puma or Unicorn worker boot hook.
+
+Until [valkey-glide#6912](https://github.com/valkey-io/valkey-glide/issues/6912) is resolved, the parent process must not issue a GLIDE command before forking. A client created in the child can still terminate the child with a native signal if the parent previously issued a command.
 
 ### WATCH/UNWATCH Commands
 

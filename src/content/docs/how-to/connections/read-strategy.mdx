@@ -584,7 +584,7 @@ Compared with AZ Affinity Replicas and Primary in cluster mode:
 Standalone clients use the same local-first, all-node rotation. However, including the primary in the final fallback pool is already the behavior of standalone AZ Affinity Replicas and Primary. See [command routing](/concepts/client-features/command-routing/#read-strategy) for the comparison.
 
 :::note[Release availability]
-AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3**. It is not available in their 2.5.0–2.5.2 releases.
+AZ Affinity All Nodes is included in Java and Python in 2.5.3, Go and Node.js in 2.6.0, C# in 1.2.0, PHP after 1.2.0, and Ruby in 1.1.0.
 :::
 
 <ClientTabs>
@@ -633,32 +633,84 @@ AZ Affinity All Nodes is included in Java and Python (async and sync) in **2.5.3
   </ClientTab>
 
   <ClientTab slot="node">
-    :::note[Release availability]
-    AZ Affinity All Nodes is not included in the Node 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#7104](https://github.com/valkey-io/valkey-glide/pull/7104).
-    :::
+    ```typescript
+    import { GlideClusterClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClusterClient.createClient({
+        addresses: [{ host: "address.example.com", port: 6379 }],
+        readFrom: "AZAffinityAllNodes",
+        clientAz: "us-east-1a",
+    });
+
+    await client.get("key1");
+    ```
   </ClientTab>
 
   <ClientTab slot="go">
-    :::note[Release availability]
-    AZ Affinity All Nodes is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6927](https://github.com/valkey-io/valkey-glide/pull/6927).
-    :::
+    ```go
+    myConfig := config.NewClusterClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+        WithReadFrom(config.AzAffinityAllNodes).
+        WithClientAZ("us-east-1a")
+
+    client, _ := glide.NewClusterClient(myConfig)
+    client.Get(context.Background(), "key1")
+    ```
   </ClientTab>
 
   <ClientTab slot="csharp">
-    :::note[Coming soon]
-    The AZ Affinity All Nodes read strategy is not yet available in the C# client.
-    :::
+    ```csharp
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithReadFrom(new ReadFrom(ReadFromStrategy.AzAffinityAllNodes, "us-east-1a"))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    await client.GetAsync("key1");
+    ```
   </ClientTab>
 
   <ClientTab slot="php">
-    :::note[Coming soon]
-    The AZ Affinity All Nodes read strategy is not yet available in the PHP client.
-    :::
+    ```php
+    $client = new ValkeyGlideCluster(
+        addresses: [['host' => 'address.example.com', 'port' => 6379]],
+        read_from: ValkeyGlide::READ_FROM_AZ_AFFINITY_ALL_NODES,
+        client_az: 'us-east-1a'
+    );
+
+    $client->get('key1');
+    ```
   </ClientTab>
 
   <ClientTab slot="ruby">
-    :::note[Coming soon]
-    The AZ Affinity All Nodes read strategy is not yet available in the Ruby client.
-    :::
+    ```ruby
+    client = Valkey.new(
+      nodes: [{ host: "address.example.com", port: 6379 }],
+      cluster_mode: true,
+      read_from: Valkey::ReadFrom::AZ_AFFINITY_ALL_NODES,
+      client_az: "us-east-1a"
+    )
+
+    client.get("key1")
+    ```
   </ClientTab>
 </ClientTabs>
+
+### PHPRedis cluster failover option
+
+`ValkeyGlideCluster` uses primary reads by default for PHPRedis-style construction. `OPT_SLAVE_FAILOVER` maps PHPRedis failover modes to GLIDE read strategies:
+
+| PHP option | GLIDE read strategy |
+| --- | --- |
+| `FAILOVER_NONE` or `FAILOVER_ERROR` | Primary |
+| `FAILOVER_DISTRIBUTE` | All Nodes |
+| `FAILOVER_DISTRIBUTE_SLAVES` | Prefer Replica |
+
+```php
+$cluster->setOption(
+    ValkeyGlideCluster::OPT_SLAVE_FAILOVER,
+    ValkeyGlideCluster::FAILOVER_DISTRIBUTE_SLAVES
+);
+```
+
+Changing this option recreates the underlying client. It returns `false` while keys are watched, inside `MULTI` or a pipeline, while subscribed, in a forked child, or for a persistent client. Call `getLastError()` for the reason.

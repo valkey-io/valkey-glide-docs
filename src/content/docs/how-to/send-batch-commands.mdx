@@ -480,14 +480,31 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
     client = Valkey.new(nodes: nodes, cluster_mode: true)
 
     # Create an atomic transaction (all keys map to same slot)
+    visits = nil
     results = client.multi do |tx|
       tx.set("user:100:visits", "1")
-      tx.incrby("user:100:visits", 5)
+      visits = tx.incrby("user:100:visits", 5)
       tx.get("user:100:visits")
     end
 
     puts "Atomic Cluster Transaction: #{results.inspect}"
     # Atomic Cluster Transaction: ["OK", 6, "6"]
+    puts visits.value # 6
+    ```
+
+    Commands queued in `multi` and `pipelined` blocks return `Valkey::Future` placeholders. Read `future.value` after the block finishes to obtain that command's reply. Reading it inside the block raises `Valkey::FutureNotReady`; an aborted batch or `WATCH` conflict raises `Valkey::FutureAborted`.
+
+    Runtime command errors raise by default. Pass `exception: false` to keep successful replies and return a `Valkey::CommandError` in the failed command's result slot. Queue-time transaction errors still raise `Valkey::ExecAbortError`.
+
+    ```ruby
+    results = client.multi(exception: false) do |tx|
+      tx.set("counter", "not-a-number")
+      tx.incr("counter")
+      tx.set("other", "saved")
+    end
+
+    results[1].is_a?(Valkey::CommandError) # true
+    client.get("other")                    # "saved"
     ```
   </ClientTab>
 </ClientTabs>
@@ -693,15 +710,17 @@ Pipelining is a group of commands sent in a single request that does not guarant
     client = Valkey.new(host: "localhost", port: 6379)
 
     # Create non-atomic pipeline using pipelined
+    first_value = nil
     results = client.pipelined do |pipe|
       pipe.set("temp:key1", "value1")
       pipe.set("temp:key2", "value2")
-      pipe.get("temp:key1")
+      first_value = pipe.get("temp:key1")
       pipe.get("temp:key2")
     end
 
     puts "Pipeline Results: #{results.inspect}"
     # Pipeline Results: ["OK", "OK", "value1", "value2"]
+    puts first_value.value # value1
     ```
   </ClientTab>
 </ClientTabs>

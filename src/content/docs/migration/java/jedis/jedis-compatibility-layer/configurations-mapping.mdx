@@ -25,7 +25,7 @@ The following Jedis configuration parameters are:
 * `redisProtocol` → `BaseClientConfiguration.protocol`
 * `connectionTimeoutMillis` → `AdvancedBaseClientConfiguration.connectionTimeout`
 * `socketTimeoutMillis` → `BaseClientConfiguration.requestTimeout`
-* `database` → Handled via SELECT command after connection
+* `database` → `BaseClientConfiguration.databaseId` for standalone clients. Cluster configurations reject a non-zero database because Valkey Cluster supports only database 0.
 
 ### Partially Mapped Parameters
 
@@ -42,4 +42,4 @@ The following Jedis configuration parameters are:
 1. **GLIDE Architecture Shift**: From application-managed SSL to system-managed SSL with secure defaults
 2. **Certificate Management**: Custom keystores/truststores require migration to system certificate store
 3. **Protocol Selection**: GLIDE auto-selects TLS 1.2+ and secure cipher suites
-4. **Client Authentication**: Client certificates not supported; use username/password authentication
+4. **Client Authentication**: Client certificates require GLIDE's advanced TLS configuration rather than Jedis socket factories

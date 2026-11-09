@@ -244,6 +244,8 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
 ## Configuring Reconnect Strategy
 
+Reconnect delays use exponential backoff with optional jitter. `numOfRetries`, `factor`, and `exponentBase` must be non-negative 32-bit integers, and `jitterPercent` must be between 0 and 100. Invalid values fail client creation instead of being clamped. A factor or exponent base of zero uses the core default, while zero retries disables the finite retry phase. Jitter randomizes each calculated delay by up to the configured percentage, which helps prevent many clients from reconnecting at the same instant.
+
 <ClientTabs>
   <ClientTab slot="python">
     ```python
@@ -257,7 +259,12 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
     addresses = [NodeAddress(host="address.example.com", port=6379)]
     client_config = GlideClusterClientConfiguration(
         addresses,
-        reconnect_strategy=BackoffStrategy(num_of_retries=3, factor=2, exponent_base=2)
+        reconnect_strategy=BackoffStrategy(
+            num_of_retries=3,
+            factor=2,
+            exponent_base=2,
+            jitter_percent=20,
+        )
     )
 
     client = await GlideClusterClient.create(client_config)
@@ -279,6 +286,7 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
             .numOfRetries(3)
             .factor(2)
             .exponentBase(2)
+            .jitterPercent(20)
             .build())
         .build();
 
@@ -302,7 +310,8 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         connectionBackoff: {
             numberOfRetries: 3,
             factor: 2,
-            exponentBase: 2
+            exponentBase: 2,
+            jitterPercent: 20
         }
     });
     ```
@@ -318,7 +327,7 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
     func ConnectClusterWithReconnectStrategy() (*glide.ClusterClient, error) {
         myConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
-            WithReconnectStrategy(config.NewBackoffStrategy(3, 2, 2))
+            WithReconnectStrategy(config.NewBackoffStrategy(3, 2, 2).WithJitterPercent(20))
 
         return glide.NewClusterClient(myConfig)
     }

@@ -987,8 +987,7 @@ You can provide custom root certificates for TLS connections. This is useful whe
 
 ### Mutual TLS (mTLS)
 
-Mutual TLS has the client present its own certificate and private key to the server, so the server can authenticate the client in addition to the client authenticating the server.
-GLIDE supports three mTLS modes: in-memory PEM bytes (loaded once), path-based with automatic reload at the core's default cadence, and path-based with a custom reload interval.
+Mutual TLS has the client present its own certificate and private key to the server, so the server can authenticate the client in addition to the client authenticating the server. GLIDE supports in-memory PEM bytes, path-based PEM with automatic reload, and, in Java, a static client identity loaded from a JKS or PKCS12 keystore.
 
 :::caution
 The client private key must never be committed to a repository or logged.
@@ -1011,6 +1010,29 @@ Supplying both is rejected at configuration time in every SDK.
 
 A custom reload interval must be a positive whole number of seconds no greater than 4,294,967,295 (the maximum value of an unsigned 32-bit integer, roughly 136 years).
 Sub-second, zero, negative, and oversized values are rejected at configuration time.
+
+#### Java KeyStore client identity (static)
+
+Java can load the client private key and certificate chain directly from a JKS or PKCS12 keystore. The keystore must contain exactly one private-key entry with a certificate chain. This mode loads the identity once and does not reload it; use path-based PEM when automatic certificate rotation is required.
+
+```java
+import glide.api.models.configuration.TlsAdvancedConfiguration;
+
+char[] password = System.getenv("GLIDE_KEYSTORE_PASSWORD").toCharArray();
+
+TlsAdvancedConfiguration trustStore =
+    TlsAdvancedConfiguration.fromKeyStore(
+        "/etc/glide/truststore.p12", password, "PKCS12");
+
+TlsAdvancedConfiguration tlsConfig =
+    TlsAdvancedConfiguration.builder()
+        .rootCertificates(trustStore.getRootCertificates())
+        .useMutualTlsFromKeyStore(
+            "/etc/glide/client-identity.p12", password, "PKCS12")
+        .build();
+```
+
+Pass `tlsConfig` through the client's advanced configuration and enable TLS on the top-level configuration. `fromKeyStore()` loads trusted roots; `useMutualTlsFromKeyStore()` loads the client identity.
 
 #### In-memory PEM (static)
 

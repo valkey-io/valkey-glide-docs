@@ -27,7 +27,8 @@ GLIDE does not export data directly to third-party services—instead, it sends 
     OpenTelemetry.init(OpenTelemetryConfig(
         traces=OpenTelemetryTracesConfig(
             endpoint="http://localhost:4318/v1/traces",
-            sample_percentage=10  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
+            sample_percentage=10,  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
+            enable_trace_context_propagation=True,  # Optional, defaults to False.
         ),
         metrics=OpenTelemetryMetricsConfig(
             endpoint="http://localhost:4318/v1/metrics"
@@ -197,6 +198,7 @@ Both `traces` and `metrics` are optional—but **at least one must be provided**
 | --------------------------- | ------- | ------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **traces.endpoint**         | String  | Yes (if traces enabled)  | -       | The trace collector endpoint URL. Supports `http://`, `https://`, `grpc://`, or `file://` protocols.                                                                           |
 | **traces.samplePercentage** | Integer | No                       | `1`     | Percentage (0–100) of commands to sample for tracing. For production, a low sampling rate (1–5%) is recommended to balance performance and insight. Can be changed at runtime. |
+| **traces.enableTraceContextPropagation** | Boolean | No | `false` | Python only. Parents sampled command, batch, and script spans to the active OpenTelemetry span. Requires the optional `opentelemetry-api` package. |
 | **metrics.endpoint**        | String  | Yes (if metrics enabled) | -       | The metrics collector endpoint URL. Supports `http://`, `https://`, `grpc://`, or `file://` protocols.                                                                         |
 | **flushIntervalMs**         | Integer | No                       | `5000`  | Time in milliseconds between flushes to the collector. Must be a positive integer.                                                                                             |
 
@@ -236,15 +238,28 @@ If using `file://` as the endpoint:
 * **Minimize sampling in production** — Use a low sample percentage (1–5%) to limit the volume of potentially sensitive operational data collected.
 * **Review exported data** — GLIDE traces include command names, latency measurements, and error status. While GLIDE does not include command arguments or key values in trace spans, always review what your collector pipeline forwards to third-party backends.
 
-## Go: Trace Context Propagation
+## Trace Context Propagation
+
+### Python
+
+Set `enable_trace_context_propagation=True` on `OpenTelemetryTracesConfig` to attach sampled GLIDE command, batch, and script spans to the active application span. Propagation is disabled by default. If `opentelemetry-api` is not installed or the active context cannot be read, commands continue normally and GLIDE emits an independent root span.
+
+```python
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
+with tracer.start_as_current_span("process-order"):
+    await client.set("order:42", "processing")
+```
+
+GLIDE's sampling setting still applies. An active application span does not force GLIDE to sample a command.
+
+### Go
 
 GLIDE can attach its command spans as children of your application's existing OpenTelemetry trace, giving end-to-end visibility from your application code through to Valkey operations—without GLIDE depending on `go.opentelemetry.io/otel`.
 
 This is achieved by registering a **span context extractor** function that bridges your application's trace context into GLIDE's internal tracing.
-
-:::note
-This feature is currently Go-only. Other language clients use their native OpenTelemetry SDKs for context propagation.
-:::
 
 ```go
 import (

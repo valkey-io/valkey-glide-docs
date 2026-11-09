@@ -66,6 +66,12 @@
       }
     },
     {
+      "feature": "mutual_tls",
+      "hover": {
+        "href": "https://github.com/valkey-io/valkey-glide-php/pull/321"
+      }
+    },
+    {
       "feature": "client_statistics",
       "hover": {
         "href": "https://github.com/valkey-io/valkey-glide-php/releases/tag/v1.1.0"
