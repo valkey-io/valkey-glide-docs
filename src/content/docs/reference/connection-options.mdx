@@ -45,9 +45,9 @@ The following are the configuration references for each Glide clients:
 
   <ClientTab slot="node">
     ```typescript
-    import { GlideClientOptions } from "@valkey/valkey-glide";
+    import { GlideClientConfiguration } from "@valkey/valkey-glide";
 
-    const config: GlideClientOptions = {
+    const config: GlideClientConfiguration = {
         addresses: [{ host: "localhost", port: 6379 }],
         useTLS: false,
         requestTimeout: 1000,
@@ -72,12 +72,10 @@ The following are the configuration references for each Glide clients:
 
   <ClientTab slot="go">
     ```go
-    import "github.com/valkey-io/valkey-glide/go/v2/config"
-
-    conf := config.NewClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6380}).
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
         WithUseTLS(false).
-        WithRequestTimeout(1000).
+        WithRequestTimeout(time.Second).
         WithClientName("go_app")
     ```
   </ClientTab>

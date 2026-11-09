@@ -40,7 +40,13 @@ Lazy connection can be configured through the client configuration object.
 
   <ClientTab slot="python">
     ```python
-    from glide import GlideClient, GlideClusterClient, NodeAddress
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        GlideClusterClient,
+        GlideClusterClientConfiguration,
+        NodeAddress
+    )
 
     # Standalone client with lazy connect
     standalone_config = GlideClientConfiguration(
@@ -101,35 +107,48 @@ Lazy connection can be configured through the client configuration object.
   <ClientTab slot="go">
     ```go
     import (
-        "github.com/valkey-io/valkey-glide/go/glide/api"
-        "github.com/valkey-io/valkey-glide/go/glide/config"
+        "context"
+        "time"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    // Standalone client with lazy connect
-    standaloneConfig := config.NewClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-        WithLazyConnect(true).
-        WithRequestTimeout(5000 * time.Millisecond)
+    func ConfigureLazyConnections() error {
+        // Standalone client with lazy connect
+        standaloneConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+            WithLazyConnect(true).
+            WithRequestTimeout(5000 * time.Millisecond)
 
-    standaloneClient, err := api.NewClient(standaloneConfig)
-    if err != nil {
-        // Handle error
+        standaloneClient, err := glide.NewClient(standaloneConfig)
+        if err != nil {
+            return err
+        }
+        defer standaloneClient.Close()
+
+        // Cluster client with lazy connect
+        clusterConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 7000}).
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 7001}).
+            WithLazyConnect(true).
+            WithRequestTimeout(5000 * time.Millisecond)
+
+        clusterClient, err := glide.NewClusterClient(clusterConfig)
+        if err != nil {
+            return err
+        }
+        defer clusterClient.Close()
+
+        // No connection has been established yet. These commands trigger the connections.
+        if _, err := standaloneClient.Ping(context.Background()); err != nil {
+            return err
+        }
+        if _, err := clusterClient.Ping(context.Background()); err != nil {
+            return err
+        }
+        return nil
     }
-
-    // Cluster client with lazy connect
-    clusterConfig := config.NewClusterClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 7000}).
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 7001}).
-        WithLazyConnect(true).
-        WithRequestTimeout(5000 * time.Millisecond)
-
-    clusterClient, err := api.NewClusterClient(clusterConfig)
-    if err != nil {
-        // Handle error
-    }
-
-    // No connection established yet - this will trigger the connection
-    result, err := standaloneClient.Ping()
     ```
   </ClientTab>
 

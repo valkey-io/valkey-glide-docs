@@ -71,16 +71,18 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
   <ClientTab slot="go">
     ```go
     import (
+        "time"
+
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectClusterWithTimeout() {
+    func ConnectClusterWithTimeout() (*glide.ClusterClient, error) {
         myConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
-            WithRequestTimeout(500)
+            WithRequestTimeout(500 * time.Millisecond)
 
-        client, err := glide.NewClusterClient(myConfig)
+        return glide.NewClusterClient(myConfig)
     }
     ```
   </ClientTab>
@@ -142,7 +144,7 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
     addresses = [NodeAddress(host="address.example.com", port=6379)]
     client_config = GlideClusterClientConfiguration(
         addresses,
-        advanced_configuration=AdvancedGlideClusterClientConfiguration(
+        advanced_config=AdvancedGlideClusterClientConfiguration(
             connection_timeout=5000
         )
     )
@@ -187,17 +189,19 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
   <ClientTab slot="go">
     ```go
     import (
+        "time"
+
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectClusterWithConnectionTimeout() {
+    func ConnectClusterWithConnectionTimeout() (*glide.ClusterClient, error) {
         myConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
             WithAdvancedConfiguration(config.NewAdvancedClusterClientConfiguration().
                 WithConnectionTimeout(5 * time.Second))
 
-        client, err := glide.NewClusterClient(myConfig)
+        return glide.NewClusterClient(myConfig)
     }
     ```
   </ClientTab>
@@ -295,8 +299,8 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
 
     const client = await GlideClusterClient.createClient({
         addresses: addresses,
-        reconnectStrategy: {
-            numOfRetries: 3,
+        connectionBackoff: {
+            numberOfRetries: 3,
             factor: 2,
             exponentBase: 2
         }
@@ -311,16 +315,12 @@ The connection timeout controls how long the client waits for a TCP/TLS connecti
         "github.com/valkey-io/valkey-glide/go/v2/config"
     )
 
-    func ConnectClusterWithReconnectStrategy() {
+    func ConnectClusterWithReconnectStrategy() (*glide.ClusterClient, error) {
         myConfig := config.NewClusterClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
-            WithReconnectStrategy(config.BackoffStrategy{
-                NumOfRetries: 3,
-                Factor:       2,
-                ExponentBase: 2,
-            })
+            WithReconnectStrategy(config.NewBackoffStrategy(3, 2, 2))
 
-        client, err := glide.NewClusterClient(myConfig)
+        return glide.NewClusterClient(myConfig)
     }
     ```
   </ClientTab>

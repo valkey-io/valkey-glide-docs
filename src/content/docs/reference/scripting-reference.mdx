@@ -1052,40 +1052,54 @@ When a client timeout occurs, the client stops waiting for a response, but the s
   <ClientTab slot="go">
     ```go
     import (
+        "context"
+        "fmt"
+        "strings"
+        "time"
+
         glide "github.com/valkey-io/valkey-glide/go/v2"
         "github.com/valkey-io/valkey-glide/go/v2/config"
         "github.com/valkey-io/valkey-glide/go/v2/options"
     )
 
-    // Configure client timeout for long-running scripts
-    myConfig := config.NewClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
-        WithRequestTimeout(30000)  // 30 seconds for long scripts (default is usually 5000ms)
+    func RunLongScript() error {
+        // Configure client timeout for long-running scripts
+        myConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379}).
+            WithRequestTimeout(30 * time.Second) // 30 seconds for long scripts
 
-    client, err := glide.NewClient(myConfig)
-
-    // Handle long-running scripts
-    longScript := options.NewScript(`
-        local start = redis.call('TIME')[1]
-        while redis.call('TIME')[1] - start < 25 do
-            redis.call('GET', 'dummy_key')  -- Read-only operation
-        end
-        return 'Done'
-    `)
-
-    result, err := client.InvokeScript(context.Background(), *longScript)
-    if err != nil {
-        errMsg := err.Error()
-        if strings.Contains(strings.ToLower(errMsg), "timeout") {
-            fmt.Println("Client timeout - script may still be running on server!")
-            fmt.Println("Consider increasing request_timeout in client configuration")
-        } else if strings.Contains(errMsg, "Script killed") {
-            fmt.Println("Script was killed by server (only possible for read-only scripts)")
-        } else {
-            fmt.Printf("Script error: %v\n", err)
+        client, err := glide.NewClient(myConfig)
+        if err != nil {
+            return err
         }
-    } else {
+        defer client.Close()
+
+        // Handle long-running scripts
+        longScript := options.NewScript(`
+            local start = redis.call('TIME')[1]
+            while redis.call('TIME')[1] - start < 25 do
+                redis.call('GET', 'dummy_key')  -- Read-only operation
+            end
+            return 'Done'
+        `)
+        defer longScript.Close()
+
+        result, err := client.InvokeScript(context.Background(), *longScript)
+        if err != nil {
+            errMsg := err.Error()
+            if strings.Contains(strings.ToLower(errMsg), "timeout") {
+                fmt.Println("Client timeout - script may still be running on server!")
+                fmt.Println("Consider increasing the client request timeout")
+            } else if strings.Contains(errMsg, "Script killed") {
+                fmt.Println("Script was killed by server (only possible for read-only scripts)")
+            } else {
+                fmt.Printf("Script error: %v\n", err)
+            }
+            return err
+        }
+
         fmt.Printf("Script completed: %v\n", result)
+        return nil
     }
     ```
   </ClientTab>

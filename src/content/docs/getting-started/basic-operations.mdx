@@ -33,10 +33,13 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
   <ClientTab slot="python">
     ```python
     import asyncio
-    from glide import GlideClient, NodeAddress
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
     async def string_operations():
-        client = GlideClient([NodeAddress("localhost", 6379)])
+        config = GlideClientConfiguration(
+            addresses=[NodeAddress("localhost", 6379)]
+        )
+        client = await GlideClient.create(config)
         
         try:
             # Set a key-value pair
@@ -45,7 +48,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
             
             # Get the value
             value = await client.get("user:1000")
-            print(f"✓ Retrieved value: {value}")
+            print(f"✓ Retrieved value: {value.decode()}")
 
         finally:
             await client.close()
@@ -90,7 +93,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     const { GlideClient } = require('@valkey/valkey-glide');
 
     async function stringOperations() {
-        const client = GlideClient.createClient({
+        const client = await GlideClient.createClient({
             addresses: [{ host: 'localhost', port: 6379 }]
         });
         
@@ -125,10 +128,10 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
     )
 
     func main() {
-        config := config.NewClientConfiguration().
+        cfg := config.NewClientConfiguration().
             WithAddress(&config.NodeAddress{Host: "localhost", Port: 6379})
 
-        client, err := glide.NewClient(config)
+        client, err := glide.NewClient(cfg)
         if err != nil {
             log.Fatalf("NewClient failed: %v", err)
         }
@@ -137,16 +140,18 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
         // Set a key-value pair
         _, err = client.Set(context.Background(), "user:1000", "john_doe")
         if err != nil {
-            log.Fatalf("Set failed: %v", err)
+            log.Printf("Set failed: %v", err)
+            return
         }
         fmt.Println("✓ Key set successfully")
 
         // Get the value
         value, err := client.Get(context.Background(), "user:1000")
         if err != nil {
-            log.Fatalf("Get failed: %v", err)
+            log.Printf("Get failed: %v", err)
+            return
         }
-        fmt.Printf("✓ Retrieved value: %v\n", value)
+        fmt.Printf("✓ Retrieved value: %v\n", value.Value())
     }
     ```
   </ClientTab>
@@ -224,7 +229,7 @@ Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://val
 
     # Get multiple keys at once
     values = await client.mget(["user:1001", "user:1002", "user:1003"])
-    print(f"✓ Retrieved values: {values}")
+    print(f"✓ Retrieved values: {[value.decode() for value in values]}")
     ```
   </ClientTab>
 

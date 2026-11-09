@@ -3,7 +3,8 @@ title: Use Isolated Execution Scopes
 description: Run WATCH/MULTI/EXEC transactions on a dedicated connection with optimistic concurrency control.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { ClientTab, ClientTabs } from '@components/client-tabs';
 
 <Aside type="caution" title="Preview Feature">
 Isolated Execution Scopes are a preview feature available in Python, Java, Node.js, and Go. The API may change in a future release without following normal semantic versioning guarantees. See [Limitations](#limitations) for behavior that is intentionally constrained in this release and for known issues planned for a future release.
@@ -15,8 +16,8 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
 
 ## Acquire a Scope
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient
 
@@ -26,9 +27,9 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
         # Use scope for WATCH/MULTI/EXEC
         pass
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.scope.IsolatedScope;
@@ -40,9 +41,9 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
         // Use scope for WATCH/MULTI/EXEC
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from '@valkey/valkey-glide';
 
@@ -55,9 +56,9 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
         scope.release();
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     scope, err := client.ScopedConnection(ctx, 5*time.Second, "my-key")
     if err != nil {
@@ -66,8 +67,8 @@ Use isolated scopes when you need optimistic concurrency control (OCC) — for e
     defer scope.Close()
     // Use scope for WATCH/MULTI/EXEC
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Optimistic Locking with WATCH/MULTI/EXEC
 
@@ -81,8 +82,8 @@ The classic optimistic concurrency control pattern works as follows:
 6. `EXEC` — returns `null` if any watched key was modified by another client
 7. Retry if `EXEC` returned `null`
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     from glide import GlideClient
 
@@ -101,9 +102,9 @@ The classic optimistic concurrency control pattern works as follows:
                 break  # Success
             # WATCH conflict — retry
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     import glide.api.GlideClient;
     import glide.api.models.scope.IsolatedScope;
@@ -123,9 +124,9 @@ The classic optimistic concurrency control pattern works as follows:
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     import { GlideClient } from '@valkey/valkey-glide';
 
@@ -146,9 +147,9 @@ The classic optimistic concurrency control pattern works as follows:
         }
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     for attempt := 0; attempt < 10; attempt++ {
         scope, err := client.ScopedConnection(ctx, 5*time.Second, "counter")
@@ -169,8 +170,8 @@ The classic optimistic concurrency control pattern works as follows:
         }
     }
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ## Blocking Commands
 
@@ -196,16 +197,16 @@ When using isolated scopes with a cluster client, keep the following in mind:
 
 Pass a `routing_key` when acquiring the scope. The key is used to determine which cluster node (via CRC16 slot hashing) the scope's dedicated connection targets. If you omit it, the scope connects to the primary that owns slot 0 and is pinned to the slot of its first keyed command — which is not the same as passing a key that hashes to slot 0, since that constrains the scope to slot 0 from the start.
 
-<Tabs syncKey="progLangInExamples">
-  <TabItem label="Python">
+<ClientTabs>
+  <ClientTab slot="python">
     ```python
     async with await client.scoped_connection(routing_key="user:123") as scope:
         await scope.watch("user:123")
         # ...
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Java">
+  <ClientTab slot="java">
     ```java
     try (IsolatedScope scope = client.scopedConnection(
             Duration.ofSeconds(5), "user:123").get()) {
@@ -213,20 +214,20 @@ Pass a `routing_key` when acquiring the scope. The key is used to determine whic
         // ...
     }
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Node">
+  <ClientTab slot="node">
     ```typescript
     const scope = await client.scopedConnection('user:123');
     ```
-  </TabItem>
+  </ClientTab>
 
-  <TabItem label="Go">
+  <ClientTab slot="go">
     ```go
     scope, _ := client.ScopedConnection(ctx, 5*time.Second, "user:123")
     ```
-  </TabItem>
-</Tabs>
+  </ClientTab>
+</ClientTabs>
 
 ### Same-Slot Requirement
 
