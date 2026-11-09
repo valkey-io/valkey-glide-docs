@@ -15,17 +15,19 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 
 * GLIDE automatically generates **temporary authentication tokens** that are valid for **15 minutes**
 * GLIDE **refreshes the token every 5 minutes** (default). On failure, it retries with **exponential backoff** and keeps using the **last valid token** until a new one is obtained
-* When a new token is available, GLIDE **updates the connection credentials on the next command** after a token refresh. The actual re-authentication (AUTH command) only happens during reconnection
-* During reconnection, GLIDE **checks whether the cached token has expired** (age ≥ 15 minutes). If so, it generates a fresh token before attempting to reconnect — ensuring a valid credential is used even when connections have been idle
-* GLIDE handles **re-authentication** automatically when required — for example, when ElastiCache or MemoryDB terminates a session after its maximum lifetime
+* When a new token is available, GLIDE updates its cached credentials. New and reconnecting connections use the fresh token, while pooled and isolated connections reconcile token changes before an eligible command
+* During reconnection, GLIDE **checks whether the cached token has expired** (age ≥ 15 minutes). If so, it generates a fresh token before attempting to reconnect, ensuring a valid credential is used even when connections have been idle
+* GLIDE handles **re-authentication** automatically when required, for example when ElastiCache or MemoryDB terminates a session after its maximum lifetime
 * GLIDE handles all **token management**, **refresh operations**, and **re-authentication** behind the scenes
 * On-demand token refresh is available via **`refreshIamToken`** (see [On-Demand Refresh](#on-demand-refresh) below)
 
 ## Required Setup
 
-1. **AWS Credentials**: Your application must run in an environment with AWS credentials available (such as an **EC2 instance with an IAM role**, or **ECS task with a task role**).
+1. **AWS Credentials**: Unless you configure a [custom AWS credential provider](#custom-aws-credential-providers), your application must run in an environment where the default AWS credential chain can find credentials, such as an **EC2 instance with an IAM role** or an **ECS task with a task role**.
 
-2. **Required Information**:
+2. **TLS**: IAM authentication requires TLS. GLIDE rejects an IAM client configuration when TLS is disabled.
+
+3. **Required Information**:
 
 * **username**: Your ElastiCache/MemoryDB username
 * **cluster\_name**: Your cluster's name
@@ -33,8 +35,10 @@ For GLIDE versions below 2.2, see the [guide](/how-to/security/iam-integration-u
 * **region**: The AWS region where your cluster runs
 * **refresh\_interval\_seconds (Optional)**: How often to refresh the token. Default is **300 seconds (5 minutes)**
 
+The cluster name and region must not be blank, and the username must not be empty.
+
 :::note
-If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, a `ConfigurationError` is raised at call time.
+If `refreshIamToken` is called on a client that was not configured with `IamAuthConfig`, an error is raised at call time.
 :::
 
 ## Examples
@@ -58,6 +62,7 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
     var config = new ClusterClientConfigurationBuilder()
         .WithAddress("endpoint.example.com", 6379)
+        .WithTls()
         .WithCredentials(credentials)
         .Build();
 
@@ -91,13 +96,15 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
     config = GlideClusterClientConfiguration(
         addresses=addresses,
+        use_tls=True,
         credentials=credentials,
     )
-    # for async mode
-    client = await GlideClusterClient.create(config) 
+    # For async mode
+    client = await GlideClusterClient.create(config)
 
-    # for sync mode  
-    client = GlideClusterClient.create_sync(config)
+    # For sync mode
+    from glide_sync import GlideClusterClient as SyncGlideClusterClient
+    sync_client = SyncGlideClusterClient.create(config)
     ...
     ```
   </ClientTab>
@@ -109,10 +116,11 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       import java.util.List;
 
       import glide.api.GlideClusterClient;
-      import glide.api.models.configuration.AwsIamConfig;
-      import glide.api.models.configuration.AwsIamConfig.ServiceType;
       import glide.api.models.configuration.GlideClusterClientConfiguration;
+      import glide.api.models.configuration.IamAuthConfig;
       import glide.api.models.configuration.NodeAddress;
+      import glide.api.models.configuration.ServerCredentials;
+      import glide.api.models.configuration.ServiceType;
       ...
 
       List<NodeAddress> nodeList =
@@ -121,8 +129,8 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
       // Configure IAM authentication
       // Automatically regenerates the token every 5 mins (default: 300 seconds)
-      AwsIamConfig iamConfig =
-              AwsIamConfig.builder()
+      IamAuthConfig iamConfig =
+              IamAuthConfig.builder()
                       .clusterName("clustername")
                       .service(ServiceType.ELASTICACHE) // or ServiceType.MEMORYDB
                       .region("us-east-1")
@@ -132,7 +140,12 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
       GlideClusterClientConfiguration config =
               GlideClusterClientConfiguration.builder()
                       .addresses(nodeList)
-                      .credentials("username", iamConfig)
+                      .useTLS(true)
+                      .credentials(
+                              ServerCredentials.builder()
+                                      .username("username")
+                                      .iamConfig(iamConfig)
+                                      .build())
                       .build();
 
       GlideClusterClient client = GlideClusterClient.createClient(config).get();
@@ -142,9 +155,12 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
   <ClientTab slot="node">
     ```ts
+    import { GlideClusterClient, ServiceType } from "@valkey/valkey-glide";
+
     // Automatically regenerates the token every 5 mins
     const client = await GlideClusterClient.createClient({
       addresses: [{ host: "endpoint.example.com", port: 6379 }],
+      useTLS: true,
       credentials: {
         username: "username",
         iamConfig: {
@@ -160,33 +176,33 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 
   <ClientTab slot="go">
     ```go
+    package main
+
     import (
+        "log"
 
-    	"github.com/valkey-io/valkey-glide/go/glide/api"
-    	"github.com/valkey-io/valkey-glide/go/glide/config"
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
     )
-    ...
 
-    // Configure IAM authentication
-    // Automatically regenerates the token every 5 mins (default: 300 seconds)
-    iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
-    // Optional: Set custom refresh interval
-    // iamConfig.WithRefreshIntervalSeconds(100)
+    func main() {
+        iamConfig := config.NewIamAuthConfig("clustername", config.ElastiCache, "us-east-1")
+        credentials, err := config.NewServerCredentialsWithIam("username", iamConfig)
+        if err != nil {
+            log.Fatal(err)
+        }
 
-    credentials, err := config.NewServerCredentialsWithIam("username", iamConfig)
-    if err != nil {
-    	return nil, fmt.Errorf("failed to create credentials: %w", err)
+        clientConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "endpoint.example.com", Port: 6379}).
+            WithUseTLS(true).
+            WithCredentials(credentials)
+
+        client, err := glide.NewClusterClient(clientConfig)
+        if err != nil {
+            log.Fatal(err)
+        }
+        defer client.Close()
     }
-
-    clientConfig := config.GlideClusterClientConfiguration{
-    	Addresses: []config.NodeAddress{
-    		{Host: "endpoint.example.com", Port: 6379},
-    	},
-    	Credentials: credentials,
-    }
-
-    client, err := api.NewGlideClusterClient(&clientConfig)
-    ...
     ```
   </ClientTab>
 
@@ -217,6 +233,139 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
     ...
     ```
   </ClientTab>
+
+  <ClientTab slot="ruby">
+    ```ruby
+    require "valkey"
+
+    # Configure IAM authentication
+    # Automatically regenerates the token every 5 mins (default: 300 seconds)
+    iam_config = Valkey::IamAuthConfig.new(
+      cluster_name: "clustername",
+      service: Valkey::ServiceType::ELASTICACHE, # or Valkey::ServiceType::MEMORYDB
+      region: "us-east-1"
+      # refresh_interval_seconds: 100, # Optional, default is 300 seconds
+    )
+
+    client = Valkey.new(
+      nodes: [{ host: "endpoint.example.com", port: 6379 }],
+      cluster_mode: true,
+      ssl: true, # REQUIRED for IAM authentication
+      username: "username", # REQUIRED for IAM
+      iam_config: iam_config # cannot be combined with password
+    )
+
+    # Use the client normally - IAM tokens are managed automatically
+    client.set("key", "value")
+    value = client.get("key")
+
+    client.close
+    ```
+  </ClientTab>
+</ClientTabs>
+
+## Custom AWS credential providers
+
+Python, Java, Node.js, and Go direct clients can obtain AWS credentials from an application callback instead of the default AWS credential chain. Use this for credential stores or custom assume-role flows that the default chain cannot resolve.
+
+The provider must return a non-blank access key ID and secret access key. A session token and expiration time are optional. GLIDE can invoke the provider during client creation, token refresh, or reconnection, so it must return current credentials and tolerate repeated calls.
+
+:::caution[Direct clients only]
+Custom IAM credential providers are not supported by client pools. Pool creation rejects a configuration that contains one. Omit the provider to use IAM authentication with the default AWS credential chain in a pool.
+:::
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import AwsCredentials, IamAuthConfig, ServiceType
+
+    iam_config = IamAuthConfig(
+        "clustername",
+        ServiceType.ELASTICACHE,
+        "us-east-1",
+        credential_provider=lambda: AwsCredentials("access-key-id", "secret-access-key"),
+    )
+    ```
+  </ClientTab>
+
+  <ClientTab slot="java">
+    ```java
+    import java.util.concurrent.CompletableFuture;
+
+    import glide.api.models.configuration.AwsCredentials;
+    import glide.api.models.configuration.IamAuthConfig;
+    import glide.api.models.configuration.ServiceType;
+
+    IamAuthConfig iamConfig =
+            IamAuthConfig.builder()
+                    .clusterName("clustername")
+                    .service(ServiceType.ELASTICACHE)
+                    .region("us-east-1")
+                    .credentialsProvider(
+                            () ->
+                                    CompletableFuture.completedFuture(
+                                            AwsCredentials.builder()
+                                                    .accessKeyId("access-key-id")
+                                                    .secretAccessKey("secret-access-key")
+                                                    .build()))
+                    .build();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="node">
+    ```ts
+    import { IamAuthConfig, ServiceType } from "@valkey/valkey-glide";
+
+    const iamConfig: IamAuthConfig = {
+        clusterName: "clustername",
+        service: ServiceType.Elasticache,
+        region: "us-east-1",
+        credentialProvider: () => ({
+            accessKeyId: "access-key-id",
+            secretAccessKey: "secret-access-key",
+        }),
+    };
+    ```
+  </ClientTab>
+
+  <ClientTab slot="go">
+    ```go
+    package example
+
+    import "github.com/valkey-io/valkey-glide/go/v2/config"
+
+    func customIAMConfig() *config.IamAuthConfig {
+        return config.NewIamAuthConfig(
+            "clustername",
+            config.ElastiCache,
+            "us-east-1",
+        ).WithCredentialProvider(func() (config.AwsCredentials, error) {
+            return config.AwsCredentials{
+                AccessKeyID:     "access-key-id",
+                SecretAccessKey: "secret-access-key",
+            }, nil
+        })
+    }
+    ```
+  </ClientTab>
+
+  <ClientTab slot="csharp">
+    :::note[Not currently supported]
+    The C# client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="php">
+    :::note[Not currently supported]
+    The PHP client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    :::note[Not currently supported]
+    The Ruby client does not currently support custom AWS credential providers.
+    :::
+  </ClientTab>
 </ClientTabs>
 
 ## On-Demand Refresh
@@ -224,9 +373,9 @@ If `refreshIamToken` is called on a client that was not configured with `IamAuth
 You can call `refreshIamToken` (or language equivalent) at any time to immediately request a fresh token from AWS and update the internal token cache.
 
 :::note[What this does and does not do]
-`refreshIamToken` **generates a new token and caches it**. It does **not** immediately re-authenticate existing connections — the new token is applied on the next command or reconnection, whichever comes first.
+`refreshIamToken` **generates a new token and caches it**. It does **not** immediately re-authenticate an ordinary established connection. New and reconnecting connections use the refreshed token, while pooled and isolated connections reconcile it before an eligible command.
 
-The method always returns `"OK"`. If AWS token generation fails, errors are logged internally and the previously cached token remains in use.
+A successful refresh returns `"OK"` (in C#, `RefreshIamTokenAsync` completes without a value). If the credential provider or token signing fails, the method returns the error to the caller and the previously cached token remains in use.
 :::
 
 <ClientTabs>
@@ -253,8 +402,18 @@ The method always returns `"OK"`. If AWS token generation fails, errors are logg
 
   <ClientTab slot="go">
     ```go
-    // Pre-warm the token cache before a maintenance window
-    _, err := client.RefreshIamToken(ctx)
+    package example
+
+    import (
+        "context"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+    )
+
+    func refreshIAM(client *glide.ClusterClient) error {
+        _, err := client.RefreshIamToken(context.Background())
+        return err
+    }
     ```
   </ClientTab>
 
@@ -262,6 +421,20 @@ The method always returns `"OK"`. If AWS token generation fails, errors are logg
     ```csharp
     // Pre-warm the token cache before a maintenance window
     await client.RefreshIamTokenAsync();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="php">
+    ```php
+    // Pre-warm the token cache before a maintenance window
+    $client->refreshIamToken();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    ```ruby
+    # Pre-warm the token cache before a maintenance window
+    client.refresh_iam_token
     ```
   </ClientTab>
 </ClientTabs>

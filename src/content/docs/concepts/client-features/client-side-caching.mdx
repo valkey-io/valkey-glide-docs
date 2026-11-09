@@ -1,6 +1,6 @@
 ---
 title: "Client-Side Caching"
-description: Learn about Valkey GLIDE's TTL-based client-side caching feature.
+description: Learn about Valkey GLIDE client-side caching, TTL expiration, and server-assisted invalidation.
 ---
 
 import { ClientTab, ClientTabs } from '@components/client-tabs';
@@ -10,7 +10,7 @@ import { Aside } from '@astrojs/starlight/components';
 Client-side caching in Valkey GLIDE stores responses from cacheable read commands in a local in-memory cache on the client, reducing network round-trips and server load. When a cached command is issued again, the response is served directly from local memory without contacting the server.
 
 <Aside type="caution" title="TTL-Only Caching (Default)">
-  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. **Java** now supports [server-assisted invalidation](#server-assisted-invalidation) via the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol, which pushes invalidation messages from the server when keys change. Other languages still use TTL-only mode; server-assisted support will be added in future releases.
+  By default, client-side caching uses **TTL-based expiration only**. Cached entries may become stale before their TTL expires if **any client** modifies the underlying data, **including the same client that cached the value**. A read issued immediately after the same client's `SET` / `HSET` / `SADD` / `DEL` will still return the cached value until its TTL expires. Python, Java, Node.js, Go, and C# can opt into [server-assisted invalidation](#server-assisted-invalidation) through the [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) protocol.
 </Aside>
 
 ## How It Works
@@ -28,10 +28,21 @@ Only the following read commands are cached:
 | Command      | Description                        |
 | ------------ | ---------------------------------- |
 | `GET`        | Retrieve a string value            |
+| `MGET`       | Retrieve multiple string values    |
 | `HGETALL`    | Retrieve all fields from a hash    |
 | `SMEMBERS`   | Retrieve all members from a set    |
 
 All other commands bypass the cache entirely. Write commands (`SET`, `HSET`, `SADD`, etc.) are never cached.
+
+### `MGET` caching
+
+GLIDE caches `MGET` one key at a time. Before it sends anything to the server, it checks each key against the cache.
+
+If every key is cached, GLIDE returns the values without contacting the server. If only some keys are cached, GLIDE sends an `MGET` for the missing keys and merges the reply with the cached values. The result keeps the original key order, and duplicate keys behave as they do in a plain `MGET`.
+
+GLIDE stores each value from the server under its own key, so a later `GET` or `MGET` can read it from the cache. It does not store NIL values. Cache metrics count each key as one hit or one miss.
+
+**A partial hit is not atomic.** On the server, `MGET` reads every key at the same moment. A partial hit mixes cached values, which can be as old as the entry TTL, with values the server reads now. To get every key from the same moment, read them with a client that has no cache.
 
 ### What Is Not Cached
 
@@ -85,8 +96,8 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
     import glide.api.GlideClusterClient;
     import glide.api.models.configuration.GlideClientConfiguration;
     import glide.api.models.configuration.GlideClusterClientConfiguration;
-    import glide.api.models.ClientSideCache;
-    import glide.api.models.EvictionPolicy;
+    import glide.api.models.configuration.ClientSideCache;
+    import glide.api.models.configuration.EvictionPolicy;
     import glide.api.models.configuration.NodeAddress;
 
     // Create a cache configuration
@@ -236,7 +247,7 @@ To enable client-side caching, pass a `ClientSideCache` configuration when creat
 | `entryTtlMs`      | integer           | —       | Time-to-live per entry in milliseconds. Use `0` to disable TTL (entries persist until evicted).   |
 | `evictionPolicy`   | `LRU` or `LFU`   | `LRU`   | Policy for removing entries when the cache is full.                                               |
 | `enableMetrics`    | boolean           | `false` | When `true`, enables collection of hit/miss/eviction/expiration counters.                         |
-| `serverAssisted`   | boolean           | `false` | When `true`, enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` (broadcast) mode — the only tracking mode GLIDE currently supports. Requires RESP3.|
+| `serverAssisted`   | boolean           | `false` | Enables server-assisted invalidation using Valkey's `CLIENT TRACKING ON BCAST` mode. Supported by Python, Java, Node.js, Go, and C#. Requires RESP3. |
 
 ## Eviction Policies
 
@@ -529,45 +540,63 @@ Multiple clients can share the same cache instance by passing the same `ClientSi
 
 ## Server-Assisted Invalidation
 
-Server-assisted invalidation can be enabled in the client side configuration by setting server assisted to true.
-You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself; GLIDE issues `CLIENT TRACKING ON BCAST` on your behalf during connection setup.
+Python, Java, Node.js, Go, and C# support server-assisted invalidation for standalone and cluster clients. Enable the binding's server-assisted cache option. You do not need to call [`CLIENT TRACKING`](https://valkey.io/commands/client-tracking/) yourself because GLIDE issues `CLIENT TRACKING ON BCAST` during connection setup.
 
-Once enabled, the client receives push invalidation messages from the server whenever a cached key is modified, eliminating the staleness window inherent in TTL-only mode — the server notifies the client immediately when data changes, and the client removes the stale entry from its local cache.
+The server sends an invalidation message whenever a cached key changes. GLIDE then removes that entry from the local cache, so the next read fetches the current value.
 
 ### Enabling server-assisted mode
+
+Create the cache as shown below, then attach it to a standalone or cluster client configuration as in [Configuration](#configuration).
 
 <ClientTabs>
   <ClientTab slot="java">
     ```java
-    import glide.api.GlideClient;
-    import glide.api.models.configuration.GlideClientConfiguration;
-    import glide.api.models.ClientSideCache;
-    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.ClientSideCache;
 
     ClientSideCache cache = ClientSideCache.builder()
         .maxCacheKb(1024)
         .entryTtlMs(60_000)
-        .serverAssisted(true)   // Enable server-assisted invalidation
+        .serverAssisted(true)
         .build();
-
-    GlideClientConfiguration config = GlideClientConfiguration.builder()
-        .address(NodeAddress.builder().host("localhost").port(6379).build())
-        .clientSideCache(cache)
-        .build();
-    GlideClient client = GlideClient.createClient(config).get();
     ```
   </ClientTab>
 
   <ClientTab slot="python">
-    Server-assisted invalidation is not yet available in the Python client. Progress is tracked in [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+    ```python
+    from glide import ClientSideCache
+
+    cache = ClientSideCache.create(
+        max_cache_kb=1024,
+        entry_ttl_ms=60_000,
+        server_assisted=True,
+    )
+    ```
   </ClientTab>
 
   <ClientTab slot="node">
-    Server-assisted invalidation is not yet available in the Node.js client. Progress is tracked in [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+    ```typescript
+    import { ClientSideCache } from "@valkey/valkey-glide";
+
+    const cache = ClientSideCache.create(1024, 60000, {
+        serverAssisted: true,
+    });
+    ```
   </ClientTab>
 
   <ClientTab slot="go">
-    Server-assisted invalidation is not yet available in the Go client. Progress is tracked in [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+    ```go
+    package example
+
+    import "github.com/valkey-io/valkey-glide/go/v2/config"
+
+    func serverAssistedCache() *config.ClientSideCache {
+        cache, err := config.NewClientSideCache(1024, 60000)
+        if err != nil {
+            panic(err)
+        }
+        return cache.WithServerAssisted(true)
+    }
+    ```
   </ClientTab>
 
   <ClientTab slot="php">
@@ -575,17 +604,22 @@ Once enabled, the client receives push invalidation messages from the server whe
   </ClientTab>
 
   <ClientTab slot="csharp">
-    Server-assisted invalidation is not yet available in the C# client. Progress is tracked in [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+
+    var cache = new ClientSideCacheConfig(1024, TimeSpan.FromSeconds(60))
+        .WithServerAssisted(true);
+    ```
   </ClientTab>
 </ClientTabs>
 
 <Aside type="caution" title="RESP3 Required">
-  Server-assisted caching requires the RESP3 protocol, which is enforced automatically by glide-core when `serverAssisted(true)` is set. Ensure your Valkey server supports RESP3 (Valkey 7.2+).
+  Server-assisted caching requires RESP3. RESP3 is the default protocol, but client creation fails if the configuration enables server-assisted caching and explicitly selects RESP2.
 </Aside>
 
 ### Diagnosing tracking state with `CLIENT TRACKINGINFO`
 
-The `clientTrackingInfo()` command returns the current tracking state of the connection. This is useful for verifying that server-assisted caching is active.
+Each supported binding's `CLIENT TRACKINGINFO` method returns the current tracking state of the connection. Use it to verify that server-assisted caching is active.
 
 <ClientTabs>
   <ClientTab slot="java">
@@ -601,28 +635,62 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
     Map<String, Object> clusterInfo = clusterClient.clientTrackingInfo().get();
 
     // Cluster client — query all nodes
-    Map<String, Object> allNodesInfo = clusterClient.clientTrackingInfo(Route.ALL_NODES).get();
+    // import static glide.api.models.configuration.RequestRoutingConfiguration.SimpleMultiNodeRoute.ALL_NODES;
+    Map<String, Map<String, Object>> allNodesInfo =
+        clusterClient.clientTrackingInfo(ALL_NODES).get().getMultiValue();
     ```
   </ClientTab>
 
   <ClientTab slot="python">
-    Not yet available. See [issue #5963](https://github.com/valkey-io/valkey-glide/issues/5963).
+    ```python
+    info = await client.client_tracking_info()
+    print(info.flags, info.redirect, info.prefixes)
+    ```
   </ClientTab>
 
   <ClientTab slot="node">
-    Not yet available. See [issue #5964](https://github.com/valkey-io/valkey-glide/issues/5964).
+    ```typescript
+    // Standalone client; cluster clients return ClusterResponse<ClientTrackingInfo>
+    const info = await client.clientTrackingInfo();
+    console.log(info.flags, info.redirect, info.prefixes);
+    ```
   </ClientTab>
 
   <ClientTab slot="go">
-    Not yet available. See [issue #5966](https://github.com/valkey-io/valkey-glide/issues/5966).
+    ```go
+    package example
+
+    import (
+        "context"
+
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/models"
+    )
+
+    func trackingInfo(client *glide.Client) (models.ClientTrackingInfo, error) {
+        return client.ClientTrackingInfo(context.Background())
+    }
+    ```
   </ClientTab>
 
   <ClientTab slot="php">
-    Not yet available. See [issue #6292](https://github.com/valkey-io/valkey-glide/issues/6292).
+    ```php
+    $info = $client->clientTrackingInfo();
+    var_dump($info['flags'], $info['redirect'], $info['prefixes']);
+    ```
   </ClientTab>
 
   <ClientTab slot="csharp">
-    Not yet available. See [issue #6010](https://github.com/valkey-io/valkey-glide/issues/6010).
+    ```csharp
+    using Valkey.Glide;
+
+    ClientTrackingInfo info = await client.ClientTrackingInfoAsync();
+    Console.WriteLine(string.Join(", ", info.Flags));
+    ```
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    `CLIENT TRACKINGINFO` is not yet available in the Ruby client.
   </ClientTab>
 </ClientTabs>
 
@@ -630,28 +698,29 @@ The `clientTrackingInfo()` command returns the current tracking state of the con
 
 | Limitation | Details |
 | --- | --- |
-| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Java supports [server-assisted invalidation](#server-assisted-invalidation) which eliminates this limitation. |
+| **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Python, Java, Node.js, Go, and C# support [server-assisted invalidation](#server-assisted-invalidation). |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
-| **Limited command coverage** | Only `GET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
+| **Limited command coverage** | Only `GET`, `MGET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
+| **`MGET` not atomic on partial hits** | A partial hit combines cached values with a new server read, so the values can come from different moments. See [`MGET` caching](#mget-caching). |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
-| **No invalidation on writes** | In TTL-only mode, writing to a key (e.g., `SET`, `HSET`, `SADD`, `DEL`) does not invalidate the local cache entry — even when the write is issued by the same client that has the value cached. Subsequent reads return the stale value until its TTL expires or it is evicted under memory pressure. With [server-assisted mode](#server-assisted-invalidation) (Java), the server pushes invalidation messages that clear the stale entry immediately. |
+| **No invalidation on writes** | In TTL-only mode, writing to a key such as `SET`, `HSET`, `SADD`, or `DEL` does not invalidate the local cache entry, even when the same client issues the write. Subsequent reads return the stale value until its TTL expires or memory pressure evicts it. In [server-assisted mode](#server-assisted-invalidation), the server sends invalidation messages that clear stale entries. |
 
 ### Compatibility with managed services
 
-The Java client now supports server-assisted invalidation via `CLIENT TRACKING`. When using this feature, the deployment must expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
+Server-assisted invalidation requires the deployment to expose the `CLIENT TRACKING` command. The table below summarizes compatibility:
 
 | Deployment                                                          | Exposes `CLIENT TRACKING`? | Notes                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Self-managed Valkey or Redis OSS                                    | ✅ Yes                     | Requires Valkey 7.2+ / Redis OSS 6.0+ (any version that supports `CLIENT TRACKING`).                                                                                                                                                                        |
 | Amazon MemoryDB                                                     | ✅ Yes                     | Standard `CLIENT` surface available.                                                                                                                                                                                                                        |
 | Amazon ElastiCache (cluster-mode replication group, non-serverless) | ✅ Yes                     | Standard `CLIENT` surface available.                                                                                                                                                                                                                        |
-| Amazon ElastiCache **Serverless**                                   | ❌ No                      | Only `CLIENT GETNAME / SETNAME / REPLY / HELP` are exposed; `CLIENT TRACKING` returns `ERR unknown subcommand 'tracking'`. The TTL-only behavior described above will continue to apply on Serverless even after server-driven invalidation lands in GLIDE. |
+| Amazon ElastiCache **Serverless**                                   | ❌ No                      | Only `CLIENT GETNAME / SETNAME / REPLY / HELP` are exposed; `CLIENT TRACKING` returns `ERR unknown subcommand 'tracking'`. Client-side caching remains TTL-only on Serverless. |
 
 If your deployment is in the last row, plan around the TTL-only model: cache only data that is immutable or can tolerate staleness up to its TTL.
 
 ## Validating cache behavior
 
-The metrics counters give you an objective way to confirm caching is doing what you expect. The following sequence is short enough to run interactively from a single client with `enableMetrics(true)` set, and illustrates the most common behaviors:
+The metrics counters show whether requests hit the cache. The following sequence assumes the default TTL-only mode with `serverAssisted` disabled:
 
 | Step | Operation           | What you should see                                                                                                                                       |
 | ---- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -659,24 +728,24 @@ The metrics counters give you an objective way to confirm caching is doing what 
 | 2    | `GET k`             | Cache **miss**, populates the entry. `entryCount=1`, `totalLookups=1`, `hitRate≈0`.                                                                       |
 | 3    | `GET k`             | Cache **hit**. `totalLookups=2`, `hitRate≈0.5`.                                                                                                           |
 | 4    | `GET nonexistent`   | Cache miss; the `nil` reply is **not** cached. `entryCount` stays at `1`, `missRate` rises.                                                               |
-| 5    | `SET k v2`          | Server-only. **The cache still holds `v1`** — no invalidation, even though the same client just wrote.                                                   |
-| 6    | `GET k`             | Returns `v1` — the stale cached value. The cache catches up only after the entry's TTL expires or the entry is evicted under memory pressure.            |
+| 5    | `SET k v2`          | Server-only. **The cache still holds `v1`** because TTL-only mode does not invalidate it.                                                               |
+| 6    | `GET k`             | Returns the stale value `v1`. The cache catches up only after the entry's TTL expires or memory pressure evicts it.                                     |
 
-### Confirming the limit on the same client
+### Confirming TTL-only behavior on the same client
 
-The biggest surprise for new users is that the cache does **not** clear after the *same* client writes a key it had cached. You can confirm this with a single client and four operations:
+With server-assisted caching disabled, the cache does **not** clear after the same client writes a key it had cached. You can confirm this with four operations:
 
 1. `SET k "before"`
 2. `GET k` (populates the cache).
 3. `SET k "after"` (writes go through to the server; the cache is untouched).
 4. `GET k` → returns `"before"` until the entry's TTL expires.
 
-This is the expected behavior of the TTL-only implementation. Until server-driven invalidation lands, treat any key the application writes to as **not safely cacheable**, regardless of which client performs the write.
+This is the expected TTL-only behavior. Python, Java, Node.js, Go, and C# applications can enable [server-assisted invalidation](#server-assisted-invalidation) when the deployment supports `CLIENT TRACKING`. Otherwise, cache only values that can remain stale until their TTL expires.
 
 ## Best Practices
 
 * **Set an appropriate TTL** — Choose a TTL that balances freshness with cache effectiveness. Shorter TTLs reduce staleness risk; longer TTLs improve hit rates.
 * **Size the cache appropriately** — Monitor eviction counts. High eviction rates indicate the cache is too small for the working set.
 * **Use metrics to tune** — Enable metrics during development and load testing to understand cache behavior and optimize configuration.
-* **Use only for read-heavy, slow-changing data** — Until server-driven invalidation ships, restrict the cache to values that can tolerate staleness up to your TTL: configuration, lookup tables, slow-changing reference data, computed projections rebuilt out-of-band, and similar. Avoid caching any key that the application itself writes to during its lifetime — reads after the write will return stale data.
+* **Use TTL-only mode for read-heavy, slow-changing data.** Without server-assisted invalidation, restrict the cache to values that can tolerate staleness up to the configured TTL. Avoid caching keys that the application writes during the cache lifetime.
 * **Avoid sharing caches across databases** — Keys in different databases may have the same name but different values.

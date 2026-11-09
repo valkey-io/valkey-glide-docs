@@ -340,35 +340,176 @@ Valkey GLIDE also supports Standalone deployments, where the database is hosted 
   </ClientTab>
 </ClientTabs>
 
-### Configure node discovery in PHP
+### Connect through a Unix domain socket
 
-For standalone PHP clients, use `node_discovery_mode` to control how the client identifies the primary and replicas:
+Unix domain socket connections are currently available only in the Python standalone client.
 
-* `ValkeyGlide::NODE_DISCOVERY_MODE_STANDARD` is the default. It verifies node roles with `INFO REPLICATION` and uses only the addresses you provide.
-* `ValkeyGlide::NODE_DISCOVERY_MODE_STATIC` trusts the provided addresses without checking their roles. The first address is treated as the primary. Use this mode when connecting through a proxy such as Envoy or HAProxy that does not support `INFO`.
-* `ValkeyGlide::NODE_DISCOVERY_MODE_DISCOVER_ALL` discovers the primary and all replicas from any starting node.
+<ClientTabs>
+  <ClientTab slot="java">
+    :::note[Not currently supported]
+    The Java client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
 
-To connect through a proxy without role discovery:
+  <ClientTab slot="python">
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
 
-```php
-$client = new ValkeyGlide();
-$client->connect(
-    addresses: [['host' => 'proxy.example.com', 'port' => 6379]],
-    node_discovery_mode: ValkeyGlide::NODE_DISCOVERY_MODE_STATIC
-);
-```
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress(unix_socket_path="/run/valkey/valkey.sock")],
+    )
+    client = await GlideClient.create(config)
+    ```
 
-To discover the complete standalone topology from one node:
+    The synchronous client accepts the same `GlideClientConfiguration`.
+  </ClientTab>
 
-```php
-$client = new ValkeyGlide();
-$client->connect(
-    addresses: [['host' => 'node.example.com', 'port' => 6379]],
-    node_discovery_mode: ValkeyGlide::NODE_DISCOVERY_MODE_DISCOVER_ALL
-);
-```
+  <ClientTab slot="node">
+    :::note[Not currently supported]
+    The Node.js client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
 
-`node_discovery_mode` applies only to `ValkeyGlide` standalone clients. When using `STATIC` mode through a proxy, do not set `client_name`.
+  <ClientTab slot="go">
+    :::note[Not currently supported]
+    The Go client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="php">
+    :::note[Not currently supported]
+    The PHP client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="csharp">
+    :::note[Not currently supported]
+    The C# client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    :::note[Not currently supported]
+    The Ruby client does not currently support Unix domain socket connections.
+    :::
+  </ClientTab>
+</ClientTabs>
+
+#### Unix domain socket limitations
+
+GLIDE rejects the client configuration at creation time if a Unix domain socket address:
+
+* Uses a relative path. The path must be absolute, for example `/run/valkey/valkey.sock`, and short enough to fit in a socket address.
+* Also sets a host or port.
+* Is mixed with TCP addresses in the same configuration.
+* Is used with TLS.
+* Is used with the `DISCOVER_ALL` node discovery mode.
+* Is used with a cluster client. Unix domain sockets are supported only for standalone clients.
+* Is used on Windows. Unix domain sockets are supported only on Unix platforms.
+
+### Configure node discovery
+
+For standalone clients, the node discovery mode controls how the client identifies the primary and replicas:
+
+* `STANDARD` is the default. It verifies node roles with `INFO REPLICATION` and uses only the addresses you provide.
+* `STATIC` trusts the provided addresses without checking their roles. The first address is treated as the primary. Use this mode when connecting through a proxy such as Envoy or HAProxy that does not support `INFO`.
+* `DISCOVER_ALL` discovers the primary and all replicas from any starting node. Discovery runs once, at client creation. `DISCOVER_ALL` cannot be combined with read-only mode or Unix domain socket addresses.
+
+When using `STATIC` mode through a proxy, do not configure a client name because the proxy might not support `CLIENT SETNAME`. The examples below configure `STATIC` mode; use the corresponding `DISCOVER_ALL` value with any primary or replica address to discover the complete standalone topology.
+
+<ClientTabs>
+  <ClientTab slot="java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+    import glide.api.models.configuration.NodeDiscoveryMode;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("proxy.example.com")
+            .port(6379)
+            .build())
+        .nodeDiscoveryMode(NodeDiscoveryMode.STATIC)
+        .build();
+
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="python">
+    ```python
+    from glide import (
+        GlideClient,
+        GlideClientConfiguration,
+        NodeAddress,
+        NodeDiscoveryMode,
+    )
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress(host="proxy.example.com", port=6379)],
+        node_discovery_mode=NodeDiscoveryMode.STATIC,
+    )
+    client = await GlideClient.create(config)
+    ```
+  </ClientTab>
+
+  <ClientTab slot="node">
+    ```typescript
+    import { GlideClient, NodeDiscoveryMode } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "proxy.example.com", port: 6379 }],
+        nodeDiscoveryMode: NodeDiscoveryMode.Static,
+    });
+    ```
+  </ClientTab>
+
+  <ClientTab slot="go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    clientConfig := config.NewClientConfiguration().
+        WithAddress(&config.NodeAddress{Host: "proxy.example.com", Port: 6379}).
+        WithNodeDiscoveryMode(config.NodeDiscoveryModeStatic)
+
+    client, err := glide.NewClient(clientConfig)
+    ```
+  </ClientTab>
+
+  <ClientTab slot="php">
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'proxy.example.com', 'port' => 6379]],
+        node_discovery_mode: ValkeyGlide::NODE_DISCOVERY_MODE_STATIC
+    );
+    ```
+  </ClientTab>
+
+  <ClientTab slot="csharp">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new StandaloneClientConfigurationBuilder()
+        .WithAddress("proxy.example.com", 6379)
+        .WithNodeDiscoveryMode(NodeDiscoveryMode.Static)
+        .Build();
+
+    await using var client = await GlideClient.CreateClient(config);
+    ```
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    :::note[Not currently supported]
+    The Ruby client does not currently expose a node discovery mode.
+    :::
+  </ClientTab>
+</ClientTabs>
 
 ## Configuration Options
 

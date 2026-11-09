@@ -1,7 +1,7 @@
 {
   "language": "go",
   "displayName": "Go",
-  "version": "2.5.3",
+  "version": "2.6.0",
   "async": false,
   "features": [
     {
@@ -133,7 +133,7 @@
     {
       "feature": "in_flight_request_limits",
       "hover": {
-        "text": "unreleased",
+        "text": "since 2.6.0",
         "href": "https://github.com/valkey-io/valkey-glide/pull/6580"
       }
     },

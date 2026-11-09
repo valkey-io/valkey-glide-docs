@@ -1,7 +1,7 @@
 {
   "language": "php",
   "displayName": "PHP",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "async": false,
   "features": [
     {
@@ -78,6 +78,7 @@
       }
     },
     "glide_logging",
+    "monitor_streaming",
     "opentelemetry",
     {
       "feature": "json",
