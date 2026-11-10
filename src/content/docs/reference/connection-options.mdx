@@ -163,6 +163,16 @@ through `~` (U+007E), excluding `(` and `)`.
       <td>Node.js</td>
       <td><code>GlideJS</code></td>
     </tr>
+
+    <tr>
+      <td>PHP</td>
+      <td><code>GlidePHP</code></td>
+    </tr>
+
+    <tr>
+      <td>Ruby</td>
+      <td><code>GlideRuby</code></td>
+    </tr>
   </tbody>
 </table>
 
@@ -341,4 +351,60 @@ Choose the option that matches how the connection should be identified:
     defer monitor.Close()
     ```
   </ClientTab>
+
+  <ClientTab slot="php">
+    Standalone and cluster clients accept the same identification options:
+
+    ```php
+    $client = new ValkeyGlide();
+    $client->connect(
+        addresses: [['host' => 'localhost', 'port' => 6379]],
+        lib_name: 'custom-client',
+        client_info_tag: 'framework:1.2'
+    );
+
+    $cluster = new ValkeyGlideCluster(
+        addresses: [['host' => 'localhost', 'port' => 7001]],
+        lib_name: 'custom-client',
+        client_info_tag: 'framework:1.2'
+    );
+    ```
+
+    Empty values are treated as unset. Invalid values cause connection creation to throw `ValkeyGlideException`.
+  </ClientTab>
+
+  <ClientTab slot="ruby">
+    Standalone and cluster clients accept the same identification options:
+
+    ```ruby
+    standalone = Valkey.new(
+      host: "localhost",
+      port: 6379,
+      lib_name: "custom-client",
+      client_info_tag: "framework:1.2"
+    )
+
+    cluster = Valkey.new(
+      nodes: [{ host: "localhost", port: 7001 }],
+      cluster_mode: true,
+      lib_name: "custom-client",
+      client_info_tag: "framework:1.2"
+    )
+    ```
+
+    String and symbol values are accepted. Empty values are treated as unset, and invalid composed names raise `Valkey::CannotConnectError` during client creation.
+  </ClientTab>
 </ClientTabs>
+
+### PHPRedis-compatible runtime options
+
+The PHP client supports client-side key prefixing through `OPT_PREFIX`. The prefix applies to key arguments, multi-key commands, the `KEYS` portion of `EVAL`, `EVALSHA`, and `FCALL`, commands queued in transactions or pipelines, Pub/Sub channels, and cluster route keys. Server replies are not rewritten, and `rawCommand()` arguments are not prefixed.
+
+```php
+$client->setOption(ValkeyGlide::OPT_PREFIX, 'app:');
+$client->set('user:1', 'active');          // writes app:user:1
+echo $client->_prefix('user:1');           // app:user:1
+$client->setOption(ValkeyGlide::OPT_PREFIX, ''); // removes the prefix
+```
+
+`OPT_SCAN` controls two independent behaviors. `SCAN_RETRY` skips empty intermediate pages, while `SCAN_NORETRY` returns them. `SCAN_PREFIX` applies `OPT_PREFIX` to a scan's `MATCH` pattern, while `SCAN_NOPREFIX` sends the pattern unchanged. `getOption(OPT_SCAN)` returns a bitmask containing the active retry and prefix flags.

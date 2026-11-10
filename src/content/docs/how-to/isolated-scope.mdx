@@ -179,6 +179,14 @@ Blocking commands honor their own blocking timeout rather than the client's requ
 
 If a blocking command times out or its caller cancels it, the scope's connection is discarded instead of being returned to the pool. Releasing the scope or closing its parent client closes that socket, so a blocked server-side waiter cannot consume a later push.
 
+## Custom Commands in Java
+
+Java scopes expose `command(String command, String... args)` for commands without a dedicated scope method. The returned object is decoded using the same response model as ordinary GLIDE commands, including strings, arrays, and maps. Responses larger than 16 KiB are decoded normally.
+
+```java
+Object reply = scope.command("COMMAND", "DOCS", "GET").get();
+```
+
 ## Concurrent Scopes
 
 Each client keeps its own pool of scope connections, holding up to 64 concurrent scopes. Acquiring beyond that limit waits for one to be released rather than failing immediately, so release each scope as soon as its transaction completes — a context manager or `try`/`finally` is the safest way to guarantee that. The wait ends at the acquire timeout (default 5 s) with a timeout error; causes that waiting cannot fix, such as a closed parent client or an invalid configuration, fail immediately instead of waiting.
@@ -259,6 +267,6 @@ These are intentional constraints for this release. Design your application arou
 These are being tracked and are expected to be resolved in a future release.
 
 - **Cluster scopes without a routing key can fail with `MOVED`:** In Go and Node.js, a scope acquired without a routing key is not pinned by its first keyed command. If that key's slot is not on the slot-0 primary, the command fails with `MOVED`. Always pass a routing key in cluster mode.
-- **Scope replies don't match the parent client:** Scope commands return string-typed replies. Binary values are corrupted or raise, array and map replies are returned as strings, and binary arguments are not supported in Java and Python. In Go and Python, `exec()` can't distinguish a `WATCH` abort from an empty transaction. Server errors are not raised as the binding's GLIDE error type. Scope connections use RESP2 even when the parent client uses RESP3. Use scopes with string data, and don't rely on GLIDE error types for errors raised by scope commands.
+- **Scope replies don't fully match the parent client:** Binary values are corrupted or raise, and binary arguments are not supported in Java and Python. Java decodes string, array, and map replies from `command()`, including responses larger than 16 KiB. In Go and Python, `exec()` can't distinguish a `WATCH` abort from an empty transaction. Server errors are not raised as the binding's GLIDE error type. Scope connections use RESP2 even when the parent client uses RESP3. Use scopes with string data, and don't rely on GLIDE error types for errors raised by scope commands.
 - **Some connection state carries over to the next scope:** Release does not reset `AUTH` identity, `HELLO`/`RESET` protocol changes, `CLIENT NO-EVICT`, or `CLIENT NO-TOUCH`. Don't change connection-level state inside a scope.
 - **Go cluster pool clients can't open a scope:** A client borrowed from a Go cluster pool is a standalone client, so `ClusterClient.ScopedConnection()` is not available on it. Open scopes from a cluster client that is not pool-borrowed.

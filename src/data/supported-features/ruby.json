@@ -23,6 +23,13 @@
     "custom_commands",
     "multi_slot_command_handling",
     {
+      "feature": "pubsub",
+      "hover": {
+        "text": "unreleased; merged after 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/pull/304"
+      }
+    },
+    {
       "feature": "request_routing",
       "hover": {
         "text": "since 1.0.0",
@@ -76,6 +83,13 @@
       }
     },
     "client_statistics",
-    "opentelemetry"
+    "opentelemetry",
+    {
+      "feature": "search",
+      "hover": {
+        "text": "unreleased; merged after 1.0.0",
+        "href": "https://github.com/valkey-io/valkey-glide-ruby/pull/295"
+      }
+    }
   ]
 }

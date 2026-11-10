@@ -99,7 +99,7 @@ The release of Valkey GLIDE was tested on the following platforms:
 Alpine Linux defaults to using MUSL libc. Valkey GLIDE currently supports it as following:
 
 * **Java:** use a `linux_musl-x86_64` or `linux_musl-aarch_64` classifier, or the uber jar.
-* **Go:** build with `-tags=musl` (for example, `export GOFLAGS=-tags=musl`).
+* **Go:** build with `-tags=musl` (for example, `export GOFLAGS=-tags=musl`). Valkey GLIDE Go 2.6.0 requires an additional linker flag when using TLS cluster clients; see [Known Issues](/reference/known-issues/#go-tls-cluster-clients-on-alpine-linux).
 * **PHP:** on Alpine 3.19+, install the build dependencies listed in the [PHP client README](https://github.com/valkey-io/valkey-glide-php#readme).
 * **Ruby & Node.js:** Work out of the box.
 
