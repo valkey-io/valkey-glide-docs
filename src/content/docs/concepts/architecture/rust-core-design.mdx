@@ -6,8 +6,6 @@ sidebar:
 
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
 Valkey GLIDE is built on a sophisticated, layered architecture designed to deliver consistent, high-performance database interaction across multiple programming languages.
 It features a **unified core engine written in Rust**, which handles all the complex, low-level tasks of client-server communication.
 
@@ -59,9 +57,7 @@ In general, each language binding is responsible for:
 * **Handles Callbacks:** Enables event propagation across language boundaries
 * **Ensures Safety:** Prevents memory leaks and undefined behavior
 
-<Aside>
-  The FFI layer is implemented using language-specific FFI mechanisms, e.g. Py03 for Python or JNI (Java Native Interface) for Java.
-</Aside>
+Each client reaches the FFI layer through its language's native interop mechanism. The Python async client uses PyO3 and the sync client uses CFFI. Java uses JNI (Java Native Interface), Node.js uses NAPI-RS, and Go uses cgo. C# calls the Rust library through P/Invoke, PHP through a C extension, and Ruby through the `ffi` gem.
 
 ## The Rust Core
 

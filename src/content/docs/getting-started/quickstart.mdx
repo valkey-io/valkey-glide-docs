@@ -49,11 +49,8 @@ For this guide, we will use a standalone client to connect to a Valkey Docker in
 ### Linux
 
 * Ubuntu 20 (x86\_64/amd64 and arm64/aarch64)
-* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64)
-
-:::caution
-Note: Currently Alpine Linux / MUSL is NOT supported.
-:::
+* Amazon Linux 2 (AL2) and 2023 (AL2023) (x86\_64). The Node.js client does not support AL2; see [Known Issues](/reference/known-issues).
+* Alpine Linux are not supported for Python and C# clients. See [Installation Guide](/how-to/installation/#alpine-linux) for more details.
 
 ### MacOS
 
@@ -62,15 +59,16 @@ Note: Currently Alpine Linux / MUSL is NOT supported.
 
 ### Windows
 
-Windows support is currently available only for Valkey-GLIDE Java
+Windows support is currently available for Valkey GLIDE Java and C#.
 
 * Windows (x86\_64)
+* Windows (arm64) — C# only
 
 ## Install Valkey GLIDE
 
 <ClientTabs>
   <ClientTab slot="python">
-    **Requirements:** Python 3.9 to 3.13.
+    **Requirements:** Python 3.9 to 3.14.
 
     ```bash
     # Install the latest version
@@ -79,7 +77,7 @@ Windows support is currently available only for Valkey-GLIDE Java
   </ClientTab>
 
   <ClientTab slot="java">
-    **Requirements:** JDK 11+
+    **Requirements:** JDK 8+ (JDK 11+ recommended)
 
     Add the following to your build tool. Make sure to specify your classifier for your OS.
 
@@ -129,7 +127,7 @@ Windows support is currently available only for Valkey-GLIDE Java
   </ClientTab>
 
   <ClientTab slot="node">
-    **Requirements:** Node 16+
+    **Requirements:** Node.js 20+
 
     ```bash
     npm install @valkey/valkey-glide
