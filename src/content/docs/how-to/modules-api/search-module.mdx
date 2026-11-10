@@ -404,6 +404,7 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     aggregate = client.ft_aggregate(
       index,
       "@category:{demo}",
+      load: ["@category"],
       clauses: [
         Valkey::Search::GroupBy.new(
           ["@category"],

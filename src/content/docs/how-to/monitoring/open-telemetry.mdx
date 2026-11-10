@@ -28,7 +28,7 @@ GLIDE does not export data directly to third-party services—instead, it sends 
         traces=OpenTelemetryTracesConfig(
             endpoint="http://localhost:4318/v1/traces",
             sample_percentage=10,  # Optional, defaults to 1. Can also be changed at runtime via set_sample_percentage().
-            enable_trace_context_propagation=True,  # Optional, defaults to False.
+            enable_trace_context_propagation=True,  # Optional, defaults to False. Requires the opentelemetry-api package.
         ),
         metrics=OpenTelemetryMetricsConfig(
             endpoint="http://localhost:4318/v1/metrics"
