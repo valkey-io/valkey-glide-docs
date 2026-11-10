@@ -310,8 +310,8 @@ No special configuration is needed at client creation time — you can subscribe
         addresses: [['host' => 'localhost', 'port' => 7001]]
     );
 
-    // Run the publisher from another process or client.
-    $cluster->spublish('{news}.1', 'hello');
+    // Run this publisher command from another process or client:
+    // $cluster->spublish('{news}.1', 'hello');
 
     // Channels in one call must share a hash slot.
     $cluster->ssubscribe(['{news}.1', '{news}.2'], function ($client, $channel, $message) {

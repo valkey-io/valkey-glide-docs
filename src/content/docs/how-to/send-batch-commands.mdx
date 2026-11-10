@@ -498,13 +498,13 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
 
     ```ruby
     results = client.multi(exception: false) do |tx|
-      tx.set("counter", "not-a-number")
-      tx.incr("counter")
-      tx.set("other", "saved")
+      tx.set("{batch}:counter", "not-a-number")
+      tx.incr("{batch}:counter")
+      tx.set("{batch}:other", "saved")
     end
 
     results[1].is_a?(Valkey::CommandError) # true
-    client.get("other")                    # "saved"
+    client.get("{batch}:other")            # "saved"
     ```
   </ClientTab>
 </ClientTabs>
