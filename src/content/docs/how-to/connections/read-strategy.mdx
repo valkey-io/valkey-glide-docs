@@ -583,10 +583,6 @@ Compared with AZ Affinity Replicas and Primary in cluster mode:
 
 Standalone clients use the same local-first, all-node rotation. However, including the primary in the final fallback pool is already the behavior of standalone AZ Affinity Replicas and Primary. See [command routing](/concepts/client-features/command-routing/#read-strategy) for the comparison.
 
-:::note[Release availability]
-AZ Affinity All Nodes is included in Java and Python in 2.5.3, Go and Node.js in 2.6.0, and C# in 1.2.0. PHP and Ruby support is merged after their latest releases and is not released yet.
-:::
-
 <ClientTabs>
   <ClientTab slot="python">
     ```python
@@ -725,4 +721,4 @@ $cluster->setOption(
 );
 ```
 
-Changing this option recreates the underlying client. It returns `false` while keys are watched, inside `MULTI` or a pipeline, while subscribed, in a forked child, or for a persistent client. Call `getLastError()` for the reason.
+Changing this option recreates the underlying client. It returns `false` while keys are watched, inside `MULTI` or a pipeline, while subscribed, or for a persistent client. Call `getLastError()` for the reason.
