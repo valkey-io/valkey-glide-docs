@@ -26,4 +26,14 @@ When running on an incompatible system, the client fails to load with an error s
 /lib64/libc.so.6: version `GLIBC_2.28' not found
 ```
 
-You can check the `glibc` version on your system by running `ldd --version`. For the Node.js client, any `glibc` below `2.28` (for example `2.26` or `2.27`) is not supported; for the Python, Java, and Go clients, any `glibc` below `2.17` is not supported. Progress on broader `glibc` compatibility is tracked in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).
+You can check the `glibc` version on your system by running `ldd --version`. For the Node.js client, any `glibc` below `2.28` (for example `2.26` or `2.27`) is not supported; for the Python, Java, Go, C#, and Ruby clients, any `glibc` below `2.17` is not supported. Progress on broader `glibc` compatibility is tracked in issue [#3291](https://github.com/valkey-io/valkey-glide/issues/3291).
+
+## Go TLS cluster clients on Alpine Linux
+
+Valkey GLIDE Go 2.6.0 can crash with a `SIGSEGV` when an application creates a TLS cluster client on Alpine Linux or another MUSL-based distribution. The crash is caused by a native stack overflow when client creation runs on a non-main operating system thread, which is common when called from a goroutine. Standalone clients, non-TLS cluster clients, glibc-based distributions, and Valkey GLIDE Go 2.5.3 are not affected. Progress on a fix is tracked in issue [#7637](https://github.com/valkey-io/valkey-glide/issues/7637).
+
+To avoid the crash, build the application with a larger MUSL thread stack:
+
+```bash
+go build -ldflags='-extldflags=-Wl,-z,stack-size=262144' ./...
+```
