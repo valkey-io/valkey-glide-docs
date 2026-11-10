@@ -413,14 +413,11 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
       ]
     )
 
-    # FT.INFO with Valkey cluster options
-    info = client.ft_info(
-      index,
-      Valkey::Search::InfoOptions.new(scope: :cluster)
-    )
+    # FT.INFO
+    info = client.ft_info(index)
     ```
 
-    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, and `FT.INFO`. Use `client.call(...)` for raw Search commands without a builder. `ft_search` and `ft_aggregate` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries.
+    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, and `FT.INFO`. Use `client.call(...)` for raw Search commands without a builder. `ft_search` and `ft_aggregate` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries. When the client connects to a Search-enabled cluster, pass `Valkey::Search::InfoOptions.new(scope: :cluster)` to request cluster-wide `FT.INFO`.
   </ClientTab>
 </ClientTabs>
 
