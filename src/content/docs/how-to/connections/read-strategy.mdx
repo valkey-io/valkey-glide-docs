@@ -648,13 +648,22 @@ AZ Affinity All Nodes is included in Java and Python in 2.5.3, Go and Node.js in
 
   <ClientTab slot="go">
     ```go
-    myConfig := config.NewClusterClientConfiguration().
-        WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
-        WithReadFrom(config.AzAffinityAllNodes).
-        WithClientAZ("us-east-1a")
+    import (
+        "context"
 
-    client, _ := glide.NewClusterClient(myConfig)
-    client.Get(context.Background(), "key1")
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func ConnectClusterWithReadStrategyAZAffinityAllNodes() {
+        myConfig := config.NewClusterClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "address.example.com", Port: 6379}).
+            WithReadFrom(config.AzAffinityAllNodes).
+            WithClientAZ("us-east-1a")
+
+        client, _ := glide.NewClusterClient(myConfig)
+        client.Get(context.Background(), "key1")
+    }
     ```
   </ClientTab>
 
