@@ -26,19 +26,13 @@ The table describes ordinary cluster reads. Candidate nodes belong to the key's 
 Strategies that include replicas can return stale data. The `set`/`get` examples below demonstrate routing; a read from a replica is not guaranteed to observe the preceding write immediately.
 :::
 
+:::note[Configuring AZ strategies]
+All AZ strategies require the application's AZ. The value must match the node AZ information reported by the server. An incorrect nonempty AZ can match no nodes and cause cross-AZ fallback. AZ strategies are incompatible with standalone `readOnly` mode.
+:::
+
 ### All Nodes
 
-Use All Nodes to share reads between the primary and replicas without preferring an AZ. This strategy is available in Java, Python, Node, Go, and C#. Java, Python, Node, and Go include it in 2.4.0 and later. It does not require a client AZ.
-
-The configuration name differs by client:
-
-| Language | Configuration                   |
-| -------- | ------------------------------- |
-| Python   | `ReadFrom.ALL_NODES`            |
-| Java     | `ReadFrom.ALL_NODES`            |
-| Node     | `"allNodes"`                    |
-| Go       | `config.ReadFromAllNodes`        |
-| C#       | `ReadFromStrategy.AllNodes`      |
+Use All Nodes to share reads between the primary and replicas without preferring an AZ. It does not require a client AZ.
 
 <ClientTabs>
   <ClientTab slot="python">
@@ -291,17 +285,7 @@ The configuration name differs by client:
 
 ### AZ Affinity
 
-When using the AZ Affinity read strategy, the `clientAz` setting is required to ensure that readonly commands are directed to replicas within the specified availability zone if they exist. Reads fall back to other available replicas, then to the primary only if no replica is available.
-
-:::note[Configuring AZ strategies]
-All AZ strategies require the application's AZ: `clientAZ` in Java, `clientAz` in Node, `client_az` in Python, or `WithClientAZ` in Go. The value must match the node AZ information reported by the server. An incorrect nonempty AZ can match no nodes and cause cross-AZ fallback. AZ strategies are incompatible with standalone `readOnly` mode.
-:::
-
-:::caution[Java AZ validation in 2.5.3]
-Java 2.5.3 validates `clientAZ` for `AZ_AFFINITY`, `AZ_AFFINITY_REPLICAS_AND_PRIMARY`, and `AZ_AFFINITY_ALL_NODES`. A missing or empty value, including one that becomes empty after Java's `String.trim()`, causes `createClient` to throw `ConfigurationError` synchronously. Padded values such as `" us-east-1a "` are trimmed before use.
-
-When upgrading, correct existing configurations that omit the AZ: they could previously fall back silently to `PreferReplica`. Padded values could fail to match the intended AZ. Python, Go, and Node already reject missing or empty AZ values for their supported AZ strategies; Java additionally normalizes surrounding whitespace.
-:::
+When using the AZ Affinity read strategy, the client AZ setting is required to ensure that readonly commands are directed to replicas within the specified availability zone if they exist. Reads fall back to other available replicas, then to the primary only if no replica is available.
 
 <ClientTabs>
   <ClientTab slot="python">
