@@ -28,7 +28,17 @@ Strategies that include replicas can return stale data. The `set`/`get` examples
 
 ### All Nodes
 
-Use All Nodes to share reads between the primary and replicas without preferring an AZ. This strategy is available in Java, Python, Node, and Go in 2.4.0 and later. It does not require a client AZ.
+Use All Nodes to share reads between the primary and replicas without preferring an AZ. This strategy is available in Java, Python, Node, Go, and C#. Java, Python, Node, and Go include it in 2.4.0 and later. It does not require a client AZ.
+
+The configuration name differs by client:
+
+| Language | Configuration                   |
+| -------- | ------------------------------- |
+| Python   | `ReadFrom.ALL_NODES`            |
+| Java     | `ReadFrom.ALL_NODES`            |
+| Node     | `"allNodes"`                    |
+| Go       | `config.ReadFromAllNodes`        |
+| C#       | `ReadFromStrategy.AllNodes`      |
 
 <ClientTabs>
   <ClientTab slot="python">
@@ -115,6 +125,24 @@ Use All Nodes to share reads between the primary and replicas without preferring
         // Get rotates across available primary and replicas for the key's shard
         client.Get(context.Background(),"key1")
     }
+    ```
+  </ClientTab>
+
+  <ClientTab slot="csharp">
+    ```csharp
+    using Valkey.Glide;
+    using static Valkey.Glide.ConnectionConfiguration;
+
+    var config = new ClusterClientConfigurationBuilder()
+        .WithAddress("address.example.com", 6379)
+        .WithReadFrom(new ReadFrom(ReadFromStrategy.AllNodes))
+        .Build();
+
+    await using var client = await GlideClusterClient.CreateClient(config);
+    await client.SetAsync("key1", "val1");
+
+    // GetAsync rotates across available primary and replicas for the key's shard
+    await client.GetAsync("key1");
     ```
   </ClientTab>
 </ClientTabs>
