@@ -7,11 +7,14 @@
     "dev": "astro dev",
     "start": "astro dev",
     "badge": "sh ./add-draft-badges.sh && sh ./add-wip-aside.sh",
-    "build": "astro build",
+    "build": "pnpm test && astro build",
     "check-links": "lychee \"$PWD/dist\" --root-dir \"$PWD/dist\"",
     "build:check-links": "pnpm build && pnpm run check-links",
     "preview": "astro preview",
     "astro": "astro",
+    "test": "pnpm test:unit && pnpm test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
     "format:non-mdx": "prettier --write .",
     "format:mdx": "remark \"src/content/docs/**/*.{md,mdx}\" --output --frail; bash scripts/fix-remark-escapes.sh",
     "format": "pnpm run format:non-mdx && pnpm run format:mdx",
@@ -32,11 +35,14 @@
     "starlight-links-validator": "0.19.2"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "cheerio": "1.2.0",
     "prettier": "3.6.2",
     "prettier-plugin-astro": "0.14.1",
     "remark-cli": "12.0.1",
     "remark-frontmatter": "5.0.0",
     "remark-mdx": "3.1.0",
-    "remark-preset-lint-recommended": "7.0.1"
+    "remark-preset-lint-recommended": "7.0.1",
+    "vitest": "^3.2.7"
   }
 }
