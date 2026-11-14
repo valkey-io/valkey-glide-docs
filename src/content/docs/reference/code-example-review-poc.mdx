@@ -1,0 +1,56 @@
+---
+title: Code example review PoC
+description: Temporary examples used to exercise automated client API validation.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+These examples configure automatic retries when creating a standalone GLIDE
+client.
+
+<Tabs syncKey="progLangInExamples">
+  <TabItem label="Python">
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    configuration = GlideClientConfiguration(
+        addresses=[NodeAddress(host="localhost", port=6379)],
+        automatic_retry_attempts=3,
+    )
+
+    client = await GlideClient.create(configuration)
+    ```
+  </TabItem>
+
+  <TabItem label="Java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration configuration =
+        GlideClientConfiguration.builder()
+            .address(NodeAddress.builder().host("localhost").port(6379).build())
+            .automaticRetryAttempts(3)
+            .build();
+
+    GlideClient client = GlideClient.createClient(configuration).get();
+    ```
+  </TabItem>
+
+  <TabItem label="Node">
+    ```typescript
+    import {
+        GlideClient,
+        GlideClientConfiguration,
+    } from "@valkey/valkey-glide";
+
+    const configuration: GlideClientConfiguration = {
+        addresses: [{ host: "localhost", port: 6379 }],
+        automaticRetryAttempts: 3,
+    };
+
+    const client = await GlideClient.createClient(configuration);
+    ```
+  </TabItem>
+</Tabs>
