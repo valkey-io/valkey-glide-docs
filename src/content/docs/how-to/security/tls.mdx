@@ -939,8 +939,10 @@ You can provide custom root certificates for TLS connections. This is useful whe
     **Certificate Behavior:**
 
     * If `ssl_params` is not provided, the system's default certificate trust store is used
-    * `ca_file` takes a path to a CA certificate file in PEM format
+    * `ca_file`, `cert`, and `key` each accept a file path, PEM text, or an OpenSSL object (such as `OpenSSL::X509::Certificate` or `OpenSSL::PKey`). A String is used as PEM content when it contains `-----BEGIN `; otherwise it is read as a file path
     * Multiple certificates can be provided as PEM strings via the `root_certs` array, or by pointing `ca_path` at a directory of `.crt`/`.pem` files
+    * If a `ca_file`, `cert`, or `key` file is missing or unreadable, or `ca_path` is not an existing directory, `Valkey.new` raises `ArgumentError`. The message names the option but never includes the supplied value or path, so it is safe to log (for example, `Key file does not exist (pass a file path, PEM text, or an OpenSSL object)`)
+    * `cert` and `key` files are read once when the client is created; Ruby does not reload rotated certificate files
 
     #### Example - Connecting with Custom Root Certificate from File
 
@@ -979,6 +981,25 @@ You can provide custom root certificates for TLS connections. This is useful whe
         ca_file: "/path/to/ca-cert.pem",
         cert: "/etc/glide/client.pem",
         key: "/etc/glide/client.key"
+      }
+    )
+    ```
+
+    #### Example - Client Certificate from PEM Text
+
+    ```ruby
+    # Load PEM text from a secret store.
+    client_cert = "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgode..."
+    client_key = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBAD..."
+
+    client = Valkey.new(
+      host: "address.example.com",
+      port: 6379,
+      ssl: true,
+      ssl_params: {
+        ca_file: "/path/to/ca-cert.pem",
+        cert: client_cert,
+        key: client_key
       }
     )
     ```
