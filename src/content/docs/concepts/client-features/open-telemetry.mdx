@@ -37,6 +37,12 @@ GLIDE creates a **trace span for each Valkey command**, giving detailed visibili
 
 This distinction helps developers separate client-side queuing latency from server communication delays, making it easier to troubleshoot performance issues.
 
+### Application parent spans
+
+GLIDE's native exporter is configured separately from the application's OpenTelemetry instrumentation. Without parent-context propagation, GLIDE spans form independent traces. With propagation enabled, sampled GLIDE spans can share the application's trace ID and use its active span as their parent, while still being exported by GLIDE's native exporter. Propagation does not override GLIDE's sampling percentage.
+
+Java's opt-in `parentSpanContextProvider` captures context on the thread submitting a command or batch. GLIDE preserves that captured context through its own asynchronous execution; context propagation across application-managed executor boundaries remains the responsibility of the application or its instrumentation. This Java feature is unreleased and is not available in GLIDE 2.6.0. See [trace context propagation](/how-to/monitoring/open-telemetry/#trace-context-propagation) for configuration examples and release status.
+
 :::note
 Some advanced commands have limited or no tracing instrumentation:
 

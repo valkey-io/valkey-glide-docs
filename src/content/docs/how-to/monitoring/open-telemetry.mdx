@@ -199,6 +199,7 @@ Both `traces` and `metrics` are optional—but **at least one must be provided**
 | **traces.endpoint**         | String  | Yes (if traces enabled)  | -       | The trace collector endpoint URL. Supports `http://`, `https://`, `grpc://`, or `file://` protocols.                                                                           |
 | **traces.samplePercentage** | Integer | No                       | `1`     | Percentage (0–100) of commands to sample for tracing. For production, a low sampling rate (1–5%) is recommended to balance performance and insight. Can be changed at runtime. |
 | **traces.enableTraceContextPropagation** | Boolean | No | `false` | Python only. Parents sampled command, batch, and script spans to the active OpenTelemetry span. Requires the optional `opentelemetry-api` package. |
+| **parentSpanContextProvider** | Callback | No | Unset | Java (unreleased). Supplies application parent context for sampled command and batch spans. See [Java trace context propagation](#java). |
 | **metrics.endpoint**        | String  | Yes (if metrics enabled) | -       | The metrics collector endpoint URL. Supports `http://`, `https://`, `grpc://`, or `file://` protocols.                                                                         |
 | **flushIntervalMs**         | Integer | No                       | `5000`  | Time in milliseconds between flushes to the collector. Must be a positive integer.                                                                                             |
 
@@ -239,6 +240,63 @@ If using `file://` as the endpoint:
 * **Review exported data** — GLIDE traces include command names, latency measurements, and error status. While GLIDE does not include command arguments or key values in trace spans, always review what your collector pipeline forwards to third-party backends.
 
 ## Trace Context Propagation
+
+### Java
+
+:::note[Unreleased Java feature]
+Java parent-context propagation is introduced by [valkey-glide PR #7747](https://github.com/valkey-io/valkey-glide/pull/7747) and is not available in GLIDE 2.6.0. The following example requires a build containing that change.
+:::
+
+Register `parentSpanContextProvider` to attach sampled GLIDE command and batch spans to an active application span. Propagation is disabled by default and does not add an OpenTelemetry Java dependency to GLIDE.
+
+Use your application's existing OpenTelemetry setup, including framework or Java-agent configuration. If you configure OpenTelemetry manually, configure the application SDK before using this example. Application spans use that setup; GLIDE spans are exported separately through GLIDE's configured native exporter. Configure both exporters to send to the same tracing backend to view the complete trace.
+
+Initialize GLIDE once with a callback that reads the current application span:
+
+```java
+import glide.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import java.util.stream.Collectors;
+
+OpenTelemetry.init(OpenTelemetry.OpenTelemetryConfig.builder()
+    .traces(OpenTelemetry.TracesConfig.builder()
+        .endpoint("http://localhost:4318/v1/traces")
+        .samplePercentage(10)
+        .build())
+    .parentSpanContextProvider(() -> {
+        SpanContext context = Span.current().getSpanContext();
+        if (!context.isValid()) {
+            return null;
+        }
+        String traceState = context.getTraceState().asMap().entrySet().stream()
+            .map(entry -> entry.getKey() + "=" + entry.getValue())
+            .collect(Collectors.joining(","));
+        return new OpenTelemetry.GlideSpanContext(
+            context.getTraceId(), context.getSpanId(),
+            Byte.toUnsignedInt(context.getTraceFlags().asByte()), traceState);
+    })
+    .build());
+
+// Submit through an existing GlideClient or GlideClusterClient.
+Tracer tracer = GlobalOpenTelemetry.getTracer("my-application");
+Span parent = tracer.spanBuilder("process-order").startSpan();
+try (Scope scope = parent.makeCurrent()) {
+    client.set("order:42", "processing").join();
+} finally {
+    parent.end();
+}
+```
+
+* The provider is process-global and applies to all GLIDE clients. Keep it lightweight and thread-safe: it runs synchronously on the submitting thread, once per sampled command or batch execution, not when a batch is constructed.
+* GLIDE captures the parent before dispatch and carries it through its own asynchronous/native execution. If application code switches executor threads **before submission**, ensure the context is active on the destination thread. Framework or Java-agent instrumentation may already do this; otherwise, wrap the submitted task using the OpenTelemetry context API.
+* GLIDE's `samplePercentage` still applies. A sampled parent does not force GLIDE to sample an operation; a valid unsampled parent's sampling flag is passed to the native sampler.
+* An absent or invalid parent context, or a provider `RuntimeException`, falls back to a standalone GLIDE span without failing the command. GLIDE never ends the application span.
+* Replace or clear the provider after initialization using `OpenTelemetry.setParentSpanContextProvider(provider)` or `OpenTelemetry.setParentSpanContextProvider(null)`. Successful initialization replaces any previously registered provider with the one in the initialization config. Changes affect subsequent captures; they do not wait for callbacks already executing.
+* This option only parents existing command/batch spans. It does not add instrumentation to currently untraced operations.
 
 ### Python
 
