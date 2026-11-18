@@ -986,6 +986,31 @@ Pipelining is a group of commands sent in a single request that does not guarant
   </ClientTab>
 </ClientTabs>
 
+## SCAN commands in a batch (PHP)
+
+:::caution[PHP only]
+In the PHP client, `scan()`, `sScan()`, `hScan()` and `zScan()` (standalone and cluster, including cluster `scan()` with `ClusterScanCursor`) cannot be called inside `multi()` or `multi(ValkeyGlide::PIPELINE)`. The call throws a `ValkeyGlideException` with the message `Can't call SCAN commands in multi or pipeline mode`.
+:::
+
+The call queues nothing and leaves the by-reference iterator or cursor untouched. The batch stays open, so `exec()` and `discard()` still work. Run SCAN commands outside the batch:
+
+```php
+$client->multi();
+try {
+    $iterator = null;
+    $client->sScan('myset', $iterator);
+} catch (ValkeyGlideException $e) {
+    // "Can't call SCAN commands in multi or pipeline mode"
+}
+$client->exec(); // or $client->discard()
+
+// Run SCAN outside the batch
+$iterator = null;
+$members = $client->sScan('myset', $iterator);
+```
+
+Earlier versions queued these calls, which could return corrupted data at `exec()`, and cluster `scan()` ran immediately outside the batch.
+
 ## Next Steps
 
 To lean more about how GLIDE handles batch commands, see our [explanation](/concepts/client-features/batch-commands).

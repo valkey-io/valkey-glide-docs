@@ -480,6 +480,19 @@ if ($balance >= 100) {
 }
 ```
 
+:::caution[SCAN commands in multi() or pipeline]
+`scan()`, `sScan()`, `hScan()` and `zScan()` (standalone and cluster) throw a `ValkeyGlideException` when called inside `multi()` or `multi(ValkeyGlide::PIPELINE)`. Nothing is queued, the iterator or cursor is not modified, and the batch stays open so `exec()` and `discard()` still work. PHPRedis raises a fatal `E_ERROR` for `Redis` and throws `RedisClusterException` for `RedisCluster`. GLIDE throws a catchable `ValkeyGlideException` in both cases. Run SCAN commands outside the batch:
+
+```php
+$client->multi();
+$client->set('key1', 'value1');
+$results = $client->exec();
+
+$iterator = null;
+$keys = $client->sScan('myset', $iterator);
+```
+:::
+
 ### TLS/SSL Support
 
 ```php
@@ -544,6 +557,10 @@ while ($cursor->hasNext()) {
 }
 ```
 
+:::caution
+Cluster `scan()` cannot be called inside `multi()` or `multi(ValkeyGlide::PIPELINE)`. It throws a `ValkeyGlideException`, so run it outside the batch.
+:::
+
 ## Supported Features
 
 Valkey GLIDE PHP supports all major Redis/Valkey features including:
@@ -566,6 +583,7 @@ Valkey GLIDE PHP supports all major Redis/Valkey features including:
 * [ ] Update return type expectations for consistency
 * [ ] Test cluster operations if using cluster mode
 * [ ] Verify code that depends on `getLastError()` / `clearLastError()`, such as Symfony Lock
+* [ ] Move SCAN, SSCAN, HSCAN and ZSCAN calls out of multi()/pipeline()
 * [ ] Update configuration to use `connect()` method parameters
 * [ ] Verify TLS/SSL configuration if using encrypted connections
 * [ ] Test IAM authentication if using AWS ElastiCache
