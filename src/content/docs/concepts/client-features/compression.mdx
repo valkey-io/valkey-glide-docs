@@ -72,10 +72,10 @@ operate on the compressed bytes instead of the original value when compression i
 These commands are disabled when compression is enabled:
 
 * String manipulation: `APPEND`, `GETRANGE`, `LCS`, `SETRANGE`, `STRLEN`, `SUBSTR`
-* Value comparison: `DELIFEQ`, `SET` with the `IFEQ` or `IFNE`
+* Value comparison: `DELEX`, `DELIFEQ`, `SET` with the `IFEQ` or `IFNE`
 * Numeric operations: `DECR`, `DECRBY`, `INCR`, `INCRBY`, `INCRBYFLOAT`
 * Bit operations: `BITCOUNT`, `BITFIELD`, `BITFIELD_RO`, `BITOP`, `BITPOS`, `GETBIT`, `SETBIT`
 
 The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed,
 operations like `APPEND` would concatenate compressed data, and `STRLEN` would return the compressed length rather than the original length.
-Comparison commands fail for the same reason. Operations like `DELIFEQ` and `SET ... IFEQ` incorrectly compare the uncompressed comparison value against the compressed data.
+Comparison commands fail for the same reason. Operations like `DELEX`, `DELIFEQ`, and `SET ... IFEQ` incorrectly compare the uncompressed comparison value against the compressed data.
