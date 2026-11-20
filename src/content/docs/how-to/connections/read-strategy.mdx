@@ -23,7 +23,7 @@ The table describes ordinary cluster reads. Candidate nodes belong to the key's 
 | [AZ Affinity All Nodes](#az-affinity-all-nodes)                                     | Spread the read requests equally among all nodes (primary and replicas) within the client's availability zone in a round robin manner, falling back to a round robin across all nodes if no node in the client's availability zone is available.            |
 
 :::note[Replica reads]
-Strategies that include replicas can return stale data. The `set`/`get` examples below demonstrate routing; a read from a replica is not guaranteed to observe the preceding write immediately.
+Strategies that include replicas can return stale data. The `set`/`get` examples below demonstrate routing; a read from a replica is not guaranteed to observe the preceding write immediately. In standalone mode, with the Python, Node.js, Java, and Go clients, non-atomic batches (pipelines) that contain only read-only commands can also follow the read strategy and return stale data; see [Batch](/concepts/client-features/batch-commands/#batch).
 :::
 
 :::note[Configuring AZ strategies]

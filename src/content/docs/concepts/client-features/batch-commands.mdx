@@ -122,7 +122,14 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
 </ClientTabs>
 
 :::note
-Standalone Batches are executed on primary node.
+In the Python, Node.js, Java, and Go clients, the following standalone batches run on the primary node:
+
+* Atomic batches (transactions).
+* Batches sent while a raw `MULTI` is open.
+* Non-atomic batches containing a command that writes, changes connection or server state, uses a cursor, or is sent to every node when run on its own (for example, `SELECT`, `CLIENT SETNAME`, `CONFIG SET`, `SLOWLOG GET`, or `SCAN`).
+* Non-atomic batches containing `HTTL`, `HPTTL`, `HEXPIRETIME`, or `HPEXPIRETIME` ([#7703](https://github.com/valkey-io/valkey-glide/issues/7703)).
+
+Other non-atomic batches, including ones with read-only admin commands such as `CONFIG GET` or `INFO`, follow the client's [read strategy](/how-to/connections/read-strategy/). With a strategy that includes replicas, they may observe replication lag. With such a strategy, a `SELECT` or `RESET` in a batch also switches the replicas to the new database, and reads use a replica only after it has switched.
 :::
 
 ### ClusterBatch
@@ -214,7 +221,7 @@ splitting into sub-pipelines if needed, [Read more in Multi-Node support](#multi
 :::note
 When `isAtomic = true`, all keys in the `ClusterBatch` must map to the same slot. Attempting to include keys from different slots will result in an exception. Read more in [Multi-Node support](#multi-node-support).
 
-If the client is configured to read from replicas (ReplicaPrefered, AZ\_AFFINITY, AZ\_AFFINITY\_REPLICAS\_AND\_PRIMARY) read commands may be routed to the replicas, in a round robin manner, if this behavior impacts your application, consider creating a dedicated client, with the desired ReadFrom configuration.
+If the client is configured with a [read strategy that includes replicas](/how-to/connections/read-strategy/#available-read-strategies), read commands may be routed to the replicas in a round robin manner. If this behavior impacts your application, consider creating a dedicated client with the desired ReadFrom configuration.
 :::
 
 ### Error handling - Raise on Error
