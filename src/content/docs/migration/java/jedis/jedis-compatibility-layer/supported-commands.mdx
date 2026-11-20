@@ -1,0 +1,322 @@
+---
+title: Supported Commands Reference
+description: A reference page in my new Starlight docs site.
+sidebar:
+  order: 4
+
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+
+
+## Supported Commands Reference
+
+The following table lists all supported commands in the Jedis compatibility layer with category, description, and usage examples.
+
+| Category | Command | Description | Example |
+|----------|---------|-------------|---------|
+| String | `GET` | Get the value of a key | `jedis.get("mykey")` |
+| String | `SET` | Set the value of a key | `jedis.set("mykey", "value")` |
+| String | `SET` (with options) | Set with expiration/conditions | `jedis.set("key", "val", SetParams.setParams().ex(10).nx())` |
+| String | `MGET` | Get multiple values | `jedis.mget("key1", "key2", "key3")` |
+| String | `MSET` | Set multiple key-value pairs | `jedis.mset("k1", "v1", "k2", "v2")` |
+| String | `MSETNX` | Set multiple keys only if none exist | `jedis.msetnx("k1", "v1", "k2", "v2")` |
+| String | `GETEX` | Get value and set expiration | `jedis.getEx("key", GetExParams.getExParams().ex(10))` |
+| String | `GETDEL` | Get value and delete key | `jedis.getdel("mykey")` |
+| String | `SETRANGE` | Overwrite part of string at offset | `jedis.setrange("key", 6, "world")` |
+| String | `GETRANGE` | Get substring of string value | `jedis.getrange("key", 0, 4)` |
+| String | `APPEND` | Append value to key | `jedis.append("key", " more")` |
+| String | `STRLEN` | Get length of string value | `jedis.strlen("mykey")` |
+| String | `INCR` | Increment integer value by 1 | `jedis.incr("counter")` |
+| String | `INCRBY` | Increment integer by amount | `jedis.incrBy("counter", 5)` |
+| String | `INCRBYFLOAT` | Increment float by amount | `jedis.incrByFloat("price", 2.5)` |
+| String | `DECR` | Decrement integer value by 1 | `jedis.decr("counter")` |
+| String | `DECRBY` | Decrement integer by amount | `jedis.decrBy("counter", 3)` |
+| String | `LCS` | Find longest common subsequence | `jedis.lcs("key1", "key2")` |
+| String | `LCS` (with options) | LCS with length/indices | `jedis.lcs("k1", "k2", LCSParams.LCSParams().withIdx())` |
+| Hash | `HGET` | Get hash field value | `jedis.hget("user:1", "name")` |
+| Hash | `HSET` | Set hash field value | `jedis.hset("user:1", "name", "John")` |
+| Hash | `HMGET` | Get multiple hash field values | `jedis.hmget("user:1", "name", "age")` |
+| Hash | `HMSET` | Set multiple hash fields | `jedis.hmset("user:1", Map.of("name", "John", "age", "30"))` |
+| Hash | `HGETALL` | Get all hash fields and values | `jedis.hgetAll("user:1")` |
+| Hash | `HDEL` | Delete hash fields | `jedis.hdel("user:1", "age", "city")` |
+| Hash | `HEXISTS` | Check if hash field exists | `jedis.hexists("user:1", "name")` |
+| Hash | `HKEYS` | Get all hash field names | `jedis.hkeys("user:1")` |
+| Hash | `HVALS` | Get all hash values | `jedis.hvals("user:1")` |
+| Hash | `HLEN` | Get number of hash fields | `jedis.hlen("user:1")` |
+| Hash | `HINCRBY` | Increment hash field integer | `jedis.hincrBy("user:1", "visits", 1)` |
+| Hash | `HINCRBYFLOAT` | Increment hash field float | `jedis.hincrByFloat("user:1", "balance", 10.5)` |
+| Hash | `HSETNX` | Set hash field if not exists | `jedis.hsetnx("user:1", "email", "john@example.com")` |
+| Hash | `HRANDFIELD` | Get random hash field(s) | `jedis.hrandfield("user:1", 2)` |
+| Hash | `HSCAN` | Iterate hash fields | `jedis.hscan("user:1", "0")` |
+| Hash | `HEXPIRE` | Set hash field expiration (seconds) | `jedis.hexpire("user:1", 3600, "session")` |
+| Hash | `HPEXPIRE` | Set hash field expiration (ms) | `jedis.hpexpire("user:1", 3600000, "session")` |
+| Hash | `HTTL` | Get hash field TTL (seconds) | `jedis.httl("user:1", "session")` |
+| Hash | `HPTTL` | Get hash field TTL (milliseconds) | `jedis.hpttl("user:1", "session")` |
+| List | `LPUSH` | Push elements to list head | `jedis.lpush("mylist", "item1", "item2")` |
+| List | `RPUSH` | Push elements to list tail | `jedis.rpush("mylist", "item3", "item4")` |
+| List | `LPOP` | Pop element from list head | `jedis.lpop("mylist")` |
+| List | `LPOP` (with count) | Pop multiple elements from head | `jedis.lpop("mylist", 2)` |
+| List | `RPOP` | Pop element from list tail | `jedis.rpop("mylist")` |
+| List | `RPOP` (with count) | Pop multiple elements from tail | `jedis.rpop("mylist", 2)` |
+| List | `LLEN` | Get list length | `jedis.llen("mylist")` |
+| List | `LRANGE` | Get list elements by range | `jedis.lrange("mylist", 0, -1)` |
+| List | `LINDEX` | Get element by index | `jedis.lindex("mylist", 0)` |
+| List | `LSET` | Set element at index | `jedis.lset("mylist", 0, "newvalue")` |
+| List | `LREM` | Remove elements from list | `jedis.lrem("mylist", 2, "value")` |
+| List | `LTRIM` | Trim list to range | `jedis.ltrim("mylist", 0, 99)` |
+| List | `LINSERT` | Insert element before/after | `jedis.linsert("mylist", ListPosition.BEFORE, "pivot", "new")` |
+| List | `LPOS` | Find element position | `jedis.lpos("mylist", "value")` |
+| List | `LMOVE` | Move element between lists | `jedis.lmove("src", "dst", ListDirection.LEFT, ListDirection.RIGHT)` |
+| List | `BLMOVE` | Blocking move between lists | `jedis.blmove("src", "dst", ListDirection.LEFT, ListDirection.RIGHT, 5.0)` |
+| List | `LMPOP` | Pop from multiple lists | `jedis.lmpop(ListDirection.LEFT, "list1", "list2")` |
+| List | `BLMPOP` | Blocking pop from multiple lists | `jedis.blmpop(5.0, ListDirection.LEFT, "list1", "list2")` |
+| List | `BRPOPLPUSH` | Blocking pop and push | `jedis.brpoplpush("src", "dst", 5)` |
+| Set | `SADD` | Add members to set | `jedis.sadd("myset", "member1", "member2")` |
+| Set | `SREM` | Remove members from set | `jedis.srem("myset", "member1")` |
+| Set | `SMEMBERS` | Get all set members | `jedis.smembers("myset")` |
+| Set | `SCARD` | Get set cardinality | `jedis.scard("myset")` |
+| Set | `SISMEMBER` | Check if member exists | `jedis.sismember("myset", "member1")` |
+| Set | `SMISMEMBER` | Check multiple members | `jedis.smismember("myset", "m1", "m2")` |
+| Set | `SPOP` | Remove and return random member | `jedis.spop("myset")` |
+| Set | `SPOP` (with count) | Pop multiple random members | `jedis.spop("myset", 3)` |
+| Set | `SRANDMEMBER` | Get random member(s) | `jedis.srandmember("myset", 2)` |
+| Set | `SMOVE` | Move member between sets | `jedis.smove("src", "dst", "member")` |
+| Set | `SINTER` | Intersect multiple sets | `jedis.sinter("set1", "set2")` |
+| Set | `SINTERCARD` | Get intersection cardinality | `jedis.sintercard("set1", "set2")` |
+| Set | `SINTERSTORE` | Store set intersection | `jedis.sinterstore("dest", "set1", "set2")` |
+| Set | `SUNION` | Union multiple sets | `jedis.sunion("set1", "set2")` |
+| Set | `SUNIONSTORE` | Store set union | `jedis.sunionstore("dest", "set1", "set2")` |
+| Set | `SDIFF` | Difference of sets | `jedis.sdiff("set1", "set2")` |
+| Set | `SDIFFSTORE` | Store set difference | `jedis.sdiffstore("dest", "set1", "set2")` |
+| Set | `SSCAN` | Iterate set members | `jedis.sscan("myset", "0")` |
+| Sorted Set | `ZADD` | Add members with scores | `jedis.zadd("zset", 1.0, "member1")` |
+| Sorted Set | `ZADD` (with options) | Add with NX/XX/GT/LT/CH | `jedis.zadd("zset", 2.0, "m1", ZAddParams.zAddParams().nx())` |
+| Sorted Set | `ZADD` (multiple) | Add multiple scored members | `jedis.zadd("zset", Map.of("m1", 1.0, "m2", 2.0))` |
+| Sorted Set | `ZREM` | Remove members | `jedis.zrem("zset", "member1", "member2")` |
+| Sorted Set | `ZCARD` | Get sorted set cardinality | `jedis.zcard("zset")` |
+| Sorted Set | `ZSCORE` | Get member score | `jedis.zscore("zset", "member1")` |
+| Sorted Set | `ZMSCORE` | Get multiple member scores | `jedis.zmscore("zset", "m1", "m2")` |
+| Sorted Set | `ZRANK` | Get member rank (ascending) | `jedis.zrank("zset", "member1")` |
+| Sorted Set | `ZREVRANK` | Get member rank (descending) | `jedis.zrevrank("zset", "member1")` |
+| Sorted Set | `ZRANGE` | Get members by index range | `jedis.zrange("zset", 0, -1)` |
+| Sorted Set | `ZRANGE` (with scores) | Get members with scores | `jedis.zrangeWithScores("zset", 0, -1)` |
+| Sorted Set | `ZRANGEBYSCORE` | Get members by score range | `jedis.zrangeByScore("zset", 0.0, 100.0)` |
+| Sorted Set | `ZREVRANGEBYSCORE` | Get members by score (reverse) | `jedis.zrevrangeByScore("zset", 100.0, 0.0)` |
+| Sorted Set | `ZRANGEBYLEX` | Get members by lex range | `jedis.zrangeByLex("zset", "[a", "[z")` |
+| Sorted Set | `ZREVRANGEBYLEX` | Get members by lex (reverse) | `jedis.zrevrangeByLex("zset", "[z", "[a")` |
+| Sorted Set | `ZRANGESTORE` | Store range in destination | `jedis.zrangestore("dest", "src", 0, -1)` |
+| Sorted Set | `ZCOUNT` | Count members in score range | `jedis.zcount("zset", 0.0, 100.0)` |
+| Sorted Set | `ZLEXCOUNT` | Count members in lex range | `jedis.zlexcount("zset", "[a", "[z")` |
+| Sorted Set | `ZINCRBY` | Increment member score | `jedis.zincrby("zset", 10.0, "member1")` |
+| Sorted Set | `ZPOPMIN` | Pop member(s) with min score | `jedis.zpopmin("zset", 2)` |
+| Sorted Set | `ZPOPMAX` | Pop member(s) with max score | `jedis.zpopmax("zset", 2)` |
+| Sorted Set | `BZPOPMIN` | Blocking pop min | `jedis.bzpopmin(5.0, "zset1", "zset2")` |
+| Sorted Set | `BZPOPMAX` | Blocking pop max | `jedis.bzpopmax(5.0, "zset1", "zset2")` |
+| Sorted Set | `ZREMRANGEBYRANK` | Remove members by rank range | `jedis.zremrangeByRank("zset", 0, 9)` |
+| Sorted Set | `ZREMRANGEBYSCORE` | Remove members by score range | `jedis.zremrangeByScore("zset", 0.0, 50.0)` |
+| Sorted Set | `ZREMRANGEBYLEX` | Remove members by lex range | `jedis.zremrangeByLex("zset", "[a", "[m")` |
+| Sorted Set | `ZDIFF` | Difference of sorted sets | `jedis.zdiff("zset1", "zset2")` |
+| Sorted Set | `ZDIFFSTORE` | Store sorted set difference | `jedis.zdiffstore("dest", "zset1", "zset2")` |
+| Sorted Set | `ZINTER` | Intersect sorted sets | `jedis.zinter(ZParams.zparams(), "zset1", "zset2")` |
+| Sorted Set | `ZINTERCARD` | Get intersection cardinality | `jedis.zintercard("zset1", "zset2")` |
+| Sorted Set | `ZINTERSTORE` | Store sorted set intersection | `jedis.zinterstore("dest", "zset1", "zset2")` |
+| Sorted Set | `ZUNION` | Union sorted sets | `jedis.zunion(ZParams.zparams(), "zset1", "zset2")` |
+| Sorted Set | `ZUNIONSTORE` | Store sorted set union | `jedis.zunionstore("dest", "zset1", "zset2")` |
+| Sorted Set | `ZSCAN` | Iterate sorted set members | `jedis.zscan("zset", "0")` |
+| Sorted Set | `ZMPOP` | Pop from multiple sorted sets | `jedis.zmpop(SortedSetOption.MIN, "zset1", "zset2")` |
+| Sorted Set | `BZMPOP` | Blocking pop from sorted sets | `jedis.bzmpop(5.0, SortedSetOption.MIN, "zset1", "zset2")` |
+| Sorted Set | `ZRANDMEMBER` | Get random member(s) | `jedis.zrandmember("zset", 3)` |
+| Stream | `XADD` | Add entry to stream | `jedis.xadd("stream", StreamEntryID.NEW_ENTRY, Map.of("field", "value"))` |
+| Stream | `XADD` (with options) | Add with MAXLEN/MINID | `jedis.xadd("stream", XAddParams.xAddParams().maxLen(1000), Map.of("f", "v"))` |
+| Stream | `XLEN` | Get stream length | `jedis.xlen("stream")` |
+| Stream | `XDEL` | Delete stream entries | `jedis.xdel("stream", "1234567890-0")` |
+| Stream | `XRANGE` | Get entries in range | `jedis.xrange("stream", "-", "+")` |
+| Stream | `XREVRANGE` | Get entries in reverse range | `jedis.xrevrange("stream", "+", "-")` |
+| Stream | `XREAD` | Read from streams | `jedis.xread(XReadParams.xReadParams().count(10), Map.of("stream", "0-0"))` |
+| Stream | `XTRIM` | Trim stream | `jedis.xtrim("stream", XTrimParams.xTrimParams().maxLen(1000))` |
+| Stream | `XGROUP CREATE` | Create consumer group | `jedis.xgroupCreate("stream", "group", "0", false)` |
+| Stream | `XGROUP DESTROY` | Destroy consumer group | `jedis.xgroupDestroy("stream", "group")` |
+| Stream | `XGROUP SETID` | Set group last ID | `jedis.xgroupSetID("stream", "group", "1234567890-0")` |
+| Stream | `XREADGROUP` | Read as consumer group | `jedis.xreadGroup("group", "consumer", XReadGroupParams.xReadGroupParams(), Map.of("stream", ">"))` |
+| Stream | `XACK` | Acknowledge entries | `jedis.xack("stream", "group", "1234567890-0")` |
+| Stream | `XPENDING` | Get pending entries info | `jedis.xpending("stream", "group")` |
+| Stream | `XCLAIM` | Claim pending entries | `jedis.xclaim("stream", "group", "consumer", 3600000, "1234567890-0")` |
+| Stream | `XAUTOCLAIM` | Auto-claim pending entries | `jedis.xautoclaim("stream", "group", "consumer", 3600000, "0-0")` |
+| Stream | `XINFO STREAM` | Get stream info | `jedis.xinfoStream("stream")` |
+| Stream | `XINFO GROUPS` | Get consumer groups info | `jedis.xinfoGroups("stream")` |
+| Stream | `XINFO CONSUMERS` | Get consumers info | `jedis.xinfoConsumers("stream", "group")` |
+| Geospatial | `GEOADD` | Add geospatial items | `jedis.geoadd("locations", 13.361389, 38.115556, "Palermo")` |
+| Geospatial | `GEOPOS` | Get positions of members | `jedis.geopos("locations", "Palermo", "Catania")` |
+| Geospatial | `GEODIST` | Get distance between members | `jedis.geodist("locations", "Palermo", "Catania", GeoUnit.KM)` |
+| Geospatial | `GEOHASH` | Get geohash of members | `jedis.geohash("locations", "Palermo")` |
+| Geospatial | `GEOSEARCH` | Search by radius/box | `jedis.geosearch("locations", GeoSearchParam.geoSearchParam().fromMember("Palermo").byRadius(100, GeoUnit.KM))` |
+| Geospatial | `GEOSEARCHSTORE` | Store geosearch results | `jedis.geosearchStore("dest", "locations", GeoSearchParam.geoSearchParam().fromMember("Palermo").byRadius(100, GeoUnit.KM))` |
+| Bitmap | `SETBIT` | Set bit value | `jedis.setbit("bitmap", 7, true)` |
+| Bitmap | `GETBIT` | Get bit value | `jedis.getbit("bitmap", 7)` |
+| Bitmap | `BITCOUNT` | Count set bits | `jedis.bitcount("bitmap")` |
+| Bitmap | `BITCOUNT` (range) | Count bits in range | `jedis.bitcount("bitmap", 0, 10)` |
+| Bitmap | `BITPOS` | Find first bit position | `jedis.bitpos("bitmap", true)` |
+| Bitmap | `BITOP` | Bitwise operations | `jedis.bitop(BitOP.AND, "dest", "key1", "key2")` |
+| Bitmap | `BITFIELD` | Multiple bitfield operations | `jedis.bitfield("key", "GET", "u4", "0", "SET", "u4", "4", "15")` |
+| Bitmap | `BITFIELD_RO` | Read-only bitfield operations | `jedis.bitfieldReadonly("key", "GET", "u4", "0")` |
+| HyperLogLog | `PFADD` | Add elements to HyperLogLog | `jedis.pfadd("hll", "elem1", "elem2", "elem3")` |
+| HyperLogLog | `PFCOUNT` | Get HyperLogLog cardinality | `jedis.pfcount("hll")` |
+| HyperLogLog | `PFCOUNT` (multiple) | Get merged cardinality | `jedis.pfcount("hll1", "hll2")` |
+| HyperLogLog | `PFMERGE` | Merge HyperLogLogs | `jedis.pfmerge("dest", "hll1", "hll2")` |
+| Key Management | `DEL` | Delete key(s) | `jedis.del("key1", "key2")` |
+| Key Management | `UNLINK` | Async delete key(s) | `jedis.unlink("key1", "key2")` |
+| Key Management | `EXISTS` | Check if key(s) exist | `jedis.exists("key1", "key2")` |
+| Key Management | `EXPIRE` | Set key expiration (seconds) | `jedis.expire("key", 3600)` |
+| Key Management | `EXPIREAT` | Set expiration at timestamp | `jedis.expireAt("key", 1735689600)` |
+| Key Management | `PEXPIRE` | Set expiration (milliseconds) | `jedis.pexpire("key", 3600000)` |
+| Key Management | `PEXPIREAT` | Set expiration at timestamp (ms) | `jedis.pexpireAt("key", 1735689600000L)` |
+| Key Management | `EXPIRETIME` | Get expiration timestamp | `jedis.expiretime("key")` |
+| Key Management | `PEXPIRETIME` | Get expiration timestamp (ms) | `jedis.pexpiretime("key")` |
+| Key Management | `TTL` | Get time to live (seconds) | `jedis.ttl("key")` |
+| Key Management | `PTTL` | Get time to live (milliseconds) | `jedis.pttl("key")` |
+| Key Management | `PERSIST` | Remove key expiration | `jedis.persist("key")` |
+| Key Management | `TYPE` | Get key type | `jedis.type("key")` |
+| Key Management | `RENAME` | Rename key | `jedis.rename("oldkey", "newkey")` |
+| Key Management | `RENAMENX` | Rename key if new doesn't exist | `jedis.renamenx("oldkey", "newkey")` |
+| Key Management | `RANDOMKEY` | Get random key | `jedis.randomKey()` |
+| Key Management | `TOUCH` | Update key last access time | `jedis.touch("key1", "key2")` |
+| Key Management | `COPY` | Copy key to destination | `jedis.copy("src", "dst", true)` |
+| Key Management | `DUMP` | Serialize key value | `jedis.dump("key")` |
+| Key Management | `RESTORE` | Restore serialized value | `jedis.restore("key", 0, serializedValue)` |
+| Key Management | `MIGRATE` | Migrate key to another server | `jedis.migrate("host", 6379, "key", 0, 5000)` |
+| Key Management | `SCAN` | Iterate keys | `jedis.scan("0")` |
+| Key Management | `SCAN` (with pattern) | Scan with pattern matching | `jedis.scan("0", ScanParams.scanParams().match("user:*"))` |
+| Key Management | `SORT` | Sort list/set/sorted set | `jedis.sort("mylist")` |
+| Key Management | `SORT` (with options) | Sort with BY/GET/LIMIT | `jedis.sort("mylist", SortingParams.sortingParams().desc().limit(0, 10))` |
+| Key Management | `SORT_RO` | Read-only sort | `jedis.sortReadonly("mylist")` |
+| Key Management | `WAIT` | Wait for replication | `jedis.wait(2, 1000)` |
+| Key Management | `WAITAOF` | Wait for AOF replication | `jedis.waitAOF(1, 1, 1000)` |
+| Scripting | `EVAL` | Execute Lua script | `jedis.eval("return ARGV[1]", 0, "hello")` |
+| Scripting | `EVAL` (with keys) | Execute with keys and args | `jedis.eval("return redis.call('GET', KEYS[1])", 1, "mykey")` |
+| Scripting | `EVALSHA` | Execute script by SHA | `jedis.evalsha("abc123...", 0, "arg1")` |
+| Scripting | `EVAL_RO` | Execute read-only script | `jedis.evalReadonly("return redis.call('GET', KEYS[1])", 1, "key")` |
+| Scripting | `EVALSHA_RO` | Execute read-only by SHA | `jedis.evalshaReadonly("abc123...", 1, "key")` |
+| Scripting | `SCRIPT LOAD` | Load script to cache | `jedis.scriptLoad("return ARGV[1]")` |
+| Scripting | `SCRIPT EXISTS` | Check if scripts exist | `jedis.scriptExists("abc123...")` |
+| Scripting | `SCRIPT FLUSH` | Flush script cache | `jedis.scriptFlush()` |
+| Scripting | `SCRIPT KILL` | Kill running script | `jedis.scriptKill()` |
+| Scripting | `FCALL` | Call Valkey function | `jedis.fcall("myfunction", List.of("key1"), List.of("arg1"))` |
+| Scripting | `FCALL_RO` | Call read-only function | `jedis.fcallReadonly("myfunction", List.of("key1"), List.of("arg1"))` |
+| Scripting | `FUNCTION LOAD` | Load function library | `jedis.functionLoad("#!lua name=mylib\nredis.register_function('myfunc', function(keys, args) return args[1] end)")` |
+| Scripting | `FUNCTION DELETE` | Delete function library | `jedis.functionDelete("mylib")` |
+| Scripting | `FUNCTION FLUSH` | Flush all functions | `jedis.functionFlush()` |
+| Scripting | `FUNCTION LIST` | List loaded functions | `jedis.functionList()` |
+| Scripting | `FUNCTION DUMP` | Dump functions | `jedis.functionDump()` |
+| Scripting | `FUNCTION RESTORE` | Restore functions | `jedis.functionRestore(serialized)` |
+| Scripting | `FUNCTION KILL` | Kill running function | `jedis.functionKill()` |
+| Scripting | `FUNCTION STATS` | Get function stats | `jedis.functionStats()` |
+| Server Management | `INFO` | Get server information | `jedis.info()` |
+| Server Management | `INFO` (section) | Get specific info section | `jedis.info("server")` |
+| Server Management | `CONFIG GET` | Get configuration parameter | `jedis.configGet("maxmemory")` |
+| Server Management | `CONFIG SET` | Set configuration parameter | `jedis.configSet("maxmemory", "2gb")` |
+| Server Management | `CONFIG REWRITE` | Rewrite config file | `jedis.configRewrite()` |
+| Server Management | `CONFIG RESETSTAT` | Reset statistics | `jedis.configResetStat()` |
+| Server Management | `DBSIZE` | Get database key count | `jedis.dbSize()` |
+| Server Management | `FLUSHDB` | Flush current database | `jedis.flushDB()` |
+| Server Management | `FLUSHDB` (async) | Async flush database | `jedis.flushDB(FlushMode.ASYNC)` |
+| Server Management | `FLUSHALL` | Flush all databases | `jedis.flushAll()` |
+| Server Management | `FLUSHALL` (async) | Async flush all | `jedis.flushAll(FlushMode.ASYNC)` |
+| Server Management | `TIME` | Get server time | `jedis.time()` |
+| Server Management | `LASTSAVE` | Get last save timestamp | `jedis.lastsave()` |
+| Server Management | `LOLWUT` | Display Redis art | `jedis.lolwut()` |
+| Server Management | `OBJECT ENCODING` | Get object encoding | `jedis.objectEncoding("key")` |
+| Server Management | `OBJECT FREQ` | Get object access frequency | `jedis.objectFreq("key")` |
+| Server Management | `OBJECT IDLETIME` | Get object idle time | `jedis.objectIdletime("key")` |
+| Server Management | `OBJECT REFCOUNT` | Get object reference count | `jedis.objectRefcount("key")` |
+| ACL | `ACL LIST` | List ACL rules | `jedis.aclList()` |
+| ACL | `ACL GETUSER` | Get user ACL rules | `jedis.aclGetUser("username")` |
+| ACL | `ACL SETUSER` | Set user ACL rules | `jedis.aclSetUser("user", "on", "+@all", "~*")` |
+| ACL | `ACL DELUSER` | Delete user | `jedis.aclDelUser("username")` |
+| ACL | `ACL CAT` | List ACL categories | `jedis.aclCat()` |
+| ACL | `ACL GENPASS` | Generate password | `jedis.aclGenPass()` |
+| ACL | `ACL GENPASS` (bits) | Generate password with bits | `jedis.aclGenPass(256)` |
+| ACL | `ACL LOG` | Get ACL log | `jedis.aclLog()` |
+| ACL | `ACL LOG` (count) | Get ACL log entries | `jedis.aclLog(10)` |
+| ACL | `ACL LOG RESET` | Reset ACL log | `jedis.aclLogReset()` |
+| ACL | `ACL WHOAMI` | Get current username | `jedis.aclWhoami()` |
+| ACL | `ACL USERS` | List all users | `jedis.aclUsers()` |
+| ACL | `ACL SAVE` | Save ACL to file | `jedis.aclSave()` |
+| ACL | `ACL LOAD` | Load ACL from file | `jedis.aclLoad()` |
+| ACL | `ACL DRYRUN` | Simulate command execution | `jedis.aclDryRun("username", "GET", "key")` |
+| Connection | `PING` | Ping server | `jedis.ping()` |
+| Connection | `PING` (message) | Ping with message | `jedis.ping("hello")` |
+| Connection | `SELECT` | Select database | `jedis.select(1)` |
+| Connection | `AUTH` | Authenticate | `jedis.auth("password")` |
+| Connection | `AUTH` (user/pass) | Authenticate with username | `jedis.auth("username", "password")` |
+| Connection | `CLIENT SETNAME` | Set client name | `jedis.clientSetname("myapp")` |
+| Connection | `CLIENT GETNAME` | Get client name | `jedis.clientGetname()` |
+| Connection | `CLIENT ID` | Get client ID | `jedis.clientId()` |
+| Generic Command Execution | `sendCommand` | Execute any Protocol.Command | `jedis.sendCommand(Protocol.Command.GET, "mykey")` |
+| Generic Command Execution | `sendCommand` (binary) | Execute with byte arrays | `jedis.sendCommand(Protocol.Command.SET, "key".getBytes(), "val".getBytes())` |
+
+## Client Types and Configuration
+
+### Supported Client Types
+
+| Client Type | Description | Example |
+|-------------|-------------|---------|
+| `Jedis` | Basic standalone client | `try (Jedis jedis = new Jedis("localhost", 6379)) { ... }` |
+| `JedisCluster` | Cluster client with multi-node support | `try (JedisCluster cluster = new JedisCluster(nodes)) { ... }` |
+| `UnifiedJedis` | Unified interface for standalone/cluster | `try (UnifiedJedis client = new UnifiedJedis("localhost", 6379)) { ... }` |
+| `JedisPool` | Connection pooling | `try (JedisPool pool = new JedisPool("localhost", 6379)) { Jedis jedis = pool.getResource(); ... }` |
+| `JedisPooled` | Simplified pooled client | `try (JedisPooled pooled = new JedisPooled("localhost", 6379)) { ... }` |
+
+### Configuration Options
+
+| Configuration | Support | Description | Example |
+|---------------|---------|-------------|---------|
+| Host and port | ✅ Full | Server connection details | `new Jedis("localhost", 6379)` |
+| Authentication | ✅ Full | Username/password auth | `DefaultJedisClientConfig.builder().user("user").password("pass").build()` |
+| Database selection | ✅ Full | SELECT database number | `DefaultJedisClientConfig.builder().database(1).build()` |
+| Connection timeout | ✅ Full | Connection timeout in ms | `DefaultJedisClientConfig.builder().connectionTimeoutMillis(5000).build()` |
+| Socket timeout | ✅ Full | Request timeout in ms | `DefaultJedisClientConfig.builder().socketTimeoutMillis(3000).build()` |
+| Client name | ✅ Full | Set client name | `DefaultJedisClientConfig.builder().clientName("myapp").build()` |
+| Protocol version | ✅ Full | RESP2/RESP3 selection | `DefaultJedisClientConfig.builder().protocol(RedisProtocol.RESP3).build()` |
+| Basic SSL/TLS | ✅ Full | Enable SSL connection | `DefaultJedisClientConfig.builder().ssl(true).build()` |
+| Advanced SSL | ⚠️ Partial | Custom SSL configs limited | Requires migration to system certificate store |
+
+## Drawbacks and Unsupported Features
+
+### Connection Management
+- **JedisPool advanced configurations**: Complex pool settings may not be fully supported (basic pooling works)
+- **Connection validation**: Jedis connection health checks unavailable
+- **Failover configurations**: Jedis-specific sentinel failover logic not supported
+- **Blocking socket timeout**: `blockingSocketTimeoutMillis` parameter not mapped (GLIDE uses async I/O)
+
+### Advanced Features Not Supported
+- ❌ **Transactions**: MULTI/EXEC/WATCH/UNWATCH transaction blocks not supported
+- ❌ **Pipelining**: Jedis pipelining functionality unavailable
+- ❌ **Pub/Sub**: Redis publish/subscribe (PUBLISH/SUBSCRIBE/PSUBSCRIBE/UNSUBSCRIBE/PUNSUBSCRIBE) not implemented
+- ❌ **Redis Modules**: Module-specific commands not available
+- ❌ **Async operations**: Jedis async methods not implemented
+- ❌ **Custom protocols**: Protocol customization not supported
+
+### Configuration Limitations
+- **Complex SSL configurations**: Advanced Jedis `JedisClientConfig` SSL parameters have limited mapping to Valkey GLIDE
+  - ⚠️ `sslSocketFactory`: Requires migration to system certificate store
+  - ⚠️ `sslParameters`: Limited mapping; custom protocols/ciphers not supported
+  - ⚠️ `hostnameVerifier`: Standard verification works; custom verifiers require `useInsecureTLS`
+- **Custom trust stores**: SSL trust store configurations require manual migration to system certificate store
+- **Client certificates**: SSL client certificate authentication not supported in compatibility layer
+- **SSL protocols and cipher suites**: Advanced SSL protocol settings cannot be automatically converted (GLIDE auto-selects TLS 1.2+ and secure cipher suites)
+- **Custom serializers**: Jedis serialization options not supported
+- **Retry mechanisms**: Jedis-specific retry logic not implemented (GLIDE has its own retry mechanism)
+
+### Cluster Support
+- ✅ **JedisCluster**: Full cluster client support via compatibility layer
+- ✅ **Cluster operations**: All standard Redis commands work in cluster mode
+- ✅ **Multiple node configuration**: Supports `Set<HostAndPort>` initialization
+- ✅ **Cluster routing**: Automatic slot-based routing and hash tag support
+- ⚠️ **Advanced cluster features**: Some Jedis-specific cluster management features may have limitations
+
+### Performance Features
+- **Async operations**: Jedis async methods not implemented
+- **Batch operations**: Bulk operation optimizations unavailable
+- **Custom protocols**: Protocol customization not supported
