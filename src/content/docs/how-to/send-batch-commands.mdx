@@ -517,6 +517,10 @@ If you attempt to include keys from different slots, the batch creation will thr
 
 Pipelining is a group of commands sent in a single request that does not guarantee atomicity or isolation. GLIDE handles this as non-atomic batches.
 
+:::note
+In standalone mode, with the Python, Node.js, Java, and Go clients, a pipeline that contains only read-only commands can follow the client's [read strategy](/how-to/connections/read-strategy/), so it may read from a replica. Pipelines with writes, like the example below, and transactions run on the primary. See [Batch](/concepts/client-features/batch-commands/#batch) for the full rules.
+:::
+
 ### Standalone
 
 <ClientTabs>
