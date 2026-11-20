@@ -441,6 +441,31 @@ $result = $client->set('key', 'value'); // Returns true (default)
   `OPT_REPLY_LITERAL` affects: `SET`, `MSET`, `SETEX`, `PSETEX`, `SELECT`, `FLUSHDB`, `FLUSHALL`, `RENAME`, `RESTORE`, `CONFIG SET`, `LSET`, `LTRIM`, and `HMSET`.
 </Aside>
 
+### 6. Raw Commands in Transactions and Pipelines
+
+Both clients queue `rawcommand()` inside `multi()` and `pipeline()` and include its reply in the result of `exec()`. They differ in which calls they queue and how they route them:
+
+| Call in a batch | PHPRedis | Valkey GLIDE |
+| --- | --- | --- |
+| Cluster key route (key string) | Sends the command to the node for the route's key | Accepts the route but ignores it; routes each command by its own keys |
+| Cluster node route (`[host, port]`) | Queues the command for that node | Refused |
+| Named routes `randomNode`, `allPrimaries`, `allNodes` | Not available | Refused |
+| `SELECT`, `AUTH`, `HELLO`, `CLIENT SETNAME`, `RESET` | Queued | Refused (typed `select()` also returns `false` in a batch) |
+
+A refused call returns `false`, queues nothing, and leaves the batch open. `getLastError()` holds the reason:
+
+```php
+$cluster->multi(ValkeyGlide::PIPELINE);
+
+var_dump($cluster->rawcommand(['127.0.0.1', 7000], 'PING')); // bool(false)
+echo $cluster->getLastError(); // rawcommand() can only be queued in a batch with a key route
+
+var_dump($cluster->rawcommand('{user:1}', 'AUTH', 'password')); // bool(false)
+echo $cluster->getLastError(); // rawcommand() can't queue SELECT, AUTH, HELLO, CLIENT SETNAME or RESET in a batch
+```
+
+See [Use Custom Commands in a PHP Batch](/how-to/execute-custom-commands#use-custom-commands-in-a-php-batch) for details.
+
 ## Advanced Features
 
 ### Pub/Sub

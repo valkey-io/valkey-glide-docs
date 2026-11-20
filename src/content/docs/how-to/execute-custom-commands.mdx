@@ -180,6 +180,66 @@ Pass the command name and arguments as an array of strings:
   </ClientTab>
 </ClientTabs>
 
+## Use Custom Commands in a PHP Batch
+
+In the PHP client, `rawcommand()` can be queued inside `multi()` and `pipeline()` batches on both `ValkeyGlide` and `ValkeyGlideCluster`. In a batch, `rawcommand()` returns the client, so you can chain it, and its reply appears in the result of `exec()` in queue order. As with other queued commands, `OK` becomes `true`, and a nil reply or a server error becomes `false` (the error is not thrown). For batch basics, see [Send Batch Commands](/how-to/send-batch-commands).
+
+```php
+$client = new ValkeyGlide();
+$client->connect(addresses: [['host' => 'localhost', 'port' => 6379]]);
+$client->del('mykey', 'mylist');
+
+$results = $client->multi(ValkeyGlide::MULTI)
+    ->rawcommand('SET', 'mykey', 'hello')
+    ->rawcommand('GET', 'mykey')
+    ->rawcommand('GET', 'missing')
+    ->rawcommand('RPUSH', 'mylist', 1, 2.5)
+    ->rawcommand('LRANGE', 'mylist', 0, -1)
+    ->rawcommand('INCR', 'mykey')
+    ->exec();
+// [true, 'hello', false, 2, ['1', '2.5'], false]
+```
+
+`OPT_PREFIX` is not applied to `rawcommand()` arguments, inside or outside a batch.
+
+### Cluster Client
+
+`ValkeyGlideCluster::rawcommand()` still takes a route as its first argument in a batch, and the route must be a key: a key string, or `['type' => 'primarySlotKey', 'key' => ...]` / `['type' => 'slotKey', 'key' => ...]`. The key route is accepted but not used. Each queued command goes to the node that owns its own key arguments, and a keyless command uses the default routing for that command (see [Batch Commands](/concepts/client-features/batch-commands#multi-node-support)). In `multi()`, the whole transaction goes to one node.
+
+```php
+$cluster = new ValkeyGlideCluster(
+    addresses: [['host' => 'localhost', 'port' => 6379]]
+);
+
+$results = $cluster->multi(ValkeyGlide::PIPELINE)
+    ->rawcommand('{user:100}:name', 'SET', '{user:100}:name', 'Alice')
+    ->rawcommand('{user:100}:name', 'GET', '{user:100}:name')
+    ->exec();
+// [true, 'Alice']
+```
+
+### Commands Refused in a Batch
+
+Some `rawcommand()` calls are refused in a batch. A refused call returns `false`, queues nothing, and leaves the batch open. Read the reason with `getLastError()`.
+
+| Refused call | `getLastError()` message |
+| --- | --- |
+| Cluster route that is not a key: `[host, port]`, `['type' => 'routeByAddress', 'host' => ..., 'port' => ...]`, `'randomNode'`, `'allPrimaries'`, `'allNodes'` | `rawcommand() can only be queued in a batch with a key route` |
+| `SELECT`, `AUTH`, `HELLO`, `CLIENT SETNAME`, `RESET` (case-insensitive; other `CLIENT` subcommands are allowed) | `rawcommand() can't queue SELECT, AUTH, HELLO, CLIENT SETNAME or RESET in a batch` |
+
+`select()` also returns `false` in a batch.
+
+```php
+$cluster->multi(ValkeyGlide::PIPELINE);
+
+var_dump($cluster->rawcommand('allPrimaries', 'PING')); // bool(false), nothing queued
+echo $cluster->getLastError(); // rawcommand() can only be queued in a batch with a key route
+
+// The batch is still open
+$results = $cluster->rawcommand('{user:100}:name', 'GET', '{user:100}:name')->exec();
+// ['Alice']
+```
+
 ## Limitations
 
 Keep these constraints in mind when using custom commands:
