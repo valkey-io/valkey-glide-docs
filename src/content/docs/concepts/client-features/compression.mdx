@@ -34,6 +34,11 @@ When a response comes back from a command like `GET`:
 1. The client checks the first bytes for the magic header.
 2. If present, it decompresses and returns the plain value.
 3. If absent, it returns the value unchanged.
+4. If the header is present but the data can't be decompressed, it returns the stored bytes unchanged and logs a rate-limited warning (at most one per 5 seconds per process). This covers a plain value written by another client that happens to start with the magic bytes. It also covers a compressed value that was corrupted on the server, which the client can't tell apart from a plain value.
+
+Replies with several values, such as `MGET` and pipeline or transaction results, are handled per element. A plain value that looks like a compressed one doesn't stop the other values in the reply from being decompressed.
+
+The one exception is a value whose decompressed size exceeds `maxDecompressedSize`. The client returns an error for it, for single commands and for batches alike.
 
 Compressed and uncompressed values can coexist in the same database. The client handles both.
 
