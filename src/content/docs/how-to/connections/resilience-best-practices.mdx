@@ -84,6 +84,10 @@ A resilient client combines request timeout, inflight limiting, and the circuit 
 
     client, err := glide.NewClusterClient(clientConfig)
     ```
+
+    :::note[Release availability]
+    `WithInflightRequestsLimit` is not included in the Go 2.5.3 client. Support is planned for **2.6.0**; its implementation has merged into `main` in [#6580](https://github.com/valkey-io/valkey-glide/pull/6580). The other options shown are available in 2.5.3.
+    :::
   </ClientTab>
 
   <ClientTab slot="ruby">

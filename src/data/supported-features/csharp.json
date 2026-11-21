@@ -139,6 +139,13 @@
       }
     },
     {
+      "feature": "in_flight_request_limits",
+      "hover": {
+        "text": "unreleased",
+        "href": "https://github.com/valkey-io/valkey-glide-csharp/pull/509"
+      }
+    },
+    {
       "feature": "lazy_connections",
       "hover": {
         "text": "since 1.0.0",
