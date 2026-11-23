@@ -345,6 +345,7 @@ These are intentional constraints for this release. Design your application arou
 - **No background eviction:** Idle clients are evicted lazily when `acquire()` is called, not on a background timer.
 - **No automatic pool sharing:** Each call that creates a pool produces an independent pool. Two pools built from the same configuration are not deduplicated or shared. Hold and reuse the pool you created wherever you need it.
 - **Scopes do not outlive the pool:** Closing the pool invalidates any isolated scope still open on a borrowed client. Commands on such a scope fail rather than continuing to run on a connection the pool no longer owns.
+- **Forking:** A pool or scope created in a forked child works, even if the parent used pools or scopes before the fork (for example gunicorn preload, Celery prefork, or `multiprocessing`). In Python, using a `ClientPool` or `AsyncClientPool` inherited from the parent in the child (acquire, release, or borrow) raises `ClosingError` ("Cannot use a pool created before fork()..."). Create a new pool in the child. Calling `close()` on an inherited pool in the child does nothing to the parent's native pool, so don't rely on it. Pool and scope IDs inherited from the parent are unknown in the child, so the native layer returns an error for calls that use them instead of hanging.
 
 ### Known issues
 
@@ -356,3 +357,4 @@ These are being tracked and are expected to be resolved in a future release.
 - **`close()` does not wait for borrowed clients:** Closing a pool tears it down immediately, interrupting commands still running on borrowed clients. Release all clients before closing the pool.
 - **Python async pools require asyncio:** Borrowing from an `AsyncClientPool` fails under trio when the borrow has to wait, and borrowed clients are bound to the asyncio event loop. Use asyncio with Python client pools.
 - **Pool timeouts and errors are inconsistent across bindings:** An acquire timeout of `0` uses the configured default instead of not waiting in Python async, Go, and Node.js. Pool exhaustion is not raised as the binding's GLIDE `TimeoutError` in Java, Node.js, and Python. Use a positive timeout, and handle exhaustion as a generic error.
+- **Python sync pooled clients are not guarded across `fork()`:** A sync pooled client borrowed before `fork()` and used in the child is not guarded. Don't use it. Borrow a new client from a new pool in the child.

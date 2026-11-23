@@ -261,6 +261,7 @@ These are intentional constraints for this release. Design your application arou
 - **A scope does not outlive its client:** Closing the client, or the pool the client was borrowed from, invalidates any scope still open on it. Further commands on that scope fail.
 - **No automatic reconnection:** If the connection drops mid-scope, the command fails and the scope becomes unusable. Reconnecting silently would return a connection without the `WATCH` keys, queued `MULTI` commands, or tracking registrations the caller is relying on, so an `EXEC` could commit where it should have aborted. Acquire a new scope instead.
 - **Single caller per scope:** Only one coroutine or thread should use a scope at a time. Commands on one scope are serialized, but a scope has a single `WATCH`/`MULTI` state, so two callers sharing it will see each other's queued commands and conflicts. Use one scope per caller.
+- **Forking:** A scope that is open in the parent fails with a `RuntimeError` ("invalid scope") if it is used in a forked child. In Python, an async client inherited from the parent raises `ClosingError` when asked for a new `scoped_connection()`. Create a new client and scope in the child. A sync Python client opens new scopes in the child normally.
 
 ### Known issues
 
