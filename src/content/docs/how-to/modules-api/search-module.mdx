@@ -422,6 +422,317 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
   </ClientTab>
 </ClientTabs>
 
+## Valkey Search 1.3 Features (Node.js)
+
+These features require valkey-search 1.3. The snippets below assume a connected `client` (`GlideClusterClient` or `GlideClient`) and an existing index named `idx`. Fields used below: a TEXT field `title`, a NUMERIC field `price`, a TAG field `category`, and a VECTOR field `vec` with two dimensions.
+
+### Restrict a Search to Specific Keys
+
+Pass `inKeys` to search only the listed keys. An empty array matches nothing, while leaving `inKeys` unset applies no restriction.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const res = await GlideFt.search(client, idx, "@title:hello", {
+    inKeys: ["doc:1", "doc:2"],
+});
+
+await GlideFt.search(client, idx, "*", { inKeys: [] }); // [0]
+```
+
+### Count Matches Without Fetching Documents
+
+`count: true` returns only the number of matches. It sends `LIMIT 0 0`, so it cannot be combined with `limit`. A bare `COUNT` is not a valid `FT.SEARCH` token.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const r = await GlideFt.search(client, idx, "@title:hello", { count: true });
+console.log(r[0]); // 2
+```
+
+### Use New Aggregate Reducers
+
+`FtAggregateReducer` has factory helpers for `TOLIST`, `FIRST_VALUE`, and `RANDOM_SAMPLE`. Use them in a `GROUPBY` clause.
+
+```typescript
+import { FtAggregateReducer, GlideFt } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["category", "price"],
+    clauses: [
+        {
+            type: "GROUPBY",
+            properties: ["@category"],
+            reducers: [
+                FtAggregateReducer.toList("@price", "prices"),
+                FtAggregateReducer.firstValue(
+                    "@price",
+                    { by: "@price", order: "DESC" },
+                    "max_price",
+                ),
+                FtAggregateReducer.randomSample("@price", 2, "sample"),
+            ],
+        },
+    ],
+});
+```
+
+- `toList` removes duplicates and nil values.
+- `firstValue` throws an `Error` if you set `order` without `by`.
+- `randomSample` takes a size from 0 to 1000. The server rejects other values.
+
+### Score and Rank Results
+
+Set `withScores: true` on `FT.SEARCH` to get a relevance score for each document. `BM25STD` is the only accepted `scorer`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const res = await GlideFt.search(client, idx, "hello", {
+    withScores: true,
+    scorer: "BM25STD",
+});
+
+for (const { key, value } of res[1]) {
+    const [score] = value; // value is [score, fields]; score is a string
+    console.log(key, score);
+}
+```
+
+For `FT.AGGREGATE`, set `addScores: true` to expose the score as `@__score`.
+
+```typescript
+import { GlideFt, SortOrder } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "hello", {
+    addScores: true,
+    scorer: "BM25STD",
+    loadFields: ["title"],
+    clauses: [
+        {
+            type: "SORTBY",
+            properties: [{ property: "@__score", order: SortOrder.DESC }],
+        },
+    ],
+});
+```
+
+### Page Through Results with Cursors
+
+Set `withCursor` on `FT.AGGREGATE` to get results in pages. The reply is `[rows, cursorId]`, and a `cursorId` of `0` means there are no more pages.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+let [rows, cursorId] = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["title"],
+    withCursor: { count: 5 },
+});
+
+while (cursorId !== 0) {
+    [rows, cursorId] = await GlideFt.cursorRead(client, idx, cursorId);
+}
+```
+
+`withCursor` accepts `count` (rows per page) and `maxidle` (idle time in milliseconds before the server discards the cursor). `cursorRead` takes an optional fourth argument, `{ count }`, to change the page size for that read.
+
+To discard a cursor before it is exhausted:
+
+```typescript
+await GlideFt.cursorDel(client, idx, cursorId); // "OK"
+```
+
+:::note
+In cluster mode, cursor queries and every `cursorRead` and `cursorDel` go to the primary of the index's slot, regardless of `readFrom`.
+
+On a standalone `GlideClient`, set `readFrom: "primary"` when you use `withCursor` on `aggregate`. Otherwise the next page can fail with `Cursor: not found`.
+:::
+
+- Reading or deleting an unknown or deleted cursor id throws.
+- A client created with `readOnly: true` rejects `cursorRead`, `cursorDel`, and `hybrid` before sending them.
+
+### Combine Text and Vector Search with FT.HYBRID
+
+`GlideFt.hybrid(client, index, searchArm, vsimArm, options?)` runs a text query and a vector similarity search together and fuses the results.
+
+Pass the query vector as a `Buffer`. The client sends it as raw data.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// Two float32 values in little-endian order.
+const q = Buffer.alloc(8);
+q.writeFloatLE(1, 0);
+q.writeFloatLE(1, 4);
+
+const rows = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello" },
+    { field: "vec", vector: q, k: 5 },
+);
+// Each row contains __key and __score by default.
+```
+
+To reference a query parameter instead, pass a string that starts with `$` and supply the value in `params`. A `Buffer` is never treated as a reference, even if its first byte is `$`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// q is the Buffer from the previous example.
+const rows = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello" },
+    { field: "vec", vector: "$myvec", k: 5 },
+    { params: [{ key: "myvec", value: q }] },
+);
+```
+
+The search arm takes `query`, `scorer`, and `yieldScoreAs`. The vector arm takes `field` (without a leading `@`), `vector`, `k`, `efRuntime`, `shardKRatio`, `yieldScoreAs`, and `filter`.
+
+#### Choose a Fusion Method
+
+Set `combine` in the options. Each method is one of the following:
+
+```typescript
+import type { FtHybridCombine } from "@valkey/valkey-glide";
+
+const rrf: FtHybridCombine = {
+    method: "RRF",
+    constant: 60,
+    window: 20,
+    yieldScoreAs: "fused",
+};
+
+// Set both alpha and beta, or neither.
+const linear: FtHybridCombine = { method: "LINEAR", alpha: 1.0, beta: 0.0 };
+
+// Reference arm scores by their yieldScoreAs names, or use
+// @__search_score and @__vector_score.
+const fn: FtHybridCombine = { method: "FUNCTION", expr: "@ss + @vs" };
+```
+
+#### Filter, Fuse, and Page
+
+This example filters the vector arm, fuses with RRF, filters the fused rows, and pages the output.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// q is the Buffer from the first FT.HYBRID example.
+let [rows, cursorId] = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello", yieldScoreAs: "ss" },
+    {
+        field: "vec",
+        vector: q,
+        k: 5,
+        yieldScoreAs: "vs",
+        filter: { expression: "@title:hello", policy: "BATCHES" },
+    },
+    {
+        combine: { method: "RRF", constant: 60 },
+        clauses: [{ type: "FILTER", expression: "@ss > 0" }],
+        withCursor: { count: 10 },
+    },
+);
+
+while (cursorId !== 0) {
+    [rows, cursorId] = await GlideFt.cursorRead(client, idx, cursorId);
+}
+```
+
+Other options: `localOnly`, `timeout`, `params`, `dialect`, and `loadFields` or `loadAll`.
+
+:::note
+- `k` defaults to 10.
+- Results are limited to 10 rows unless you add a `LIMIT` clause.
+- The search arm cannot be a KNN query.
+- The server rejects any `dialect` other than 2.
+:::
+
+### Load Fields with Aliases
+
+Each `loadFields` entry is a field name or a `{ fieldIdentifier, alias }` object. This works in `GlideFt.aggregate` and `GlideFt.hybrid`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["title", { fieldIdentifier: "price", alias: "cost" }],
+});
+```
+
+An empty `loadFields` array omits the `LOAD` clause.
+
+:::caution
+Aliases need `search.emulate-release` set to 1.3.0 or later. Otherwise the server returns `Index: field AS does not exist`. The client does not check this.
+:::
+
+### Avoid Client-Side Errors
+
+`GlideFt.hybrid` and `GlideFt.create` reject with an `Error` before the command is sent in these cases:
+
+- `efRuntime` is set on a vector arm whose `filter.policy` is `"ADHOC"`.
+- `filter.batchSize` is set without `filter.policy: "BATCHES"`.
+- The RRF `constant` is negative.
+- A `LINEAR` method sets only one of `alpha` or `beta`.
+- A field sets `unf` without `sortable` (`unf requires sortable to be set.`).
+- `filter` in `GlideFt.create` options is empty.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// Rejects with: unf requires sortable to be set.
+await GlideFt.create(client, idx, [{ type: "TEXT", name: "title", unf: true }], {
+    dataType: "HASH",
+});
+```
+
+### Create Indexes with RediSearch-Compatible Options
+
+`FT.CREATE` accepts these additional options:
+
+- `type: "FLOAT16"` or `"BFLOAT16"` on a vector field. The default is `FLOAT32`. You must encode the vector bytes yourself. `BFLOAT16` is the top two bytes of a little-endian float32. The server may refuse `BFLOAT16` on CPUs without SIMD BF16 support.
+- `filter`, an expression that decides which documents the index includes.
+- `scoreField`, a document field whose numeric value is used as the document's score. `FT.INFO` reports it only when `search.emulate-release` is 1.3.0 or later.
+- `noHighlight`, which does nothing on valkey-search. It is accepted for RediSearch compatibility.
+- `unf: true` on a sortable TEXT, TAG, or NUMERIC field. It keeps the original (un-normalized) value for sorting, and requires `sortable: true`. It does not apply to vector fields.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const prefix = "{hash}:";
+
+await GlideFt.create(
+    client,
+    idx,
+    [
+        {
+            type: "VECTOR",
+            name: "vec",
+            attributes: {
+                algorithm: "FLAT",
+                dimensions: 2,
+                distanceMetric: "L2",
+                type: "FLOAT16",
+            },
+        },
+        { type: "TEXT", name: "title", sortable: true, unf: true },
+    ],
+    {
+        dataType: "HASH",
+        prefixes: [prefix],
+        filter: "@age > 18",
+        scoreField: "boost",
+        noHighlight: true,
+    },
+);
+```
+
 ## What's Next
 
 For more details on the Search module, see the [Valkey Search topic](https://valkey.io/topics/search/).

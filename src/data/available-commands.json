@@ -307,7 +307,9 @@
     "commands": [
       { "command": "FT.AGGREGATE", "valkey-io": "/commands/ft.aggregate", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "FT.CREATE", "valkey-io": "/commands/ft.create", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.CURSOR", "valkey-io": "/commands/ft.cursor", "python": "not_available", "node": "available", "java": "not_available", "go": "not_available", "csharp": "not_available", "php": "not_available", "ruby": "not_available" },
       { "command": "FT.DROPINDEX", "valkey-io": "/commands/ft.dropindex", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
+      { "command": "FT.HYBRID", "valkey-io": "/commands/ft.hybrid", "python": "not_available", "node": "available", "java": "not_available", "go": "not_available", "csharp": "not_available", "php": "not_available", "ruby": "not_available" },
       { "command": "FT.INFO", "valkey-io": "/commands/ft.info", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "FT.SEARCH", "valkey-io": "/commands/ft.search", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" },
       { "command": "FT._LIST", "valkey-io": "/commands/ft._list", "python": "available", "node": "available", "java": "available", "go": "available", "csharp": "available", "php": "available", "ruby": "available" }
