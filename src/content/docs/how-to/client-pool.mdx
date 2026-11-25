@@ -12,6 +12,18 @@ Client Pool is a preview feature available in Python, Java, Node.js, and Go. The
 
 The Client Pool manages a set of reusable GLIDE client instances that can be borrowed and returned on demand. Use it when your application needs high concurrency, runs blocking commands like `BLPOP`, `BRPOP`, or `XREAD BLOCK` that tie up a connection, or requires connection isolation between independent workflows.
 
+## Why Use a Client Pool
+
+A single GLIDE client multiplexes commands over shared connections. That is efficient for most commands but a poor fit for blocking commands, large values, and `WATCH`, which hold a connection or per-connection state. Creating a client for each of these is costly: every new client opens its own connections (to every node in cluster mode) and repeats connection setup and authentication.
+
+A pool avoids that cost:
+
+- **Faster reuse of connections:** Borrow an already-connected client instead of creating one, which skips the cost of establishing connections and authenticating. Set `min_idle` to connect clients when the pool is created.
+- **Fewer connections:** Callers share up to `max_size` clients, which caps the connections to the server however many callers your application has.
+- **Isolated commands:** A borrowed client serves one caller at a time, so state such as `WATCH` or `MULTI` isn't disturbed by other callers' commands, and returning it resets state the borrower left behind, such as an open `MULTI`. Up to `max_size` callers can also block on `BRPOP` at once, and a large value doesn't delay other callers' requests.
+
+If your application only sends short, non-blocking commands, a single shared client is enough.
+
 ## Configuration
 
 The pool is configured with a `PoolConfig` object. All parameters are optional and have sensible defaults.
