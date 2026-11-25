@@ -494,7 +494,7 @@ A transaction is an all-or-nothing set of commands sent in a single request to V
 
     Commands queued in `multi` and `pipelined` blocks return `Valkey::Future` placeholders. Read `future.value` after the block finishes to obtain that command's reply. Reading it inside the block raises `Valkey::FutureNotReady`; an aborted batch or `WATCH` conflict raises `Valkey::FutureAborted`.
 
-    Runtime command errors raise by default. Pass `exception: false` to keep successful replies and return a `Valkey::CommandError` in the failed command's result slot. Queue-time transaction errors still raise `Valkey::ExecAbortError`.
+    Runtime command errors raise by default. Pass `exception: false` to `multi` or `pipelined` to keep successful replies and put the error object for each failed command in its result slot. That object is an instance of a `Valkey::BaseError` subclass chosen from the server error code, such as `Valkey::WrongTypeError` for `WRONGTYPE` or `Valkey::CommandError` for general `ERR` replies. See [Ruby Error Classes](/reference/scripting-reference#ruby-error-classes). Queue-time transaction errors still raise `Valkey::ExecAbortError`.
 
     ```ruby
     results = client.multi(exception: false) do |tx|
