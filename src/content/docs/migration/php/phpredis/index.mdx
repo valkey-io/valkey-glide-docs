@@ -128,14 +128,47 @@ Valkey GLIDE PHP supports flexible connection patterns for compatibility with PH
             ['host' => '127.0.0.1', 'port' => 7000],
             ['host' => '127.0.0.1', 'port' => 7001]
         ],
-        timeout: 2.5
+        timeout: 2.5,  // Connection timeout in seconds
+        auth: ['user', 'password']  // Username and password
     );
     ```
   </TabItem>
 </Tabs>
 
+`ValkeyGlideCluster` uses the PHPRedis-style constructor when any of `name`, `seeds`, `timeout`, `read_timeout`, or `auth` is not `null`. The PHPRedis-style parameters map to ValkeyGlide-style parameters as follows:
+
+| PHPRedis-style           | ValkeyGlide-style equivalent                  | Notes                                                                                                            |
+| ------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `name`                   | None                                          | Not used. Accepted for compatibility.                                                                            |
+| `seeds`                  | `addresses`                                   | Same `['host' => ..., 'port' => ...]` format.                                                                    |
+| `timeout` (seconds)      | `advanced_config['connection_timeout']` (ms)  | `0` keeps `advanced_config['connection_timeout']` or the 250 ms default. Positive values below 1 ms become 1 ms. |
+| `read_timeout` (seconds) | `request_timeout` (ms)                        | `0` keeps the default (5 s). Positive values below 1 ms become 1 ms.                                             |
+| `auth`                   | `credentials`                                 | See the accepted forms below.                                                                                    |
+
+`timeout` and `read_timeout` throw `ValkeyGlideException` when the value is negative, non-finite (`INF`, `NAN`), or larger than 2147483 seconds.
+
+`auth` accepts these forms:
+
+* A scalar, such as `'password'`, sets the password. Scalars are cast to strings.
+* `['password']` sets the password.
+* `['user', 'password']` or `['user' => 'user', 'pass' => 'password']` sets the username and password. A `null` or `false` user means no username.
+* A `credentials` array with `username`, `password`, or `iamConfig` keys is used as-is.
+* `false`, `[null]`, or `[false]` means no credentials.
+
+Any other value throws `ValkeyGlideException`. This includes `[]`, arrays with more than two elements, a user without a password, and mixed key styles such as `'user'` with `'password'`.
+
 :::caution
-You cannot mix PHPRedis-style and ValkeyGlide-style parameters in the same call. Choose one style and use it consistently.
+PHPRedis-style parameters cannot be combined with `addresses`, or with the ValkeyGlide-style parameter they replace:
+
+* A non-zero `timeout` with `advanced_config['connection_timeout']`
+* A non-zero `read_timeout` with `request_timeout`
+* `auth` with `credentials`
+
+Each of these combinations throws `ValkeyGlideException`. Combining `timeout` with `request_timeout` is allowed because they set different timeouts.
+:::
+
+:::note
+Earlier versions silently ignored `auth` and connected without credentials. They also accepted the combinations listed above. Code that passes both a PHPRedis-style parameter and its replacement now throws `ValkeyGlideException`.
 :::
 
 ### PHPRedis Compatibility
@@ -309,7 +342,7 @@ $cluster = new ValkeyGlideCluster(
 ```
 
 :::caution
-Cannot mix PHPRedis-style and ValkeyGlide-style parameters.
+Cannot mix PHPRedis-style parameters with `addresses` or with the ValkeyGlide-style parameter they replace. See [Cluster Connection](#cluster-connection).
 :::
 
 ### 2. Method Signatures
