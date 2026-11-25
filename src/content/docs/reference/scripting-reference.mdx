@@ -922,6 +922,75 @@ You can update a value conditionally without a script by using [`SET`](https://v
   </ClientTab>
 </ClientTabs>
 
+### Ruby Error Classes
+
+This subsection applies to the Valkey GLIDE Ruby client only. It covers all commands, including pipelined and `multi` calls, not only scripts.
+
+The client raises the same error classes as redis-rb for server error replies, plus `Valkey::ExecAbortError` (a `Valkey::CommandError` subclass, used for `EXECABORT`). It picks the class from the error code at the start of the reply, using the same mapping as redis-client. `message` is the server's own `CODE detail` text, for example `WRONGTYPE Operation against a key holding the wrong kind of value`.
+
+| Error code | Class | Superclass |
+| ---------- | ----- | ---------- |
+| `EXECABORT` | `Valkey::ExecAbortError` | `Valkey::CommandError` |
+| `NOPERM` | `Valkey::PermissionError` | `Valkey::CommandError` |
+| `WRONGTYPE` | `Valkey::WrongTypeError` | `Valkey::CommandError` |
+| `OOM` | `Valkey::OutOfMemoryError` | `Valkey::CommandError` |
+| `NOSCRIPT` | `Valkey::NoScriptError` | `Valkey::CommandError` |
+| `WRONGPASS` | `Valkey::CannotConnectError` | `Valkey::BaseConnectionError` |
+| `MASTERDOWN` | `Valkey::ConnectionError` | `Valkey::BaseConnectionError` |
+| `READONLY` | `Valkey::ReadOnlyError` | `Valkey::BaseConnectionError` |
+| Other codes (`ERR`, `LOADING`, `MOVED`, `ASK`, `TRYAGAIN`, `CLUSTERDOWN`, `CROSSSLOT`, `NOTBUSY`, and so on) | `Valkey::CommandError` | `Valkey::BaseError` |
+
+`Valkey::CommandError` and `Valkey::BaseConnectionError` both inherit from `Valkey::BaseError`.
+
+On older servers, a failing script's reply starts with `ERR Error running script` and nests the real error code inside, such as `-WRONGTYPE` in `... @user_script:1: -WRONGTYPE ...`. The client reads that nested code to choose the class, and the message text stays whole. If the message has no nested code, the error is a `Valkey::CommandError`. Newer servers return the code directly, so no unwrapping is needed.
+
+With `pipelined(exception: false)` and `multi(exception: false)`, the slot of each failed command holds the same specific error object, not always a `Valkey::CommandError`. A queue-time `EXECABORT` for a whole transaction still raises `Valkey::ExecAbortError`.
+
+:::caution[Breaking change]
+Code that rescues only `Valkey::CommandError` no longer catches `READONLY`, `MASTERDOWN`, or `WRONGPASS` replies. As in redis-rb, these now raise `Valkey::ReadOnlyError`, `Valkey::ConnectionError`, and `Valkey::CannotConnectError`, which are `Valkey::BaseConnectionError` subclasses.
+
+To keep catching them, rescue both classes:
+
+```ruby
+begin
+  client.set("key", "value")
+rescue Valkey::CommandError, Valkey::BaseConnectionError => e
+  puts "Request failed: #{e.message}"
+end
+```
+
+`Valkey::BaseConnectionError` also covers transport failures, `Valkey::TimeoutError`, and `Valkey::InheritedError`.
+:::
+
+Limitations:
+
+* An error whose message starts with `Received error for address` is not classified and stays a `Valkey::CommandError`.
+* A connection failure in `Valkey.new` raises `Valkey::CannotConnectError` with the connection message unchanged.
+* An unrecognized native error type still raises a bare `RuntimeError`.
+
+Use `Valkey::NoScriptError` to reload a script after the server's script cache is flushed or the server restarts:
+
+```ruby
+require "valkey"
+
+client = Valkey.new(host: "localhost", port: 6379)
+
+lua = <<~LUA
+  redis.call('SET', KEYS[1], ARGV[1])
+  return KEYS[1] .. ': ' .. redis.call('GET', KEYS[1])
+LUA
+
+sha = client.script_load(lua)
+
+begin
+  result = client.evalsha(sha, keys: ["username"], args: ["John Doe"])
+rescue Valkey::NoScriptError
+  # the server's script cache was flushed or restarted
+  client.script_load(lua)
+  result = client.evalsha(sha, keys: ["username"], args: ["John Doe"])
+end
+```
+
 ### Script Timeout Handling
 
 :::caution[Client Timeout vs Script Termination]
