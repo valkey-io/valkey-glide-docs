@@ -15,6 +15,8 @@ Valkey GLIDE allows you to configure timeout settings and reconnect strategies. 
 | Connection Timeout    | The duration in milliseconds to wait for a TCP/TLS connection to complete. This applies both during initial client creation and any reconnection that may occur during request processing. A high connection timeout may lead to prolonged blocking of the entire command pipeline. This is configured via the advanced client configuration. | 2000 milliseconds   |
 | Reconnect Strategy    | The reconnection strategy defines how and when reconnection attempts are made in the event of connection failures.                                                                                                                                                                                                                                                                                                                                                  | Exponential backoff |
 
+The request timeout also bounds each cluster scan iteration. See [Cluster Scan timeouts and retries](/concepts/client-features/cluster-scan#timeouts-and-retries). In Java, timeouts from scan and `invokeScript` raise `TimeoutException`.
+
 ## Setting Request Timeout for Long-Running Commands
 
 <ClientTabs>
