@@ -68,6 +68,99 @@ The `SCAN` command accepts three optional parameters:
 * `COUNT`: Specifies the number of keys to return in a single iteration. The actual number may vary, serving as a hint to the server on the number of steps to perform in each iteration. The default value is 10.
 * `TYPE`: Filters the keys by a specific type.
 
+## Timeouts and Retries
+
+Each scan call, including its internal topology check, is bounded by the client's request timeout (250 milliseconds by default). If a call exceeds it, the scan fails with a timeout error. Earlier versions could wait indefinitely if a primary stopped responding.
+
+In Python, Node.js, and Java, a timeout leaves the cursor usable. Call scan again with the same cursor to resume where the scan left off. In Java, a scan or `invokeScript` timeout raises `TimeoutException` instead of `RequestException`. `TimeoutException` does not extend `RequestException`, so code that catches `RequestException` for these timeouts must also catch `TimeoutException`.
+
+:::caution
+In Go, each call releases its cursor. After any error, including a timeout, restart the scan from `models.NewClusterScanCursor()`.
+:::
+
+When `SCAN` keeps failing on the same node and the cluster topology has not changed, GLIDE retries that node a limited number of times and then returns the last error. Retries after a topology change do not count toward this limit. Earlier versions retried indefinitely.
+
+Applications that scan large clusters can catch the timeout error and retry with the same cursor. If iterations keep timing out, use a smaller `COUNT` or a [longer request timeout](/how-to/connections/timeouts-and-reconnect-strategy).
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```py
+    from glide import ClusterScanCursor, TimeoutError
+
+    cursor = ClusterScanCursor()
+    all_keys = []
+    timeouts = 0
+    while not cursor.is_finished():
+        try:
+            cursor, keys = await client.scan(cursor)
+        except TimeoutError:
+            timeouts += 1
+            if timeouts >= 3:
+                raise
+            continue  # Retry with the same cursor
+        timeouts = 0
+        all_keys.extend(keys)
+    ```
+  </ClientTab>
+
+  <ClientTab slot="java">
+    ```java
+    import glide.api.models.commands.scan.ClusterScanCursor;
+    import glide.api.models.exceptions.TimeoutException;
+    import java.util.LinkedHashSet;
+    import java.util.Set;
+    import java.util.concurrent.ExecutionException;
+
+    // The enclosing method declares `throws ExecutionException, InterruptedException`.
+    Set<String> allKeys = new LinkedHashSet<>();
+    ClusterScanCursor cursor = ClusterScanCursor.initialCursor();
+    int timeouts = 0;
+    while (!cursor.isFinished()) {
+        Object[] response;
+        try {
+            response = client.scan(cursor).get();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof TimeoutException && ++timeouts < 3) {
+                continue; // Retry with the same cursor, so don't release it
+            }
+            throw e;
+        }
+        timeouts = 0;
+        cursor.releaseCursorHandle();
+        cursor = (ClusterScanCursor) response[0];
+        for (Object key : (Object[]) response[1]) {
+            allKeys.add(key.toString());
+        }
+    }
+    cursor.releaseCursorHandle();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="node">
+    ```typescript
+    import { ClusterScanCursor, GlideString, TimeoutError } from "@valkey/valkey-glide";
+
+    let cursor = new ClusterScanCursor();
+    const allKeys: GlideString[] = [];
+    let keys: GlideString[] = [];
+    let timeouts = 0;
+
+    while (!cursor.isFinished()) {
+        try {
+            [cursor, keys] = await client.scan(cursor);
+        } catch (e) {
+            if (e instanceof TimeoutError && ++timeouts < 3) {
+                continue; // Retry with the same cursor
+            }
+            throw e;
+        }
+        timeouts = 0;
+        allKeys.push(...keys);
+    }
+    ```
+  </ClientTab>
+</ClientTabs>
+
 ## Next Steps
 
 See our [guide](/how-to/scan-cluster) on how to scan a cluster for values.
