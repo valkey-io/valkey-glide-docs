@@ -19,6 +19,7 @@ For how this works and when it helps, see [RDMA Transfers](/concepts/client-feat
 * A Valkey server with the [valkey-large-object module](https://github.com/valkey-io/valkey-large-object) that serves the `BLOB.*` RDMA commands.
   * Note: the module's `max-object-size` (default 512 MiB) caps what `rdma_set` can store, so increase it if you need to store larger values.
 * Check `ulimit -l` (or `LimitMEMLOCK=` in the systemd unit) is at least the total you will register with RDMA. Registration pins pages, so `RLIMIT_MEMLOCK` must cover every open region.
+* Only to register GPU memory: the CUDA driver on the client machine, and a libfabric built with CUDA support.
 
 ## Check that RDMA can run
 
@@ -73,6 +74,67 @@ region.window()               # the whole region
 
 Any writable, C-contiguous, non-empty buffer works. GLIDE keeps a reference to it while the region is open and never copies or frees it.
 
+## Register GPU memory
+
+To have the server read and write CUDA GPU memory directly, with no copy through host memory, create the client with `device_memory=True`:
+
+```python
+import torch
+from glide_sync import (
+    GlideClient,
+    GlideClientConfiguration,
+    NodeAddress,
+    RdmaConfiguration,
+    RdmaProvider,
+    RdmaSetChecksum,
+)
+
+config = GlideClientConfiguration(
+    addresses=[NodeAddress("localhost", 6379)],
+    rdma=RdmaConfiguration(provider=RdmaProvider.EfaDirect(), device_memory=True),
+)
+client = GlideClient.create(config)
+
+tensor = torch.empty(64 << 20, dtype=torch.uint8, device="cuda")
+region = client.register_rdma_region(tensor)
+
+n = 1 << 20
+tensor[:n].fill_(7)        # GPU work that writes the window
+torch.cuda.synchronize()   # finish it before rdma_set
+
+crc = your_gpu_crc32c(tensor[:n])  # your own CRC-32c, computed on the GPU
+client.rdma_set(b"weights", region.window(0, n), checksum=RdmaSetChecksum.Known(crc))
+# or checksum=RdmaSetChecksum.Skip()
+
+receipt = client.rdma_get(b"weights", region.window(n, n))
+if receipt is None:
+    ...  # the key does not exist; nothing was written
+else:
+    # The bytes are in tensor[n : n + receipt.bytes_written].
+    # GLIDE does not check them; compare your own CRC-32c with receipt.checksum.
+    ...
+```
+
+* `register_rdma_region` accepts a CUDA `torch.Tensor`, a CuPy array, or any object whose `__dlpack_device__` names a CUDA device and that offers `__cuda_array_interface__`. For a tensor whose dtype has no typestr, such as float8, GLIDE uses `data_ptr()`. The memory must be writable and C-contiguous.
+* Host memory registers the same way with or without `device_memory`.
+* You can register GPU memory from any thread, including one that never used CUDA.
+* A GPU region has no host view: `region.memoryview()` and `window.memoryview()` raise `RdmaError`. Read and write the data through the tensor or array.
+* `rdma_set` on a GPU window takes `RdmaSetChecksum.Skip()` (the default) or `RdmaSetChecksum.Known(crc)`. `Compute()` raises `RdmaError` before anything is sent, and the region stays usable.
+* `rdma_get` returns the server's CRC-32c in `receipt.checksum` without checking the landed bytes against it.
+* Finish GPU work that writes a window before `rdma_set`, for example with `torch.cuda.synchronize()`. Don't touch a window with GPU work while a transfer of it runs. Submit GPU work that reads a window only after `rdma_get` returns. If the device's `CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING` does not cover that work, call `cuFlushGPUDirectRDMAWrites` first.
+* A tensor that requires grad can be registered, but `rdma_get` writes it outside PyTorch, so autograd's version counter does not change. Don't `rdma_get` into storage that a pending backward pass saved.
+* If the tensor's address range, size or layout changes after registration (for example `resize_()` or `set_()`), the next transfer raises `RdmaError` before anything is sent. The region stays usable once the range is restored. Otherwise, close it and register again.
+* Only CUDA device memory is supported. CUDA managed memory (`cudaMallocManaged`) and memory on other devices, such as ROCm, raise `TypeError` before anything is registered.
+* Without `device_memory=True`, registering GPU memory raises `RdmaError`.
+* If the provider doesn't offer GPU memory (FI_HMEM) on the host, creating the client fails with an error naming FI_HMEM. `EfaDirect` offers it on a GPU host whose libfabric was built with CUDA.
+* The first GPU registration loads the CUDA driver, `libcuda.so.1`. If it can't be loaded, registration raises `RdmaError`.
+
+:::note
+A tensor from PyTorch's expandable segments (`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`) can span more than one mapping. Registering one that does needs libfabric 2.7.0 or later and the dmabuf path libfabric takes by default. On libfabric 2.6.0 such a registration fails in `fi_mr_regattr` with `Invalid argument`. GLIDE does not check the libfabric version for this.
+:::
+
+For how GPU transfers work, see [GPU memory](/concepts/client-features/rdma/#gpu-memory).
+
 ## Write a value
 
 ```python
@@ -107,7 +169,7 @@ else:
     value = region.window(4096, receipt.bytes_written).memoryview()
 ```
 
-The value is in the window by the time `rdma_get` returns, already checked against the checksum the server sent.
+The value is in the window by the time `rdma_get` returns. For host memory, GLIDE has already checked it against the checksum the server sent. For GPU memory, see [Register GPU memory](/how-to/rdma-transfers/#register-gpu-memory).
 A value larger than the window raises `RdmaError` without writing anything.
 
 ## Transfer from several threads
