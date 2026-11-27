@@ -418,9 +418,939 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     info = client.ft_info(index)
     ```
 
-    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, and `FT.INFO`. Use `client.call(...)` for raw Search commands without a builder. `ft_search` and `ft_aggregate` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries. When the client connects to a Search-enabled cluster, pass `Valkey::Search::InfoOptions.new(scope: :cluster)` to request cluster-wide `FT.INFO`.
+    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, `FT.INFO`, `FT.HYBRID`, and `FT.CURSOR` (see [Valkey Search 1.3 Features (Ruby)](#valkey-search-13-features-ruby)). Use `client.call(...)` for raw Search commands without a builder. `ft_search`, `ft_aggregate`, `ft_hybrid`, `ft_cursor_read`, and `ft_cursor_del` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries. When the client connects to a Search-enabled cluster, pass `Valkey::Search::InfoOptions.new(scope: :cluster)` to request cluster-wide `FT.INFO`.
   </ClientTab>
 </ClientTabs>
+
+## Valkey Search 1.3 Features (Java)
+
+These features require valkey-search 1.3. The snippets below assume a connected `client` (`GlideClusterClient` or `GlideClient`) and an existing index named `idx`. Fields used below: a TEXT field `title`, a NUMERIC field `price`, a TAG field `category`, and a VECTOR field `vec` with two dimensions.
+
+### Restrict a Search to Specific Keys
+
+Pass `inKeys` to search only the listed keys. An empty array sends `INKEYS 0` and matches nothing. Leaving `inKeys` unset omits `INKEYS` and applies no restriction.
+
+```java
+import static glide.api.models.GlideString.gs;
+
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTSearchOptions;
+
+Object[] res = FT.search(client, "idx", "@title:hello",
+        FTSearchOptions.builder()
+                .inKeys(new GlideString[] {gs("doc:1"), gs("doc:2")})
+                .build())
+        .get();
+
+// Matches nothing.
+FT.search(client, "idx", "*",
+        FTSearchOptions.builder().inKeys(new GlideString[0]).build())
+        .get();
+```
+
+### Count Matches Without Fetching Documents
+
+`count()` returns only the number of matches. It sends `LIMIT 0 0`, so it cannot be combined with `limit(offset, count)`. A bare `COUNT` is not a valid `FT.SEARCH` token.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.commands.FT.FTSearchOptions;
+
+Object[] r = FT.search(client, "idx", "@title:hello",
+        FTSearchOptions.builder().count().build())
+        .get();
+System.out.println(r[0]); // 2
+```
+
+### Use New Aggregate Reducers
+
+`FTAggregateOptions.GroupBy.Reducer` has factory methods for `TOLIST`, `FIRST_VALUE`, and `RANDOM_SAMPLE`. Use them in a `GroupBy` clause.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTAggregateOptions;
+import glide.api.models.commands.FT.FTAggregateOptions.GroupBy;
+import glide.api.models.commands.FT.FTAggregateOptions.GroupBy.Reducer;
+import glide.api.models.commands.FT.FTAggregateOptions.SortBy.SortOrder;
+import java.util.Map;
+
+Map<GlideString, Object>[] rows = FT.aggregate(client, "idx", "*",
+        FTAggregateOptions.builder()
+                .loadFields(new String[] {"category", "price"})
+                .addClause(new GroupBy(
+                        new String[] {"@category"},
+                        new Reducer[] {
+                            Reducer.toList("@price", "prices"),
+                            Reducer.firstValue("@price", "@price", SortOrder.DESC, "max_price"),
+                            Reducer.randomSample("@price", 2, "sample"),
+                        }))
+                .build())
+        .get();
+```
+
+- `toList(field, name)` removes duplicates and nil values.
+- `firstValue(field, by, order, name)` throws `IllegalArgumentException` if you set `order` without `by`. Pass `null` for `by` and `order` to take the first record encountered.
+- `randomSample(field, size, name)` takes a size from 0 to 1000. The server rejects other values.
+
+### Score and Rank Results
+
+Call `withScores()` on `FTSearchOptions` to get a relevance score for each document. `BM25STD` is the only accepted `scorer`.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTSearchOptions;
+import java.util.Map;
+
+Object[] res = FT.search(client, "idx", "hello",
+        FTSearchOptions.builder().withScores().scorer("BM25STD").build())
+        .get();
+
+Map<GlideString, Object> docs = (Map<GlideString, Object>) res[1];
+for (Map.Entry<GlideString, Object> doc : docs.entrySet()) {
+    Object[] value = (Object[]) doc.getValue(); // value is [score, fieldMap]
+    GlideString score = (GlideString) value[0]; // score is a decimal string
+    System.out.println(doc.getKey() + " " + score);
+}
+```
+
+For `FT.AGGREGATE`, call `addScores()` on `FTAggregateOptions` to expose the score as `@__score`.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTAggregateOptions;
+import glide.api.models.commands.FT.FTAggregateOptions.SortBy;
+import glide.api.models.commands.FT.FTAggregateOptions.SortBy.SortOrder;
+import glide.api.models.commands.FT.FTAggregateOptions.SortBy.SortProperty;
+import java.util.Map;
+
+Map<GlideString, Object>[] rows = FT.aggregate(client, "idx", "hello",
+        FTAggregateOptions.builder()
+                .addScores()
+                .scorer("BM25STD")
+                .loadFields(new String[] {"title"})
+                .addClause(new SortBy(new SortProperty[] {
+                    new SortProperty("@__score", SortOrder.DESC)
+                }))
+                .build())
+        .get();
+```
+
+### Page Through Results with Cursors
+
+Set `withCursor` on `FTAggregateOptions` and call `FT.aggregateWithCursor` to get results in pages. The reply is an `Object[]` of `[rows, cursorId]`, and a `cursorId` of `0` means there are no more pages.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTAggregateOptions;
+import glide.api.models.commands.FT.FTWithCursor;
+import java.util.Map;
+
+Object[] page = FT.aggregateWithCursor(client, "idx", "*",
+        FTAggregateOptions.builder()
+                .loadFields(new String[] {"title"})
+                .withCursor(new FTWithCursor(5))
+                .build())
+        .get();
+Map<GlideString, Object>[] rows = (Map<GlideString, Object>[]) page[0];
+long cursorId = (Long) page[1];
+
+while (cursorId != 0) {
+    page = FT.cursorRead(client, "idx", cursorId).get();
+    rows = (Map<GlideString, Object>[]) page[0];
+    cursorId = (Long) page[1];
+}
+```
+
+`FTWithCursor` takes an optional `count` (rows per page) and `maxIdle` (idle time in milliseconds before the server discards the cursor): `new FTWithCursor()`, `new FTWithCursor(count)`, or `new FTWithCursor(count, maxIdle)`. `cursorRead` takes an optional fourth argument, `Integer count`, to change the page size for that read.
+
+Plain `FT.aggregate` throws `IllegalArgumentException` if the options set `withCursor`. `FT.aggregateWithCursor` throws if they do not.
+
+To discard a cursor before it is exhausted:
+
+```java
+FT.cursorDel(client, "idx", cursorId).get(); // "OK"
+```
+
+:::note
+In cluster mode, cursor queries and every `cursorRead` and `cursorDel` go to the primary of the index's slot, regardless of `readFrom`.
+
+On a standalone `GlideClient`, a cursor opened with aggregate `WITHCURSOR` can fail with `Cursor: not found` on `cursorRead` or `cursorDel` if the client reads from a replica. Set `ReadFrom.PRIMARY` (the default) on standalone clients that use `withCursor`.
+:::
+
+- Reading or deleting an unknown or deleted cursor id throws.
+- A client created with `readOnly(true)` rejects `cursorRead`, `cursorDel`, `hybrid`, and `hybridWithCursor` before sending them.
+
+### Combine Text and Vector Search with FT.HYBRID
+
+`FT.hybrid(client, index, searchArm, vsimArm, options)` runs a text query and a vector similarity search together and fuses the results. The `options` argument is optional.
+
+Pass the query vector as a `byte[]` to `FTHybridVsimArm.builder(field, vector)`. The client sends it as raw data.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.commands.FT.FTHybridSearchArm;
+import glide.api.models.commands.FT.FTHybridVsimArm;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+// Two float32 values in little-endian order.
+byte[] q = ByteBuffer.allocate(8)
+        .order(ByteOrder.LITTLE_ENDIAN)
+        .putFloat(1f)
+        .putFloat(1f)
+        .array();
+
+Object[] rows = FT.hybrid(client, "idx",
+        new FTHybridSearchArm("hello"),
+        FTHybridVsimArm.builder("vec", q).k(5).build())
+        .get();
+// Each row contains __key and __score by default.
+```
+
+To reference a query parameter instead, call `FTHybridVsimArm.builder(field, "$name")` and supply the value in `params`. Only a `String` that starts with `$` is treated as a reference. A `byte[]` is always raw vector data, even if its first byte is `$`.
+
+```java
+import static glide.api.models.GlideString.gs;
+
+import glide.api.commands.servermodules.FT;
+import glide.api.models.commands.FT.FTHybridOptions;
+import glide.api.models.commands.FT.FTHybridSearchArm;
+import glide.api.models.commands.FT.FTHybridVsimArm;
+import java.util.Map;
+
+// q is the byte[] from the previous example.
+Object[] rows = FT.hybrid(client, "idx",
+        new FTHybridSearchArm("hello"),
+        FTHybridVsimArm.builder("vec", "$myvec").k(5).build(),
+        FTHybridOptions.builder().params(Map.of("myvec", gs(q))).build())
+        .get();
+```
+
+Create the search arm with `new FTHybridSearchArm(query)`, `FTHybridSearchArm.withScorer(query, scorer)`, `FTHybridSearchArm.withYieldScoreAs(query, alias)`, or `new FTHybridSearchArm(query, scorer, yieldScoreAs)`. The vector arm builder takes `field` (without a leading `@`) and the vector, then `k`, `efRuntime`, `shardKRatio`, `yieldScoreAs`, and `filter`.
+
+#### Choose a Fusion Method
+
+Pass one of the following to `FTHybridOptions.builder().combine(...)`:
+
+```java
+import glide.api.models.commands.FT.FTHybridCombine;
+
+FTHybridCombine rrf = FTHybridCombine.Rrf.builder()
+        .constant(60)
+        .window(20)
+        .yieldScoreAs("fused")
+        .build();
+
+// Set both alpha and beta, or neither.
+FTHybridCombine linear = FTHybridCombine.Linear.builder().alpha(1.0).beta(0.0).build();
+
+// Reference arm scores by their yieldScoreAs names, or use
+// @__search_score and @__vector_score.
+FTHybridCombine fn = new FTHybridCombine.Function("@ss + @vs");
+```
+
+#### Filter, Fuse, and Page
+
+This example filters the vector arm, fuses with RRF, filters the fused rows, and pages the output. Use `FT.hybridWithCursor` for a paged reply. It returns `[rows, cursorId]` in the same shape as `FT.aggregateWithCursor`. Plain `FT.hybrid` throws `IllegalArgumentException` if the options set `withCursor`.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTAggregateOptions;
+import glide.api.models.commands.FT.FTHybridCombine;
+import glide.api.models.commands.FT.FTHybridOptions;
+import glide.api.models.commands.FT.FTHybridSearchArm;
+import glide.api.models.commands.FT.FTHybridVsimArm;
+import glide.api.models.commands.FT.FTHybridVsimFilter;
+import glide.api.models.commands.FT.FTWithCursor;
+import glide.api.models.commands.FT.HybridFilterPolicy;
+import java.util.Map;
+
+// q is the byte[] from the first FT.HYBRID example.
+Object[] page = FT.hybridWithCursor(client, "idx",
+        FTHybridSearchArm.withYieldScoreAs("hello", "ss"),
+        FTHybridVsimArm.builder("vec", q)
+                .k(5)
+                .yieldScoreAs("vs")
+                .filter(new FTHybridVsimFilter("@title:hello", HybridFilterPolicy.BATCHES))
+                .build(),
+        FTHybridOptions.builder()
+                .combine(FTHybridCombine.Rrf.builder().constant(60).build())
+                .addClause(new FTAggregateOptions.Filter("@ss > 0"))
+                .withCursor(new FTWithCursor(10))
+                .build())
+        .get();
+Map<GlideString, Object>[] rows = (Map<GlideString, Object>[]) page[0];
+long cursorId = (Long) page[1];
+
+while (cursorId != 0) {
+    page = FT.cursorRead(client, "idx", cursorId).get();
+    rows = (Map<GlideString, Object>[]) page[0];
+    cursorId = (Long) page[1];
+}
+```
+
+Other `FTHybridOptions` builder methods: `localOnly()`, `timeout(...)`, `params(...)`, `dialect(...)`, and `loadFields(...)` or `loadAll()`.
+
+:::note
+- `k` defaults to 10.
+- Results are limited to 10 rows unless you add an `FTAggregateOptions.Limit` clause. This also applies when you page with a cursor.
+- The search arm cannot be a KNN query.
+- The server rejects any `dialect` other than 2.
+:::
+
+### Load Fields with Aliases
+
+`FTAggregateOptions.LoadField` loads a field and renames it with `AS`. Pass a `LoadField[]` to `loadFields` on `FTAggregateOptions` or `FTHybridOptions`. You can also pass a plain `String[]` in the same builder. The client sends the plain fields first.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.GlideString;
+import glide.api.models.commands.FT.FTAggregateOptions;
+import glide.api.models.commands.FT.FTAggregateOptions.LoadField;
+import java.util.Map;
+
+Map<GlideString, Object>[] rows = FT.aggregate(client, "idx", "*",
+        FTAggregateOptions.builder()
+                .loadFields(new String[] {"title"})
+                .loadFields(new LoadField[] {new LoadField("price", "cost")})
+                .build())
+        .get();
+```
+
+Empty field arrays omit the `LOAD` clause.
+
+:::caution
+Aliases need `search.emulate-release` set to 1.3.0 or later. Otherwise the server returns `Index: field AS does not exist`. The client does not check this.
+:::
+
+### Avoid Client-Side Errors
+
+The Java client throws `IllegalArgumentException` before the command is sent in these cases:
+
+- A `TextField`, `TagField`, or `NumericField` constructor sets `unf` without `sortable` (`unf requires sortable to be set.`).
+- `Reducer.firstValue` sets `order` without `by`.
+- `FT.aggregate` or `FT.hybrid` receives options with `withCursor` set. `FT.aggregateWithCursor` or `FT.hybridWithCursor` receives options without it.
+- `FTSearchOptions` sets both `count()` and `limit(offset, count)`.
+- `efRuntime` is set on a vector arm whose filter policy is `HybridFilterPolicy.ADHOC`.
+- An `FTHybridVsimFilter` sets `batchSize` without `HybridFilterPolicy.BATCHES`.
+- The RRF `constant` is negative.
+- `Linear` sets only one of `alpha` or `beta`.
+- `FTHybridVsimArm.builder(field, String)` receives a reference that does not start with `$`.
+- `filter` in `FTCreateOptions` is an empty string.
+
+```java
+import glide.api.models.commands.FT.FTAggregateOptions.GroupBy.Reducer;
+import glide.api.models.commands.FT.FTAggregateOptions.SortBy.SortOrder;
+import glide.api.models.commands.FT.FTCreateOptions.TextField;
+
+// Throws: unf requires sortable to be set.
+// Arguments: noStem, weight, withSuffixTrie, noSuffixTrie, sortable, unf
+new TextField(false, null, false, false, false, true);
+
+// Throws: firstValue: order requires by to be set.
+Reducer.firstValue("@price", null, SortOrder.DESC, "max_price");
+```
+
+### Create Indexes with RediSearch-Compatible Options
+
+`FT.CREATE` accepts these additional options:
+
+- `type(VectorType.FLOAT16)` or `type(VectorType.BFLOAT16)` on a `VectorFieldHnsw` or `VectorFieldFlat` builder. The default is `FLOAT32`. You must encode the vector bytes yourself. `BFLOAT16` is the top two bytes of a little-endian float32. The server may refuse `BFLOAT16` on CPUs without SIMD BF16 support.
+- `filter(String)`, an expression that decides which documents the index includes.
+- `scoreField(String)`, a document field whose numeric value is used as the document's score. `FT.INFO` reports it only when `search.emulate-release` is 1.3.0 or later.
+- `noHighlight(true)`, which does nothing on valkey-search. It is accepted for RediSearch compatibility.
+- `unf` on a sortable TEXT, TAG, or NUMERIC field. Use the `TextField(noStem, weight, withSuffixTrie, noSuffixTrie, sortable, unf)`, `TagField(separator, caseSensitive, sortable, unf)`, or `NumericField(sortable, unf)` constructor. It keeps the original (un-normalized) value for sorting, and requires `sortable` to be `true`. It does not apply to vector fields.
+
+```java
+import glide.api.commands.servermodules.FT;
+import glide.api.models.commands.FT.FTCreateOptions;
+import glide.api.models.commands.FT.FTCreateOptions.DataType;
+import glide.api.models.commands.FT.FTCreateOptions.DistanceMetric;
+import glide.api.models.commands.FT.FTCreateOptions.FieldInfo;
+import glide.api.models.commands.FT.FTCreateOptions.TextField;
+import glide.api.models.commands.FT.FTCreateOptions.VectorFieldFlat;
+import glide.api.models.commands.FT.FTCreateOptions.VectorType;
+
+String prefix = "{hash}:";
+
+FT.create(client, "idx",
+        new FieldInfo[] {
+            new FieldInfo("vec",
+                    VectorFieldFlat.builder(DistanceMetric.L2, 2).type(VectorType.FLOAT16).build()),
+            // noStem, weight, withSuffixTrie, noSuffixTrie, sortable, unf
+            new FieldInfo("title", new TextField(false, null, false, false, true, true)),
+        },
+        FTCreateOptions.builder()
+                .dataType(DataType.HASH)
+                .prefixes(new String[] {prefix})
+                .filter("@age > 18")
+                .scoreField("boost")
+                .noHighlight(true)
+                .build())
+        .get();
+```
+
+## Valkey Search 1.3 Features (Node.js)
+
+These features require valkey-search 1.3. The snippets below assume a connected `client` (`GlideClusterClient` or `GlideClient`) and an existing index named `idx`. Fields used below: a TEXT field `title`, a NUMERIC field `price`, a TAG field `category`, and a VECTOR field `vec` with two dimensions.
+
+### Restrict a Search to Specific Keys
+
+Pass `inKeys` to search only the listed keys. An empty array matches nothing, while leaving `inKeys` unset applies no restriction.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const res = await GlideFt.search(client, idx, "@title:hello", {
+    inKeys: ["doc:1", "doc:2"],
+});
+
+await GlideFt.search(client, idx, "*", { inKeys: [] }); // [0]
+```
+
+### Count Matches Without Fetching Documents
+
+`count: true` returns only the number of matches. It sends `LIMIT 0 0`, so it cannot be combined with `limit`. A bare `COUNT` is not a valid `FT.SEARCH` token.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const r = await GlideFt.search(client, idx, "@title:hello", { count: true });
+console.log(r[0]); // 2
+```
+
+### Use New Aggregate Reducers
+
+`FtAggregateReducer` has factory helpers for `TOLIST`, `FIRST_VALUE`, and `RANDOM_SAMPLE`. Use them in a `GROUPBY` clause.
+
+```typescript
+import { FtAggregateReducer, GlideFt } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["category", "price"],
+    clauses: [
+        {
+            type: "GROUPBY",
+            properties: ["@category"],
+            reducers: [
+                FtAggregateReducer.toList("@price", "prices"),
+                FtAggregateReducer.firstValue(
+                    "@price",
+                    { by: "@price", order: "DESC" },
+                    "max_price",
+                ),
+                FtAggregateReducer.randomSample("@price", 2, "sample"),
+            ],
+        },
+    ],
+});
+```
+
+- `toList` removes duplicates and nil values.
+- `firstValue` throws an `Error` if you set `order` without `by`.
+- `randomSample` takes a size from 0 to 1000. The server rejects other values.
+
+### Score and Rank Results
+
+Set `withScores: true` on `FT.SEARCH` to get a relevance score for each document. `BM25STD` is the only accepted `scorer`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const res = await GlideFt.search(client, idx, "hello", {
+    withScores: true,
+    scorer: "BM25STD",
+});
+
+for (const { key, value } of res[1]) {
+    const [score] = value; // value is [score, fields]; score is a string
+    console.log(key, score);
+}
+```
+
+For `FT.AGGREGATE`, set `addScores: true` to expose the score as `@__score`.
+
+```typescript
+import { GlideFt, SortOrder } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "hello", {
+    addScores: true,
+    scorer: "BM25STD",
+    loadFields: ["title"],
+    clauses: [
+        {
+            type: "SORTBY",
+            properties: [{ property: "@__score", order: SortOrder.DESC }],
+        },
+    ],
+});
+```
+
+### Page Through Results with Cursors
+
+Set `withCursor` on `FT.AGGREGATE` to get results in pages. The reply is `[rows, cursorId]`, and a `cursorId` of `0` means there are no more pages.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+let [rows, cursorId] = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["title"],
+    withCursor: { count: 5 },
+});
+
+while (cursorId !== 0) {
+    [rows, cursorId] = await GlideFt.cursorRead(client, idx, cursorId);
+}
+```
+
+`withCursor` accepts `count` (rows per page) and `maxidle` (idle time in milliseconds before the server discards the cursor). `cursorRead` takes an optional fourth argument, `{ count }`, to change the page size for that read.
+
+To discard a cursor before it is exhausted:
+
+```typescript
+await GlideFt.cursorDel(client, idx, cursorId); // "OK"
+```
+
+:::note
+In cluster mode, cursor queries and every `cursorRead` and `cursorDel` go to the primary of the index's slot, regardless of `readFrom`.
+
+On a standalone `GlideClient`, set `readFrom: "primary"` when you use `withCursor` on `aggregate`. Otherwise the next page can fail with `Cursor: not found`.
+:::
+
+- Reading or deleting an unknown or deleted cursor id throws.
+- A client created with `readOnly: true` rejects `cursorRead`, `cursorDel`, and `hybrid` before sending them.
+
+### Combine Text and Vector Search with FT.HYBRID
+
+`GlideFt.hybrid(client, index, searchArm, vsimArm, options?)` runs a text query and a vector similarity search together and fuses the results.
+
+Pass the query vector as a `Buffer`. The client sends it as raw data.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// Two float32 values in little-endian order.
+const q = Buffer.alloc(8);
+q.writeFloatLE(1, 0);
+q.writeFloatLE(1, 4);
+
+const rows = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello" },
+    { field: "vec", vector: q, k: 5 },
+);
+// Each row contains __key and __score by default.
+```
+
+To reference a query parameter instead, pass a string that starts with `$` and supply the value in `params`. A `Buffer` is never treated as a reference, even if its first byte is `$`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// q is the Buffer from the previous example.
+const rows = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello" },
+    { field: "vec", vector: "$myvec", k: 5 },
+    { params: [{ key: "myvec", value: q }] },
+);
+```
+
+The search arm takes `query`, `scorer`, and `yieldScoreAs`. The vector arm takes `field` (without a leading `@`), `vector`, `k`, `efRuntime`, `shardKRatio`, `yieldScoreAs`, and `filter`.
+
+#### Choose a Fusion Method
+
+Set `combine` in the options. Each method is one of the following:
+
+```typescript
+import type { FtHybridCombine } from "@valkey/valkey-glide";
+
+const rrf: FtHybridCombine = {
+    method: "RRF",
+    constant: 60,
+    window: 20,
+    yieldScoreAs: "fused",
+};
+
+// Set both alpha and beta, or neither.
+const linear: FtHybridCombine = { method: "LINEAR", alpha: 1.0, beta: 0.0 };
+
+// Reference arm scores by their yieldScoreAs names, or use
+// @__search_score and @__vector_score.
+const fn: FtHybridCombine = { method: "FUNCTION", expr: "@ss + @vs" };
+```
+
+#### Filter, Fuse, and Page
+
+This example filters the vector arm, fuses with RRF, filters the fused rows, and pages the output.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// q is the Buffer from the first FT.HYBRID example.
+let [rows, cursorId] = await GlideFt.hybrid(
+    client,
+    idx,
+    { query: "hello", yieldScoreAs: "ss" },
+    {
+        field: "vec",
+        vector: q,
+        k: 5,
+        yieldScoreAs: "vs",
+        filter: { expression: "@title:hello", policy: "BATCHES" },
+    },
+    {
+        combine: { method: "RRF", constant: 60 },
+        clauses: [{ type: "FILTER", expression: "@ss > 0" }],
+        withCursor: { count: 10 },
+    },
+);
+
+while (cursorId !== 0) {
+    [rows, cursorId] = await GlideFt.cursorRead(client, idx, cursorId);
+}
+```
+
+Other options: `localOnly`, `timeout`, `params`, `dialect`, and `loadFields` or `loadAll`.
+
+:::note
+- `k` defaults to 10.
+- Results are limited to 10 rows unless you add a `LIMIT` clause.
+- The search arm cannot be a KNN query.
+- The server rejects any `dialect` other than 2.
+:::
+
+### Load Fields with Aliases
+
+Each `loadFields` entry is a field name or a `{ fieldIdentifier, alias }` object. This works in `GlideFt.aggregate` and `GlideFt.hybrid`.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const rows = await GlideFt.aggregate(client, idx, "*", {
+    loadFields: ["title", { fieldIdentifier: "price", alias: "cost" }],
+});
+```
+
+An empty `loadFields` array omits the `LOAD` clause.
+
+:::caution
+Aliases need `search.emulate-release` set to 1.3.0 or later. Otherwise the server returns `Index: field AS does not exist`. The client does not check this.
+:::
+
+### Avoid Client-Side Errors
+
+`GlideFt.hybrid` and `GlideFt.create` reject with an `Error` before the command is sent in these cases:
+
+- `efRuntime` is set on a vector arm whose `filter.policy` is `"ADHOC"`.
+- `filter.batchSize` is set without `filter.policy: "BATCHES"`.
+- The RRF `constant` is negative.
+- A `LINEAR` method sets only one of `alpha` or `beta`.
+- A field sets `unf` without `sortable` (`unf requires sortable to be set.`).
+- `filter` in `GlideFt.create` options is empty.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+// Rejects with: unf requires sortable to be set.
+await GlideFt.create(client, idx, [{ type: "TEXT", name: "title", unf: true }], {
+    dataType: "HASH",
+});
+```
+
+### Create Indexes with RediSearch-Compatible Options
+
+`FT.CREATE` accepts these additional options:
+
+- `type: "FLOAT16"` or `"BFLOAT16"` on a vector field. The default is `FLOAT32`. You must encode the vector bytes yourself. `BFLOAT16` is the top two bytes of a little-endian float32. The server may refuse `BFLOAT16` on CPUs without SIMD BF16 support.
+- `filter`, an expression that decides which documents the index includes.
+- `scoreField`, a document field whose numeric value is used as the document's score. `FT.INFO` reports it only when `search.emulate-release` is 1.3.0 or later.
+- `noHighlight`, which does nothing on valkey-search. It is accepted for RediSearch compatibility.
+- `unf: true` on a sortable TEXT, TAG, or NUMERIC field. It keeps the original (un-normalized) value for sorting, and requires `sortable: true`. It does not apply to vector fields.
+
+```typescript
+import { GlideFt } from "@valkey/valkey-glide";
+
+const prefix = "{hash}:";
+
+await GlideFt.create(
+    client,
+    idx,
+    [
+        {
+            type: "VECTOR",
+            name: "vec",
+            attributes: {
+                algorithm: "FLAT",
+                dimensions: 2,
+                distanceMetric: "L2",
+                type: "FLOAT16",
+            },
+        },
+        { type: "TEXT", name: "title", sortable: true, unf: true },
+    ],
+    {
+        dataType: "HASH",
+        prefixes: [prefix],
+        filter: "@age > 18",
+        scoreField: "boost",
+        noHighlight: true,
+    },
+);
+```
+
+## Valkey Search 1.3 Features (Ruby)
+
+These features require valkey-search 1.3. The snippets below assume `require "valkey"`, a connected `client` (`Valkey.new(host: "localhost", port: 6379)` or a cluster client created with `Valkey.new(nodes: [...], cluster_mode: true)`), and an existing index `idx = "idx"`. Fields used below: a TEXT field `title`, a NUMERIC field `price`, a TAG field `category`, and a VECTOR field `vec` with two FLOAT32 dimensions. Builder classes live under `Valkey::Search`.
+
+`ft_create`, `ft_search`, `ft_aggregate`, `ft_hybrid`, and `ft_info` accept either an options object (`CreateOptions`, `SearchOptions`, `AggregateOptions`, `HybridOptions`, `InfoOptions`) or the same options as keyword arguments, but not both.
+
+Some behaviors need the server setting `search.emulate-release` at 1.3.0 or later: `LOAD ... AS` aliases, a `LIMIT` placed directly before or after `SORTBY` in `FT.AGGREGATE` returning more than the 10 rows `SORTBY` keeps by default, and the `score_field` entry in `FT.INFO`.
+
+### Restrict a Search to Specific Keys
+
+Pass `in_keys:` to search only the listed keys. An empty array matches nothing, while leaving `in_keys` unset (`nil`) applies no restriction.
+
+```ruby
+result = client.ft_search(idx, "@title:hello", in_keys: ["doc:1", "doc:2"])
+
+# The same search with an options object.
+opts = Valkey::Search::SearchOptions.new(in_keys: ["doc:1", "doc:2"])
+result = client.ft_search(idx, "@title:hello", opts)
+
+client.ft_search(idx, "*", in_keys: []).total_results # => 0
+```
+
+### Count Matches Without Fetching Documents
+
+`count: true` returns only the number of matches. It sends `LIMIT 0 0`, so it cannot be combined with `limit:`.
+
+```ruby
+result = client.ft_search(idx, "@title:hello", count: true)
+result.total_results # => 2
+result.documents     # => []
+```
+
+### Use New Aggregate Reducers
+
+`Valkey::Search::Reducer` has factory methods for `TOLIST`, `FIRST_VALUE`, and `RANDOM_SAMPLE`. Use them in a `GroupBy` clause.
+
+```ruby
+rows = client.ft_aggregate(idx, "*",
+  load: ["category", "price"],
+  clauses: [
+    Valkey::Search::GroupBy.new(["@category"], reducers: [
+      Valkey::Search::Reducer.to_list("@price", as: "prices"),
+      Valkey::Search::Reducer.first_value("@price", by: "@price", order: :desc, as: "max_price"),
+      Valkey::Search::Reducer.random_sample("@price", 2, as: "sample")
+    ])
+  ])
+```
+
+- `to_list` removes duplicates and nil values.
+- `first_value` raises `ArgumentError` if you set `order:` without `by:`. With `by:` and no `order:`, the record with the smallest `by` value wins.
+- `random_sample` takes a size from 0 to 1000. The server rejects other values. The result is an array.
+
+### Score and Rank Results
+
+Set `with_scores: true` on `ft_search` to get a relevance score for each document in `doc.score`. `BM25STD` is the only accepted `scorer:`. The server rejects any other value with `Valkey::CommandError`.
+
+```ruby
+result = client.ft_search(idx, "hello", with_scores: true, scorer: "BM25STD")
+
+result.documents.each do |doc|
+  puts "#{doc.key} #{doc.score.to_f}"
+end
+```
+
+For `ft_aggregate`, set `add_scores: true` to expose the score as `@__score`.
+
+```ruby
+rows = client.ft_aggregate(idx, "hello",
+  add_scores: true,
+  scorer: "BM25STD",
+  load: ["title"],
+  clauses: [Valkey::Search::SortBy.new("@__score", :desc)])
+```
+
+### Page Through Results with Cursors
+
+Set `with_cursor:` on `ft_aggregate` to get results in pages. The reply is `[rows, cursor_id]`, and a `cursor_id` of `0` means there are no more pages.
+
+```ruby
+rows, cursor_id = client.ft_aggregate(idx, "*",
+  load: ["title"],
+  with_cursor: Valkey::Search::WithCursor.new(count: 5))
+
+while cursor_id != 0
+  rows, cursor_id = client.ft_cursor_read(idx, cursor_id)
+end
+```
+
+`WithCursor.new` accepts `count:` (rows per page) and `maxidle:` (idle time in milliseconds before the server discards the cursor). `ft_cursor_read` takes an optional `count:` keyword to change the page size for that read.
+
+To discard a cursor before it is exhausted:
+
+```ruby
+client.ft_cursor_del(idx, cursor_id) # => "OK"
+```
+
+:::note
+In cluster mode, cursor queries (`ft_aggregate` and `ft_hybrid` with `with_cursor:`) and every `ft_cursor_read` and `ft_cursor_del` go to the primary of the index's slot, regardless of `read_from`.
+
+On a standalone client with a replica read strategy (`Valkey::ReadFrom::PREFER_REPLICA` or an AZ affinity strategy), `ft_aggregate` with `with_cursor:` can open the cursor on a replica while `ft_cursor_read` and `ft_cursor_del` go to the primary and fail because the cursor is not found. Set `read_from: Valkey::ReadFrom::PRIMARY` for cursor workflows. `ft_hybrid` is not affected.
+:::
+
+- Reading or deleting an unknown or deleted cursor id raises `Valkey::CommandError`.
+- Cursors opened by `ft_hybrid` are read and deleted the same way.
+
+### Combine Text and Vector Search with FT.HYBRID
+
+`client.ft_hybrid(index, search_arm, vsim_arm, options = nil, **kwargs)` runs a text query and a vector similarity search together and fuses the results.
+
+Pass the query vector as a binary-encoded string. The client sends it as raw data.
+
+```ruby
+# Two float32 values in little-endian order. pack returns a binary string.
+q = [1.0, 1.0].pack("e*")
+
+rows = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello"),
+  Valkey::Search::HybridVsimArm.new("vec", q, k: 5))
+# Each row contains "__key" and "__score" by default.
+```
+
+To reference a query parameter instead, pass a regular (non-binary) string that starts with `$` and supply the value in `params:`. A binary string is never treated as a reference, even if its first byte is `$`. Use `.b` on raw vector bytes that are not already binary.
+
+```ruby
+# q is the binary string from the previous example.
+rows = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello"),
+  Valkey::Search::HybridVsimArm.new("vec", "$myvec", k: 5),
+  params: { "myvec" => q })
+```
+
+`HybridSearchArm.new` takes the query plus `scorer:` and `yield_score_as:`. `HybridVsimArm.new` takes the field name (without a leading `@`), the vector, and `k:`, `ef_runtime:`, `shard_k_ratio:`, `yield_score_as:`, and `filter:`.
+
+#### Choose a Fusion Method
+
+Pass `combine:` in the options. Each method is one of the following:
+
+```ruby
+rrf = Valkey::Search::HybridCombine.rrf(constant: 60, window: 20, yield_score_as: "fused")
+
+# Set both alpha and beta, or neither.
+linear = Valkey::Search::HybridCombine.linear(alpha: 1.0, beta: 0.0)
+
+# Reference arm scores by their yield_score_as names, or use
+# @__search_score and @__vector_score.
+fn = Valkey::Search::HybridCombine.function("@ss + @vs")
+```
+
+#### Filter, Fuse, and Page
+
+This example filters the vector arm, fuses with RRF, filters the fused rows, and pages the output.
+
+```ruby
+# q is the binary string from the first FT.HYBRID example.
+rows, cursor_id = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello", yield_score_as: "ss"),
+  Valkey::Search::HybridVsimArm.new("vec", q,
+    k: 5,
+    yield_score_as: "vs",
+    filter: Valkey::Search::HybridVsimFilter.new("@title:hello",
+      policy: Valkey::Search::HybridFilterPolicy::BATCHES)),
+  Valkey::Search::HybridOptions.new(
+    combine: Valkey::Search::HybridCombine.rrf(constant: 60),
+    clauses: [Valkey::Search::Filter.new("@ss > 0")],
+    with_cursor: Valkey::Search::WithCursor.new(count: 10)))
+
+while cursor_id != 0
+  rows, cursor_id = client.ft_cursor_read(idx, cursor_id)
+end
+```
+
+Other options: `local_only:`, `timeout:`, `params:`, `dialect:`, and `load:` (an array of fields or `:all`). There are no `limit:` or `sort_by:` options. Add `Valkey::Search::Limit`, `SortBy`, `Filter`, `Apply`, or `GroupBy` objects to `clauses:` instead.
+
+:::note
+- `k` defaults to 10.
+- Results are limited to 10 rows unless you add a `Valkey::Search::Limit` clause, for example `Valkey::Search::Limit.new(0, 20)`.
+- The search arm cannot be a KNN query.
+- The server rejects any `dialect` other than 2.
+:::
+
+### Load Fields with Aliases
+
+Each `load:` entry is a field name or a `Valkey::Search::LoadField`. This works in `ft_aggregate` and `ft_hybrid`.
+
+```ruby
+rows = client.ft_aggregate(idx, "*",
+  load: ["title", Valkey::Search::LoadField.new("price", as: "cost")])
+# Each row has a "cost" key instead of "price".
+```
+
+An empty `load:` array omits the `LOAD` clause.
+
+:::caution
+Aliases need `search.emulate-release` set to 1.3.0 or later. Otherwise the server raises `Valkey::CommandError` because it reads `AS` as a field name that does not exist. The client does not check this.
+:::
+
+### Avoid Client-Side Errors
+
+The FT methods and `Valkey::Search` builders raise `ArgumentError` before the command is sent in these cases:
+
+- `count: true` is combined with `limit:` (`count and limit are mutually exclusive: count maps to LIMIT 0 0`).
+- `Reducer.first_value` sets `order:` without `by:` (`first_value: order requires by to be set`).
+- A TEXT, TAG, or NUMERIC field sets `unf: true` without `sortable: true` (`unf requires sortable: true`).
+- `filter:` in the create options is an empty string (`filter cannot be empty`).
+- `HybridVsimFilter` sets `batch_size:` without `policy: Valkey::Search::HybridFilterPolicy::BATCHES`.
+- `HybridVsimArm` sets `ef_runtime:` with a filter whose policy is `HybridFilterPolicy::ADHOC`.
+- `HybridCombine.rrf` gets a negative `constant:` (`constant must not be negative`).
+- `HybridCombine.linear` sets only one of `alpha:` or `beta:` (`alpha and beta must both be set, or both left unset`).
+- A method gets both an options object and keyword options, or a plain Hash in place of the options object.
+- `ft_hybrid` gets a search arm that is not a `HybridSearchArm`, or a vector arm that is not a `HybridVsimArm`.
+- `ft_search`, `ft_aggregate`, `ft_hybrid`, `ft_cursor_read`, or `ft_cursor_del` is called inside `pipelined` or `multi`. Use `client.call` to send the raw command there.
+
+```ruby
+begin
+  Valkey::Search::TextField.new("title", unf: true)
+rescue ArgumentError => e
+  puts e.message # => unf requires sortable: true
+end
+```
+
+### Create Indexes with RediSearch-Compatible Options
+
+`ft_create` accepts these additional options:
+
+- `type: "FLOAT16"` or `"BFLOAT16"` on `VectorField.flat` or `VectorField.hnsw`. The default is `"FLOAT32"`. You must encode the vector bytes yourself. The server may refuse `BFLOAT16` on hardware without support for it.
+- `filter:`, an expression that decides which documents the index includes.
+- `score_field:`, a document field whose numeric value is used as the document's score. `FT.INFO` reports it only when `search.emulate-release` is 1.3.0 or later.
+- `no_highlight:`, which sends `NOHL`. It does nothing on valkey-search and is accepted for RediSearch compatibility.
+- `unf: true` on a sortable TEXT, TAG, or NUMERIC field, which sends `SORTABLE UNF`. It requires `sortable: true` and does not apply to vector fields.
+
+```ruby
+prefix = "{hash}:"
+
+client.ft_create(idx,
+  [
+    Valkey::Search::VectorField.flat("vec", dim: 2, metric: :l2, type: "FLOAT16"),
+    Valkey::Search::TextField.new("title", sortable: true, unf: true)
+  ],
+  on: :hash,
+  prefixes: [prefix],
+  filter: "@age > 18",
+  score_field: "boost",
+  no_highlight: true)
+```
 
 ## What's Next
 
