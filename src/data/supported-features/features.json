@@ -107,7 +107,7 @@
         "standalone_read_only_mode": {
           "displayName": "Standalone Read-only Mode",
           "description": "Restricts standalone clients to read-only commands and supports replica-only deployments.",
-          "docs": "/how-to/connections/read-strategy/"
+          "docs": "/how-to/client-initialization/#standalone-read-only-mode"
         }
       }
     },
