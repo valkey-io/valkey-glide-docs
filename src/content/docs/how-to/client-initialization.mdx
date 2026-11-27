@@ -511,6 +511,75 @@ When using `STATIC` mode through a proxy, do not configure a client name because
   </ClientTab>
 </ClientTabs>
 
+## Standalone read-only mode
+
+Enable read-only mode on a standalone client to connect to a replica-only endpoint. The option is off by default. With it enabled, the client skips primary-role discovery. At least one configured endpoint must be reachable to serve reads. The client rejects ordinary write commands.
+
+The option is available starting with GLIDE v2.3.0 for Python, Java, Node.js, and Go. C#, PHP, and Ruby do not expose it. Do not combine it with AZ-affinity read strategies.
+
+<ClientTabs>
+  <ClientTab slot="python">
+    ```python
+    from glide import GlideClient, GlideClientConfiguration, NodeAddress
+
+    config = GlideClientConfiguration(
+        addresses=[NodeAddress(host="replica.example.com", port=6379)],
+        read_only=True,
+    )
+    client = await GlideClient.create(config)
+    ```
+  </ClientTab>
+
+  <ClientTab slot="java">
+    ```java
+    import glide.api.GlideClient;
+    import glide.api.models.configuration.GlideClientConfiguration;
+    import glide.api.models.configuration.NodeAddress;
+
+    GlideClientConfiguration config = GlideClientConfiguration.builder()
+        .address(NodeAddress.builder()
+            .host("replica.example.com")
+            .port(6379)
+            .build())
+        .readOnly(true)
+        .build();
+    GlideClient client = GlideClient.createClient(config).get();
+    ```
+  </ClientTab>
+
+  <ClientTab slot="node">
+    ```typescript
+    import { GlideClient } from "@valkey/valkey-glide";
+
+    const client = await GlideClient.createClient({
+        addresses: [{ host: "replica.example.com", port: 6379 }],
+        readOnly: true,
+    });
+    ```
+  </ClientTab>
+
+  <ClientTab slot="go">
+    ```go
+    import (
+        glide "github.com/valkey-io/valkey-glide/go/v2"
+        "github.com/valkey-io/valkey-glide/go/v2/config"
+    )
+
+    func newReplicaClient() (*glide.Client, error) {
+        clientConfig := config.NewClientConfiguration().
+            WithAddress(&config.NodeAddress{Host: "replica.example.com", Port: 6379}).
+            WithReadOnly(true)
+
+        return glide.NewClient(clientConfig)
+    }
+    ```
+  </ClientTab>
+</ClientTabs>
+
+[Read strategies](/how-to/connections/read-strategy/) choose where to send reads within the known topology. Setting `ReadFrom` alone still requires a primary for a standalone client. Enabling standalone read-only mode does not send the Valkey Cluster [`READONLY` command](https://valkey.io/commands/readonly/), which configures reads on a cluster replica connection.
+
+Keep standalone batches read-only. In GLIDE releases through v2.6.0 (v2.6.1 for Go), do not rely on client-side write rejection inside a batch. See the [standalone Batch routing discussion](https://github.com/valkey-io/valkey-glide/issues/4339).
+
 ## Configuration Options
 
 GLIDE clients uses configuration `objects` to configure connections to Valkey. This keeps a consistent interface
