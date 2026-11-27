@@ -14,6 +14,16 @@ An Isolated Execution Scope provides a dedicated, per-connection state for runni
 
 Use isolated scopes when you need optimistic concurrency control (OCC) — for example, incrementing a counter only if no other client modified it, or implementing compare-and-swap patterns.
 
+## Why Use an Isolated Scope
+
+Creating a separate client for each transaction isolates `WATCH` state, but each client opens its own connections (to every node in cluster mode) and repeats connection setup and authentication. A scope gives you the isolation without that cost:
+
+- **Correct optimistic locking:** Your `WATCH` keys stay valid until you call `EXEC`, because no other caller uses the connection.
+- **Lighter and faster than a new client:** In cluster mode a scope connects only to the node that owns its key's slot, not to every node. Released scope connections are reused, so later scopes skip the cost of a new connection.
+- **Other callers aren't held up:** Blocking commands, large values, and slow transactions run on the scope's own connection, so the shared client is unaffected.
+
+If you need an atomic `MULTI`/`EXEC` without `WATCH`, use an atomic [batch](/how-to/send-batch-commands/) instead.
+
 ## Acquire a Scope
 
 <ClientTabs>

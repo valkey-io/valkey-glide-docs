@@ -106,7 +106,7 @@ To publish a message, create a separate client to your Valkey instance. Both Sta
     publisher = Valkey.new(host: "localhost", port: 6379, protocol: :resp3)
 
     # Publish message on 'ch1' channel
-    publisher.publish("Test message", "ch1")
+    publisher.publish("ch1", "Test message")
     ```
   </ClientTab>
 </ClientTabs>
@@ -778,7 +778,7 @@ To use callback-based delivery, provide a subscription configuration with a call
     client.subscribe("news", timeout_ms: 5000)
 
     # Publish a message (from another client)
-    publishing_client.publish("Hello!", "news")
+    publishing_client.publish("news", "Hello!")
     sleep 0.5
 
     # Verify the callback received the message

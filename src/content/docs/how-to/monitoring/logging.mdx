@@ -142,8 +142,11 @@ The following examples show how to configure the logger in GLIDE clients.
 
   <ClientTab slot="php">
     ```php
-    // Configure the log level and the output file name
-    valkey_glide_logger_set_config("debug", "./glide_logs");
+    // Configure the log level and the output file name.
+    // Returns false if the log file path can't be used.
+    if (!valkey_glide_logger_set_config("debug", "./glide_logs")) {
+        // Handle the error, for example fall back to console logging
+    }
 
     // Logging example
     $identifier = "LoggingExample";
@@ -172,6 +175,19 @@ If the file name is an absolute path `/example/logs/client_logs`, the logs will 
 If the file name is a relative path `./client_logs`, the logs will be written inside the folder `glide-logs`. For example, `./glide-logs/client_logs.<timestamp>`.
 
 To prevent large files, log files are rotated hourly.
+
+:::note[PHP]
+`valkey_glide_logger_set_config()` and `valkey_glide_logger_init()` check the log file path before applying it. `valkey_glide_logger_init()` checks the path only when it initializes the logger for the first time. If the logger is already initialized, it returns `true` without checking the path. If the path can't be used, they return `false` and write `Failed to initialize logger: <reason>: <filename>` to `stderr`. The path is rejected when:
+
+- The file name is empty or ends with `/`.
+- The directory can't be created, or a path component isn't a directory.
+- The directory isn't writable.
+- The current UTC hour's log file exists but can't be opened for writing.
+
+A missing directory is created when the path is checked. Relative file names resolve under `$GLIDE_LOG_DIR` if it is set and can be created, otherwise under `glide-logs`; absolute paths are used as given. If `set_config()` fails, the previous logger configuration (level and file) stays in effect.
+
+The check happens only at configuration time, so later permission changes aren't detected. When running as root, read-only directories and files pass the check.
+:::
 
 ## Cleanup Outputs
 
