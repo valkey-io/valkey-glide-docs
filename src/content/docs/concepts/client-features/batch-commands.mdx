@@ -121,8 +121,7 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
   </ClientTab>
 </ClientTabs>
 
-:::note
-In the Python, Node.js, Java, and Go clients, the following standalone batches run on the primary node:
+In standalone mode, the following batches run on the primary node:
 
 * Atomic batches (transactions).
 * Batches sent while a raw `MULTI` is open.
@@ -130,7 +129,6 @@ In the Python, Node.js, Java, and Go clients, the following standalone batches r
 * Non-atomic batches containing `HTTL`, `HPTTL`, `HEXPIRETIME`, or `HPEXPIRETIME` ([#7703](https://github.com/valkey-io/valkey-glide/issues/7703)).
 
 Other non-atomic batches, including ones with read-only admin commands such as `CONFIG GET` or `INFO`, follow the client's [read strategy](/how-to/connections/read-strategy/). With a strategy that includes replicas, they may observe replication lag. With such a strategy, a `SELECT` or `RESET` in a batch also switches the replicas to the new database, and reads use a replica only after it has switched.
-:::
 
 ### ClusterBatch
 

@@ -47,10 +47,6 @@ Round-robin distributes requests, not measured CPU utilization. Concurrency, ret
 
 In standalone mode, AZ Affinity uses local replicas, then any available replicas, then the primary. AZ Affinity Replicas and Primary uses local replicas, then the local primary, but its final fallback rotates across **all** available primary and replica nodes. AZ Affinity All Nodes rotates equally across local primary and replicas, then all available nodes if no local node is available. Thus, equal local-primary participation alongside local replicas is new with AZ Affinity All Nodes; including the primary in the final standalone fallback pool is not.
 
-### Standalone batches
-
-In standalone mode, with the Python, Node.js, Java, and Go clients, non-atomic batches (pipelines) that contain only read-only commands can follow the read strategy. Transactions and batches that need the primary, such as those containing writes, run on the primary. See [Batch](/concepts/client-features/batch-commands/#batch) for the full rules.
-
 ## Automatic Redirect Handling (MOVED and ASK)
 
 In a Valkey cluster, slots can move between nodes during failovers, scaling operations, or rebalancing. When a command is sent to a node that no longer owns the target slot, the server responds with a redirect error rather than executing the command. GLIDE handles these redirects automatically.
