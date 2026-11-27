@@ -34,11 +34,11 @@ Both modes leverage the same classes— `Batch` (or `StandaloneBatch` in Go) for
 * **Use Case:** Bulk reads or writes where each command is independent.
 * See: [Valkey Pipelines](https://valkey.io/topics/pipelining/).
 
-## Read routing for non-atomic batches
+### Read routing for non-atomic batches
 
 In both standalone and cluster modes, a non-atomic batch containing only commands eligible for replica routing follows the client's configured [read strategy](/how-to/connections/read-strategy/). If the strategy includes replicas, the batch may return stale data.
 
-Some commands require primary routing even though they do not write data. The sections below describe the constraints for each mode.
+Commands that require the primary continue to use it.
 
 ## Classes and API
 
@@ -126,17 +126,6 @@ For **standalone** (non-cluster, cluster mode disabled) clients.
     ```
   </ClientTab>
 </ClientTabs>
-
-In standalone mode, the following batches run on the primary node:
-
-* Atomic batches (transactions).
-* Batches sent while a raw `MULTI` is open.
-* Non-atomic batches containing a command that writes, changes connection or server state, uses a cursor, or is sent to every node when run on its own (for example, `SELECT`, `CLIENT SETNAME`, `CONFIG SET`, `SLOWLOG GET`, or `SCAN`).
-* Non-atomic batches containing `HTTL`, `HPTTL`, `HEXPIRETIME`, or `HPEXPIRETIME` ([#7703](https://github.com/valkey-io/valkey-glide/issues/7703)).
-
-Other standalone non-atomic batches, including ones with read-only admin commands such as `CONFIG GET` or `INFO`, use the [read routing described above](#read-routing-for-non-atomic-batches).
-
-After a standalone batch applies `SELECT` or `RESET` on the primary, GLIDE switches each replica to the same database. Reads do not use a replica until that switch completes.
 
 ### ClusterBatch
 
