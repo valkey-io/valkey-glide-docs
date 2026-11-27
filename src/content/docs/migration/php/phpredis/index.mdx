@@ -214,6 +214,73 @@ Commands are identical - just replace `$redis` with `$client` (or use the alias 
   </TabItem>
 </Tabs>
 
+#### Hash Field Expiration (hSetEx)
+
+Valkey GLIDE PHP accepts the PHPRedis form `hSetEx(string $key, array $fields, ?array $expiry = null)`, where `$fields` maps each field to its value. It works the same on `ValkeyGlide`, `ValkeyGlideCluster`, and inside `multi()` and `pipeline()`. Outside `multi()` and `pipeline()`, it returns `1` when the fields were set, `0` when a condition prevented the write, or `false` on failure. Inside a transaction or pipeline, the call returns the client, and the result comes back from `exec()`. [HSETEX](https://valkey.io/commands/hsetex/) requires Valkey 9.0 or later.
+
+<Tabs>
+  <TabItem label="PHPRedis">
+    ```php
+    // Set fields with a 60-second TTL
+    $redis->hSetEx('profile', ['token' => 'abc123'], ['EX' => 60]);
+    // Millisecond TTL, only if none of the fields exist
+    $redis->hSetEx('profile', ['token' => 'abc123'], ['PX' => 60000, 'FNX']);
+    // Keep the existing TTL
+    $redis->hSetEx('profile', ['token' => 'abc123'], ['KEEPTTL']);
+    ```
+  </TabItem>
+
+  <TabItem label="Valkey GLIDE">
+    ```php
+    // Set fields with a 60-second TTL
+    $client->hSetEx('profile', ['token' => 'abc123'], ['EX' => 60]);
+    // Millisecond TTL, only if none of the fields exist
+    $client->hSetEx('profile', ['token' => 'abc123'], ['PX' => 60000, 'FNX']);
+    // Keep the existing TTL
+    $client->hSetEx('profile', ['token' => 'abc123'], ['KEEPTTL']);
+    ```
+  </TabItem>
+</Tabs>
+
+The `$expiry` array accepts these entries. Option names are case-insensitive.
+
+| Entry                              | Meaning                                                                                                                                               |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'EX'`, `'PX'`, `'EXAT'`, `'PXAT'` | TTL or expiry time as an integer. Integer strings such as `'30'` and whole-number floats are also accepted. Use at most one of these, or `'KEEPTTL'`. |
+| `'KEEPTTL'`                        | Keep the fields' existing TTL.                                                                                                                        |
+| `'FNX'` / `'FXX'`                  | Set only if none / all of the fields exist.                                                                                                           |
+| `'NX'` / `'XX'`                    | Set only if the key does not exist / does exist. Requires Valkey 9.1 or later. Valkey GLIDE extension, not available in PHPRedis.                     |
+
+For example, to set the field only if the key already exists (Valkey 9.1 or later):
+
+```php
+$client->hSetEx('profile', ['token' => 'abc123'], ['XX', 'EX' => 60]);
+```
+
+:::note
+Valkey GLIDE validates `$expiry` more strictly than PHPRedis. When an entry is unknown, malformed, negative, or conflicting (for example both `EX` and `PX`, `EX` with `KEEPTTL`, or both `FNX` and `FXX`), Valkey GLIDE returns `false` without sending the command. PHPRedis ignores unknown entries. An empty `$fields` array emits a warning and returns `false`.
+:::
+
+:::caution
+The legacy forms `hSetEx($key, $seconds, $mode, $field, $value, ...)` and `hPSetEx($key, $milliseconds, $mode, $field, $value, ...)` still work but are deprecated. Each call emits `E_DEPRECATED`, and these forms support none of the new options. Valkey GLIDE picks the form from the second argument. An array means the PHPRedis form.
+
+In the legacy form, a `$mode` of `'NX'` or `'XX'` is a field condition, so it becomes `'FNX'` or `'FXX'` in the new `$expiry` array. Plain `'NX'` or `'XX'` in `$expiry` is a key condition.
+
+Subclasses that override `hSetEx` with the legacy signature now fail with a signature-compatibility error.
+:::
+
+```php
+// Deprecated
+$client->hSetEx('key', 60, null, 'f', 'v');
+$client->hPSetEx('key', 60000, null, 'f', 'v');
+$client->hPSetEx('key', 60000, 'NX', 'f', 'v');
+
+// Replacement
+$client->hSetEx('key', ['f' => 'v'], ['EX' => 60]);
+$client->hSetEx('key', ['f' => 'v'], ['PX' => 60000]);
+$client->hSetEx('key', ['f' => 'v'], ['PX' => 60000, 'FNX']);
+```
+
 ### List Operations
 
 <Tabs>
