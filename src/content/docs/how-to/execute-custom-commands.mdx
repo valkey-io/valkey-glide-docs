@@ -180,7 +180,7 @@ Pass the command name and arguments as an array of strings:
   </ClientTab>
 </ClientTabs>
 
-## Use Custom Commands in a PHP Batch
+## Use custom commands in a PHP batch
 
 In the PHP client, `rawcommand()` can be queued inside `multi()` and `pipeline()` batches on both `ValkeyGlide` and `ValkeyGlideCluster`. In a batch, `rawcommand()` returns the client, so you can chain it, and its reply appears in the result of `exec()` in queue order. As with other queued commands, `OK` becomes `true`, and a nil reply or a server error becomes `false` (the error is not thrown). For batch basics, see [Send Batch Commands](/how-to/send-batch-commands).
 
@@ -202,7 +202,7 @@ $results = $client->multi(ValkeyGlide::MULTI)
 
 `OPT_PREFIX` is not applied to `rawcommand()` arguments, inside or outside a batch.
 
-### Cluster Client
+### Cluster client
 
 `ValkeyGlideCluster::rawcommand()` still takes a route as its first argument in a batch, and the route must be a key: a key string, or `['type' => 'primarySlotKey', 'key' => ...]` / `['type' => 'slotKey', 'key' => ...]`. The key route is accepted but not used. Each queued command goes to the node that owns its own key arguments, and a keyless command uses the default routing for that command (see [Batch Commands](/concepts/client-features/batch-commands#multi-node-support)). In `multi()`, the whole transaction goes to one node.
 
@@ -218,7 +218,7 @@ $results = $cluster->multi(ValkeyGlide::PIPELINE)
 // [true, 'Alice']
 ```
 
-### Commands Refused in a Batch
+### Commands refused in a batch
 
 Some `rawcommand()` calls are refused in a batch. A refused call returns `false`, queues nothing, and leaves the batch open. Read the reason with `getLastError()`.
 
