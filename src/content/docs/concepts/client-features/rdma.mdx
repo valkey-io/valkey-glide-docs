@@ -27,6 +27,15 @@ GLIDE never copies or frees registered memory.
 
 Registering is slow (on EFA, roughly 100 ms for 512 MiB), so register a large block once and reuse it for many transfers.
 
+### GPU memory
+
+With `device_memory=True` in the client's `RdmaConfiguration`, registered memory can be CUDA GPU memory, and the server reads and writes it directly without a copy through host memory.
+The server reaches GPU memory directly and GLIDE synchronizes nothing with the GPU, so the application must order GPU work around each transfer.
+GLIDE can't read GPU memory, so it can't compute or check checksums for it: `rdma_get` returns the server's CRC-32c unverified, and `rdma_set` takes only a checksum you provide or none.
+While registering, GLIDE makes the memory's GPU context current, so any thread can register GPU memory.
+The provider must offer GPU memory (FI_HMEM) on the host.
+For code examples, see [Register GPU memory](/how-to/rdma-transfers/#register-gpu-memory).
+
 ### Reading a value
 
 When you read a key into registered memory:
@@ -35,7 +44,7 @@ When you read a key into registered memory:
 2. The client sends `BLOB.RDMA_GET` with the key and the location and size of the destination.
 3. The server writes the value directly into that memory, then replies with its length and a CRC-32c checksum.
    If the key doesn't exist, the server writes nothing and the read returns `None`.
-4. The client checks the bytes that landed against the checksum before returning.
+4. For host memory, the client checks the bytes that landed against the checksum before returning. For GPU memory, it returns the checksum without checking it.
 
 The server refuses a value larger than the destination before writing anything, so the memory around it is never touched.
 
@@ -104,3 +113,7 @@ The fabric reaches the server through a provider:
 * Transfers always go to the key's primary, whatever read strategy is configured.
 * A transfer is refused with `RdmaError` while a `MULTI` is open on the client. Send `EXEC` or `DISCARD` first.
 * `BLOB.RDMA_*` commands can only be sent through the RDMA methods, not as custom commands or inside a batch.
+* GPU memory must be CUDA device memory. CUDA managed memory and memory on other devices, such as ROCm, are refused.
+* GPU memory needs `device_memory=True`, the CUDA driver (`libcuda.so.1`) on the client, and a libfabric built with CUDA whose provider offers FI_HMEM.
+* A GPU region has no `memoryview()`, and `rdma_set` refuses `RdmaSetChecksum.Compute()` for it.
+* PyTorch expandable-segment tensors that span more than one mapping need libfabric 2.7.0 or later and the dmabuf path libfabric takes by default.
