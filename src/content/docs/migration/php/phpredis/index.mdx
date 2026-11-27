@@ -441,6 +441,19 @@ $result = $client->set('key', 'value'); // Returns true (default)
   `OPT_REPLY_LITERAL` affects: `SET`, `MSET`, `SETEX`, `PSETEX`, `SELECT`, `FLUSHDB`, `FLUSHALL`, `RENAME`, `RESTORE`, `CONFIG SET`, `LSET`, `LTRIM`, and `HMSET`.
 </Aside>
 
+### 6. Raw commands in transactions and pipelines
+
+Both clients queue `rawcommand()` inside `multi()` and `pipeline()` and include its reply in the result of `exec()`. They differ in which calls they queue and how they route them:
+
+| Call in a batch | PHPRedis | Valkey GLIDE |
+| --- | --- | --- |
+| Cluster key route (key string) | Sends the command to the node for the route's key | Accepts the route but ignores it; routes each command by its own keys |
+| Cluster node route (`[host, port]`) | Queues the command for that node | Refused |
+| Named routes `randomNode`, `allPrimaries`, `allNodes` | Not available | Refused |
+| `SELECT`, `AUTH`, `HELLO`, `CLIENT SETNAME`, `RESET` | Queued | Refused (typed `select()` also returns `false` in a batch) |
+
+See [Use custom commands in a PHP batch](/how-to/execute-custom-commands#use-custom-commands-in-a-php-batch) for refusal behavior and error handling.
+
 ## Advanced Features
 
 ### Pub/Sub
