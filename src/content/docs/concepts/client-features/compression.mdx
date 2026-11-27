@@ -1,81 +1,156 @@
 ---
 title: Data Compression
-description: Learn how Valkey data compression works.
+description: Understand GLIDE's client-side compression, command compatibility, and ways to protect compressed values.
 ---
 
-:::caution[Experimental Feature]
-Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
-:::
+GLIDE can compress large string values before sending them to Valkey and decompress them when reading them. This can reduce network traffic and the memory used to store values, at the cost of client CPU time.
 
-Working with large string values can affect both bandwidth, memory, and cost on every round trip to the server.
-GLIDE's compression feature shrinks those values before they leave the client and expands them again on read, reducing the cost of large commands.
+Compression happens on the client. Valkey stores the compressed representation as bytes and does not interpret it as the original value.
 
-**Compression is a client side feature.** The server simply stores compressed data as raw bytes from GLIDE.
+For configuration and examples, see [Compressing Data](/how-to/compressing-data/).
 
-For setup instructions and code examples, see our section on [Compressing Data](/how-to/compressing-data/).
+## Client support
+
+| Client | Transparent compression |
+| --- | --- |
+| Java | Supported |
+| Python | Supported |
+| Node.js | Supported |
+| Go | Supported |
+| C# | Supported |
+| PHP | Supported |
+| Ruby | Not supported |
+
+See [Supported Features](/reference/supported-features/) for the client feature matrix. Support depends on the client version in use.
 
 ## How it works
 
-Compression runs in GLIDE's Rust core layer, sitting between your application code and the network.
+Compression runs in GLIDE's Rust core between the application and the network.
 
 ### Write path
 
-When you issue a command like `SET`:
+For a supported write command such as `SET`:
 
-1. The client checks whether the value exceeds `minCompressionSize` (default: 64 bytes). Small values are sent as-is because the compression overhead would make them larger.
-2. If the value is large enough, the client compresses it with the configured backend (ZSTD or LZ4).
-3. A short magic header is prepended to identify the data as compressed and record which backend was used.
-4. The server receives and stores the compressed payload without modification.
+1. The client checks whether the value meets `minCompressionSize`, which defaults to 64 bytes.
+2. If it meets the threshold, the client attempts to compress it using ZSTD or LZ4. If the compressed representation is not smaller, the client sends the original value.
+3. A five-byte header identifies a compressed value and its backend.
+4. Valkey stores the bytes received from the client.
 
 ### Read path
 
-When a response comes back from a command like `GET`:
-
-1. The client checks the first bytes for the magic header.
-2. If present, it decompresses and returns the plain value.
-3. If absent, it returns the value unchanged.
-
-Compressed and uncompressed values can coexist in the same database. The client handles both.
+For a supported read command such as `GET`, a compression-enabled client checks the returned bytes for the header. It decompresses recognized compressed values and returns other values unchanged. Compressed and uncompressed values can coexist in the same database.
 
 ### Compression backends
 
 | Backend | Characteristics |
-|---------|----------------|
-| ZSTD | Better compression ratio, more CPU. Good default for most workloads. |
-| LZ4 | Faster but compresses less. Better when latency matters more than size. |
+| --- | --- |
+| ZSTD | Typically provides a better compression ratio at greater CPU cost. |
+| LZ4 | Typically faster, with a lower compression ratio. |
 
 ## Compatibility
 
-Only specific commands support compressions.
-
 ### Supported commands
 
-These commands work transparently with compressed values:
+GLIDE transparently handles values for these commands when compression is enabled:
 
-* `GET`
-* `GETDEL`
-* `GETEX`
-* `GETSET`
-* `MGET`
-* `MSET`
-* `MSETNX`
-* `PSETEX`
-* `SET`
-* `SETEX`
-* `SETNX`
+* `GET`, `GETDEL`, `GETEX`, `GETSET`, `MGET`
+* `MSET`, `MSETNX`, `PSETEX`, `SET`, `SETEX`, `SETNX`
 
 ### Incompatible commands
 
-The server doesn't know about compression, so commands that read, modify, or compare a stored string
-operate on the compressed bytes instead of the original value when compression is enabled.
+The current GLIDE core rejects the following commands when compression is enabled, even when the key has never contained a compressed value:
 
-These commands are disabled when compression is enabled:
-
-* String manipulation: `APPEND`, `GETRANGE`, `LCS`, `SETRANGE`, `STRLEN`, `SUBSTR`
-* Value comparison: `DELIFEQ`, `SET` with the `IFEQ` or `IFNE`
+* String operations: `APPEND`, `GETRANGE`, `LCS`, `SETRANGE`, `STRLEN`, `SUBSTR`
+* Value comparisons: `DELEX`, `DELIFEQ`, and `SET` with `IFEQ` or `IFNE`
 * Numeric operations: `DECR`, `DECRBY`, `INCR`, `INCRBY`, `INCRBYFLOAT`
 * Bit operations: `BITCOUNT`, `BITFIELD`, `BITFIELD_RO`, `BITOP`, `BITPOS`, `GETBIT`, `SETBIT`
 
-The incompatibility exists because the server operates on stored bytes directly. Since it doesn't know the bytes are compressed,
-operations like `APPEND` would concatenate compressed data, and `STRLEN` would return the compressed length rather than the original length.
-Comparison commands fail for the same reason. Operations like `DELIFEQ` and `SET ... IFEQ` incorrectly compare the uncompressed comparison value against the compressed data.
+`DELEX` requires Valkey 9.2 and `DELIFEQ` requires Valkey 9.0. The guard rejects `DELEX` as a command, including its value-comparison conditions. Client releases can bundle an older core, so check the guard coverage for your client version. See the [FAQ](#which-commands-are-incompatible-and-what-can-go-wrong) for the effects of running these commands against compressed values without the guard.
+
+`INCREX` is also unsafe for compressed values, but GLIDE's current compression guard does not reject it. On a server that supports `INCREX`, restrict it with ACLs until the guard is added. See [GLIDE issue #7200](https://github.com/valkey-io/valkey-glide/issues/7200) for implementation status.
+
+## Protecting compressed keys
+
+The incompatibility guard only applies to requests sent by a compression-enabled GLIDE client. It checks typed commands, custom commands, pipelines, and transactions when GLIDE recognizes the command. It does not inspect commands inside Lua scripts or functions invoked with `EVAL`, `EVALSHA`, `FCALL`, or `FCALL_RO`, or indirect reads such as `SORT ... GET`.
+
+Other Valkey clients, GLIDE clients without compression, and tools such as `valkey-cli` do not use this guard. They can read compressed bytes, modify them without decompressing them, or replace them with uncompressed values. All readers of compressed values need a compatible compression-enabled client. Review scripts and functions separately: even an allowed `GET` inside a script reads the stored bytes, and an allowed `SET` can replace them with uncompressed data.
+
+### Restrict commands with ACLs
+
+Use a dedicated [ACL user](https://valkey.io/topics/acl/) for applications that access compressed values. Apply restrictions to every user that can access those keys, including users used by scripts and operational tools. Prefer granting only the commands and key patterns each application needs.
+
+The following example creates a user with broad non-administrative access while denying most commands in the current compression guard. Run it in `valkey-cli` as an administrator, replacing `<password>` with a strong password. `reset` clears existing permissions, selectors, and passwords, so use a new user or review the impact before applying it to an existing user.
+
+```text
+ACL SETUSER app reset on ><password> ~* &* +@all -@admin -@dangerous -@bitmap -append -setrange -getrange -substr -strlen -lcs -incr -incrby -incrbyfloat -decr -decrby
+```
+
+For Valkey 9.0 or later, also deny `DELIFEQ`. For Valkey 9.2 or later, also deny `DELEX` and `INCREX`, if the server supports them:
+
+```text
+ACL SETUSER app -delifeq
+ACL SETUSER app -delex
+ACL SETUSER app -increx
+```
+
+Only apply the rules for commands present on the server. `@bitmap` covers all seven bit commands listed above. Denying `@string` is too broad because that category includes compatible commands such as `GET` and `SET`. ACL rules cannot deny only the `IFEQ` or `IFNE` arguments of `SET`; restrict `SET` entirely if callers cannot be trusted to avoid those options. Valkey also checks the caller's ACL permissions for commands invoked by scripts and functions.
+
+These rules are an example, not a complete integrity boundary. They allow ordinary `SET` and other commands that can replace or move data, and they do not constrain more privileged users. Reduce `+@all` to an application-specific allowlist and restrict access to compressed key prefixes where possible. Check module commands and other ways your applications can alter those keys.
+
+### Use separate key prefixes for counters
+
+Counters need an uncompressed client because a compression-enabled client rejects numeric commands for every key. Use separate clients and key prefixes, such as `counter:*` and `cache:*`. An ACL selector can allow numeric operations on the counter prefix while denying them on the cache prefix:
+
+```text
+ACL SETUSER app reset on ><password> ~counter:* &* +@all -@admin -@dangerous (~cache:* +@all -@admin -@dangerous -@bitmap -append -setrange -getrange -substr -strlen -lcs -incr -incrby -incrbyfloat -decr -decrby)
+```
+
+On Valkey 9.0 or later, add `-delifeq` inside the `cache:*` selector. On Valkey 9.2 or later, also add `-delex -increx` there if those commands are available. The root rule and each selector are independent: a single rule set must allow the command and every key it uses. For example, `MGET counter:a cache:b` can be denied because neither rule set permits both keys. In cluster mode, multi-key commands must also satisfy the server's hash-slot requirements.
+
+### Managed services and command renaming
+
+For ElastiCache, configure the restrictions as an [RBAC access string](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Clusters.RBAC.html) through the service API or console. Omit `ACL SETUSER app`, `reset`, and the password rule from the access string. Set the password through the user API or use another supported authentication method. ElastiCache does not support write-based ACL commands, and a service may reject rules for unsupported or restricted commands. Check which ACL features and commands your engine version supports.
+
+For self-managed Valkey, disabling a command with `rename-command APPEND ""` in `valkey.conf` is a fallback when ACLs are unavailable. It affects every user, including administrators and operational tools, and only applies to commands explicitly disabled. Valkey deprecates command renaming in favor of ACLs. ElastiCache exposes a `rename-commands` parameter for supported parameter groups, but its [allowed command list](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/ParameterGroups.Engine.html) does not cover every incompatible command. Check the service and engine version before relying on it.
+
+## FAQ
+
+### Which commands are incompatible, and what can go wrong?
+
+The following effects apply if a command reaches the server without GLIDE's guard and operates on a compressed value. A command can have more than one effect depending on its arguments and stored data.
+
+| Commands | Possible effect |
+| --- | --- |
+| `APPEND`, `SETRANGE` | Modify compressed bytes and can make the value impossible to decompress. |
+| `GETRANGE`, `SUBSTR`, `STRLEN`, `LCS` | Return a substring, length, or comparison of compressed bytes rather than the original value. |
+| `DELEX`, `DELIFEQ`, `SET ... IFEQ/IFNE` | Compare against compressed bytes, so a condition can give the wrong result. `DELEX` or `DELIFEQ` can delete a key, and `SET` can replace its value. |
+| `DECR`, `DECRBY`, `INCR`, `INCRBY`, `INCRBYFLOAT` | Usually return a numeric conversion error when the stored value is compressed. |
+| `BITCOUNT`, `BITFIELD_RO`, `BITPOS`, `GETBIT` | Return results for compressed bytes rather than the original value. |
+| `BITFIELD`, `SETBIT` | Read or modify compressed bytes and can make the value impossible to decompress. |
+| `BITOP` | Computes on compressed bytes and writes an incorrect destination value. |
+
+`INCREX` is a numeric operation with the same risk as `INCR`, but is not yet rejected by the current GLIDE guard.
+
+### Why does GLIDE reject `INCR` on a key that was never compressed?
+
+The guard uses the client configuration and command type, not the contents of an individual key. GLIDE cannot know whether a key contains compressed bytes without reading it first. Use a separate compression-disabled client for counters and keep them in a separate prefix.
+
+### Can a client without compression read compressed values?
+
+It receives the stored bytes, including GLIDE's five-byte header, rather than the original value. Configure every reader of those values to use a compatible compression-enabled GLIDE client before enabling compression on writers. Values that were not compressed remain readable by other clients.
+
+### How can applications prevent other clients and scripts from corrupting compressed keys?
+
+Restrict every user that can access the compressed keys with ACLs, and review script and function behavior. See [Protecting compressed keys](#protecting-compressed-keys) for examples and limitations. ACLs cannot distinguish `SET` comparison options from ordinary `SET`, so command restrictions alone cannot guarantee that every write uses GLIDE's compression format.
+
+### How can applications use counters and compressed values in the same database?
+
+Use a compression-disabled client for counters and a compression-enabled client for compressed values. Separate the keys by prefix and use [ACL selectors](#use-separate-key-prefixes-for-counters) to allow numeric commands only for counter keys.
+
+### How does this apply to ElastiCache and other managed services?
+
+Client-side compression works independently of whether Valkey is self-managed. Use the service's access-control mechanism to restrict commands and key patterns, and verify its support for ACL selectors and individual commands. ElastiCache uses RBAC access strings and configures passwords separately, as described in [Managed services and command renaming](#managed-services-and-command-renaming).
+
+### How does client-side compression interact with server-side compression?
+
+GLIDE compresses values before they travel over the network. Proposed Valkey server-side inline compression would instead compress values in server memory. Applying both could spend CPU trying to compress already compressed data and may provide little additional space saving. The server-side feature and its interaction with GLIDE are still under development; see [valkey-io/valkey#3423](https://github.com/valkey-io/valkey/issues/3423) and [valkey-io/valkey-glide#7204](https://github.com/valkey-io/valkey-glide/issues/7204) for their status. Disabling client-side compression does not convert values already stored in GLIDE's compressed format; migrate those values with a compression-enabled reader first.

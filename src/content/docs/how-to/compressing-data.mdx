@@ -5,10 +5,6 @@ description: Learn how to enable and configure GLIDE's compression feature.
 
 import { ClientTab, ClientTabs } from '@components/client-tabs';
 
-:::caution[Experimental Feature]
-Compression was added in Valkey GLIDE 2.4.0 and is currently an experimental feature. The API may change in future releases.
-:::
-
 Valkey GLIDE supports compressing string values, reducing memory usage and network bandwidth.
 When enabled, values are transparently compressed before being sent to the server and decompressed on retrieval.
 
@@ -134,10 +130,9 @@ When enabled, values are transparently compressed before being sent to the serve
 
 ## When to use compression
 
-Compression works well when you primarily use basic read and write commands with large string values.
-If your application uses commands that read, modify, or compare a stored string, don't use compression.
+Compression works well when you primarily use supported read and write commands with large string values. If you also need incompatible commands such as `INCR`, use a compression-disabled client with separate keys.
 
-See [Compatibility](/concepts/client-features/compression/#compatibility)f or the full list of supported and incompatible commands. 
+See [Compatibility](/concepts/client-features/compression/#compatibility) for the full list of supported and incompatible commands.
 
 ## Configuration options
 
