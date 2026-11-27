@@ -418,7 +418,7 @@ Use `INFO MODULES` or `MODULE LIST` command to see the status of all loaded modu
     info = client.ft_info(index)
     ```
 
-    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, and `FT.INFO`. Use `client.call(...)` for raw Search commands without a builder. `ft_search` and `ft_aggregate` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries. When the client connects to a Search-enabled cluster, pass `Valkey::Search::InfoOptions.new(scope: :cluster)` to request cluster-wide `FT.INFO`.
+    Ruby's structured builders cover `FT.CREATE`, `FT.SEARCH`, `FT.AGGREGATE`, `FT.INFO`, `FT.HYBRID`, and `FT.CURSOR` (see [Valkey Search 1.3 Features (Ruby)](#valkey-search-13-features-ruby)). Use `client.call(...)` for raw Search commands without a builder. `ft_search`, `ft_aggregate`, `ft_hybrid`, `ft_cursor_read`, and `ft_cursor_del` cannot run inside `pipelined` or `multi`, and `ft_search` is incompatible with `flatten_map: true`. In cluster mode, `ft_create` and `ft_drop_index` broadcast to all primaries. When the client connects to a Search-enabled cluster, pass `Valkey::Search::InfoOptions.new(scope: :cluster)` to request cluster-wide `FT.INFO`.
   </ClientTab>
 </ClientTabs>
 
@@ -1105,6 +1105,251 @@ await GlideFt.create(
         noHighlight: true,
     },
 );
+```
+
+## Valkey Search 1.3 Features (Ruby)
+
+These features require valkey-search 1.3. The snippets below assume `require "valkey"`, a connected `client` (`Valkey.new(host: "localhost", port: 6379)` or a cluster client created with `Valkey.new(nodes: [...], cluster_mode: true)`), and an existing index `idx = "idx"`. Fields used below: a TEXT field `title`, a NUMERIC field `price`, a TAG field `category`, and a VECTOR field `vec` with two FLOAT32 dimensions. Builder classes live under `Valkey::Search`.
+
+`ft_create`, `ft_search`, `ft_aggregate`, `ft_hybrid`, and `ft_info` accept either an options object (`CreateOptions`, `SearchOptions`, `AggregateOptions`, `HybridOptions`, `InfoOptions`) or the same options as keyword arguments, but not both.
+
+Some behaviors need the server setting `search.emulate-release` at 1.3.0 or later: `LOAD ... AS` aliases, a `LIMIT` placed directly before or after `SORTBY` in `FT.AGGREGATE` returning more than the 10 rows `SORTBY` keeps by default, and the `score_field` entry in `FT.INFO`.
+
+### Restrict a Search to Specific Keys
+
+Pass `in_keys:` to search only the listed keys. An empty array matches nothing, while leaving `in_keys` unset (`nil`) applies no restriction.
+
+```ruby
+result = client.ft_search(idx, "@title:hello", in_keys: ["doc:1", "doc:2"])
+
+# The same search with an options object.
+opts = Valkey::Search::SearchOptions.new(in_keys: ["doc:1", "doc:2"])
+result = client.ft_search(idx, "@title:hello", opts)
+
+client.ft_search(idx, "*", in_keys: []).total_results # => 0
+```
+
+### Count Matches Without Fetching Documents
+
+`count: true` returns only the number of matches. It sends `LIMIT 0 0`, so it cannot be combined with `limit:`.
+
+```ruby
+result = client.ft_search(idx, "@title:hello", count: true)
+result.total_results # => 2
+result.documents     # => []
+```
+
+### Use New Aggregate Reducers
+
+`Valkey::Search::Reducer` has factory methods for `TOLIST`, `FIRST_VALUE`, and `RANDOM_SAMPLE`. Use them in a `GroupBy` clause.
+
+```ruby
+rows = client.ft_aggregate(idx, "*",
+  load: ["category", "price"],
+  clauses: [
+    Valkey::Search::GroupBy.new(["@category"], reducers: [
+      Valkey::Search::Reducer.to_list("@price", as: "prices"),
+      Valkey::Search::Reducer.first_value("@price", by: "@price", order: :desc, as: "max_price"),
+      Valkey::Search::Reducer.random_sample("@price", 2, as: "sample")
+    ])
+  ])
+```
+
+- `to_list` removes duplicates and nil values.
+- `first_value` raises `ArgumentError` if you set `order:` without `by:`. With `by:` and no `order:`, the record with the smallest `by` value wins.
+- `random_sample` takes a size from 0 to 1000. The server rejects other values. The result is an array.
+
+### Score and Rank Results
+
+Set `with_scores: true` on `ft_search` to get a relevance score for each document in `doc.score`. `BM25STD` is the only accepted `scorer:`. The server rejects any other value with `Valkey::CommandError`.
+
+```ruby
+result = client.ft_search(idx, "hello", with_scores: true, scorer: "BM25STD")
+
+result.documents.each do |doc|
+  puts "#{doc.key} #{doc.score.to_f}"
+end
+```
+
+For `ft_aggregate`, set `add_scores: true` to expose the score as `@__score`.
+
+```ruby
+rows = client.ft_aggregate(idx, "hello",
+  add_scores: true,
+  scorer: "BM25STD",
+  load: ["title"],
+  clauses: [Valkey::Search::SortBy.new("@__score", :desc)])
+```
+
+### Page Through Results with Cursors
+
+Set `with_cursor:` on `ft_aggregate` to get results in pages. The reply is `[rows, cursor_id]`, and a `cursor_id` of `0` means there are no more pages.
+
+```ruby
+rows, cursor_id = client.ft_aggregate(idx, "*",
+  load: ["title"],
+  with_cursor: Valkey::Search::WithCursor.new(count: 5))
+
+while cursor_id != 0
+  rows, cursor_id = client.ft_cursor_read(idx, cursor_id)
+end
+```
+
+`WithCursor.new` accepts `count:` (rows per page) and `maxidle:` (idle time in milliseconds before the server discards the cursor). `ft_cursor_read` takes an optional `count:` keyword to change the page size for that read.
+
+To discard a cursor before it is exhausted:
+
+```ruby
+client.ft_cursor_del(idx, cursor_id) # => "OK"
+```
+
+:::note
+In cluster mode, cursor queries (`ft_aggregate` and `ft_hybrid` with `with_cursor:`) and every `ft_cursor_read` and `ft_cursor_del` go to the primary of the index's slot, regardless of `read_from`.
+
+On a standalone client with a replica read strategy (`Valkey::ReadFrom::PREFER_REPLICA` or an AZ affinity strategy), `ft_aggregate` with `with_cursor:` can open the cursor on a replica while `ft_cursor_read` and `ft_cursor_del` go to the primary and fail because the cursor is not found. Set `read_from: Valkey::ReadFrom::PRIMARY` for cursor workflows. `ft_hybrid` is not affected.
+:::
+
+- Reading or deleting an unknown or deleted cursor id raises `Valkey::CommandError`.
+- Cursors opened by `ft_hybrid` are read and deleted the same way.
+
+### Combine Text and Vector Search with FT.HYBRID
+
+`client.ft_hybrid(index, search_arm, vsim_arm, options = nil, **kwargs)` runs a text query and a vector similarity search together and fuses the results.
+
+Pass the query vector as a binary-encoded string. The client sends it as raw data.
+
+```ruby
+# Two float32 values in little-endian order. pack returns a binary string.
+q = [1.0, 1.0].pack("e*")
+
+rows = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello"),
+  Valkey::Search::HybridVsimArm.new("vec", q, k: 5))
+# Each row contains "__key" and "__score" by default.
+```
+
+To reference a query parameter instead, pass a regular (non-binary) string that starts with `$` and supply the value in `params:`. A binary string is never treated as a reference, even if its first byte is `$`. Use `.b` on raw vector bytes that are not already binary.
+
+```ruby
+# q is the binary string from the previous example.
+rows = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello"),
+  Valkey::Search::HybridVsimArm.new("vec", "$myvec", k: 5),
+  params: { "myvec" => q })
+```
+
+`HybridSearchArm.new` takes the query plus `scorer:` and `yield_score_as:`. `HybridVsimArm.new` takes the field name (without a leading `@`), the vector, and `k:`, `ef_runtime:`, `shard_k_ratio:`, `yield_score_as:`, and `filter:`.
+
+#### Choose a Fusion Method
+
+Pass `combine:` in the options. Each method is one of the following:
+
+```ruby
+rrf = Valkey::Search::HybridCombine.rrf(constant: 60, window: 20, yield_score_as: "fused")
+
+# Set both alpha and beta, or neither.
+linear = Valkey::Search::HybridCombine.linear(alpha: 1.0, beta: 0.0)
+
+# Reference arm scores by their yield_score_as names, or use
+# @__search_score and @__vector_score.
+fn = Valkey::Search::HybridCombine.function("@ss + @vs")
+```
+
+#### Filter, Fuse, and Page
+
+This example filters the vector arm, fuses with RRF, filters the fused rows, and pages the output.
+
+```ruby
+# q is the binary string from the first FT.HYBRID example.
+rows, cursor_id = client.ft_hybrid(idx,
+  Valkey::Search::HybridSearchArm.new("hello", yield_score_as: "ss"),
+  Valkey::Search::HybridVsimArm.new("vec", q,
+    k: 5,
+    yield_score_as: "vs",
+    filter: Valkey::Search::HybridVsimFilter.new("@title:hello",
+      policy: Valkey::Search::HybridFilterPolicy::BATCHES)),
+  Valkey::Search::HybridOptions.new(
+    combine: Valkey::Search::HybridCombine.rrf(constant: 60),
+    clauses: [Valkey::Search::Filter.new("@ss > 0")],
+    with_cursor: Valkey::Search::WithCursor.new(count: 10)))
+
+while cursor_id != 0
+  rows, cursor_id = client.ft_cursor_read(idx, cursor_id)
+end
+```
+
+Other options: `local_only:`, `timeout:`, `params:`, `dialect:`, and `load:` (an array of fields or `:all`). There are no `limit:` or `sort_by:` options. Add `Valkey::Search::Limit`, `SortBy`, `Filter`, `Apply`, or `GroupBy` objects to `clauses:` instead.
+
+:::note
+- `k` defaults to 10.
+- Results are limited to 10 rows unless you add a `Valkey::Search::Limit` clause, for example `Valkey::Search::Limit.new(0, 20)`.
+- The search arm cannot be a KNN query.
+- The server rejects any `dialect` other than 2.
+:::
+
+### Load Fields with Aliases
+
+Each `load:` entry is a field name or a `Valkey::Search::LoadField`. This works in `ft_aggregate` and `ft_hybrid`.
+
+```ruby
+rows = client.ft_aggregate(idx, "*",
+  load: ["title", Valkey::Search::LoadField.new("price", as: "cost")])
+# Each row has a "cost" key instead of "price".
+```
+
+An empty `load:` array omits the `LOAD` clause.
+
+:::caution
+Aliases need `search.emulate-release` set to 1.3.0 or later. Otherwise the server raises `Valkey::CommandError` because it reads `AS` as a field name that does not exist. The client does not check this.
+:::
+
+### Avoid Client-Side Errors
+
+The FT methods and `Valkey::Search` builders raise `ArgumentError` before the command is sent in these cases:
+
+- `count: true` is combined with `limit:` (`count and limit are mutually exclusive: count maps to LIMIT 0 0`).
+- `Reducer.first_value` sets `order:` without `by:` (`first_value: order requires by to be set`).
+- A TEXT, TAG, or NUMERIC field sets `unf: true` without `sortable: true` (`unf requires sortable: true`).
+- `filter:` in the create options is an empty string (`filter cannot be empty`).
+- `HybridVsimFilter` sets `batch_size:` without `policy: Valkey::Search::HybridFilterPolicy::BATCHES`.
+- `HybridVsimArm` sets `ef_runtime:` with a filter whose policy is `HybridFilterPolicy::ADHOC`.
+- `HybridCombine.rrf` gets a negative `constant:` (`constant must not be negative`).
+- `HybridCombine.linear` sets only one of `alpha:` or `beta:` (`alpha and beta must both be set, or both left unset`).
+- A method gets both an options object and keyword options, or a plain Hash in place of the options object.
+- `ft_hybrid` gets a search arm that is not a `HybridSearchArm`, or a vector arm that is not a `HybridVsimArm`.
+- `ft_search`, `ft_aggregate`, `ft_hybrid`, `ft_cursor_read`, or `ft_cursor_del` is called inside `pipelined` or `multi`. Use `client.call` to send the raw command there.
+
+```ruby
+begin
+  Valkey::Search::TextField.new("title", unf: true)
+rescue ArgumentError => e
+  puts e.message # => unf requires sortable: true
+end
+```
+
+### Create Indexes with RediSearch-Compatible Options
+
+`ft_create` accepts these additional options:
+
+- `type: "FLOAT16"` or `"BFLOAT16"` on `VectorField.flat` or `VectorField.hnsw`. The default is `"FLOAT32"`. You must encode the vector bytes yourself. The server may refuse `BFLOAT16` on hardware without support for it.
+- `filter:`, an expression that decides which documents the index includes.
+- `score_field:`, a document field whose numeric value is used as the document's score. `FT.INFO` reports it only when `search.emulate-release` is 1.3.0 or later.
+- `no_highlight:`, which sends `NOHL`. It does nothing on valkey-search and is accepted for RediSearch compatibility.
+- `unf: true` on a sortable TEXT, TAG, or NUMERIC field, which sends `SORTABLE UNF`. It requires `sortable: true` and does not apply to vector fields.
+
+```ruby
+prefix = "{hash}:"
+
+client.ft_create(idx,
+  [
+    Valkey::Search::VectorField.flat("vec", dim: 2, metric: :l2, type: "FLOAT16"),
+    Valkey::Search::TextField.new("title", sortable: true, unf: true)
+  ],
+  on: :hash,
+  prefixes: [prefix],
+  filter: "@age > 18",
+  score_field: "boost",
+  no_highlight: true)
 ```
 
 ## What's Next
