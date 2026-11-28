@@ -218,7 +218,7 @@ To update keys in Valkey, clients can send [SET](https://valkey.io/commands/set/
 
 ## Making Multiple Atomic Operations
 
-Clients can send [MSET](https://valkey.io/commands/mset/) and [MGET](https://valkey.io/commands/mget/) commands, which are used to set/get keys and values atomically.
+A single server command can write multiple keys atomically with [MSET](https://valkey.io/commands/mset/) or read them atomically with [MGET](https://valkey.io/commands/mget/). In cluster mode, GLIDE [splits commands by slot](/concepts/client-features/multi-slot-command-handling/) when the keys span multiple slots. Atomicity then applies per slot. With [client-side caching](/concepts/client-features/client-side-caching/#mget-caching), `MGET` can also combine values from different reads.
 
 <ClientTabs>
   <ClientTab slot="python">

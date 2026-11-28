@@ -57,13 +57,13 @@ The following commands are supported as multi-slot commands in GLIDE, meaning th
 Consider the command:
 
 ```
-MSET foo1 bar1 foo2 bar2 {foo3} bar3
+MSET {foo}1 bar1 {foo}2 bar2 {foo3} bar3
 ```
 
-In this example, keys `foo1` and `foo2` hash to different slots from `{foo3}` due to their hash slots. GLIDE will split the `MSET` command into separate commands based on slot grouping to ensure each key is routed to the correct shard, and execute them asynchronously.
+The keys `{foo}1` and `{foo}2` share the hash tag `{foo}` and therefore the same slot. The key `{foo3}` uses a different slot, so GLIDE sends two independent commands:
 
 ```
-MSET foo1 bar1 foo2 bar2
+MSET {foo}1 bar1 {foo}2 bar2
 MSET {foo3} bar3
 ```
 
