@@ -42,7 +42,9 @@ If every key is cached, GLIDE returns the values without contacting the server. 
 
 GLIDE stores each value from the server under its own key, so a later `GET` or `MGET` can read it from the cache. It does not store NIL values. Cache metrics count each key as one hit or one miss.
 
-**A partial hit is not atomic.** On the server, `MGET` reads every key at the same moment. A partial hit mixes cached values, which can be as old as the entry TTL, with values the server reads now. To get every key from the same moment, read them with a client that has no cache.
+**A cache hit offers no atomic snapshot guarantee.** A partial hit combines cached values with a new server read. A full hit can also combine values cached at different times.
+
+For an atomic read, use a client with caching disabled. In cluster mode, put all keys in the same hash slot, for example by using a shared hash tag. Otherwise, GLIDE [splits the request by slot](/concepts/client-features/multi-slot-command-handling/) and each sub-command executes independently.
 
 ### What Is Not Cached
 
@@ -701,7 +703,7 @@ Each supported binding's `CLIENT TRACKINGINFO` method returns the current tracki
 | **TTL-only expiration** | No server-side invalidation by default. Cached values may become stale if the key is modified on the server before the TTL expires. Python, Java, Node.js, Go, and C# support [server-assisted invalidation](#server-assisted-invalidation). |
 | **Lazy expiration** | Expired entries are cleaned up on access, not proactively in the background. |
 | **Limited command coverage** | Only `GET`, `MGET`, `HGETALL`, and `SMEMBERS` are cached. Other read commands are not cached. |
-| **`MGET` not atomic on partial hits** | A partial hit combines cached values with a new server read, so the values can come from different moments. See [`MGET` caching](#mget-caching). |
+| **Cached `MGET` values can come from different reads** | Full and partial cache hits can combine values from different times. See [`MGET` caching](#mget-caching). |
 | **NIL not cached** | If a key does not exist, the nil response is not stored. |
 | **No invalidation on writes** | In TTL-only mode, writing to a key such as `SET`, `HSET`, `SADD`, or `DEL` does not invalidate the local cache entry, even when the same client issues the write. Subsequent reads return the stale value until its TTL expires or memory pressure evicts it. In [server-assisted mode](#server-assisted-invalidation), the server sends invalidation messages that clear stale entries. |
 
