@@ -38,7 +38,7 @@ Both modes leverage the same classes— `Batch` (or `StandaloneBatch` in Go) for
 
 In both standalone and cluster modes, a non-atomic batch containing only commands eligible for replica routing follows the client's configured [read strategy](/how-to/connections/read-strategy/). If the strategy includes replicas, the batch may return stale data.
 
-Commands that require the primary continue to use it.
+Otherwise, the batch is routed to the primary.
 
 ## Classes and API
 
